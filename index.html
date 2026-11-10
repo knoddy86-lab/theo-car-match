@@ -1,0 +1,1799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Theo's Car Match">
+  <meta name="theme-color" content="#4FC3F7">
+  <title>Theo's Car Match</title>
+  <style>
+    :root {
+      --sky-top: #7ED6FF;
+      --sky-mid: #B3ECFF;
+      --sky-bot: #FFF6C2;
+      --grass: #6FCF6A;
+      --grass-dark: #4CAF50;
+      --road: #5C6770;
+      --focus: #FFD54F;
+      --play: #34C759;
+      --play-dark: #248A3D;
+      --ink: #1A237E;
+      --card-back: #1565C0;
+      --card-back-2: #0D47A1;
+      --safe-t: max(12px, env(safe-area-inset-top));
+      --safe-b: max(12px, env(safe-area-inset-bottom));
+      --safe-l: max(16px, env(safe-area-inset-left));
+      --safe-r: max(16px, env(safe-area-inset-right));
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      overscroll-behavior: none;
+      touch-action: none;
+      background: var(--sky-top);
+      font-family: "Trebuchet MS", "Segoe UI", "Avenir Next", "Arial Rounded MT Bold", "Chalkboard SE", "Comic Sans MS", sans-serif;
+      color: var(--ink);
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+    button { font-family: inherit; touch-action: manipulation; cursor: pointer; }
+    button:disabled { cursor: default; }
+
+    #app {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      height: 100dvh;
+      height: var(--vh, 100dvh);
+      overflow: hidden;
+    }
+
+    .scene {
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 42%, var(--sky-bot) 70%, #F3E08A 78%, var(--grass) 78%, var(--grass-dark) 100%);
+    }
+    .sun {
+      position: absolute;
+      top: 4%;
+      right: 8%;
+      width: min(18vmin, 140px);
+      height: min(18vmin, 140px);
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #FFFCE0, #FFE566 55%, #FFC107 100%);
+      box-shadow: 0 0 40px 12px rgba(255, 215, 64, 0.55);
+      pointer-events: none;
+    }
+    .hill {
+      position: absolute;
+      bottom: 18%;
+      width: 55%;
+      height: 22%;
+      background: #81C784;
+      border-radius: 50% 50% 0 0;
+      pointer-events: none;
+    }
+    .hill.a { left: -18%; width: 70%; background: #66BB6A; }
+    .hill.b { right: -18%; width: 72%; height: 20%; background: #7CB342; }
+    .road {
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      height: 16%;
+      background: #607080;
+      pointer-events: none;
+    }
+    .road::before {
+      content: "";
+      position: absolute;
+      left: 0; right: 0; top: 48%;
+      height: 8px;
+      background: repeating-linear-gradient(90deg, #FFEE58 0 36px, transparent 36px 68px);
+      transform: translateY(-50%);
+    }
+
+    .screen {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: var(--safe-t) var(--safe-r) var(--safe-b) var(--safe-l);
+      z-index: 2;
+    }
+    .screen[hidden] { display: none !important; }
+
+    /* ---- Start ---- */
+    .splash {
+      text-align: center;
+      width: min(920px, 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: clamp(10px, 2.4vh, 28px);
+    }
+    .banner {
+      background: rgba(255,255,255,0.92);
+      border: 6px solid #FFF;
+      border-radius: 28px;
+      padding: clamp(10px, 2vh, 22px) clamp(18px, 4vw, 48px);
+      box-shadow: 0 10px 0 rgba(25, 40, 90, 0.12), 0 18px 40px rgba(0,0,0,0.12);
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(28px, 7.2vmin, 84px);
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      color: #D32F2F;
+      text-shadow: 0 3px 0 #FFCDD2;
+    }
+    .tag {
+      margin: 6px 0 0;
+      font-size: clamp(16px, 3.2vmin, 32px);
+      color: #283593;
+      font-weight: 700;
+    }
+    .for-theo {
+      margin-top: 2px;
+      font-size: clamp(13px, 2.2vmin, 20px);
+      color: #5C6BC0;
+      font-weight: 700;
+    }
+    .hero-cars {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: clamp(8px, 2vw, 24px);
+      width: min(720px, 92%);
+      height: clamp(90px, 22vh, 200px);
+    }
+    .hero-cars .car-wrap {
+      flex: 1 1 0;
+      max-width: 220px;
+      animation: idle 2.4s ease-in-out infinite;
+    }
+    .hero-cars .car-wrap:nth-child(2) { animation-delay: -0.7s; transform: scale(1.08); }
+    .hero-cars .car-wrap:nth-child(3) { animation-delay: -1.4s; }
+    @keyframes idle {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+    .hero-cars .car-wrap:nth-child(2) { animation-name: idle-mid; }
+    @keyframes idle-mid {
+      0%, 100% { transform: scale(1.08) translateY(0); }
+      50% { transform: scale(1.08) translateY(-8px); }
+    }
+
+    .btn {
+      appearance: none;
+      border: 0;
+      border-radius: 999px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      color: #fff;
+      background: var(--play);
+      box-shadow: 0 8px 0 var(--play-dark), 0 12px 24px rgba(0,0,0,0.18);
+      padding: 0.35em 1.1em 0.45em;
+      line-height: 1;
+      transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+    }
+    .btn:active { transform: translateY(6px); box-shadow: 0 2px 0 var(--play-dark), 0 6px 12px rgba(0,0,0,0.18); }
+    .btn-play {
+      font-size: clamp(36px, 9vmin, 96px);
+      min-width: min(70vw, 420px);
+      min-height: clamp(72px, 16vmin, 130px);
+      margin-top: 4px;
+      animation: pulse 1.8s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { filter: brightness(1); transform: scale(1); }
+      50% { filter: brightness(1.06); transform: scale(1.04); }
+    }
+    .btn-play:active { animation: none; }
+
+    .btn-next {
+      font-size: clamp(28px, 6.5vmin, 64px);
+      min-width: min(72vw, 380px);
+      min-height: clamp(64px, 14vmin, 110px);
+      background: #FF9800;
+      box-shadow: 0 8px 0 #E65100, 0 12px 24px rgba(0,0,0,0.18);
+    }
+    .btn-next:active { box-shadow: 0 2px 0 #E65100, 0 6px 12px rgba(0,0,0,0.18); }
+
+    .btn:focus, .card:focus {
+      outline: 7px solid var(--focus);
+      outline-offset: 6px;
+      box-shadow:
+        0 8px 0 var(--play-dark),
+        0 0 0 10px rgba(255, 213, 79, 0.45),
+        0 12px 28px rgba(0,0,0,0.2);
+    }
+    .btn-next:focus {
+      box-shadow:
+        0 8px 0 #E65100,
+        0 0 0 10px rgba(255, 213, 79, 0.45),
+        0 12px 28px rgba(0,0,0,0.2);
+    }
+
+    /* ---- Game ---- */
+    #game-screen {
+      justify-content: stretch;
+      align-items: stretch;
+    }
+    .hud {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 4px 8px 8px;
+    }
+    .hud-title {
+      font-size: clamp(16px, 3.4vmin, 32px);
+      font-weight: 800;
+      color: #C62828;
+      background: rgba(255,255,255,0.88);
+      border-radius: 999px;
+      padding: 0.2em 0.7em;
+      box-shadow: 0 3px 0 rgba(0,0,0,0.08);
+    }
+    .hud-level {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: clamp(16px, 3.4vmin, 32px);
+      font-weight: 800;
+      color: #1A237E;
+      background: rgba(255,255,255,0.88);
+      border-radius: 999px;
+      padding: 0.2em 0.7em;
+      box-shadow: 0 3px 0 rgba(0,0,0,0.08);
+    }
+    .pips { display: flex; gap: 6px; }
+    .pip {
+      width: clamp(12px, 2.2vmin, 20px);
+      height: clamp(12px, 2.2vmin, 20px);
+      border-radius: 50%;
+      background: #C5CAE9;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
+    }
+    .pip.on { background: #FFCA28; box-shadow: 0 0 0 2px #F9A825; }
+
+    .board {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px 8px 8px;
+    }
+    .grid {
+      display: grid;
+      justify-content: center;
+      align-content: center;
+    }
+
+    .card {
+      position: relative;
+      width: var(--card, 160px);
+      height: var(--card, 160px);
+      padding: 0;
+      border: 0;
+      background: transparent;
+      border-radius: 22px;
+      perspective: 900px;
+      -webkit-perspective: 900px;
+    }
+    .card-inner {
+      position: absolute;
+      inset: 0;
+      border-radius: 22px;
+      transform-style: preserve-3d;
+      -webkit-transform-style: preserve-3d;
+      transition: transform 0.55s cubic-bezier(0.22, 0.8, 0.3, 1);
+      box-shadow: 0 8px 0 rgba(0,0,0,0.12), 0 14px 24px rgba(0,0,0,0.12);
+    }
+    .card.is-flipped .card-inner,
+    .card.is-matched .card-inner { transform: rotateY(180deg); }
+    .face {
+      position: absolute;
+      inset: 0;
+      border-radius: 22px;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .back {
+      background-color: #1565C0;
+      background-image:
+        linear-gradient(45deg, #0D47A1 25%, transparent 25%),
+        linear-gradient(-45deg, #0D47A1 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #0D47A1 75%),
+        linear-gradient(-45deg, transparent 75%, #0D47A1 75%),
+        linear-gradient(160deg, rgba(66,165,245,0.55), rgba(13,71,161,0.4));
+      background-size: 28px 28px, 28px 28px, 28px 28px, 28px 28px, 100% 100%;
+      background-position: 0 0, 0 14px, 14px -14px, -14px 0, 0 0;
+      border: 6px solid #fff;
+    }
+    .front {
+      background: linear-gradient(180deg, #FFFFFF 0%, #F5F7FF 100%);
+      border: 6px solid #fff;
+      transform: rotateY(180deg);
+      padding: 3% 2% 0;
+    }
+    .card.is-matched .front {
+      background: linear-gradient(180deg, #FFFDE7, #FFF8E1);
+      box-shadow: inset 0 0 0 5px #FFD54F;
+    }
+    .card.is-matched { pointer-events: none; }
+    .card .art { width: 100%; height: 100%; display: block; }
+    .card.vroom .art { animation: vroom 0.7s ease-in-out; }
+    @keyframes vroom {
+      0%, 100% { transform: translateX(0) rotate(0); }
+      18% { transform: translateX(10%) rotate(-6deg); }
+      40% { transform: translateX(-10%) rotate(6deg); }
+      62% { transform: translateX(6%) rotate(-3deg); }
+      80% { transform: translateX(-3%) rotate(2deg); }
+    }
+
+    .card:focus {
+      box-shadow: none;
+      z-index: 3;
+    }
+    .card:focus .card-inner {
+      box-shadow:
+        0 0 0 7px var(--focus),
+        0 0 0 14px rgba(255, 213, 79, 0.45),
+        0 10px 24px rgba(0,0,0,0.2);
+    }
+
+    /* ---- Win overlay ---- */
+    #win-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: clamp(12px, 3vh, 28px);
+      background: rgba(13, 40, 80, 0.28);
+      padding: var(--safe-t) var(--safe-r) var(--safe-b) var(--safe-l);
+    }
+    #win-overlay[hidden] { display: none !important; }
+    .win-banner {
+      background: rgba(255,255,255,0.96);
+      border-radius: 32px;
+      padding: clamp(16px, 3vh, 32px) clamp(22px, 5vw, 56px);
+      box-shadow: 0 14px 40px rgba(0,0,0,0.2);
+      text-align: center;
+    }
+    .win-banner h2 {
+      margin: 0;
+      font-size: clamp(36px, 9vmin, 96px);
+      color: #F9A825;
+      text-shadow: 0 3px 0 #FFF8E1, 0 6px 0 rgba(0,0,0,0.08);
+      line-height: 1;
+    }
+    .win-sub {
+      margin: 8px 0 0;
+      font-size: clamp(16px, 3.2vmin, 28px);
+      color: #283593;
+      font-weight: 700;
+    }
+
+    #fx {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 6;
+    }
+
+    .card .art, .card .custom-art, .hero-cars .art, .hero-cars .custom-art {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: contain;
+      pointer-events: none;
+    }
+    .card.vroom .custom-art { animation: vroom 0.7s ease-in-out; }
+    .hud { padding-left: calc(52px + var(--safe-l)); }
+
+    .gear-btn {
+      position: absolute;
+      top: var(--safe-t);
+      left: var(--safe-l);
+      z-index: 8;
+      width: 44px;
+      height: 44px;
+      border: 0;
+      border-radius: 50%;
+      padding: 0;
+      color: #3949AB;
+      background: rgba(255,255,255,0.9);
+      box-shadow: 0 3px 0 rgba(0,0,0,0.1), 0 6px 14px rgba(0,0,0,0.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-touch-callout: none;
+    }
+    .gear-btn:focus {
+      outline: 4px solid var(--focus);
+      outline-offset: 3px;
+      box-shadow: 0 3px 0 rgba(0,0,0,0.1), 0 0 0 8px rgba(255, 213, 79, 0.4);
+    }
+    .gear-btn .gear-icon { width: 22px; height: 22px; display: block; }
+    .gear-btn .hold-ring {
+      position: absolute;
+      inset: 0;
+      width: 44px;
+      height: 44px;
+      pointer-events: none;
+    }
+    .gear-btn .hold-progress {
+      transform: rotate(-90deg);
+      transform-origin: 50% 50%;
+      stroke-dashoffset: 100;
+      transition: none;
+    }
+    .gear-btn.holding .hold-progress {
+      stroke-dashoffset: 0;
+      transition: stroke-dashoffset 2s linear;
+    }
+
+    #settings-screen {
+      z-index: 12;
+      justify-content: flex-start;
+      background: rgba(13, 40, 80, 0.45);
+      overflow: auto;
+      touch-action: pan-y;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+    }
+    .settings-panel {
+      width: min(720px, 100%);
+      margin: 8px auto;
+      background: rgba(255,255,255,0.97);
+      border-radius: 28px;
+      border: 6px solid #fff;
+      box-shadow: 0 14px 40px rgba(0,0,0,0.2);
+      padding: clamp(14px, 2.4vh, 28px) clamp(14px, 3vw, 28px) 20px;
+      color: var(--ink);
+    }
+    .settings-panel h2 {
+      margin: 0 0 4px;
+      font-size: clamp(22px, 4.6vmin, 36px);
+      color: #1A237E;
+    }
+    .settings-lead {
+      margin: 0 0 16px;
+      font-size: clamp(14px, 2.2vmin, 18px);
+      font-weight: 700;
+      color: #3949AB;
+    }
+    .settings-row {
+      display: grid;
+      grid-template-columns: 92px 1fr;
+      gap: 12px;
+      align-items: center;
+      padding: 12px 0;
+      border-top: 2px solid #E8EAF6;
+    }
+    .settings-preview {
+      width: 92px;
+      height: 80px;
+      border-radius: 16px;
+      background: linear-gradient(180deg, #FFF, #F5F7FF);
+      border: 3px solid #C5CAE9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      padding: 2px;
+    }
+    .settings-preview .art,
+    .settings-preview .custom-art {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+    .settings-meta h3 {
+      margin: 0 0 2px;
+      font-size: clamp(16px, 2.8vmin, 22px);
+    }
+    .settings-line {
+      margin: 0 0 6px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #5C6BC0;
+    }
+    .settings-status {
+      margin: 0 0 8px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #455A64;
+    }
+    .settings-btns { display: flex; flex-wrap: wrap; gap: 6px; }
+    .btn-mini {
+      appearance: none;
+      border: 0;
+      border-radius: 999px;
+      font-family: inherit;
+      font-weight: 800;
+      font-size: 13px;
+      padding: 0.4em 0.85em;
+      color: #1A237E;
+      background: #E8EAF6;
+      box-shadow: 0 3px 0 #C5CAE9;
+    }
+    .btn-mini:active { transform: translateY(2px); box-shadow: 0 1px 0 #C5CAE9; }
+    .btn-mini:focus { outline: 4px solid var(--focus); outline-offset: 2px; }
+    .btn-mini.primary { background: #BBDEFB; box-shadow: 0 3px 0 #64B5F6; }
+    .btn-mini.warn { background: #FFE0B2; box-shadow: 0 3px 0 #FFB74D; }
+    .settings-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 16px;
+    }
+    .btn-reset {
+      font-size: 18px;
+      min-height: 52px;
+      padding: 0.35em 1em;
+      background: #EF5350;
+      box-shadow: 0 6px 0 #C62828, 0 10px 18px rgba(0,0,0,0.16);
+    }
+    .btn-reset:active { box-shadow: 0 2px 0 #C62828, 0 6px 12px rgba(0,0,0,0.16); }
+    .btn-reset:focus { box-shadow: 0 6px 0 #C62828, 0 0 0 8px rgba(255, 213, 79, 0.45); }
+    .btn-done {
+      font-size: 18px;
+      min-height: 52px;
+      padding: 0.35em 1.2em;
+      margin-left: auto;
+    }
+    .reset-confirm {
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: #FFF3E0;
+      font-weight: 700;
+    }
+    .reset-confirm p { margin: 0 0 10px; }
+    .sr-file {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+    }
+
+    @media (min-aspect-ratio: 16/9) {
+      .sun { top: 6%; right: 10%; }
+      .hud { padding-left: max(4vw, calc(52px + var(--safe-l))); padding-right: 4vw; }
+    }
+    @media (max-width: 500px) and (orientation: portrait) {
+      .hero-cars { height: clamp(80px, 18vh, 140px); }
+      .settings-row { grid-template-columns: 76px 1fr; }
+      .settings-preview { width: 76px; height: 68px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="scene" aria-hidden="true">
+      <div class="sun"></div>
+      <div class="hill a"></div>
+      <div class="hill b"></div>
+      <div class="road"></div>
+    </div>
+
+    <section id="start-screen" class="screen" aria-label="Start">
+      <div class="splash">
+        <div class="banner">
+          <h1>Theo's Car Match</h1>
+          <p class="tag">Match the cars!</p>
+          <p class="for-theo">For Theo</p>
+        </div>
+        <div class="hero-cars" id="hero-cars"></div>
+        <button type="button" class="btn btn-play" id="play-btn">PLAY</button>
+      </div>
+    </section>
+
+    <section id="game-screen" class="screen" hidden aria-label="Game">
+      <div class="hud">
+        <div class="hud-title">Theo's Car Match</div>
+        <div class="hud-level">
+          <span id="level-label">Level 1</span>
+          <div class="pips" id="pips" aria-hidden="true"></div>
+        </div>
+      </div>
+      <div class="board" id="board">
+        <div class="grid" id="grid" role="group" aria-label="Cards"></div>
+      </div>
+    </section>
+
+    <div id="win-overlay" hidden>
+      <div class="win-banner">
+        <h2>Great job!</h2>
+        <p class="win-sub" id="win-sub">You matched all the cars</p>
+      </div>
+      <button type="button" class="btn btn-next" id="next-btn">Next</button>
+    </div>
+
+    <button type="button" class="gear-btn" id="settings-btn" aria-label="Parent settings. Press and hold for two seconds.">
+      <svg class="hold-ring" viewBox="0 0 44 44" aria-hidden="true">
+        <circle cx="22" cy="22" r="18" fill="none" stroke="rgba(255,152,0,0.28)" stroke-width="3"></circle>
+        <circle class="hold-progress" cx="22" cy="22" r="18" fill="none" stroke="#FF9800" stroke-width="3.5" stroke-linecap="round" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100"></circle>
+      </svg>
+      <svg class="gear-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path fill="currentColor" d="M19.14 12.94c.04-.31.06-.63.06-.94s-.02-.63-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.04 7.04 0 0 0-1.63-.94l-.36-2.54A.5.5 0 0 0 13.9 2h-3.8a.5.5 0 0 0-.49.42l-.36 2.54c-.59.22-1.14.53-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.81 8.48a.5.5 0 0 0 .12.64l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94L2.93 14.16a.5.5 0 0 0-.12.64l1.92 3.32c.13.22.39.32.6.22l2.39-.96c.49.41 1.04.72 1.63.94l.36 2.54c.05.24.25.42.49.42h3.8c.24 0 .44-.18.49-.42l.36-2.54c.59-.22 1.14-.53 1.63-.94l2.39.96c.22.1.47 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58zM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7z"/>
+      </svg>
+    </button>
+
+    <section id="settings-screen" class="screen" hidden aria-label="Parent Settings">
+      <div class="settings-panel">
+        <h2>Parent Settings</h2>
+        <p class="settings-lead">Add your own pictures and sounds for each car. Everything stays on this device.</p>
+        <div id="settings-list"></div>
+        <div class="settings-actions">
+          <button type="button" class="btn btn-reset" id="reset-all-btn">Reset all</button>
+          <button type="button" class="btn btn-done" id="settings-done-btn">Done</button>
+        </div>
+        <div id="reset-confirm" class="reset-confirm" hidden>
+          <p>Reset all custom pictures and sounds?</p>
+          <div class="settings-btns">
+            <button type="button" class="btn-mini warn" id="reset-yes">Yes, reset</button>
+            <button type="button" class="btn-mini" id="reset-no">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <canvas id="fx"></canvas>
+  </div>
+
+  <script>
+  (function () {
+    "use strict";
+
+    var CARS = [
+      { id: "rosie",   name: "Rosie",       fullName: "Rosie Racer",  kind: "racer",    colorName: "Red",            typeName: "car",      phrase: "Zoom zoom!",        line: "Zoom zoom! Red car, Rosie!",                 color: "#E53935", dark: "#9B1B1B", light: "#FFCDD2", window: "#B3E5FC", voiceIndex: 0, rate: 1.18, pitch: 1.45 },
+      { id: "tugger",  name: "Tugger",      fullName: "Tugger",       kind: "tow",      colorName: "Orange",         typeName: "truck",    phrase: "Hooky hook!",       line: "Hooky hook! Orange truck, Tugger!",          color: "#F07830", dark: "#8D3B16", light: "#F0B27A", window: "#FFF3E0", voiceIndex: 1, rate: 0.82, pitch: 0.68 },
+      { id: "skye",    name: "Skye",        fullName: "Skye",         kind: "sports",   colorName: "Blue",           typeName: "car",      phrase: "Beep beep!",        line: "Beep beep! Blue car, Skye!",                 color: "#4FC3F7", dark: "#0277BD", light: "#B3E5FC", window: "#E1F5FE", voiceIndex: 2, rate: 1.22, pitch: 1.65 },
+      { id: "pip",     name: "Pip",         fullName: "Pip",          kind: "forklift", colorName: "Green",          typeName: "forklift", phrase: "Lift it up!",       line: "Lift it up! Green forklift, Pip!",           color: "#43A047", dark: "#1B5E20", light: "#A5D6A7", window: "#E8F5E9", voiceIndex: 3, rate: 1.28, pitch: 1.55 },
+      { id: "sunny",   name: "Sunny",       fullName: "Sunny",        kind: "city",     colorName: "Yellow",         typeName: "car",      phrase: "Sunny day!",        line: "Sunny day! Yellow car, Sunny!",              color: "#F6C800", dark: "#C49000", light: "#FFF59D", window: "#FFF8E1", voiceIndex: 4, rate: 1.00, pitch: 1.22 },
+      { id: "hank",    name: "Hank",        fullName: "Hank",         kind: "sedan",    colorName: "Dark green",     typeName: "car",      phrase: "Slow and steady!",  line: "Slow and steady! Dark green car, Hank!",     color: "#2E7D32", dark: "#1B5E20", light: "#81C784", window: "#E8F5E9", voiceIndex: 5, rate: 0.78, pitch: 0.62 },
+      { id: "officer", name: "Officer Dot", fullName: "Officer Dot",  kind: "police",   colorName: "Black and white", typeName: "car",     phrase: "Wee-woo!",          line: "Wee-woo! Black and white car, Officer Dot!", color: "#37474F", dark: "#212121", light: "#ECEFF1", window: "#E3F2FD", voiceIndex: 6, rate: 0.96, pitch: 1.00 }
+    ];
+
+    var PAIRS = [2, 3, 4];
+    var DB_NAME = "theo-car-match";
+    var DB_VERSION = 1;
+    var STORE = "media";
+    var level = 0;
+    var deck = [];
+    var levelCars = [];
+    var flipped = [];
+    var matchedCount = 0;
+    var locked = false;
+    var focusIndex = 0;
+    var gridCols = 2;
+    var audioCtx = null;
+    var voicesCache = [];
+    var defaultVoice = null;
+    var customMedia = {};
+    var customAudioEl = null;
+    var dbPromise = null;
+    var confettiBits = [];
+    var confettiOn = false;
+    var fx = document.getElementById("fx");
+    var fxCtx = fx.getContext("2d");
+    var reduced = false;
+    try { reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) {}
+
+    function carById(id) {
+      for (var i = 0; i < CARS.length; i++) if (CARS[i].id === id) return CARS[i];
+      return null;
+    }
+
+    function shadow() {
+      return '<ellipse cx="140" cy="166" rx="92" ry="10" fill="rgba(0,0,0,0.18)"/>';
+    }
+
+    function wheel(cx, cy, r) {
+      r = r || 22;
+      return '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="#222"/>' +
+        '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r * 0.58).toFixed(1) + '" fill="#B0BEC5"/>' +
+        '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r * 0.27).toFixed(1) + '" fill="#ECEFF1"/>';
+    }
+
+    function eyes(x1, x2, y, r) {
+      r = r || 12;
+      var p = r * 0.55;
+      var s = r * 0.2;
+      return '<circle cx="' + x1 + '" cy="' + y + '" r="' + r + '" fill="#fff"/>' +
+        '<circle cx="' + x2 + '" cy="' + y + '" r="' + r + '" fill="#fff"/>' +
+        '<circle cx="' + (x1 + 1.6) + '" cy="' + (y + 1.6) + '" r="' + p + '" fill="#2E2A28"/>' +
+        '<circle cx="' + (x2 + 1.6) + '" cy="' + (y + 1.6) + '" r="' + p + '" fill="#2E2A28"/>' +
+        '<circle cx="' + (x1 + 3.2) + '" cy="' + (y - 1.2) + '" r="' + s + '" fill="#fff"/>' +
+        '<circle cx="' + (x2 + 3.2) + '" cy="' + (y - 1.2) + '" r="' + s + '" fill="#fff"/>';
+    }
+
+    function smile(cx, cy, rw, color, tooth) {
+      var d = (cx - rw) + " " + cy + " Q" + cx + " " + (cy + 10) + " " + (cx + rw) + " " + cy;
+      var s = '<path d="M' + d + '" fill="none" stroke="' + color + '" stroke-width="3" stroke-linecap="round"/>';
+      if (tooth) {
+        s += '<rect x="' + (cx - 3) + '" y="' + (cy + 1) + '" width="6" height="8" rx="1.2" fill="#FFFDE7" stroke="' + color + '" stroke-width="1"/>';
+      }
+      return s;
+    }
+
+    function star(cx, cy, r, fill) {
+      var pts = [];
+      for (var i = 0; i < 5; i++) {
+        var a = (i * 2 * Math.PI) / 5 - Math.PI / 2;
+        var b = a + Math.PI / 5;
+        pts.push((cx + Math.cos(a) * r).toFixed(1) + "," + (cy + Math.sin(a) * r).toFixed(1));
+        pts.push((cx + Math.cos(b) * r * 0.42).toFixed(1) + "," + (cy + Math.sin(b) * r * 0.42).toFixed(1));
+      }
+      return '<polygon points="' + pts.join(" ") + '" fill="' + fill + '"/>';
+    }
+
+    function svgWrap(inner) {
+      return '<svg class="art" viewBox="0 0 280 180" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' + inner + "</svg>";
+    }
+
+    function carSVG(car) {
+      var c = car.color, d = car.dark, l = car.light, w = car.window;
+      if (car.kind === "racer") {
+        return svgWrap(shadow() +
+          '<path d="M58 86 L58 72 L86 72 L90 86 Z" fill="' + d + '"/>' +
+          '<path d="M60 84 L62 74 L84 74 L86 84 Z" fill="' + c + '"/>' +
+          '<rect x="62" y="70" width="22" height="5" rx="1.5" fill="' + d + '"/>' +
+          '<path d="M52 128 C50 102 70 90 96 90 L118 90 L132 50 C138 40 150 36 168 36 L214 36 C234 36 246 54 250 68 L258 70 C266 72 266 88 266 98 L262 128 C260 140 248 148 232 148 L70 148 C56 148 52 138 52 128 Z" fill="' + d + '"/>' +
+          '<path d="M54 124 C52 102 72 92 98 92 L120 92 L134 52 C140 44 151 40 168 40 L212 40 C230 40 242 56 246 68 L256 70 C262 72 262 88 262 96 L258 124 C256 136 246 144 232 144 L72 144 C58 144 54 136 54 124 Z" fill="' + c + '"/>' +
+          '<path d="M126 92 L138 56 C142 48 154 46 168 46 L206 46 C220 46 230 56 236 66 L230 92 Z" fill="' + w + '"/>' +
+          '<path d="M134 90 L144 58 C148 52 158 50 168 50 L200 50 C212 50 222 58 228 66 L224 90 Z" fill="#F5FBFF" opacity="0.5"/>' +
+          eyes(162, 200, 68, 12) +
+          smile(181, 84, 16, d, false) +
+          '<rect x="150" y="40" width="10" height="50" rx="2" fill="#fff" opacity="0.92"/>' +
+          '<rect x="164" y="40" width="10" height="50" rx="2" fill="#fff" opacity="0.92"/>' +
+          star(108, 116, 11, "#fff") +
+          star(132, 118, 8, "#fff") +
+          '<circle cx="96" cy="118" r="16" fill="#fff" stroke="' + d + '" stroke-width="2.5"/>' +
+          '<text x="96" y="126" text-anchor="middle" font-size="22" font-weight="800" font-family="Trebuchet MS, Arial Black, sans-serif" fill="' + d + '">7</text>' +
+          '<ellipse cx="256" cy="94" rx="8" ry="6" fill="#FFF8E1" stroke="' + d + '" stroke-width="2"/>' +
+          '<path d="M80 108 H230" stroke="' + l + '" stroke-width="6" stroke-linecap="round" opacity="0.7"/>' +
+          wheel(92, 146, 22) + wheel(210, 146, 22));
+      }
+      if (car.kind === "tow") {
+        return svgWrap(shadow() +
+          '<path d="M46 118 L46 102 Q52 90 70 90 L78 90 L78 118 Z" fill="' + d + '"/>' +
+          '<path d="M50 116 L50 104 Q56 94 70 94 L76 94 L76 116 Z" fill="#A35424"/>' +
+          '<path d="M38 132 C38 88 70 70 118 70 L150 70 L164 108 L250 108 C262 108 266 120 266 130 L266 142 C266 150 256 154 244 154 L58 154 C44 154 38 144 38 132 Z" fill="' + d + '"/>' +
+          '<path d="M42 130 C42 90 72 74 118 74 L148 74 L162 110 L248 110 C258 110 262 120 262 130 L262 140 C262 148 254 150 244 150 L60 150 C48 150 42 142 42 130 Z" fill="' + c + '"/>' +
+          '<ellipse cx="86" cy="112" rx="16" ry="10" fill="#8D3B16" opacity="0.45"/>' +
+          '<ellipse cx="200" cy="128" rx="18" ry="8" fill="#6D3B1E" opacity="0.35"/>' +
+          '<ellipse cx="150" cy="124" rx="10" ry="6" fill="#A35424" opacity="0.4"/>' +
+          '<path d="M150 74 L162 42 C166 34 176 32 190 32 L226 32 C240 32 250 44 254 56 L254 108 L166 108 Z" fill="' + d + '"/>' +
+          '<path d="M152 76 L164 44 C168 38 178 36 190 36 L224 36 C236 36 246 46 250 56 L250 108 L164 108 Z" fill="' + c + '"/>' +
+          '<path d="M172 76 L180 50 C182 44 190 42 200 42 L226 42 C234 42 242 48 244 56 L244 76 Z" fill="' + w + '"/>' +
+          eyes(196, 226, 58, 11) +
+          smile(211, 72, 14, d, true) +
+          '<rect x="248" y="86" width="10" height="8" rx="2" fill="#FFF8E1" stroke="' + d + '" stroke-width="1.4"/>' +
+          '<path d="M70 90 L28 128" stroke="#5D4037" stroke-width="6" stroke-linecap="round"/>' +
+          '<path d="M28 128 C22 140 22 148 32 152 C40 154 48 148 46 138 C44 130 36 128 28 128 Z" fill="none" stroke="#5D4037" stroke-width="5" stroke-linecap="round"/>' +
+          '<circle cx="28" cy="128" r="4" fill="#795548"/>' +
+          wheel(100, 152, 22) + wheel(214, 152, 22));
+      }
+      if (car.kind === "sports") {
+        return svgWrap(shadow() +
+          '<path d="M48 128 C46 108 66 98 96 92 L130 70 C140 64 156 62 176 64 L230 78 C250 84 262 98 262 114 L258 132 C254 144 240 148 222 148 L70 148 C52 148 48 138 48 128 Z" fill="' + d + '"/>' +
+          '<path d="M50 126 C48 108 68 100 98 94 L132 72 C142 66 156 64 176 66 L228 80 C246 86 258 100 258 114 L254 128 C250 140 238 144 222 144 L72 144 C54 144 50 136 50 126 Z" fill="' + c + '"/>' +
+          '<path d="M128 90 L140 74 C148 68 160 66 178 68 L220 80 L214 102 L124 100 Z" fill="' + w + '"/>' +
+          '<path d="M136 90 L146 76 C152 72 164 70 178 72 L210 82 L206 98 L132 98 Z" fill="#F5FBFF" opacity="0.5"/>' +
+          eyes(160, 196, 84, 11) +
+          smile(178, 96, 14, d, false) +
+          '<ellipse cx="252" cy="108" rx="7" ry="5" fill="#FFF8E1" stroke="' + d + '" stroke-width="1.8"/>' +
+          '<path d="M90 118 Q160 108 230 118" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity="0.45"/>' +
+          '<circle cx="108" cy="122" r="6" fill="#fff" opacity="0.8"/>' +
+          wheel(96, 146, 20) + wheel(214, 146, 20));
+      }
+      if (car.kind === "forklift") {
+        return svgWrap(shadow() +
+          '<rect x="230" y="100" width="36" height="6" rx="2" fill="#90A4AE" stroke="' + d + '" stroke-width="1.5"/>' +
+          '<rect x="230" y="128" width="36" height="6" rx="2" fill="#90A4AE" stroke="' + d + '" stroke-width="1.5"/>' +
+          '<rect x="224" y="46" width="10" height="102" rx="3" fill="#78909C" stroke="' + d + '" stroke-width="2"/>' +
+          '<rect x="218" y="46" width="22" height="10" rx="2" fill="#607D8B"/>' +
+          '<path d="M58 136 C58 100 74 86 110 86 L200 86 L200 136 C200 148 188 152 174 152 L74 152 C62 152 58 144 58 136 Z" fill="' + d + '"/>' +
+          '<path d="M62 134 C62 102 78 90 110 90 L196 90 L196 134 C196 144 186 148 174 148 L76 148 C66 148 62 142 62 134 Z" fill="' + c + '"/>' +
+          '<path d="M126 86 L126 48 C126 38 136 34 150 34 L196 34 C208 34 216 44 216 56 L216 86 Z" fill="' + d + '"/>' +
+          '<path d="M130 86 L130 50 C130 42 138 38 150 38 L192 38 C202 38 210 46 210 56 L210 86 Z" fill="' + c + '"/>' +
+          '<path d="M138 86 L138 54 C138 48 146 46 156 46 L190 46 C198 46 204 52 204 58 L204 86 Z" fill="' + w + '"/>' +
+          eyes(160, 188, 64, 11) +
+          smile(174, 78, 12, d, false) +
+          '<rect x="70" y="108" width="40" height="16" rx="3" fill="' + d + '" opacity="0.35"/>' +
+          wheel(96, 152, 20) + wheel(176, 152, 20));
+      }
+      if (car.kind === "city") {
+        return svgWrap(shadow() +
+          '<path d="M58 130 C50 86 78 42 140 38 C202 34 236 70 236 110 C244 112 256 120 256 132 C256 146 240 152 220 152 L70 152 C52 152 48 140 58 130 Z" fill="' + d + '"/>' +
+          '<path d="M62 128 C54 86 82 46 140 42 C196 38 232 72 232 110 C240 112 252 120 252 132 C252 144 238 148 220 148 L74 148 C58 148 52 138 62 128 Z" fill="' + c + '"/>' +
+          '<ellipse cx="148" cy="88" rx="58" ry="42" fill="' + w + '"/>' +
+          '<ellipse cx="148" cy="86" rx="46" ry="32" fill="#F5FBFF" opacity="0.45"/>' +
+          eyes(128, 168, 82, 14) +
+          smile(148, 102, 16, d, false) +
+          '<circle cx="200" cy="70" r="10" fill="#FFF8E1" stroke="#F9A825" stroke-width="2"/>' +
+          '<circle cx="200" cy="70" r="4" fill="#F9A825"/>' +
+          '<ellipse cx="248" cy="122" rx="8" ry="6" fill="#FFF8E1" stroke="' + d + '" stroke-width="2"/>' +
+          wheel(96, 150, 22) + wheel(200, 150, 22));
+      }
+      if (car.kind === "sedan") {
+        return svgWrap(shadow() +
+          '<rect x="72" y="126" width="150" height="10" rx="3" fill="' + d + '"/>' +
+          '<path d="M40 128 C40 112 52 104 72 104 L92 104 L108 58 C114 46 128 40 150 40 L196 40 C216 40 228 54 234 68 L250 80 C262 86 264 100 264 114 L258 136 C254 148 240 152 220 152 L62 152 C46 152 40 140 40 128 Z" fill="' + d + '"/>' +
+          '<path d="M44 126 C44 114 56 108 74 108 L94 108 L110 60 C116 50 130 44 150 44 L194 44 C212 44 224 56 230 68 L246 80 C256 86 258 100 258 114 L252 134 C248 144 236 148 220 148 L64 148 C50 148 44 138 44 126 Z" fill="' + c + '"/>' +
+          '<path d="M112 108 L122 64 C126 54 138 50 152 50 L190 50 C206 50 216 60 222 70 L230 108 Z" fill="' + w + '"/>' +
+          '<path d="M120 106 L128 66 C132 58 142 54 152 54 L186 54 C198 54 208 62 214 70 L220 106 Z" fill="#F5FBFF" opacity="0.4"/>' +
+          eyes(150, 190, 76, 12) +
+          smile(170, 94, 16, d, false) +
+          '<ellipse cx="250" cy="104" rx="9" ry="9" fill="#FFF8E1" stroke="' + d + '" stroke-width="2.4"/>' +
+          '<ellipse cx="236" cy="92" rx="6" ry="6" fill="#FFF8E1" stroke="' + d + '" stroke-width="2"/>' +
+          '<path d="M80 118 H230" stroke="' + l + '" stroke-width="5" stroke-linecap="round" opacity="0.65"/>' +
+          '<rect x="84" y="112" width="22" height="12" rx="2" fill="' + l + '" opacity="0.8"/>' +
+          wheel(92, 150, 22) + wheel(208, 150, 22));
+      }
+      return svgWrap(shadow() +
+        '<g transform="translate(148 36)">' +
+          '<rect x="-28" y="-10" width="56" height="16" rx="5" fill="#263238"/>' +
+          '<circle cx="-14" cy="-2" r="5" fill="#E53935"/>' +
+          '<circle cx="0" cy="-2" r="5" fill="#FFF8E1"/>' +
+          '<circle cx="14" cy="-2" r="5" fill="#1E88E5"/>' +
+        '</g>' +
+        '<path d="M44 128 C44 108 62 96 90 96 L112 96 L126 56 C132 44 146 38 166 38 L210 38 C230 38 242 54 246 68 L258 72 C266 76 266 92 266 104 L260 132 C256 144 242 150 222 150 L66 150 C48 150 44 138 44 128 Z" fill="#212121"/>' +
+        '<path d="M48 126 C48 110 64 100 90 100 L114 100 L128 58 C134 48 147 42 166 42 L208 42 C226 42 238 56 242 68 L256 72 C262 76 262 92 262 104 L256 128 C252 140 240 146 222 146 L68 146 C52 146 48 136 48 126 Z" fill="#FAFAFA"/>' +
+        '<path d="M48 126 C48 110 64 100 90 100 L118 100 L118 146 L68 146 C52 146 48 136 48 126 Z" fill="#212121"/>' +
+        '<path d="M210 100 L242 68 L256 72 C262 76 262 92 262 104 L256 128 C252 140 240 146 222 146 L210 146 Z" fill="#212121"/>' +
+        '<path d="M122 100 L132 60 C136 50 148 46 166 46 L204 46 C218 46 228 56 234 66 L222 100 Z" fill="' + w + '"/>' +
+        eyes(160, 198, 72, 12) +
+        smile(179, 88, 15, "#212121", false) +
+        '<circle cx="150" cy="120" r="12" fill="#1565C0" stroke="#0D47A1" stroke-width="2"/>' +
+        '<circle cx="150" cy="120" r="5" fill="#FFF8E1"/>' +
+        '<ellipse cx="256" cy="96" rx="7" ry="5" fill="#FFF8E1" stroke="#212121" stroke-width="1.8"/>' +
+        wheel(96, 148, 22) + wheel(214, 148, 22));
+    }
+
+    function cardBackSVG() {
+      return '<svg class="art" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+        '<circle cx="60" cy="60" r="30" fill="#1565C0" stroke="#fff" stroke-width="5"/>' +
+        '<polygon points="60,34 66.5,53.5 87,54 71,66.5 76.5,86 60,74.5 43.5,86 49,66.5 33,54 53.5,53.5" fill="#FFD54F" stroke="#FFF8E1" stroke-width="1.5"/>' +
+      '</svg>';
+    }
+
+    function setVH() {
+      document.documentElement.style.setProperty("--vh", window.innerHeight + "px");
+    }
+
+    function shuffle(arr) {
+      for (var i = arr.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+      }
+      return arr;
+    }
+
+    function revokeMedia(entry) {
+      if (!entry) return;
+      try { if (entry.imageUrl) URL.revokeObjectURL(entry.imageUrl); } catch (e) {}
+      try { if (entry.audioUrl) URL.revokeObjectURL(entry.audioUrl); } catch (e) {}
+    }
+
+    function openDB() {
+      if (dbPromise) return dbPromise;
+      dbPromise = new Promise(function (resolve, reject) {
+        try {
+          var req = indexedDB.open(DB_NAME, DB_VERSION);
+          req.onupgradeneeded = function () {
+            var db = req.result;
+            if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE);
+          };
+          req.onsuccess = function () { resolve(req.result); };
+          req.onerror = function () { dbPromise = null; reject(req.error); };
+        } catch (err) {
+          dbPromise = null;
+          reject(err);
+        }
+      });
+      return dbPromise;
+    }
+
+    function idbGet(key) {
+      return openDB().then(function (db) {
+        return new Promise(function (resolve, reject) {
+          var req = db.transaction(STORE, "readonly").objectStore(STORE).get(key);
+          req.onsuccess = function () { resolve(req.result || null); };
+          req.onerror = function () { reject(req.error); };
+        });
+      });
+    }
+
+    function idbSet(key, value) {
+      return openDB().then(function (db) {
+        return new Promise(function (resolve, reject) {
+          var req = db.transaction(STORE, "readwrite").objectStore(STORE).put(value, key);
+          req.onsuccess = function () { resolve(); };
+          req.onerror = function () { reject(req.error); };
+        });
+      });
+    }
+
+    function idbDel(key) {
+      return openDB().then(function (db) {
+        return new Promise(function (resolve, reject) {
+          var req = db.transaction(STORE, "readwrite").objectStore(STORE).delete(key);
+          req.onsuccess = function () { resolve(); };
+          req.onerror = function () { reject(req.error); };
+        });
+      });
+    }
+
+    function idbClear() {
+      return openDB().then(function (db) {
+        return new Promise(function (resolve, reject) {
+          var req = db.transaction(STORE, "readwrite").objectStore(STORE).clear();
+          req.onsuccess = function () { resolve(); };
+          req.onerror = function () { reject(req.error); };
+        });
+      });
+    }
+
+    function recordToEntry(rec) {
+      if (!rec) return { imageUrl: "", audioUrl: "", imageBlob: null, audioBlob: null };
+      var imageBlob = rec.image || null;
+      var audioBlob = rec.audio || null;
+      return {
+        imageBlob: imageBlob,
+        audioBlob: audioBlob,
+        imageUrl: imageBlob ? URL.createObjectURL(imageBlob) : "",
+        audioUrl: audioBlob ? URL.createObjectURL(audioBlob) : ""
+      };
+    }
+
+    function loadAllCustom() {
+      var tasks = CARS.map(function (car) {
+        return idbGet(car.id).then(function (rec) {
+          revokeMedia(customMedia[car.id]);
+          customMedia[car.id] = recordToEntry(rec);
+        }).catch(function () {
+          revokeMedia(customMedia[car.id]);
+          customMedia[car.id] = recordToEntry(null);
+        });
+      });
+      return Promise.all(tasks).catch(function () {});
+    }
+
+    var saveQueues = {};
+    function saveCustom(id, patch) {
+      var next = (saveQueues[id] || Promise.resolve()).catch(function () {}).then(function () {
+        return idbGet(id).catch(function () { return null; }).then(function (rec) {
+          rec = rec && typeof rec === "object" ? rec : {};
+          if (patch.image !== undefined) rec.image = patch.image || undefined;
+          if (patch.audio !== undefined) rec.audio = patch.audio || undefined;
+          if (!rec.image && !rec.audio) return idbDel(id);
+          return idbSet(id, rec);
+        }).then(function () {
+          return idbGet(id).catch(function () { return null; });
+        }).then(function (rec) {
+          revokeMedia(customMedia[id]);
+          customMedia[id] = recordToEntry(rec);
+        });
+      });
+      saveQueues[id] = next;
+      return next;
+    }
+
+    function clearCustom(id) {
+      return idbDel(id).catch(function () {}).then(function () {
+        revokeMedia(customMedia[id]);
+        customMedia[id] = recordToEntry(null);
+      });
+    }
+
+    function resetAllCustom() {
+      return idbClear().catch(function () {}).then(function () {
+        CARS.forEach(function (car) {
+          revokeMedia(customMedia[car.id]);
+          customMedia[car.id] = recordToEntry(null);
+        });
+      });
+    }
+
+    function fillArt(holder, car) {
+      holder.innerHTML = "";
+      var entry = customMedia[car.id] || {};
+      if (entry.imageUrl) {
+        var img = document.createElement("img");
+        img.className = "custom-art";
+        img.alt = "";
+        img.draggable = false;
+        var fallback = document.createElement("div");
+        fallback.hidden = true;
+        fallback.innerHTML = carSVG(car);
+        img.addEventListener("error", function () {
+          img.hidden = true;
+          fallback.hidden = false;
+        });
+        img.src = entry.imageUrl;
+        holder.appendChild(img);
+        holder.appendChild(fallback);
+      } else {
+        holder.innerHTML = carSVG(car);
+      }
+    }
+
+    function refreshVisibleArt() {
+      var list = cards();
+      for (var i = 0; i < list.length; i++) {
+        var front = list[i].querySelector(".front");
+        if (!front || !deck[i]) continue;
+        fillArt(front, deck[i].car);
+      }
+      paintHero();
+      if (!document.getElementById("settings-screen").hidden) renderSettings();
+    }
+
+    function unlockMedia() {
+      try {
+        var AC = window.AudioContext || window.webkitAudioContext;
+        if (AC && !audioCtx) audioCtx = new AC();
+        if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+      } catch (e) {}
+      try {
+        if (window.speechSynthesis) {
+          var u = new SpeechSynthesisUtterance(" ");
+          u.volume = 0;
+          speechSynthesis.speak(u);
+          refreshVoices();
+        }
+      } catch (e) {}
+    }
+
+    function refreshVoices() {
+      try {
+        if (!window.speechSynthesis) { voicesCache = []; defaultVoice = null; return; }
+        voicesCache = speechSynthesis.getVoices() || [];
+        var en = englishVoices(voicesCache);
+        defaultVoice =
+          firstMatch(en, /en-AU/i, /karen|female|moira|tessa/i) ||
+          firstMatch(en, /en-AU/i, null) ||
+          firstMatch(en, /^en/i, /female|samantha|karen|moira|google us/i) ||
+          en[0] ||
+          null;
+      } catch (e) {
+        voicesCache = [];
+        defaultVoice = null;
+      }
+    }
+
+    function englishVoices(voices) {
+      var out = [];
+      for (var i = 0; i < voices.length; i++) {
+        if (/^en/i.test(voices[i].lang)) out.push(voices[i]);
+      }
+      return out;
+    }
+
+    function firstMatch(voices, langRe, nameRe) {
+      for (var i = 0; i < voices.length; i++) {
+        var v = voices[i];
+        if (langRe && !langRe.test(v.lang)) continue;
+        if (nameRe && !nameRe.test(v.name)) continue;
+        return v;
+      }
+      return null;
+    }
+
+    function voiceFor(car) {
+      var pool = englishVoices(voicesCache);
+      if (!pool.length) pool = voicesCache;
+      if (!pool.length) return null;
+      if (!car) return defaultVoice || pool[0];
+      return pool[car.voiceIndex % pool.length];
+    }
+
+    function stopSpeechAndAudio() {
+      try { if (window.speechSynthesis) speechSynthesis.cancel(); } catch (e) {}
+      if (customAudioEl) {
+        try { customAudioEl.pause(); customAudioEl.src = ""; } catch (e) {}
+        customAudioEl = null;
+      }
+    }
+
+    function speak(text, car) {
+      try {
+        if (!window.speechSynthesis) return;
+        stopSpeechAndAudio();
+        var u = new SpeechSynthesisUtterance(text);
+        u.rate = car && car.rate != null ? car.rate : 0.92;
+        u.pitch = car && car.pitch != null ? car.pitch : 1.12;
+        var voice = voiceFor(car);
+        u.lang = (voice && voice.lang) || "en-AU";
+        if (voice) u.voice = voice;
+        speechSynthesis.speak(u);
+      } catch (e) {}
+    }
+
+    function speakCar(car, fallbackToVoice) {
+      var entry = customMedia[car.id] || {};
+      if (entry.audioUrl && !fallbackToVoice) {
+        stopSpeechAndAudio();
+        try {
+          var a = new Audio(entry.audioUrl);
+          customAudioEl = a;
+          var fell = false;
+          var goFallback = function () {
+            if (fell) return;
+            fell = true;
+            speak(car.line, car);
+          };
+          a.addEventListener("error", goFallback);
+          var p = a.play();
+          if (p && p.catch) p.catch(goFallback);
+          return;
+        } catch (e) {
+          speak(car.line, car);
+          return;
+        }
+      }
+      speak(car.line, car);
+    }
+
+    function tone(freq, start, dur, type, gain) {
+      if (!audioCtx) return;
+      try {
+        var o = audioCtx.createOscillator();
+        var g = audioCtx.createGain();
+        o.type = type || "triangle";
+        o.frequency.value = freq;
+        g.gain.setValueAtTime(0, start);
+        g.gain.linearRampToValueAtTime(gain || 0.12, start + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.001, start + dur);
+        o.connect(g); g.connect(audioCtx.destination);
+        o.start(start); o.stop(start + dur + 0.02);
+      } catch (e) {}
+    }
+
+    function playMatchSound() {
+      if (!audioCtx) return;
+      var t = audioCtx.currentTime;
+      tone(523.25, t, 0.18, "triangle", 0.12);
+      tone(659.25, t + 0.12, 0.18, "triangle", 0.12);
+      tone(783.99, t + 0.24, 0.28, "triangle", 0.14);
+    }
+
+    function playWinSound() {
+      if (!audioCtx) return;
+      var t = audioCtx.currentTime;
+      var notes = [523.25, 659.25, 783.99, 1046.5];
+      for (var i = 0; i < notes.length; i++) tone(notes[i], t + i * 0.14, 0.28, "triangle", 0.14);
+    }
+
+    function playFlipTick() {
+      if (!audioCtx) return;
+      tone(640, audioCtx.currentTime, 0.08, "sine", 0.05);
+    }
+
+    function pickCarsForLevel(lvl) {
+      var n = PAIRS[lvl];
+      if (lvl === 0) {
+        levelCars = shuffle(CARS.slice()).slice(0, n);
+      } else {
+        var have = {};
+        var i;
+        for (i = 0; i < levelCars.length; i++) have[levelCars[i].id] = true;
+        var remaining = [];
+        for (i = 0; i < CARS.length; i++) if (!have[CARS[i].id]) remaining.push(CARS[i]);
+        shuffle(remaining);
+        while (levelCars.length < n && remaining.length) levelCars.push(remaining.shift());
+        if (levelCars.length > n) levelCars = levelCars.slice(0, n);
+      }
+      return levelCars;
+    }
+
+    function startGame(lvl) {
+      level = lvl;
+      matchedCount = 0;
+      flipped = [];
+      locked = false;
+      hideWin();
+      stopConfetti();
+      var chosen = pickCarsForLevel(level);
+      deck = shuffle(chosen.concat(chosen).map(function (c, i) {
+        return { uid: c.id + "-" + i, id: c.id, car: c };
+      }));
+      document.getElementById("start-screen").hidden = true;
+      document.getElementById("game-screen").hidden = false;
+      renderHUD();
+      renderGrid();
+      layoutGrid();
+      requestAnimationFrame(function () {
+        layoutGrid();
+        focusIndex = 0;
+        focusCard(0);
+      });
+    }
+
+    function renderHUD() {
+      document.getElementById("level-label").textContent = "Level " + (level + 1);
+      var pips = document.getElementById("pips");
+      pips.innerHTML = "";
+      for (var i = 0; i < 3; i++) {
+        var s = document.createElement("span");
+        s.className = "pip" + (i <= level ? " on" : "");
+        pips.appendChild(s);
+      }
+    }
+
+    function renderGrid() {
+      var grid = document.getElementById("grid");
+      grid.innerHTML = "";
+      deck.forEach(function (item, index) {
+        var btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "card";
+        btn.dataset.index = String(index);
+        btn.dataset.carId = item.id;
+        btn.setAttribute("aria-label", "Hidden car card");
+        var inner = document.createElement("div");
+        inner.className = "card-inner";
+        var back = document.createElement("div");
+        back.className = "face back";
+        back.innerHTML = cardBackSVG();
+        var front = document.createElement("div");
+        front.className = "face front";
+        fillArt(front, item.car);
+        inner.appendChild(back);
+        inner.appendChild(front);
+        btn.appendChild(inner);
+        btn.addEventListener("click", function () { onCardActivate(index); });
+        btn.addEventListener("focus", function () { focusIndex = index; });
+        grid.appendChild(btn);
+      });
+    }
+
+    function cards() {
+      return Array.prototype.slice.call(document.querySelectorAll(".card"));
+    }
+
+    function layoutGrid() {
+      var board = document.getElementById("board");
+      var grid = document.getElementById("grid");
+      var n = deck.length;
+      if (!n) return;
+      var w = board.clientWidth;
+      var h = board.clientHeight;
+      var aspect = w / Math.max(h, 1);
+      var cols, rows;
+      if (n === 4) { cols = 2; rows = 2; }
+      else if (n === 6) {
+        if (aspect >= 1.15) { cols = 3; rows = 2; } else { cols = 2; rows = 3; }
+      } else {
+        if (aspect >= 1.15) { cols = 4; rows = 2; }
+        else { cols = 2; rows = 4; }
+      }
+      if (cols * rows < n) { cols = Math.ceil(Math.sqrt(n)); rows = Math.ceil(n / cols); }
+      gridCols = cols;
+      var gap = Math.max(8, Math.min(22, Math.round(Math.min(w, h) * 0.025)));
+      var card = Math.floor(Math.min((w - gap * (cols + 1)) / cols, (h - gap * (rows + 1)) / rows));
+      card = Math.max(72, card);
+      grid.style.gridTemplateColumns = "repeat(" + cols + ", " + card + "px)";
+      grid.style.gap = gap + "px";
+      grid.style.setProperty("--card", card + "px");
+      var list = cards();
+      for (var i = 0; i < list.length; i++) list[i].style.setProperty("--card", card + "px");
+    }
+
+    function onCardActivate(index) {
+      if (locked) return;
+      if (document.getElementById("win-overlay").hidden === false) return;
+      if (!document.getElementById("settings-screen").hidden) return;
+      var item = deck[index];
+      var el = cards()[index];
+      if (!el || el.classList.contains("is-flipped") || el.classList.contains("is-matched")) return;
+
+      el.classList.add("is-flipped");
+      el.setAttribute("aria-label", item.car.fullName);
+      playFlipTick();
+      speakCar(item.car);
+      flipped.push(index);
+
+      if (flipped.length < 2) return;
+
+      var a = deck[flipped[0]];
+      var b = deck[flipped[1]];
+      if (a.id === b.id) {
+        locked = true;
+        var i0 = flipped[0], i1 = flipped[1];
+        flipped = [];
+        setTimeout(function () {
+          markMatched(i0);
+          markMatched(i1);
+          playMatchSound();
+          matchedCount += 1;
+          locked = false;
+          var won = matchedCount >= PAIRS[level];
+          setTimeout(function () {
+            speakCar(a.car);
+            if (won) setTimeout(onLevelWin, 2000);
+          }, 900);
+        }, 450);
+      } else {
+        locked = true;
+        var x0 = flipped[0], x1 = flipped[1];
+        flipped = [];
+        setTimeout(function () {
+          var list = cards();
+          if (list[x0]) {
+            list[x0].classList.remove("is-flipped");
+            list[x0].setAttribute("aria-label", "Hidden car card");
+          }
+          if (list[x1]) {
+            list[x1].classList.remove("is-flipped");
+            list[x1].setAttribute("aria-label", "Hidden car card");
+          }
+          locked = false;
+        }, 900);
+      }
+    }
+
+    function markMatched(index) {
+      var el = cards()[index];
+      if (!el) return;
+      el.classList.add("is-matched", "vroom");
+      el.setAttribute("aria-label", "Matched " + deck[index].car.fullName);
+      setTimeout(function () { el.classList.remove("vroom"); }, 800);
+    }
+
+    function onLevelWin() {
+      playWinSound();
+      speak("Great job!");
+      startConfetti();
+      var last = level >= PAIRS.length - 1;
+      document.getElementById("win-sub").textContent = last
+        ? "You matched all the cars"
+        : "On to level " + (level + 2) + "!";
+      document.getElementById("next-btn").textContent = last ? "Play Again" : "Next";
+      document.getElementById("win-overlay").hidden = false;
+      document.getElementById("next-btn").focus();
+    }
+
+    function hideWin() {
+      document.getElementById("win-overlay").hidden = true;
+    }
+
+    function focusCard(index) {
+      var list = cards();
+      if (!list.length) return;
+      focusIndex = (index + list.length) % list.length;
+      list[focusIndex].focus();
+    }
+
+    function settingsOpen() {
+      return !document.getElementById("settings-screen").hidden;
+    }
+
+    function moveFocus(dx, dy) {
+      if (settingsOpen()) return;
+      if (!document.getElementById("win-overlay").hidden) {
+        document.getElementById("next-btn").focus();
+        return;
+      }
+      if (!document.getElementById("start-screen").hidden) {
+        document.getElementById("play-btn").focus();
+        return;
+      }
+      var list = cards();
+      if (!list.length) return;
+      var cols = gridCols || 2;
+      var rows = Math.ceil(list.length / cols);
+      var x = focusIndex % cols;
+      var y = Math.floor(focusIndex / cols);
+      x = (x + dx + cols) % cols;
+      y = (y + dy + rows) % rows;
+      var next = y * cols + x;
+      if (next >= list.length) next = list.length - 1;
+      focusCard(next);
+    }
+
+    function activateFocused() {
+      if (settingsOpen()) return;
+      if (!document.getElementById("win-overlay").hidden) {
+        document.getElementById("next-btn").click();
+        return;
+      }
+      if (!document.getElementById("start-screen").hidden) {
+        document.getElementById("play-btn").click();
+        return;
+      }
+      onCardActivate(focusIndex);
+    }
+
+    function onNext() {
+      hideWin();
+      stopConfetti();
+      if (level >= PAIRS.length - 1) startGame(0);
+      else startGame(level + 1);
+    }
+
+    function mediaStatus(car) {
+      var entry = customMedia[car.id] || {};
+      var hasImg = !!entry.imageUrl;
+      var hasAud = !!entry.audioUrl;
+      if (hasImg && hasAud) return "Custom picture and sound";
+      if (hasImg) return "Custom picture, default voice";
+      if (hasAud) return "Default picture, custom sound";
+      return "Default picture and voice";
+    }
+
+    function renderSettings() {
+      var list = document.getElementById("settings-list");
+      list.innerHTML = "";
+      CARS.forEach(function (car) {
+        var row = document.createElement("div");
+        row.className = "settings-row";
+        row.dataset.carId = car.id;
+
+        var preview = document.createElement("div");
+        preview.className = "settings-preview";
+        fillArt(preview, car);
+
+        var meta = document.createElement("div");
+        meta.className = "settings-meta";
+        meta.innerHTML = "<h3>" + car.fullName + "</h3>" +
+          '<p class="settings-line">' + car.line + "</p>" +
+          '<p class="settings-status">' + mediaStatus(car) + "</p>";
+
+        var btns = document.createElement("div");
+        btns.className = "settings-btns";
+
+        var imgInput = document.createElement("input");
+        imgInput.type = "file";
+        imgInput.accept = "image/*";
+        imgInput.className = "sr-file";
+        imgInput.setAttribute("data-role", "image");
+        imgInput.setAttribute("data-car", car.id);
+        imgInput.id = "file-image-" + car.id;
+
+        var audInput = document.createElement("input");
+        audInput.type = "file";
+        audInput.accept = "audio/*";
+        audInput.className = "sr-file";
+        audInput.setAttribute("data-role", "audio");
+        audInput.setAttribute("data-car", car.id);
+        audInput.id = "file-audio-" + car.id;
+
+        function mini(label, cls, onClick) {
+          var b = document.createElement("button");
+          b.type = "button";
+          b.className = "btn-mini" + (cls ? " " + cls : "");
+          b.textContent = label;
+          b.addEventListener("click", onClick);
+          return b;
+        }
+
+        btns.appendChild(mini("Choose photo", "primary", function () { imgInput.click(); }));
+        btns.appendChild(mini("Choose sound", "primary", function () { audInput.click(); }));
+
+        var entry = customMedia[car.id] || {};
+        var playBtn = mini("Play sound", "", function () {
+          if (entry.audioUrl) speakCar(car);
+        });
+        if (!entry.audioUrl) playBtn.disabled = true;
+        btns.appendChild(playBtn);
+        btns.appendChild(mini("Clear", "warn", function () {
+          clearCustom(car.id).then(function () { renderSettings(); refreshVisibleArt(); });
+        }));
+
+        imgInput.addEventListener("change", function () {
+          var file = imgInput.files && imgInput.files[0];
+          imgInput.value = "";
+          if (!file) return;
+          saveCustom(car.id, { image: file }).then(function () {
+            renderSettings();
+            refreshVisibleArt();
+          }).catch(function () { renderSettings(); });
+        });
+        audInput.addEventListener("change", function () {
+          var file = audInput.files && audInput.files[0];
+          audInput.value = "";
+          if (!file) return;
+          saveCustom(car.id, { audio: file }).then(function () {
+            renderSettings();
+            refreshVisibleArt();
+          }).catch(function () { renderSettings(); });
+        });
+
+        meta.appendChild(btns);
+        meta.appendChild(imgInput);
+        meta.appendChild(audInput);
+        row.appendChild(preview);
+        row.appendChild(meta);
+        list.appendChild(row);
+      });
+    }
+
+    function openSettings() {
+      document.getElementById("reset-confirm").hidden = true;
+      renderSettings();
+      var screen = document.getElementById("settings-screen");
+      screen.hidden = false;
+      screen.scrollTop = 0;
+      var heading = screen.querySelector("h2");
+      if (heading) {
+        heading.setAttribute("tabindex", "-1");
+        heading.focus({ preventScroll: true });
+      }
+      screen.scrollTop = 0;
+    }
+
+    function closeSettings() {
+      document.getElementById("settings-screen").hidden = true;
+      document.getElementById("reset-confirm").hidden = true;
+      refreshVisibleArt();
+      if (!document.getElementById("start-screen").hidden) {
+        document.getElementById("play-btn").focus();
+      } else if (!document.getElementById("win-overlay").hidden) {
+        document.getElementById("next-btn").focus();
+      } else {
+        focusCard(focusIndex);
+      }
+    }
+
+    var holdTimer = null;
+    var gear = document.getElementById("settings-btn");
+
+    function startHold(e) {
+      if (e && e.button != null && e.button !== 0) return;
+      if (holdTimer) clearTimeout(holdTimer);
+      gear.classList.remove("holding");
+      void gear.offsetWidth;
+      gear.classList.add("holding");
+      holdTimer = setTimeout(function () {
+        holdTimer = null;
+        gear.classList.remove("holding");
+        if (settingsOpen()) closeSettings();
+        else openSettings();
+      }, 2000);
+    }
+
+    function endHold() {
+      if (holdTimer) {
+        clearTimeout(holdTimer);
+        holdTimer = null;
+      }
+      gear.classList.remove("holding");
+    }
+
+    gear.addEventListener("pointerdown", function (e) {
+      e.preventDefault();
+      try { gear.setPointerCapture(e.pointerId); } catch (err) {}
+      startHold(e);
+    });
+    gear.addEventListener("pointerup", endHold);
+    gear.addEventListener("pointercancel", endHold);
+    gear.addEventListener("lostpointercapture", endHold);
+    gear.addEventListener("contextmenu", function (e) { e.preventDefault(); });
+
+    document.getElementById("settings-done-btn").addEventListener("click", closeSettings);
+    document.getElementById("reset-all-btn").addEventListener("click", function () {
+      document.getElementById("reset-confirm").hidden = false;
+    });
+    document.getElementById("reset-no").addEventListener("click", function () {
+      document.getElementById("reset-confirm").hidden = true;
+    });
+    document.getElementById("reset-yes").addEventListener("click", function () {
+      resetAllCustom().then(function () {
+        document.getElementById("reset-confirm").hidden = true;
+        renderSettings();
+        refreshVisibleArt();
+      });
+    });
+
+    function resizeFx() {
+      fx.width = window.innerWidth * (window.devicePixelRatio || 1);
+      fx.height = window.innerHeight * (window.devicePixelRatio || 1);
+      fx.style.width = window.innerWidth + "px";
+      fx.style.height = window.innerHeight + "px";
+      fxCtx.setTransform(window.devicePixelRatio || 1, 0, 0, window.devicePixelRatio || 1, 0, 0);
+    }
+
+    function startConfetti() {
+      resizeFx();
+      confettiBits = [];
+      var colors = ["#E53935", "#4FC3F7", "#F6C800", "#43A047", "#E07A3A", "#2E7D32", "#37474F", "#FFD54F", "#fff"];
+      var count = reduced ? 40 : 90;
+      for (var i = 0; i < count; i++) {
+        confettiBits.push({
+          x: Math.random() * window.innerWidth,
+          y: -20 - Math.random() * window.innerHeight * 0.4,
+          r: 5 + Math.random() * 8,
+          c: colors[i % colors.length],
+          vy: 1.6 + Math.random() * 3.2,
+          vx: -1.2 + Math.random() * 2.4,
+          rot: Math.random() * Math.PI,
+          vr: -0.12 + Math.random() * 0.24,
+          star: i % 3 === 0
+        });
+      }
+      confettiOn = true;
+      requestAnimationFrame(tickConfetti);
+    }
+
+    function stopConfetti() {
+      confettiOn = false;
+      confettiBits = [];
+      fxCtx.clearRect(0, 0, fx.width, fx.height);
+    }
+
+    function starPath(ctx, x, y, r, rot) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(rot);
+      ctx.beginPath();
+      for (var i = 0; i < 5; i++) {
+        var a = (i * 2 * Math.PI) / 5 - Math.PI / 2;
+        var b = a + Math.PI / 5;
+        ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+        ctx.lineTo(Math.cos(b) * r * 0.45, Math.sin(b) * r * 0.45);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function tickConfetti() {
+      if (!confettiOn) return;
+      var w = window.innerWidth, h = window.innerHeight;
+      fxCtx.clearRect(0, 0, w, h);
+      var alive = false;
+      for (var i = 0; i < confettiBits.length; i++) {
+        var p = confettiBits[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.rot += p.vr;
+        if (p.y < h + 30) alive = true;
+        fxCtx.fillStyle = p.c;
+        if (p.star) starPath(fxCtx, p.x, p.y, p.r, p.rot);
+        else {
+          fxCtx.beginPath();
+          fxCtx.arc(p.x, p.y, p.r * 0.7, 0, Math.PI * 2);
+          fxCtx.fill();
+        }
+      }
+      if (alive) requestAnimationFrame(tickConfetti);
+      else confettiOn = false;
+    }
+
+    document.addEventListener("keydown", function (e) {
+      var key = e.key;
+      if (settingsOpen()) {
+        if (key === "Escape") { e.preventDefault(); closeSettings(); }
+        return;
+      }
+      if (key === "ArrowLeft" || key === "ArrowRight" || key === "ArrowUp" || key === "ArrowDown" || key === " " || key === "Spacebar") {
+        e.preventDefault();
+      }
+      if (key === "ArrowLeft" || key === "a" || key === "A") moveFocus(-1, 0);
+      else if (key === "ArrowRight" || key === "d" || key === "D") moveFocus(1, 0);
+      else if (key === "ArrowUp" || key === "w" || key === "W") moveFocus(0, -1);
+      else if (key === "ArrowDown" || key === "s" || key === "S") moveFocus(0, 1);
+      else if (key === "Enter" || key === " " || key === "Spacebar") activateFocused();
+    });
+
+    var prevBtn = {};
+    var prevAxis = { x: 0, y: 0 };
+    var axisRepeat = 0;
+
+    function pressed(b) { return b && (b.pressed || b.value > 0.5); }
+
+    function pollPads() {
+      var pads = navigator.getGamepads ? navigator.getGamepads() : [];
+      for (var p = 0; p < pads.length; p++) {
+        var pad = pads[p];
+        if (!pad) continue;
+        var btns = pad.buttons || [];
+        var a = pressed(btns[0]) || pressed(btns[1]);
+        if (a && !prevBtn[p + "-a"]) activateFocused();
+        prevBtn[p + "-a"] = a;
+
+        var left = pressed(btns[14]) || (pad.axes[0] < -0.55);
+        var right = pressed(btns[15]) || (pad.axes[0] > 0.55);
+        var up = pressed(btns[12]) || (pad.axes[1] < -0.55);
+        var down = pressed(btns[13]) || (pad.axes[1] > 0.55);
+
+        var ax = left ? -1 : right ? 1 : 0;
+        var ay = up ? -1 : down ? 1 : 0;
+        if (ax !== prevAxis.x || ay !== prevAxis.y) {
+          if (ax || ay) moveFocus(ax, ay);
+          prevAxis.x = ax; prevAxis.y = ay;
+          axisRepeat = 0;
+        } else if (ax || ay) {
+          axisRepeat++;
+          if (axisRepeat === 18) { moveFocus(ax, ay); axisRepeat = 10; }
+        }
+      }
+      requestAnimationFrame(pollPads);
+    }
+
+    document.getElementById("play-btn").addEventListener("click", function () {
+      unlockMedia();
+      startGame(0);
+      speak("Let's match the cars!");
+    });
+    document.getElementById("next-btn").addEventListener("click", onNext);
+
+    window.addEventListener("resize", function () { setVH(); layoutGrid(); resizeFx(); });
+    window.addEventListener("orientationchange", function () { setTimeout(function () { setVH(); layoutGrid(); resizeFx(); }, 200); });
+    if (window.speechSynthesis) {
+      refreshVoices();
+      speechSynthesis.addEventListener("voiceschanged", refreshVoices);
+    }
+    window.addEventListener("gamepadconnected", function () {});
+
+    setVH();
+    resizeFx();
+    requestAnimationFrame(pollPads);
+
+    function paintHero() {
+      var hold = document.getElementById("hero-cars");
+      hold.innerHTML = "";
+      [carById("rosie"), carById("skye"), carById("sunny")].forEach(function (car) {
+        var d = document.createElement("div");
+        d.className = "car-wrap";
+        fillArt(d, car);
+        hold.appendChild(d);
+      });
+    }
+
+    paintHero();
+    loadAllCustom().then(function () { paintHero(); });
+
+    document.getElementById("play-btn").focus();
+
+    window.TheoCarMatch = {
+      cars: CARS,
+      carSVG: carSVG,
+      openSettings: openSettings,
+      closeSettings: closeSettings,
+      loadAllCustom: loadAllCustom,
+      saveCustom: saveCustom,
+      clearCustom: clearCustom,
+      resetAllCustom: resetAllCustom,
+      getCustomMedia: function () { return customMedia; },
+      voiceFor: voiceFor,
+      speakCar: speakCar,
+      refreshVoices: refreshVoices
+    };
+
+  })();
+  </script>
+</body>
+</html>
