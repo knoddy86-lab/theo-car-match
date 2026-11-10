@@ -1146,6 +1146,20 @@
       background: #fff;
     }
     .sync-field input:focus { outline: 4px solid var(--focus); outline-offset: 2px; }
+    #sync-url-field .say-row #sync-url {
+      flex: 1 1 200px;
+      width: auto;
+      max-width: none;
+      min-width: 0;
+    }
+    .sync-url-result {
+      margin: 4px 0 0;
+      font-size: 13px;
+      font-weight: 700;
+      color: #33691E;
+    }
+    .sync-url-result.is-ok { color: #2E7D32; }
+    .sync-url-result.is-error { color: #C62828; }
 
     .settings-tabs {
       display: flex;
@@ -1609,8 +1623,13 @@
           <h3>Family sync</h3>
           <p class="sync-lead" id="sync-lead"></p>
           <div class="sync-field" id="sync-url-field">
-            <label for="sync-url">Server URL</label>
-            <input id="sync-url" type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://your-pc.ts.net" aria-label="Sync server URL">
+            <label for="sync-url">Server</label>
+            <div class="say-row">
+              <input id="sync-url" type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://192.168.68.91:8788/" aria-label="Sync server">
+              <button type="button" class="btn-mini" id="sync-url-copy">Copy</button>
+              <button type="button" class="btn-mini primary" id="sync-url-test">Connect</button>
+            </div>
+            <p class="sync-url-result" id="sync-url-result" hidden></p>
           </div>
           <div class="sync-field" id="sync-key-field">
             <label for="sync-key">Family key</label>
@@ -1754,8 +1773,11 @@
     var syncApplying = false;
     var SYNC_URL_KEY = "theo-car-match-sync-url";
     var SYNC_KEY_KEY = "theo-car-match-sync-key";
+    var DEFAULT_SYNC_URL = "https://192.168.68.91:8788";
     var sameOriginSync = false;
     var syncBaseOverride = "";
+    var lastCopiedSyncUrl = "";
+    var lastUrlTest = { ok: null, text: "" };
     var syncFamilyKey = "";
     var syncPushTimer = null;
     var syncPushIds = {};
@@ -1770,7 +1792,7 @@
     var BLOB_FETCH_MS = 20000;
     var bootStartedAt = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
     var keyChangeOpen = false;
-    var APP_VERSION = "16";
+    var APP_VERSION = "17";
     var MATCH_PAIR_CAP = 6;
     var NAME_ROUNDS = 6;
     var THUMB_MAX = 256;
@@ -5232,6 +5254,21 @@
       } catch (e) {}
     }
 
+    function normalizeSyncUrl(value) {
+      return String(value || "").trim().replace(/\/+$/, "");
+    }
+
+    function displaySyncUrl(value) {
+      return (normalizeSyncUrl(value) || DEFAULT_SYNC_URL) + "/";
+    }
+
+    function ensureSyncUrl() {
+      var next = normalizeSyncUrl(syncBaseOverride);
+      if (!next) next = DEFAULT_SYNC_URL;
+      syncBaseOverride = next;
+      return next;
+    }
+
     function adoptKeyFromLocation() {
       var key = "", url = "";
       try {
@@ -5259,29 +5296,29 @@
     function readSyncSettings() {
       var adopted = adoptKeyFromLocation();
       try {
-        syncBaseOverride = (localStorage.getItem(SYNC_URL_KEY) || "").trim().replace(/\/+$/, "");
+        syncBaseOverride = normalizeSyncUrl(localStorage.getItem(SYNC_URL_KEY) || "");
         syncFamilyKey = (localStorage.getItem(SYNC_KEY_KEY) || "").trim();
       } catch (e) {
         syncBaseOverride = syncBaseOverride || "";
         syncFamilyKey = syncFamilyKey || "";
       }
       if (!syncFamilyKey) syncFamilyKey = cookieGet("theo_family_key");
-      if (!syncBaseOverride) syncBaseOverride = (cookieGet("theo_sync_url") || "").replace(/\/+$/, "");
-      if (adopted.url) syncBaseOverride = adopted.url.replace(/\/+$/, "");
+      if (!syncBaseOverride) syncBaseOverride = normalizeSyncUrl(cookieGet("theo_sync_url") || "");
+      if (adopted.url) syncBaseOverride = normalizeSyncUrl(adopted.url);
       if (adopted.key) syncFamilyKey = adopted.key;
     }
 
     function persistSyncSettings() {
+      ensureSyncUrl();
       try {
-        if (syncBaseOverride) localStorage.setItem(SYNC_URL_KEY, syncBaseOverride);
-        else localStorage.removeItem(SYNC_URL_KEY);
+        localStorage.setItem(SYNC_URL_KEY, syncBaseOverride);
         if (syncFamilyKey) localStorage.setItem(SYNC_KEY_KEY, syncFamilyKey);
         else localStorage.removeItem(SYNC_KEY_KEY);
       } catch (e) {}
       cookieSet("theo_family_key", syncFamilyKey);
       cookieSet("theo_sync_url", syncBaseOverride);
       metaSet("familyKey", syncFamilyKey || "").catch(function () {});
-      metaSet("syncUrl", syncBaseOverride || "").catch(function () {});
+      metaSet("syncUrl", syncBaseOverride).catch(function () {});
     }
 
     function loadSyncSettings() {
@@ -5290,10 +5327,15 @@
         if (!syncFamilyKey && k) syncFamilyKey = String(k).trim();
         return metaGet("syncUrl");
       }).then(function (u) {
-        if (!syncBaseOverride && u) syncBaseOverride = String(u).trim().replace(/\/+$/, "");
-        if (syncFamilyKey || syncBaseOverride) persistSyncSettings();
+        if (!syncBaseOverride && u) syncBaseOverride = normalizeSyncUrl(u);
+        ensureSyncUrl();
+        persistSyncSettings();
         updateSyncUi();
-      }).catch(function () { updateSyncUi(); });
+      }).catch(function () {
+        ensureSyncUrl();
+        persistSyncSettings();
+        updateSyncUi();
+      });
     }
 
     function clearRejectedKey() {
@@ -5549,7 +5591,7 @@
         box.classList.add("is-idle");
         if (icon) icon.innerHTML = familyCloudSvg();
         if (title) title.textContent = "Not syncing yet";
-        if (detail) detail.textContent = sameOriginSync ? "Enter the family key to start." : "Enter a server URL and family key to start.";
+        if (detail) detail.textContent = "Enter the family key to start.";
         return;
       }
       if (!navigator.onLine || isUnreachableError(lastSyncError) || (lastSyncError && !lastSyncOk && isUnreachableError(lastSyncError))) {
@@ -5586,9 +5628,9 @@
       var notice = document.getElementById("sync-notice");
       var saveBtn = document.getElementById("sync-save-btn");
       var discardBtn = document.getElementById("sync-discard-btn");
-      if (urlInput && document.activeElement !== urlInput) urlInput.value = syncBaseOverride;
+      if (urlInput && document.activeElement !== urlInput) urlInput.value = displaySyncUrl(syncBaseOverride);
       if (keyInput && document.activeElement !== keyInput) keyInput.value = syncFamilyKey;
-      if (urlField) urlField.hidden = !!sameOriginSync;
+      if (urlField) urlField.hidden = false;
       var showKeyEntry = !syncFamilyKey || keyChangeOpen;
       if (keyField) keyField.hidden = !showKeyEntry;
       if (keySaved) keySaved.hidden = showKeyEntry;
@@ -5596,7 +5638,7 @@
         if (sameOriginSync) {
           lead.textContent = "This phone updates from the home computer automatically. Edits stay on this phone until a parent saves them with the PIN.";
         } else {
-          lead.textContent = "Optional. Leave this blank to keep everything on this device. To use a home computer later, enter the server URL and family key.";
+          lead.textContent = "This device can update from the home computer. The server address is saved here. Enter the family key to start.";
         }
       }
       if (saveBtn) saveBtn.hidden = !syncConfigured();
@@ -5605,7 +5647,7 @@
         var unreachable = isUnreachableError(lastSyncError);
         status.classList.toggle("is-error", !!lastSyncError && outboxCount === 0);
         if (!syncConfigured()) {
-          status.textContent = sameOriginSync ? "Enter the family key to start syncing." : "Sync is off until you enter a server URL and family key.";
+          status.textContent = "Enter the family key to start syncing.";
         } else if (outboxCount > 0 && unreachable) {
           status.textContent = outboxCount + " local changes not saved to home computer. Can't reach home computer.";
         } else if (outboxCount > 0) {
@@ -6263,6 +6305,91 @@
       });
     }
 
+    function showUrlTest(ok, text) {
+      lastUrlTest = { ok: ok, text: text || "" };
+      var result = document.getElementById("sync-url-result");
+      if (!result) return;
+      result.hidden = !text;
+      result.classList.toggle("is-ok", !!ok);
+      result.classList.toggle("is-error", ok === false);
+      result.textContent = text || "";
+    }
+
+    function copySyncUrlFallback(text) {
+      try {
+        var ta = document.createElement("textarea");
+        ta.value = text;
+        ta.setAttribute("readonly", "");
+        ta.style.position = "fixed";
+        ta.style.left = "-9999px";
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        var ok = document.execCommand("copy");
+        document.body.removeChild(ta);
+        return ok;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    function copySyncUrl() {
+      var text = displaySyncUrl(syncBaseOverride);
+      lastCopiedSyncUrl = text;
+      function marked() {
+        var btn = document.getElementById("sync-url-copy");
+        if (btn) {
+          btn.textContent = "Copied";
+          setTimeout(function () {
+            var live = document.getElementById("sync-url-copy");
+            if (live && live.textContent === "Copied") live.textContent = "Copy";
+          }, 1500);
+        }
+        return text;
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        return navigator.clipboard.writeText(text).then(function () {
+          return marked();
+        }, function () {
+          copySyncUrlFallback(text);
+          return marked();
+        });
+      }
+      copySyncUrlFallback(text);
+      return Promise.resolve(marked());
+    }
+
+    function connectSyncServer() {
+      var urlInput = document.getElementById("sync-url");
+      if (urlInput) {
+        var typed = normalizeSyncUrl(urlInput.value);
+        if (typed) syncBaseOverride = typed;
+      }
+      persistSyncSettings();
+      updateSyncUi();
+      var base = ensureSyncUrl();
+      showUrlTest(null, "Checking…");
+      return lanFetch(base + "/api/health", { headers: { Accept: "application/json" }, cache: "no-store" }).then(function (r) {
+        return r.ok ? r.json() : null;
+      }).then(function (j) {
+        if (j && j.ok && j.service === "theo-sync") {
+          showUrlTest(true, "Reachable");
+          return true;
+        }
+        return lanFetch(base + "/version.json", { cache: "no-store" }).then(function (r) {
+          if (r.ok) {
+            showUrlTest(true, "Reachable");
+            return true;
+          }
+          showUrlTest(false, "Unreachable");
+          return false;
+        });
+      }).catch(function () {
+        showUrlTest(false, "Unreachable");
+        return false;
+      });
+    }
+
     function bindSyncUi() {
       var urlInput = document.getElementById("sync-url");
       var keyInput = document.getElementById("sync-key");
@@ -6272,9 +6399,11 @@
       var pinRow = document.getElementById("sync-pin-row");
       var pinInput = document.getElementById("sync-pin");
       var pinGo = document.getElementById("sync-pin-go");
+      var copyBtn = document.getElementById("sync-url-copy");
+      var testBtn = document.getElementById("sync-url-test");
       function commit() {
         if (urlInput) {
-          var nextUrl = (urlInput.value || "").trim().replace(/\/+$/, "");
+          var nextUrl = normalizeSyncUrl(urlInput.value);
           if (nextUrl) syncBaseOverride = nextUrl;
         }
         if (keyInput) {
@@ -6291,6 +6420,8 @@
         urlInput.addEventListener("change", commit);
         urlInput.addEventListener("blur", commit);
       }
+      if (copyBtn) copyBtn.addEventListener("click", function () { copySyncUrl(); });
+      if (testBtn) testBtn.addEventListener("click", function () { connectSyncServer(); });
       if (keyInput) {
         keyInput.addEventListener("change", commit);
         keyInput.addEventListener("blur", commit);
@@ -6434,13 +6565,18 @@
       return {
         sameOrigin: sameOriginSync,
         base: syncRoot(),
+        url: syncBaseOverride,
+        displayUrl: displaySyncUrl(syncBaseOverride),
+        defaultUrl: DEFAULT_SYNC_URL + "/",
         hasKey: !!syncFamilyKey,
         configured: syncConfigured(),
         lastSyncAt: lastSyncAt,
         lastError: lastSyncError,
         lastOk: lastSyncOk,
         outboxCount: outboxCount,
-        notice: syncNotice
+        notice: syncNotice,
+        lastCopiedSyncUrl: lastCopiedSyncUrl,
+        lastUrlTest: { ok: lastUrlTest.ok, text: lastUrlTest.text }
       };
     }
 
@@ -6514,6 +6650,11 @@
       enqueueOutbox: enqueueOutbox,
       detectSync: detectSync,
       getSyncStatus: getSyncStatus,
+      loadSyncSettings: loadSyncSettings,
+      persistSyncSettings: persistSyncSettings,
+      copySyncUrl: copySyncUrl,
+      connectSyncServer: connectSyncServer,
+      displaySyncUrl: displaySyncUrl,
       getSyncProgress: function () { return { active: syncProgress.active, total: syncProgress.total, done: syncProgress.done }; },
       beginSyncProgress: beginSyncProgress,
       bumpSyncProgress: bumpSyncProgress,
