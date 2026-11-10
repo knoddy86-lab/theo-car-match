@@ -1613,6 +1613,7 @@
                 <option value="first">First name</option>
                 <option value="last">Last name</option>
                 <option value="nick">Nickname</option>
+                <option value="mix">Mix</option>
               </select>
             </div>
             <div class="diff-row">
@@ -1795,7 +1796,7 @@
     var BLOB_FETCH_MS = 20000;
     var bootStartedAt = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
     var keyChangeOpen = false;
-    var APP_VERSION = "20";
+    var APP_VERSION = "21";
     var MATCH_PAIR_CAP = 6;
     var NAME_ROUNDS = 6;
     var THUMB_MAX = 256;
@@ -3984,7 +3985,7 @@
       if (choices === "2" || choices === "3") choices = "4";
       if (choices !== "auto" && !/^[4-6]$/.test(choices)) choices = "auto";
       var say = String(raw.say || "full");
-      if (say !== "first" && say !== "last" && say !== "nick") say = "full";
+      if (say !== "first" && say !== "last" && say !== "nick" && say !== "mix") say = "full";
       return {
         choices: choices,
         say: say,
@@ -4057,22 +4058,65 @@
       return parts.length ? parts[parts.length - 1] : "";
     }
 
-    function spokenNameGameText(car) {
-      var full = displayFullName(car);
-      var mode = nameSettings.say || "full";
-      if (mode === "first") return firstWord(full) || full;
-      if (mode === "last") return lastWord(full) || full;
-      if (mode === "nick") return cardNickname(car) || full;
-      return spokenLine(car);
+    function nameSayKey(text) {
+      return String(text || "").trim().toLowerCase();
     }
+
+    function uniqueNameSayOptions(car) {
+      var fullText = spokenLine(car) || displayFullName(car) || displayName(car) || "";
+      var fullDisplay = displayFullName(car) || displayName(car) || "";
+      var seen = {};
+      var opts = [];
+      function add(mode, text) {
+        var t = String(text || "").trim();
+        if (!t) return;
+        var key = nameSayKey(t);
+        if (seen[key]) return;
+        seen[key] = true;
+        opts.push({ mode: mode, text: t });
+      }
+      add("full", fullText);
+      add("first", firstWord(fullDisplay));
+      add("last", lastWord(fullDisplay));
+      add("nick", cardNickname(car));
+      return opts;
+    }
+
+    function chooseNameSayOption(car, mode) {
+      mode = mode || (nameSettings.say || "full");
+      var fullText = spokenLine(car) || displayFullName(car) || displayName(car) || "";
+      var fullDisplay = displayFullName(car) || displayName(car) || "";
+      if (mode === "mix") {
+        var opts = uniqueNameSayOptions(car);
+        if (!opts.length) return { mode: "full", text: fullText };
+        return opts[Math.floor(Math.random() * opts.length)];
+      }
+      if (mode === "first") return { mode: "first", text: firstWord(fullDisplay) || fullText };
+      if (mode === "last") return { mode: "last", text: lastWord(fullDisplay) || fullText };
+      if (mode === "nick") return { mode: "nick", text: cardNickname(car) || fullText };
+      return { mode: "full", text: fullText };
+    }
+
+    function spokenNameGameText(car) {
+      var pick = (nameState.sayPick && nameState.target && car && nameState.target.id === car.id)
+        ? nameState.sayPick
+        : chooseNameSayOption(car);
+      return pick.text;
+    }
+
+    var lastNamePrompt = null;
 
     function playNameGamePrompt(car) {
       if (!car) return;
       nameState.promptCount = (nameState.promptCount || 0) + 1;
-      if ((nameSettings.say || "full") === "full") {
-        playSources(soundSourcesFor(car), spokenNameGameText(car));
+      var pick = (nameState.sayPick && nameState.target && nameState.target.id === car.id)
+        ? nameState.sayPick
+        : chooseNameSayOption(car);
+      lastNamePrompt = { id: car.id, mode: pick.mode, text: pick.text, usedClip: pick.mode === "full" };
+      if (pick.mode === "full") {
+        playSources(soundSourcesFor(car), pick.text);
       } else {
-        speak(spokenNameGameText(car));
+        speak(pick.text);
       }
     }
 
@@ -4192,6 +4236,7 @@
       nameState.remaining = round.choices.slice();
       nameState.target = round.target;
       nameState.lastTargetId = round.target.id;
+      nameState.sayPick = chooseNameSayOption(round.target);
       nameState.locked = false;
       round.choices.forEach(function (car, index) {
         var btn = document.createElement("button");
@@ -4238,10 +4283,6 @@
       if (btn) btn.classList.add("is-correct");
       if (!reduced && btn) startMatchBurst([btn]);
       playHooray();
-      var cheer = hoorayWait || Promise.resolve();
-      cheer.then(function () {
-        if (difficulty.revs !== false) playRoundRev();
-      });
       setTimeout(function () { advanceNameRound(); }, 1100);
     }
 
@@ -4254,9 +4295,6 @@
         return;
       }
       startConfetti();
-      if (difficulty.revs !== false) {
-        (hoorayWait || Promise.resolve()).then(function () { playRoundRev(); });
-      }
       document.getElementById("name-win-overlay").hidden = false;
       var again = document.getElementById("name-again-btn");
       if (again) again.focus();
@@ -6764,11 +6802,14 @@
       pairSteps: pairSteps,
       startNameGame: startNameGame,
       goHome: goHome,
-      getNameState: function () { return { active: nameState.active, round: nameState.round, target: nameState.target && nameState.target.id, remaining: (nameState.remaining || []).map(function (c) { return c.id; }), locked: nameState.locked, lastTargetId: nameState.lastTargetId, promptCount: nameState.promptCount || 0, repeatTimer: nameState.repeatTimer }; },
+      getNameState: function () { return { active: nameState.active, round: nameState.round, target: nameState.target && nameState.target.id, remaining: (nameState.remaining || []).map(function (c) { return c.id; }), locked: nameState.locked, lastTargetId: nameState.lastTargetId, promptCount: nameState.promptCount || 0, repeatTimer: nameState.repeatTimer, sayPick: nameState.sayPick ? { mode: nameState.sayPick.mode, text: nameState.sayPick.text } : null }; },
       getNameSettings: function () { return JSON.parse(JSON.stringify(nameSettings)); },
       setNameSettings: saveNameSettings,
+      uniqueNameSayOptions: uniqueNameSayOptions,
+      chooseNameSayOption: chooseNameSayOption,
       spokenNameGameText: spokenNameGameText,
       playNameGamePrompt: playNameGamePrompt,
+      getLastNamePrompt: function () { return lastNamePrompt ? { id: lastNamePrompt.id, mode: lastNamePrompt.mode, text: lastNamePrompt.text, usedClip: lastNamePrompt.usedClip } : null; },
       nameChoiceCount: nameChoiceCount,
       onNameChoice: onNameChoice,
       playFart: playFart
