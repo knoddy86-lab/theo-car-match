@@ -23,7 +23,7 @@ var MAX_JSON = 512 * 1024;
 var MAX_BLOB = 12 * 1024 * 1024;
 var PAGES_ORIGIN = "https://knoddy86-lab.github.io";
 var ID_RE = /^[a-zA-Z0-9_-]{1,80}$/;
-var GAME_VERSION_FALLBACK = { version: "11", cache: "theo-car-match-v11", name: "Theo's Car Match" };
+var GAME_VERSION_FALLBACK = { version: "12", cache: "theo-car-match-v12", name: "Theo's Car Match" };
 
 function readGameVersion() {
   try {

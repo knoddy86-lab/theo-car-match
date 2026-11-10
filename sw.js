@@ -1,6 +1,6 @@
 /* Theo's Car Match service worker — cache-first so the game opens offline
    even when the home computer is unreachable (mobile data). Never caches /api. */
-var CACHE = "theo-car-match-v11";
+var CACHE = "theo-car-match-v12";
 var CORE = [
   "./",
   "./index.html",
@@ -32,10 +32,10 @@ var OPTIONAL = [
   "./sounds/revs/11-two-step.mp3",
   "./sounds/revs/12-gentle-blip.mp3",
   "./sounds/hooray/01-girl-woohoo.mp3",
+  "./sounds/hooray/02-yay.mp3",
   "./sounds/hooray/03-joyful-yay.mp3",
-  "./sounds/hooray/05-hooray.mp3",
-  "./sounds/hooray/06-hip-hip-hooray-a.mp3",
-  "./sounds/hooray/07-hip-hip-hooray-b.mp3"
+  "./sounds/hooray/04-celebration-yay.mp3",
+  "./sounds/hooray/05-hooray.mp3"
 ];
 
 function addBestEffort(cache, urls) {
