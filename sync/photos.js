@@ -486,15 +486,22 @@ PhotoStore.prototype.deletePhoto = function (file) {
       raw.skipAssets = Array.isArray(raw.skipAssets) ? raw.skipAssets : [];
       if (raw.skipAssets.indexOf(item.asset) === -1) raw.skipAssets.push(item.asset);
     });
-    var personName = person.name;
     this.patchApproved(function (raw) {
-      if (Array.isArray(raw.people[personName])) raw.people[personName] = raw.people[personName].filter(function (id) { return id !== item.asset; });
+      Object.keys(raw.people).forEach(function (n) {
+        if (Array.isArray(raw.people[n])) raw.people[n] = raw.people[n].filter(function (id) { return id !== item.asset; });
+      });
     });
   }
-  person.photos = person.photos.filter(function (f) { return f !== file; });
-  person.items = (person.items || []).filter(function (it) { return it.file !== file; });
+  // The same picture can be cropped for several people (group shots): remove it for everyone now.
+  var gone = [file];
+  (this.index.people || []).forEach(function (p) {
+    (p.items || []).forEach(function (it) { if (it.file === file || (item && item.asset && it.asset === item.asset)) gone.push(it.file); });
+    p.photos = (p.photos || []).filter(function (f) { return gone.indexOf(f) === -1; });
+    p.items = (p.items || []).filter(function (it) { return gone.indexOf(it.file) === -1; });
+  });
   this.saveIndex();
-  this.unlinkIfUnused(file);
+  var self = this;
+  gone.forEach(function (f) { self.unlinkIfUnused(f); });
   return Promise.resolve(this.manifest());
 };
 
