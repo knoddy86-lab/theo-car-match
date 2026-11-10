@@ -299,6 +299,15 @@
     .photo-person[aria-pressed="false"] { opacity: 0.5; border-style: dashed; }
     .photo-person-face { width: 46px; height: 46px; border-radius: 50%; overflow: hidden; background: #E8EAF6; flex: 0 0 auto; }
     .photo-person-face img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .photo-thumbs { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px; margin: 8px 0 12px; }
+    .photo-thumb { position: relative; aspect-ratio: 1 / 1; border-radius: 14px; overflow: hidden; background: #E8EAF6; border: 3px solid #C5CAE9; padding: 0; cursor: default; }
+    .photo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .photo-thumb.is-face { border-color: #FFB300; }
+    .photo-thumb .thumb-tag { position: absolute; left: 4px; bottom: 4px; background: rgba(255,255,255,0.92); color: #1A237E; font-weight: 800; font-size: 0.72rem; padding: 2px 6px; border-radius: 999px; }
+    .photo-thumb .thumb-bin { position: absolute; top: 4px; right: 4px; width: 34px; height: 34px; border-radius: 50%; border: 0; background: rgba(183,28,28,0.92); color: #fff; font-size: 17px; line-height: 34px; padding: 0; cursor: pointer; }
+    .photo-thumbs.is-picking .photo-thumb:not(.is-face) { cursor: pointer; border-color: #43A047; box-shadow: 0 0 0 3px rgba(67,160,71,0.35); }
+    .photo-thumbs.is-picking .thumb-bin { display: none; }
+    .photo-thumb-none { display: flex; align-items: center; justify-content: center; text-align: center; font-weight: 700; color: #5C6BC0; font-size: 0.8rem; padding: 6px; }
     .photo-person small { display: block; font-weight: 600; color: #5C6BC0; font-size: 0.8rem; }
     .btn-names:focus {
       box-shadow:
@@ -1854,11 +1863,24 @@
             <button type="button" class="btn-mini primary" id="photo-sync-btn">Sync photos now</button>
           </div>
           <div class="sync-field">
-            <label for="photo-pin">Get new photos from Immich (parent PIN)</label>
+            <label for="photo-pin">Parent PIN (needed to refresh or delete photos)</label>
             <div class="say-row">
               <input id="photo-pin" type="password" inputmode="numeric" autocomplete="off" minlength="4" placeholder="Parent PIN" aria-label="Parent PIN">
-              <button type="button" class="btn-mini" id="photo-refresh-btn">Refresh photos</button>
+              <button type="button" class="btn-mini" id="photo-refresh-btn">Get new photos from Immich</button>
             </div>
+          </div>
+          <h3 class="friends-title">Photos in the game</h3>
+          <p class="device-only-note">Deleting takes a photo out of the game on every device. It stays in Immich.</p>
+          <div class="diff-custom">
+            <div class="diff-row">
+              <label for="photo-manage">Person</label>
+              <select id="photo-manage" aria-label="Person whose photos to show"></select>
+            </div>
+          </div>
+          <div class="photo-thumbs" id="photo-thumbs"></div>
+          <div id="photo-confirm" class="reset-confirm" hidden>
+            <p id="photo-confirm-text"></p>
+            <div class="settings-btns" id="photo-confirm-btns"></div>
           </div>
           <p class="sync-status" id="photo-status"></p>
         </div>
@@ -2050,7 +2072,7 @@
     var BLOB_FETCH_MS = 20000;
     var bootStartedAt = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
     var keyChangeOpen = false;
-    var APP_VERSION = "25";
+    var APP_VERSION = "26";
     var MATCH_PAIR_CAP = 6;
     var NAME_ROUNDS = 6;
     var THUMB_MAX = 256;
@@ -3739,7 +3761,7 @@
         if (tb) tb.setAttribute("aria-selected", is ? "true" : "false");
         if (pn) pn.hidden = !is;
       });
-      if (name === "photos") renderPhotoPeople();
+      if (name === "photos") { renderPhotoPeople(); renderPhotoManage(); }
     }
 
     function bindSettingsTabs() {
@@ -5734,6 +5756,9 @@
 
     function closeSettings() {
       stopRecording().then(function () {
+        var ppin = document.getElementById("photo-pin");
+        if (ppin) ppin.value = "";
+        photoManage.picking = false;
         document.getElementById("settings-screen").hidden = true;
         document.getElementById("reset-confirm").hidden = true;
         refreshVisibleArt(true);
@@ -6170,8 +6195,8 @@
       familyPeople = [];
       ((manifest && manifest.people) || []).forEach(function (p) {
         if (!p || !p.id) return;
-        var person = { id: String(p.id), name: String(p.name || p.id), say: String(p.say || p.name || p.id), face: "", photos: [] };
-        if (p.face && have[p.face]) person.face = p.face;
+        var person = { id: String(p.id), name: String(p.name || p.id), say: String(p.say || p.name || p.id), face: "", realFace: "", photos: [] };
+        if (p.face && have[p.face]) { person.face = p.face; person.realFace = p.face; }
         (p.photos || []).forEach(function (f) { if (have[f]) person.photos.push(f); });
         if (!person.face && person.photos.length) person.face = person.photos[0];
         if (person.face || person.photos.length) familyPeople.push(person);
@@ -6333,7 +6358,7 @@
       if (plRow) plRow.hidden = !allowed;
       setPhotoStatus(photoStatusText());
       var pane = document.getElementById("pane-photos");
-      if (pane && !pane.hidden) renderPhotoPeople();
+      if (pane && !pane.hidden) { renderPhotoPeople(); renderPhotoManage(); }
     }
 
     function renderPhotoPeople() {
@@ -6494,6 +6519,154 @@
       if (sb) sb.addEventListener("click", function () { pullPhotos(true); });
       var rb = document.getElementById("photo-refresh-btn");
       if (rb) rb.addEventListener("click", refreshPhotosOnServer);
+      var mg = document.getElementById("photo-manage");
+      if (mg) mg.addEventListener("change", function () { photoManage.person = mg.value; photoManage.picking = false; hidePhotoConfirm(); renderPhotoManage(); });
+    }
+
+    var photoManage = { person: "", picking: false, busy: false };
+
+    function hidePhotoConfirm() {
+      var box = document.getElementById("photo-confirm");
+      if (box) box.hidden = true;
+    }
+
+    function showPhotoConfirm(text, buttons) {
+      var box = document.getElementById("photo-confirm");
+      var t = document.getElementById("photo-confirm-text");
+      var row = document.getElementById("photo-confirm-btns");
+      if (!box || !t || !row) return;
+      t.textContent = text;
+      row.innerHTML = "";
+      buttons.forEach(function (b) {
+        var el = document.createElement("button");
+        el.type = "button";
+        el.className = "btn-mini" + (b.warn ? " warn" : (b.primary ? " primary" : ""));
+        el.textContent = b.label;
+        el.addEventListener("click", function () { hidePhotoConfirm(); if (b.run) b.run(); });
+        row.appendChild(el);
+      });
+      box.hidden = false;
+      try { box.scrollIntoView({ block: "nearest" }); } catch (e) {}
+    }
+
+    function photoPin() {
+      var el = document.getElementById("photo-pin");
+      return el ? String(el.value || "").trim() : "";
+    }
+
+    function photoEdit(kind, body, doneText) {
+      if (!syncConfigured()) { setPhotoStatus("Connect to the home computer on the Family tab first."); return Promise.resolve(false); }
+      var pin = photoPin();
+      if (!pin) {
+        setPhotoStatus("Type the parent PIN first, then tap the bin again.");
+        var pe = document.getElementById("photo-pin");
+        if (pe) pe.focus();
+        return Promise.resolve(false);
+      }
+      if (photoManage.busy) return Promise.resolve(false);
+      photoManage.busy = true;
+      setPhotoStatus("Saving on the home computer…");
+      var h = syncHeaders(true);
+      h["X-Parent-Pin"] = pin;
+      return syncFetch("/api/photos/" + kind, { method: "POST", headers: h, body: JSON.stringify(body) }, BLOB_FETCH_MS * 3).then(function (r) {
+        return r.json().catch(function () { return {}; }).then(function (j) {
+          if (!r.ok) throw new Error((j && j.message) || "The home computer said no.");
+          return pullPhotos(true);
+        });
+      }).then(function () {
+        photoManage.busy = false;
+        photoSync.note = doneText || "";
+        updatePhotoUi();
+        return true;
+      }).catch(function (e) {
+        photoManage.busy = false;
+        photoSync.error = (e && e.message) || "Could not change the photos.";
+        updatePhotoUi();
+        return false;
+      });
+    }
+
+    function renderPhotoManage() {
+      var sel = document.getElementById("photo-manage");
+      var hold = document.getElementById("photo-thumbs");
+      if (!sel || !hold) return;
+      if (!familyPeople.length) { sel.innerHTML = ""; hold.innerHTML = ""; return; }
+      if (!photoManage.person || !familyPeople.some(function (p) { return p.id === photoManage.person; })) photoManage.person = familyPeople[0].id;
+      if (sel.options.length !== familyPeople.length || sel.dataset.sig !== familyPeople.map(function (p) { return p.id + p.photos.length; }).join(",")) {
+        sel.innerHTML = "";
+        familyPeople.forEach(function (p) {
+          var o = document.createElement("option");
+          o.value = p.id;
+          o.textContent = p.name + " (" + p.photos.length + ")";
+          sel.appendChild(o);
+        });
+        sel.dataset.sig = familyPeople.map(function (p) { return p.id + p.photos.length; }).join(",");
+      }
+      sel.value = photoManage.person;
+      var person = familyPeople.filter(function (p) { return p.id === photoManage.person; })[0];
+      hold.innerHTML = "";
+      hold.classList.toggle("is-picking", !!photoManage.picking);
+      if (!person) return;
+      function tile(file, isFace) {
+        var t = document.createElement("div");
+        t.className = "photo-thumb" + (isFace ? " is-face" : "");
+        var img = document.createElement("img");
+        img.alt = "";
+        img.loading = "lazy";
+        t.appendChild(img);
+        photoUrlFor(file).then(function (u) { if (u) img.src = u; });
+        if (isFace) {
+          var tag = document.createElement("span");
+          tag.className = "thumb-tag";
+          tag.textContent = "Face card";
+          t.appendChild(tag);
+        }
+        var bin = document.createElement("button");
+        bin.type = "button";
+        bin.className = "thumb-bin";
+        bin.textContent = "🗑";
+        bin.setAttribute("aria-label", isFace ? "Change or remove " + person.name + "'s face card" : "Delete this photo of " + person.name);
+        bin.addEventListener("click", function (ev) {
+          ev.stopPropagation();
+          if (isFace) {
+            showPhotoConfirm("Change " + person.name + "'s face card? It stays in Immich.", [
+              { label: "Pick a new face", primary: true, run: function () { photoManage.picking = true; setPhotoStatus("Tap one of " + person.name + "'s photos to use for the face card."); renderPhotoManage(); } },
+              { label: "No face card", warn: true, run: function () { photoEdit("face", { person: person.id, use: "none" }, person.name + " has no face card now."); } },
+              { label: "Cancel" }
+            ]);
+          } else {
+            showPhotoConfirm("Delete this photo of " + person.name + " from the game on every device? It stays in Immich.", [
+              { label: "Yes, delete", warn: true, run: function () { photoEdit("delete", { file: file }, "Photo deleted from the game."); } },
+              { label: "Cancel" }
+            ]);
+          }
+        });
+        t.appendChild(bin);
+        if (!isFace) {
+          t.addEventListener("click", function () {
+            if (!photoManage.picking) return;
+            photoManage.picking = false;
+            photoEdit("face", { person: person.id, use: file }, person.name + "'s face card was changed.");
+          });
+        }
+        hold.appendChild(t);
+      }
+      if (person.realFace) tile(person.realFace, true);
+      else {
+        var none = document.createElement("div");
+        none.className = "photo-thumb photo-thumb-none is-face";
+        none.textContent = "No face card";
+        var pick = document.createElement("button");
+        pick.type = "button";
+        pick.className = "thumb-bin";
+        pick.style.background = "#43A047";
+        pick.textContent = "+";
+        pick.setAttribute("aria-label", "Pick a face card for " + person.name);
+        pick.addEventListener("click", function () { photoManage.picking = true; setPhotoStatus("Tap one of " + person.name + "'s photos to use for the face card."); renderPhotoManage(); });
+        none.appendChild(pick);
+        hold.appendChild(none);
+      }
+      person.photos.forEach(function (f) { tile(f, false); });
     }
 
     function paintHero() {

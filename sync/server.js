@@ -694,6 +694,19 @@ function handlePhotos(req, res, parts) {
     photoStore.refresh("parent");
     return sendJson(res, 202, photoStore.status());
   }
+  if (req.method === "POST" && parts.length === 3 && (parts[2] === "delete" || parts[2] === "face")) {
+    var gate2 = requireParentPin(req, res);
+    if (gate2 !== true) return gate2;
+    return readRequest(req, 8192).then(function (buf) {
+      var body = {};
+      try { body = JSON.parse(buf.toString("utf8") || "{}"); } catch (e) { return sendJson(res, 400, { ok: false, error: "bad json" }); }
+      var job = parts[2] === "delete" ? photoStore.deletePhoto(String(body.file || "")) : photoStore.setFace(String(body.person || ""), String(body.use || ""));
+      return job.then(function (man) { sendJson(res, 200, man); });
+    }).catch(function (e) {
+      var code = e && (e.code === 400 || e.code === 404 || e.code === 409 || e.code === 413) ? e.code : 500;
+      sendJson(res, code, { ok: false, error: "photo edit failed", message: (e && e.message) || "Could not change the photos." });
+    });
+  }
   if (req.method === "GET" && parts.length === 4 && parts[2] === "img") {
     var file = photoStore.filePath(parts[3]);
     if (!file) return send(res, 404, "text/plain; charset=utf-8", "No photo");

@@ -68,8 +68,17 @@ PhotoStore.prototype.readConfig = function () {
     people: people.filter(function (p) { return p && p.match; }).map(function (p) {
       return { match: String(p.match).trim(), name: String(p.name || p.match).trim().slice(0, 40), say: p.say ? String(p.say).trim().slice(0, 60) : "" };
     }),
-    skipAssets: Array.isArray(raw.skipAssets) ? raw.skipAssets.map(String) : []
+    skipAssets: Array.isArray(raw.skipAssets) ? raw.skipAssets.map(String) : [],
+    faceAssets: raw.faceAssets && typeof raw.faceAssets === "object" ? raw.faceAssets : {}
   };
+};
+
+PhotoStore.prototype.patchConfig = function (fn) {
+  var raw = {};
+  try { raw = JSON.parse(fs.readFileSync(this.configFile, "utf8")); } catch (e) { raw = {}; }
+  fn(raw);
+  fs.writeFileSync(this.configFile + ".tmp", JSON.stringify(raw, null, 2));
+  fs.renameSync(this.configFile + ".tmp", this.configFile);
 };
 
 PhotoStore.prototype.readIndex = function () {
@@ -259,6 +268,13 @@ PhotoStore.prototype.refresh = function (reason) {
         return self.pickPhotos(hit.person.id, cfg.perPerson, skip).then(function (picked) {
           var entry = { id: slug, name: hit.cfg.name, say: hit.cfg.say || hit.cfg.name, immichName: String(hit.person.name).trim(), totalAssets: picked.total, chosen: picked.items };
           people.push(entry);
+          var faceCfg = cfg.faceAssets[hit.cfg.name];
+          var faceIdx = -1;
+          if (faceCfg !== "none") {
+            picked.items.forEach(function (it, i) { if (faceIdx < 0 && faceCfg && it.id === faceCfg) faceIdx = i; });
+            if (faceIdx < 0 && picked.items.length) faceIdx = 0;
+          }
+          entry.faceNone = faceCfg === "none";
           var dl = Promise.resolve();
           picked.items.forEach(function (it, i) {
             dl = dl.then(function () {
@@ -271,7 +287,8 @@ PhotoStore.prototype.refresh = function (reason) {
                 it.src = src;
                 it.out = path.join(tmp, slug + "-p" + i + ".jpg");
                 jobs.push({ in: src, out: it.out, crop: squareCrop(it.box, "photo"), size: 512, quality: 80, orient: useOriginal });
-                if (i === 0) {
+                if (i === faceIdx) {
+                  entry.faceAsset = it.id;
                   entry.faceOut = path.join(tmp, slug + "-face.jpg");
                   jobs.push({ in: src, out: entry.faceOut, crop: squareCrop(it.box, "face"), size: 512, quality: 82, orient: useOriginal });
                 }
@@ -279,7 +296,7 @@ PhotoStore.prototype.refresh = function (reason) {
             });
           });
           return dl.then(function () {
-            if (entry.faceOut) return;
+            if (entry.faceOut || entry.faceNone) return;
             return self.immich("GET", "/api/people/" + hit.person.id + "/thumbnail", null, true).then(function (img) {
               var src = path.join(tmp, slug + "-face.src");
               fs.writeFileSync(src, img.buf);
@@ -307,9 +324,14 @@ PhotoStore.prototype.refresh = function (reason) {
       }
       people.forEach(function (p) {
         var photos = [];
-        p.chosen.forEach(function (it) { if (!it.skip) { var n = place(it.out, p.id); if (n) photos.push(n); } });
+        var items = [];
+        p.chosen.forEach(function (it) {
+          if (it.skip) return;
+          var n = place(it.out, p.id);
+          if (n) { photos.push(n); items.push({ file: n, asset: it.id, box: it.box, mime: it.mime || "" }); }
+        });
         var face = place(p.faceOut, p.id);
-        outPeople.push({ id: p.id, name: p.name, say: p.say, face: face, photos: photos });
+        outPeople.push({ id: p.id, name: p.name, say: p.say, face: face, faceAsset: face ? (p.faceAsset || "") : "", photos: photos, items: items });
         report.people.push({ name: p.name, immichName: p.immichName, immichPhotos: p.totalAssets, cached: photos.length, face: !!face });
       });
       var etag = crypto.createHash("sha1").update(JSON.stringify(outPeople)).digest("hex").slice(0, 16);
@@ -395,12 +417,107 @@ PhotoStore.prototype.pickPhotos = function (personId, n, skip) {
   });
 };
 
+PhotoStore.prototype.saveIndex = function () {
+  var idx = this.index;
+  idx.etag = crypto.createHash("sha1").update(JSON.stringify((idx.people || []).map(function (p) { return [p.id, p.name, p.say, p.face, p.photos]; }))).digest("hex").slice(0, 16);
+  fs.writeFileSync(this.indexFile + ".tmp", JSON.stringify(idx, null, 2));
+  fs.renameSync(this.indexFile + ".tmp", this.indexFile);
+};
+
+PhotoStore.prototype.fileInUse = function (name) {
+  return (this.index.people || []).some(function (p) { return p.face === name || (p.photos || []).indexOf(name) !== -1; });
+};
+
+PhotoStore.prototype.unlinkIfUnused = function (name) {
+  if (!name || !FILE_RE.test(name) || this.fileInUse(name)) return;
+  try { fs.unlinkSync(path.join(this.dir, name)); } catch (e) {}
+};
+
+function findPerson(idx, personId) {
+  return (idx.people || []).filter(function (p) { return p.id === personId; })[0] || null;
+}
+
+// Remove one photo from the game for every device. Immich is never changed:
+// the asset id goes on skipAssets so a refresh won't pick it again.
+PhotoStore.prototype.deletePhoto = function (file) {
+  if (this.refreshing) return Promise.reject(Object.assign(new Error("Photos are refreshing. Try again in a minute."), { code: 409 }));
+  if (!FILE_RE.test(String(file || ""))) return Promise.reject(Object.assign(new Error("bad photo"), { code: 400 }));
+  var person = (this.index.people || []).filter(function (p) { return (p.photos || []).indexOf(file) !== -1; })[0];
+  if (!person) return Promise.reject(Object.assign(new Error("That photo is not in the game."), { code: 404 }));
+  var item = (person.items || []).filter(function (it) { return it.file === file; })[0];
+  if (item && item.asset) {
+    this.patchConfig(function (raw) {
+      raw.skipAssets = Array.isArray(raw.skipAssets) ? raw.skipAssets : [];
+      if (raw.skipAssets.indexOf(item.asset) === -1) raw.skipAssets.push(item.asset);
+    });
+  }
+  person.photos = person.photos.filter(function (f) { return f !== file; });
+  person.items = (person.items || []).filter(function (it) { return it.file !== file; });
+  this.saveIndex();
+  this.unlinkIfUnused(file);
+  return Promise.resolve(this.manifest());
+};
+
+// Change a person's face card: "none", or a face crop made from one of their game photos.
+PhotoStore.prototype.setFace = function (personId, use) {
+  var self = this;
+  if (this.refreshing) return Promise.reject(Object.assign(new Error("Photos are refreshing. Try again in a minute."), { code: 409 }));
+  var person = findPerson(this.index, String(personId || ""));
+  if (!person) return Promise.reject(Object.assign(new Error("Unknown person."), { code: 404 }));
+  var oldFace = person.face;
+  if (use === "none") {
+    this.patchConfig(function (raw) { raw.faceAssets = raw.faceAssets && typeof raw.faceAssets === "object" ? raw.faceAssets : {}; raw.faceAssets[person.name] = "none"; });
+    person.face = "";
+    person.faceAsset = "";
+    this.saveIndex();
+    this.unlinkIfUnused(oldFace);
+    return Promise.resolve(this.manifest());
+  }
+  var item = (person.items || []).filter(function (it) { return it.file === use; })[0];
+  if (!item || !item.asset || !item.box) return Promise.reject(Object.assign(new Error("Pick one of this person's photos."), { code: 400 }));
+  var tmp = path.join(this.dir, "_face");
+  fs.rmSync(tmp, { recursive: true, force: true });
+  fs.mkdirSync(tmp, { recursive: true });
+  var useOriginal = smallFace(item.box) && /^image\/(jpeg|png)$/i.test(item.mime || "");
+  var url = useOriginal ? "/api/assets/" + item.asset + "/original" : "/api/assets/" + item.asset + "/thumbnail?size=preview";
+  var src = path.join(tmp, "face.src"), out = path.join(tmp, "face.jpg");
+  this.refreshing = this.immich("GET", url, null, true).then(function (img) {
+    fs.writeFileSync(src, img.buf);
+    return self.resizeBatch([{ in: src, out: out, crop: squareCrop(item.box, "face"), size: 512, quality: 82, orient: useOriginal }]);
+  }).then(function () {
+    var name = "";
+    if (fs.existsSync(out) && fs.statSync(out).size) {
+      var buf = fs.readFileSync(out);
+      name = person.id + "-" + crypto.createHash("sha1").update(buf).digest("hex").slice(0, 12) + ".jpg";
+      fs.writeFileSync(path.join(self.dir, name), buf);
+    } else {
+      name = item.file;
+    }
+    self.patchConfig(function (raw) { raw.faceAssets = raw.faceAssets && typeof raw.faceAssets === "object" ? raw.faceAssets : {}; raw.faceAssets[person.name] = item.asset; });
+    person.face = name;
+    person.faceAsset = item.asset;
+    self.saveIndex();
+    self.unlinkIfUnused(oldFace);
+    return self.manifest();
+  }).then(function (m) {
+    fs.rmSync(tmp, { recursive: true, force: true });
+    self.refreshing = null;
+    return m;
+  }, function (e) {
+    try { fs.rmSync(tmp, { recursive: true, force: true }); } catch (x) {}
+    self.refreshing = null;
+    throw e;
+  });
+  return this.refreshing;
+};
+
 PhotoStore.prototype.startSchedule = function () {
   var self = this;
   function tick() {
     var cfg = self.readConfig();
     var age = Date.now() - (self.index.refreshedAt || 0);
-    if (age > cfg.refreshHours * 3600 * 1000) {
+    var old = (self.index.people || []).some(function (p) { return !Array.isArray(p.items); });
+    if (old || age > cfg.refreshHours * 3600 * 1000) {
       try { self.refresh("schedule"); } catch (e) { console.error("Photo refresh failed:", e && e.message); }
     }
   }
