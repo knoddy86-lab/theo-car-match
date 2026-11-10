@@ -487,6 +487,35 @@
       font-weight: 700;
       color: #3949AB;
     }
+    .voice-picker { margin: 0 0 18px; }
+    .voice-picker label {
+      display: block;
+      font-size: 13px;
+      font-weight: 800;
+      color: #1A237E;
+      margin: 0 0 6px;
+    }
+    .voice-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    #voice-select {
+      flex: 1 1 220px;
+      max-width: 420px;
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 15px;
+      padding: 8px 10px;
+      border: 3px solid #C5CAE9;
+      border-radius: 12px;
+      color: #1A237E;
+      background: #fff;
+    }
+    #voice-select:focus { outline: 4px solid var(--focus); outline-offset: 2px; }
+    .voice-help {
+      margin: 8px 0 0;
+      font-size: 12px;
+      font-weight: 700;
+      color: #5C6BC0;
+      line-height: 1.35;
+    }
     .settings-row {
       display: grid;
       grid-template-columns: 92px 1fr;
@@ -506,6 +535,11 @@
       justify-content: center;
       overflow: hidden;
       padding: 2px;
+      cursor: pointer;
+    }
+    .settings-preview:focus {
+      outline: 4px solid var(--focus);
+      outline-offset: 2px;
     }
     .settings-preview .art,
     .settings-preview .custom-art {
@@ -761,6 +795,14 @@
       <div class="settings-panel">
         <h2>Parent Settings</h2>
         <p class="settings-lead">Add your own names, pictures and sounds for each car, or add a new card. Everything stays on this device.</p>
+        <div class="voice-picker">
+          <label for="voice-select">Voice</label>
+          <div class="voice-row">
+            <select id="voice-select" aria-label="Voice"></select>
+            <button type="button" class="btn-mini primary" id="voice-test-btn">Test</button>
+          </div>
+          <p class="voice-help">For a nicer voice on iPhone: Settings &gt; Accessibility &gt; Spoken Content &gt; Voices &gt; English, and download an Enhanced or Premium voice.</p>
+        </div>
         <div id="settings-list"></div>
         <div class="settings-friends">
           <h3 class="friends-title">Your cards</h3>
@@ -815,6 +857,16 @@
     var voicesCache = [];
     var defaultVoice = null;
     var customMedia = {};
+    var VOICE_KEY = "theo-car-match-voice";
+    var voicePref = "";
+    try { voicePref = localStorage.getItem(VOICE_KEY) || ""; } catch (e) {}
+    var sharedAudio = null;
+    var playToken = 0;
+    var autoTimers = {};
+    var roundCount = 0;
+    var advanceTimer = null;
+    var SOUND_DIR = "sounds/";
+    var PHRASE_CLIPS = { letsMatch: "lets-match.mp3", greatJob: "great-job.mp3" };
     var extraCars = [];
     var recState = { carId: null, recorder: null, stream: null, chunks: [], timer: null, tick: null, mime: "" };
     var forcedPick = null;
@@ -1128,7 +1180,7 @@
     }
 
     function recordToEntry(rec) {
-      if (!rec) return { imageUrl: "", audioUrl: "", imageBlob: null, audioBlob: null, name: "", line: "", custom: false };
+      if (!rec) return { imageUrl: "", audioUrl: "", imageBlob: null, audioBlob: null, name: "", line: "", autoText: "", autoSrc: "", custom: false };
       var imageBlob = rec.image || null;
       var audioBlob = rec.audio || null;
       var name = rec.name ? String(rec.name) : "";
@@ -1138,6 +1190,8 @@
         audioBlob: audioBlob,
         name: name,
         line: line,
+        autoText: rec.autoText ? String(rec.autoText) : "",
+        autoSrc: rec.autoSrc ? String(rec.autoSrc) : "",
         custom: !!rec.custom,
         imageUrl: imageBlob ? URL.createObjectURL(imageBlob) : "",
         audioUrl: audioBlob ? URL.createObjectURL(audioBlob) : ""
@@ -1204,6 +1258,8 @@
           if (patch.audio !== undefined) rec.audio = patch.audio || undefined;
           if (patch.name !== undefined) rec.name = (patch.name && String(patch.name).trim()) || undefined;
           if (patch.line !== undefined) rec.line = (patch.line && String(patch.line).trim()) || undefined;
+          if (patch.autoText !== undefined) rec.autoText = patch.autoText || undefined;
+          if (patch.autoSrc !== undefined) rec.autoSrc = patch.autoSrc || undefined;
           if (patch.custom !== undefined) rec.custom = patch.custom ? true : undefined;
           if (patch.color !== undefined) rec.color = patch.color;
           if (patch.dark !== undefined) rec.dark = patch.dark;
@@ -1217,6 +1273,7 @@
             if (!rec.name) rec.name = "New friend";
             return idbSet(id, rec);
           }
+          if (!rec.name) { rec.autoText = undefined; rec.autoSrc = undefined; }
           if (!rec.image && !rec.audio && !rec.name) return idbDel(id);
           return idbSet(id, rec);
         }).then(function () {
@@ -1278,13 +1335,7 @@
     }
 
     function spokenLine(car) {
-      if (car.custom) {
-        var entry = customMedia[car.id] || {};
-        var typed = (entry.line || car.line || "").trim();
-        if (typed) return typed;
-        return "Hello! It's " + displayName(car) + "!";
-      }
-      return car.phrase + " " + car.colorName + " " + car.typeName + ", " + displayName(car) + "!";
+      return displayFullName(car);
     }
 
     function refreshCardLabels() {
@@ -1370,23 +1421,16 @@
           refreshVoices();
         }
       } catch (e) {}
-    }
-
-    function refreshVoices() {
       try {
-        if (!window.speechSynthesis) { voicesCache = []; defaultVoice = null; return; }
-        voicesCache = speechSynthesis.getVoices() || [];
-        var en = englishVoices(voicesCache);
-        defaultVoice =
-          firstMatch(en, /en-AU/i, /karen|female|moira|tessa/i) ||
-          firstMatch(en, /en-AU/i, null) ||
-          firstMatch(en, /^en/i, /female|samantha|karen|moira|google us/i) ||
-          en[0] ||
-          null;
-      } catch (e) {
-        voicesCache = [];
-        defaultVoice = null;
-      }
+        var a = getSharedAudio();
+        if (!a.dataset.unlocked) {
+          a.dataset.unlocked = "1";
+          a.muted = true;
+          a.src = SOUND_DIR + PHRASE_CLIPS.greatJob;
+          var pr = a.play();
+          if (pr && pr.then) pr.then(function () { a.pause(); a.muted = false; }, function () { a.muted = false; });
+        }
+      } catch (e) {}
     }
 
     function englishVoices(voices) {
@@ -1397,69 +1441,209 @@
       return out;
     }
 
-    function firstMatch(voices, langRe, nameRe) {
-      for (var i = 0; i < voices.length; i++) {
-        var v = voices[i];
-        if (langRe && !langRe.test(v.lang)) continue;
-        if (nameRe && !nameRe.test(v.name)) continue;
-        return v;
-      }
-      return null;
+    function voiceScore(v) {
+      var s = 0;
+      var name = v.name || "";
+      var lang = (v.lang || "").replace("_", "-");
+      if (/premium/i.test(name)) s += 120;
+      if (/enhanced|natural|neural/i.test(name)) s += 100;
+      if (/samantha|karen|daniel|google us english|google uk english female|catherine|lee|moira|serena|arthur|martha/i.test(name)) s += 60;
+      if (/en-AU/i.test(lang)) s += 40;
+      else if (/en-GB|en-US/i.test(lang)) s += 25;
+      else if (/^en/i.test(lang)) s += 10;
+      if (/compact|eloquence|novelty|albert|bad news|bahh|bells|boing|bubbles|cellos|good news|jester|organ|superstar|trinoids|whisper|wobble|zarvox|fred|junior|ralph/i.test(name)) s -= 200;
+      return s;
     }
 
-    function voiceFor(car) {
-      var pool = englishVoices(voicesCache);
-      if (!pool.length) pool = voicesCache;
-      if (!pool.length) return null;
-      if (!car) return defaultVoice || pool[0];
-      return pool[car.voiceIndex % pool.length];
+    function rankedEnglishVoices() {
+      var en = englishVoices(voicesCache);
+      return en.slice().sort(function (a, b) {
+        var d = voiceScore(b) - voiceScore(a);
+        return d || String(a.name).localeCompare(String(b.name));
+      });
+    }
+
+    function refreshVoices() {
+      try {
+        if (!window.speechSynthesis) { voicesCache = []; defaultVoice = null; return; }
+        voicesCache = speechSynthesis.getVoices() || [];
+        var ranked = rankedEnglishVoices();
+        defaultVoice = ranked[0] || voicesCache[0] || null;
+      } catch (e) {
+        voicesCache = [];
+        defaultVoice = null;
+      }
+      fillVoiceSelect();
+    }
+
+    function chosenVoice() {
+      if (voicePref) {
+        for (var i = 0; i < voicesCache.length; i++) {
+          if (voicesCache[i].voiceURI === voicePref || voicesCache[i].name === voicePref) return voicesCache[i];
+        }
+      }
+      return defaultVoice;
+    }
+
+    function voiceFor() {
+      return chosenVoice();
+    }
+
+    function fillVoiceSelect() {
+      var sel = document.getElementById("voice-select");
+      if (!sel) return;
+      var ranked = rankedEnglishVoices();
+      sel.innerHTML = "";
+      var auto = document.createElement("option");
+      auto.value = "";
+      auto.textContent = defaultVoice ? ("Best available (" + defaultVoice.name + ")") : "Best available";
+      sel.appendChild(auto);
+      ranked.forEach(function (v) {
+        var o = document.createElement("option");
+        o.value = v.voiceURI || v.name;
+        o.textContent = v.name + " (" + v.lang + ")";
+        sel.appendChild(o);
+      });
+      sel.value = voicePref;
+      if (sel.value !== voicePref) sel.value = "";
+    }
+
+    function getSharedAudio() {
+      if (!sharedAudio) {
+        sharedAudio = new Audio();
+        sharedAudio.preload = "auto";
+        sharedAudio.setAttribute("playsinline", "");
+      }
+      return sharedAudio;
     }
 
     function stopSpeechAndAudio() {
+      playToken++;
       try { if (window.speechSynthesis) speechSynthesis.cancel(); } catch (e) {}
-      if (customAudioEl) {
-        try { customAudioEl.pause(); customAudioEl.src = ""; } catch (e) {}
-        customAudioEl = null;
+      if (sharedAudio) {
+        try { sharedAudio.pause(); } catch (e) {}
       }
+      if (customAudioEl && customAudioEl !== sharedAudio) {
+        try { customAudioEl.pause(); customAudioEl.src = ""; } catch (e) {}
+      }
+      customAudioEl = null;
     }
 
-    function speak(text, car) {
+    function speakText(text) {
       try {
-        if (!window.speechSynthesis) return;
-        stopSpeechAndAudio();
+        if (!window.speechSynthesis || !text) return;
         var u = new SpeechSynthesisUtterance(text);
-        u.rate = car && car.rate != null ? car.rate : 0.92;
-        u.pitch = car && car.pitch != null ? car.pitch : 1.12;
-        var voice = voiceFor(car);
+        u.rate = 0.95;
+        u.pitch = 1;
+        var voice = chosenVoice();
         u.lang = (voice && voice.lang) || "en-AU";
         if (voice) u.voice = voice;
         speechSynthesis.speak(u);
       } catch (e) {}
     }
 
-    function speakCar(car, fallbackToVoice) {
-      var entry = customMedia[car.id] || {};
-      if (entry.audioUrl && !fallbackToVoice) {
-        stopSpeechAndAudio();
-        try {
-          var a = new Audio(entry.audioUrl);
-          customAudioEl = a;
-          var fell = false;
-          var goFallback = function () {
-            if (fell) return;
-            fell = true;
-            speak(spokenLine(car), car);
-          };
-          a.addEventListener("error", goFallback);
-          var p = a.play();
-          if (p && p.catch) p.catch(goFallback);
-          return;
-        } catch (e) {
-          speak(spokenLine(car), car);
-          return;
+    function speak(text) {
+      stopSpeechAndAudio();
+      speakText(text);
+    }
+
+    function playSources(sources, fallbackText) {
+      stopSpeechAndAudio();
+      var token = playToken;
+      var idx = 0;
+      function next() {
+        if (token !== playToken) return;
+        if (idx >= sources.length) { speakText(fallbackText); return; }
+        var src = sources[idx++];
+        var a = getSharedAudio();
+        customAudioEl = a;
+        var done = false;
+        function fail() {
+          if (done) return;
+          done = true;
+          a.removeEventListener("error", fail);
+          if (token === playToken) next();
         }
+        a.addEventListener("error", fail);
+        try {
+          a.muted = false;
+          a.src = src;
+          var p = a.play();
+          if (p && p.then) {
+            p.then(function () { a.removeEventListener("error", fail); done = true; }, fail);
+          }
+        } catch (e) { fail(); }
       }
-      speak(spokenLine(car), car);
+      next();
+    }
+
+    function soundSourcesFor(car) {
+      var entry = customMedia[car.id] || {};
+      var text = spokenLine(car);
+      var out = [];
+      if (entry.audioUrl) out.push(entry.audioUrl);
+      if (!car.custom && !customName(car)) out.push(SOUND_DIR + car.id + ".mp3");
+      if (entry.autoSrc && entry.autoText === text) out.push(entry.autoSrc);
+      return out;
+    }
+
+    function speakCar(car) {
+      playSources(soundSourcesFor(car), spokenLine(car));
+    }
+
+    function playPhrase(key, text) {
+      playSources([SOUND_DIR + PHRASE_CLIPS[key]], text);
+    }
+
+    /* Natural voice for renamed / custom names: Sound of Text (soundoftext.com, Google en-AU voice).
+       Only the spoken text is sent. Files can't be fetched as blobs (no CORS), so the URL is
+       cached in IndexedDB and played via <audio src>. Offline, the device voice is used. */
+    function fetchNameClip(text) {
+      var api = "https://api.soundoftext.com/sounds";
+      return fetch(api, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ engine: "Google", data: { text: text, voice: "en-AU" } })
+      }).then(function (r) { return r.json(); }).then(function (j) {
+        if (!j || !j.success || !j.id) throw new Error("tts create failed");
+        var tries = 0;
+        function poll() {
+          tries++;
+          return fetch(api + "/" + encodeURIComponent(j.id)).then(function (r) { return r.json(); }).then(function (s) {
+            if (s && s.status === "Done" && s.location) return s.location;
+            if (tries >= 10 || (s && s.status === "Error")) throw new Error("tts not ready");
+            return new Promise(function (res) { setTimeout(res, 600); }).then(poll);
+          });
+        }
+        return poll();
+      });
+    }
+
+    function needsAutoClip(car) {
+      return car.custom || !!customName(car);
+    }
+
+    function refreshAutoClip(car, immediate) {
+      if (!car) return;
+      if (autoTimers[car.id]) clearTimeout(autoTimers[car.id]);
+      autoTimers[car.id] = setTimeout(function () {
+        autoTimers[car.id] = null;
+        var live = carById(car.id) || car;
+        var entry = customMedia[live.id] || {};
+        if (!needsAutoClip(live)) return;
+        var text = spokenLine(live);
+        if (!text || (entry.autoSrc && entry.autoText === text)) return;
+        if (!window.fetch) return;
+        fetchNameClip(text).then(function (src) {
+          var cur = carById(live.id);
+          if (!cur || spokenLine(cur) !== text) return;
+          return saveCustom(live.id, { autoText: text, autoSrc: src });
+        }).catch(function () {});
+      }, immediate ? 0 : 900);
+    }
+
+    function refreshAllAutoClips() {
+      allCars().forEach(function (car) { if (needsAutoClip(car)) refreshAutoClip(car, true); });
     }
 
     function tone(freq, start, dur, type, gain) {
@@ -1497,7 +1681,7 @@
       tone(640, audioCtx.currentTime, 0.08, "sine", 0.05);
     }
 
-    function pickCarsForLevel(lvl) {
+    function pickCarsForLevel(lvl, fresh) {
       var n = PAIRS[lvl];
       var pool = allCars();
       if (forcedPick && forcedPick.length) {
@@ -1514,6 +1698,14 @@
       }
       if (lvl === 0) {
         levelCars = shuffle(pool.slice()).slice(0, n);
+      } else if (fresh) {
+        var prev = {};
+        levelCars.forEach(function (c) { prev[c.id] = true; });
+        var newer = shuffle(pool.filter(function (c) { return !prev[c.id]; }));
+        var older = shuffle(pool.filter(function (c) { return prev[c.id]; }));
+        var pick = newer.slice(0, n);
+        if (pick.length < n) pick = pick.concat(older.slice(0, n - pick.length));
+        levelCars = shuffle(pick);
       } else {
         var have = {};
         var i;
@@ -1527,14 +1719,16 @@
       return levelCars;
     }
 
-    function startGame(lvl) {
+    function startGame(lvl, fresh) {
+      if (advanceTimer) { clearTimeout(advanceTimer); advanceTimer = null; }
+      if (lvl === 0 && !fresh) roundCount = 0;
       level = lvl;
       matchedCount = 0;
       flipped = [];
       locked = false;
       hideWin();
       stopConfetti();
-      var chosen = pickCarsForLevel(level);
+      var chosen = pickCarsForLevel(level, fresh);
       deck = shuffle(chosen.concat(chosen).map(function (c, i) {
         return { uid: c.id + "-" + i, id: c.id, car: c };
       }));
@@ -1683,15 +1877,22 @@
 
     function onLevelWin() {
       playWinSound();
-      speak("Great job!");
+      playPhrase("greatJob", "Great job!");
       startConfetti();
-      var last = level >= PAIRS.length - 1;
-      document.getElementById("win-sub").textContent = last
-        ? "You matched all the cars"
+      var top = level >= PAIRS.length - 1;
+      document.getElementById("win-sub").textContent = top
+        ? "Here come more cars!"
         : "On to level " + (level + 2) + "!";
-      document.getElementById("next-btn").textContent = last ? "Play Again" : "Next";
+      document.getElementById("next-btn").textContent = top ? "More cars" : "Next";
       document.getElementById("win-overlay").hidden = false;
       document.getElementById("next-btn").focus();
+      if (top) {
+        if (advanceTimer) clearTimeout(advanceTimer);
+        advanceTimer = setTimeout(function () {
+          advanceTimer = null;
+          if (!document.getElementById("win-overlay").hidden && !settingsOpen()) onNext();
+        }, 3500);
+      }
     }
 
     function hideWin() {
@@ -1748,8 +1949,13 @@
     function onNext() {
       hideWin();
       stopConfetti();
-      if (level >= PAIRS.length - 1) startGame(0);
-      else startGame(level + 1);
+      if (advanceTimer) { clearTimeout(advanceTimer); advanceTimer = null; }
+      if (level >= PAIRS.length - 1) {
+        roundCount += 1;
+        startGame(PAIRS.length - 1, true);
+      } else {
+        startGame(level + 1);
+      }
     }
 
     function mediaStatus(car) {
@@ -1949,6 +2155,7 @@
             if (preview && !entry.imageUrl) fillArt(preview, live);
           }
           refreshCardLabels();
+          refreshAutoClip(live);
         });
       }
       input.addEventListener("input", function () {
@@ -1967,6 +2174,7 @@
           var row = input.closest(".settings-row");
           var lineEl = row && row.querySelector(".settings-line");
           if (lineEl) lineEl.textContent = spokenLine(carById(car.id) || car);
+          refreshAutoClip(carById(car.id) || car);
         });
       }
       input.addEventListener("input", function () {
@@ -1990,6 +2198,7 @@
         window: pal.window
       }).then(function () {
         renderSettings();
+        refreshAutoClip(carById(id));
         var input = document.querySelector('.settings-row[data-car-id="' + id + '"] .name-input');
         if (input) {
           input.focus();
@@ -2008,6 +2217,11 @@
 
       var preview = document.createElement("div");
       preview.className = "settings-preview";
+      preview.setAttribute("role", "button");
+      preview.setAttribute("tabindex", "0");
+      preview.setAttribute("aria-label", "Change photo for " + displayFullName(car));
+      preview.setAttribute("data-role", "preview");
+      preview.setAttribute("data-car", car.id);
       fillArt(preview, car);
 
       var meta = document.createElement("div");
@@ -2110,6 +2324,10 @@
         return b;
       }
 
+      preview.addEventListener("click", function () { imgInput.click(); });
+      preview.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); imgInput.click(); }
+      });
       btns.appendChild(mini("Choose photo", "primary", function () { imgInput.click(); }));
       btns.appendChild(mini("Take photo", "primary", function () { camInput.click(); }));
       btns.appendChild(mini("Choose sound", "primary", function () { audInput.click(); }));
@@ -2119,12 +2337,8 @@
       btns.appendChild(stopBtn);
 
       var entry = customMedia[car.id] || {};
-      var playBtn = mini("Play sound", "", function () {
-        if (entry.audioUrl) speakCar(car);
-        else speak(spokenLine(car), car);
-      });
+      var playBtn = mini("Play sound", "", function () { speakCar(carById(car.id) || car); });
       playBtn.setAttribute("data-role", "play");
-      if (!entry.audioUrl) playBtn.disabled = true;
       btns.appendChild(playBtn);
 
       if (car.custom) {
@@ -2232,6 +2446,7 @@
 
     function openSettings() {
       document.getElementById("reset-confirm").hidden = true;
+      refreshVoices();
       renderSettings();
       var screen = document.getElementById("settings-screen");
       screen.hidden = false;
@@ -2296,6 +2511,17 @@
 
     document.getElementById("settings-done-btn").addEventListener("click", closeSettings);
     document.getElementById("add-card-btn").addEventListener("click", function () { addCustomCard(); });
+    document.getElementById("voice-select").addEventListener("change", function (e) {
+      voicePref = e.target.value || "";
+      try {
+        if (voicePref) localStorage.setItem(VOICE_KEY, voicePref);
+        else localStorage.removeItem(VOICE_KEY);
+      } catch (err) {}
+    });
+    document.getElementById("voice-test-btn").addEventListener("click", function () {
+      unlockMedia();
+      speak("Hello Theo! Let's match the cars!");
+    });
     document.getElementById("reset-all-btn").addEventListener("click", function () {
       document.getElementById("reset-confirm").hidden = false;
     });
@@ -2439,7 +2665,7 @@
     document.getElementById("play-btn").addEventListener("click", function () {
       unlockMedia();
       startGame(0);
-      speak("Let's match the cars!");
+      playPhrase("letsMatch", "Let's match the cars!");
     });
     document.getElementById("next-btn").addEventListener("click", onNext);
 
@@ -2467,7 +2693,7 @@
     }
 
     paintHero();
-    loadAllCustom().then(function () { paintHero(); });
+    loadAllCustom().then(function () { paintHero(); refreshAllAutoClips(); });
 
     document.getElementById("play-btn").focus();
 
@@ -2495,7 +2721,12 @@
       stopRecording: stopRecording,
       pickRecorderMime: pickRecorderMime,
       startGame: startGame,
-      playWith: function (ids) { forcedPick = ids.slice(); startGame(0); }
+      playWith: function (ids) { forcedPick = ids.slice(); startGame(0); },
+      soundSourcesFor: soundSourcesFor,
+      chosenVoice: chosenVoice,
+      rankedEnglishVoices: rankedEnglishVoices,
+      refreshAutoClip: refreshAutoClip,
+      getState: function () { return { level: level, roundCount: roundCount, levelCars: levelCars.map(function (c) { return c.id; }) }; }
     };
 
   })();
