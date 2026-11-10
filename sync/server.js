@@ -11,6 +11,8 @@ var os = require("os");
 var querystring = require("querystring");
 var certs = require("./certs");
 var pinLib = require("./pin");
+var photosLib = null;
+try { photosLib = require("./photos"); } catch (e) { console.error("Photo module not loaded:", e && e.message ? e.message : e); }
 
 var ROOT = path.resolve(__dirname);
 var DATA_DIR = path.resolve(process.env.DATA_DIR || path.join(ROOT, "data"));
@@ -84,6 +86,16 @@ ensureDirs();
 var FAMILY_KEY = loadOrCreateKey();
 var KEY_BUF = Buffer.from(FAMILY_KEY);
 var pinStore = new pinLib.PinStore(DATA_DIR);
+var photoStore = null;
+try {
+  if (photosLib && process.env.PHOTOS !== "0") {
+    photoStore = new photosLib.PhotoStore({ dataDir: DATA_DIR, rootDir: ROOT });
+    photoStore.startSchedule();
+  }
+} catch (e) {
+  console.error("Photos are off:", e && e.message ? e.message : e);
+  photoStore = null;
+}
 var tlsBundle = null;
 try {
   tlsBundle = certs.ensureCerts(DATA_DIR);
@@ -523,13 +535,15 @@ function handleApi(req, res, url) {
   // parts[0] === "api"
   if (req.method === "GET" && parts.length === 2 && parts[1] === "health") {
     var gv = readGameVersion();
-    return sendJson(res, 200, { ok: true, service: "theo-sync", version: 3, gameVersion: gv.version, cache: gv.cache, httpsPort: HTTPS_PORT });
+    return sendJson(res, 200, { ok: true, service: "theo-sync", version: 4, gameVersion: gv.version, cache: gv.cache, httpsPort: HTTPS_PORT, photos: !!photoStore });
   }
   if (req.method === "GET" && parts.length === 2 && parts[1] === "version") {
     var ver = readGameVersion();
     return sendJson(res, 200, { ok: true, version: ver.version, cache: ver.cache, name: ver.name });
   }
   if (!authorized(req)) return sendJson(res, 401, { ok: false, error: "bad key" });
+
+  if (parts[1] === "photos") return handlePhotos(req, res, parts);
 
   if (req.method === "GET" && parts.length === 2 && parts[1] === "pin") {
     return sendJson(res, 200, { ok: true, set: pinStore.hasPin() });
@@ -649,6 +663,50 @@ function handleApi(req, res, url) {
   sendJson(res, 404, { ok: false, error: "not found" });
 }
 
+
+function isLanIp(ip) {
+  ip = String(ip || "").toLowerCase();
+  if (ip === "::1" || ip === "localhost") return true;
+  var m = ip.match(/^(\d+)\.(\d+)\.(\d+)\.(\d+)$/);
+  if (m) {
+    var a = +m[1], b = +m[2];
+    return a === 127 || a === 10 || (a === 192 && b === 168) || (a === 172 && b >= 16 && b <= 31) || (a === 169 && b === 254);
+  }
+  return ip.indexOf("fe80:") === 0 || ip.indexOf("fc") === 0 || ip.indexOf("fd") === 0;
+}
+
+// Family photos: home network only, family key required, never to the public web copy.
+function handlePhotos(req, res, parts) {
+  if (!photoStore) return sendJson(res, 404, { ok: false, error: "photos off" });
+  if (!isLanIp(clientIp(req))) return sendJson(res, 403, { ok: false, error: "home network only" });
+  if (req.headers.origin && req.headers.origin === PAGES_ORIGIN) return sendJson(res, 403, { ok: false, error: "photos are only on the home computer copy" });
+  res.setHeader("X-Robots-Tag", "noindex");
+  if (req.method === "GET" && parts.length === 2) {
+    var man = photoStore.manifest();
+    return sendEtagJson(req, res, man.etag || "none", man);
+  }
+  if (req.method === "GET" && parts.length === 3 && parts[2] === "status") {
+    return sendJson(res, 200, photoStore.status());
+  }
+  if (req.method === "POST" && parts.length === 3 && parts[2] === "refresh") {
+    var gate = requireParentPin(req, res);
+    if (gate !== true) return gate;
+    photoStore.refresh("parent");
+    return sendJson(res, 202, photoStore.status());
+  }
+  if (req.method === "GET" && parts.length === 4 && parts[2] === "img") {
+    var file = photoStore.filePath(parts[3]);
+    if (!file) return send(res, 404, "text/plain; charset=utf-8", "No photo");
+    var st = fs.statSync(file);
+    res.statusCode = 200;
+    res.setHeader("Content-Type", "image/jpeg");
+    res.setHeader("Content-Length", st.size);
+    res.setHeader("Cache-Control", "private, max-age=31536000, immutable");
+    fs.createReadStream(file).pipe(res);
+    return;
+  }
+  return sendJson(res, 404, { ok: false, error: "not found" });
+}
 
 function clientIp(req) {
   return String(req.socket && req.socket.remoteAddress || "").replace(/^::ffff:/, "");

@@ -120,3 +120,12 @@ Until a server URL is entered, the GitHub Pages copy does not sync and does not 
 - `GET` / `PUT` / `DELETE /api/cards/:id/image`, `.../original` and `.../audio` — display photo, original photo, and sound files
 
 Data is stored as files under `data\cards\`. The family key is a long random string created on first run.
+
+## Family photos (v25)
+
+The PHOTOS game and Family in the Name Game use pictures from Immich on this PC.
+
+- `photos.js` reads Immich **read-only** (GET requests plus the read-only metadata search) at `http://127.0.0.1:2283`, using the API key in `%USERPROFILE%\.immich\immich_api_key.txt`. The key stays in this process and is never sent to the game.
+- People and the names the game says are in `data\photo-people.json` (`match` = Immich name, `name` = what the game shows and says). Put an asset id in `skipAssets` to leave a photo out.
+- Up to 12 photos per person, plus a face card, are resized to 512 px JPEGs in `data\photos` by `photo-resize.ps1`. They refresh every 24 hours, or from Parent Settings > Photos > Refresh photos (needs the parent PIN).
+- `/api/photos` needs the family key, only answers on the home network, and refuses the GitHub Pages copy. Photos are never in git or on GitHub Pages.

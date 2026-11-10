@@ -266,6 +266,40 @@
       box-shadow: 0 8px 0 #1A237E, 0 12px 24px rgba(0,0,0,0.18);
     }
     .btn-names:active { box-shadow: 0 2px 0 #1A237E, 0 6px 12px rgba(0,0,0,0.18); }
+    .btn-photos {
+      font-size: clamp(28px, 7vmin, 72px);
+      min-width: min(42vw, 280px);
+      min-height: clamp(72px, 16vmin, 130px);
+      margin-top: 4px;
+      background: #00897B;
+      box-shadow: 0 8px 0 #004D40, 0 12px 24px rgba(0,0,0,0.18);
+    }
+    .btn-photos:active { box-shadow: 0 2px 0 #004D40, 0 6px 12px rgba(0,0,0,0.18); }
+    .btn-photos:focus { box-shadow: 0 8px 0 #004D40, 0 0 0 10px rgba(255, 213, 79, 0.45), 0 12px 28px rgba(0,0,0,0.2); }
+    .start-actions.has-three .btn-play, .start-actions.has-three .btn-names, .start-actions.has-three .btn-photos {
+      font-size: clamp(22px, 5.6vmin, 60px);
+      min-width: min(28vw, 230px);
+      padding-left: 0.6em;
+      padding-right: 0.6em;
+    }
+    .face.front.is-family, .name-choice.is-family { padding: 0; background: #FFF8E1; }
+    .family-art {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+      pointer-events: none;
+      border-radius: 16px;
+    }
+    .name-choice .family-art { border-radius: 22px; }
+    .card.is-matched .front.is-family { box-shadow: inset 0 0 0 6px #FFD54F; }
+    .card.is-matched .front.is-family .family-art { opacity: 0.92; }
+    .photo-people { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin: 8px 0 14px; }
+    .photo-person { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 14px; background: #F5F7FF; border: 3px solid #C5CAE9; font-weight: 700; color: #1A237E; cursor: pointer; text-align: left; font-size: 1rem; }
+    .photo-person[aria-pressed="false"] { opacity: 0.5; border-style: dashed; }
+    .photo-person-face { width: 46px; height: 46px; border-radius: 50%; overflow: hidden; background: #E8EAF6; flex: 0 0 auto; }
+    .photo-person-face img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .photo-person small { display: block; font-weight: 600; color: #5C6BC0; font-size: 0.8rem; }
     .btn-names:focus {
       box-shadow:
         0 8px 0 #1A237E,
@@ -1555,6 +1589,7 @@
         <div class="start-actions" id="start-actions">
           <button type="button" class="btn btn-play" id="play-btn" aria-label="Match Game">MATCH</button>
           <button type="button" class="btn btn-names" id="names-btn" aria-label="Name Game">NAME</button>
+          <button type="button" class="btn btn-photos" id="photos-btn" aria-label="Family Photo Match" hidden>PHOTOS</button>
         </div>
       </div>
       <div class="player-picker" id="player-picker" hidden>
@@ -1661,6 +1696,7 @@
           <button type="button" role="tab" id="tab-cars" aria-controls="pane-cars" aria-selected="true">Cars</button>
           <button type="button" role="tab" id="tab-difficulty" aria-controls="pane-difficulty" aria-selected="false">Match</button>
           <button type="button" role="tab" id="tab-names" aria-controls="pane-names" aria-selected="false">Names</button>
+          <button type="button" role="tab" id="tab-photos" aria-controls="pane-photos" aria-selected="false" hidden>Photos</button>
           <button type="button" role="tab" id="tab-players" aria-controls="pane-players" aria-selected="false">Players</button>
           <button type="button" role="tab" id="tab-family" aria-controls="pane-family" aria-selected="false">Family</button>
         </div>
@@ -1766,6 +1802,14 @@
           <p class="settings-lead">How Name Game works on this device.</p>
           <p class="device-only-note">This device only — not synced.</p>
           <div class="diff-custom" id="name-options">
+            <div class="diff-row" id="name-pool-row" hidden>
+              <label for="name-set-pool">Who to find</label>
+              <select id="name-set-pool">
+                <option value="cars">Cars</option>
+                <option value="family">Family</option>
+                <option value="both">Both</option>
+              </select>
+            </div>
             <div class="diff-row">
               <label for="name-set-choices">Choices</label>
               <select id="name-set-choices">
@@ -1790,6 +1834,33 @@
               <input id="name-set-cele" type="checkbox" checked>
             </div>
           </div>
+        </div>
+        <div id="pane-photos" class="settings-pane" role="tabpanel" aria-labelledby="tab-photos" hidden>
+          <p class="settings-lead">Family photos for the PHOTOS game and for Family in the Name Game. They come from the home computer and are only kept on your home devices.</p>
+          <p class="device-only-note">These settings are for this player on this device.</p>
+          <div class="diff-custom">
+            <div class="diff-row">
+              <label for="photo-style">Cards show</label>
+              <select id="photo-style">
+                <option value="photos">Photos</option>
+                <option value="faces">Faces</option>
+                <option value="mix">Face and photo pairs</option>
+              </select>
+            </div>
+          </div>
+          <h3 class="friends-title">People</h3>
+          <div class="photo-people" id="photo-people"></div>
+          <div class="settings-btns">
+            <button type="button" class="btn-mini primary" id="photo-sync-btn">Sync photos now</button>
+          </div>
+          <div class="sync-field">
+            <label for="photo-pin">Get new photos from Immich (parent PIN)</label>
+            <div class="say-row">
+              <input id="photo-pin" type="password" inputmode="numeric" autocomplete="off" minlength="4" placeholder="Parent PIN" aria-label="Parent PIN">
+              <button type="button" class="btn-mini" id="photo-refresh-btn">Refresh photos</button>
+            </div>
+          </div>
+          <p class="sync-status" id="photo-status"></p>
         </div>
         <div id="pane-players" class="settings-pane" role="tabpanel" aria-labelledby="tab-players" hidden>
           <p class="settings-lead">Players on this device. Each player keeps their own Match and Names settings. Cards are shared.</p>
@@ -1979,7 +2050,7 @@
     var BLOB_FETCH_MS = 20000;
     var bootStartedAt = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
     var keyChangeOpen = false;
-    var APP_VERSION = "24";
+    var APP_VERSION = "25";
     var MATCH_PAIR_CAP = 6;
     var NAME_ROUNDS = 6;
     var THUMB_MAX = 256;
@@ -1988,7 +2059,16 @@
     var speakTimer = null;
     var padsRunning = false;
     var NAME_SETTINGS_KEY = "theo-car-match-name-game";
-    var nameSettings = { choices: "auto", say: "full", celebration: true };
+    var nameSettings = { choices: "auto", say: "full", celebration: true, pool: "cars" };
+    var matchMode = "cars";
+    var pendingFamilyDeck = null;
+    var familyIndex = {};
+    var familyPeople = [];
+    var photoSettings = { style: "photos", off: {} };
+    var photoSync = { busy: false, total: 0, done: 0, error: "", at: 0, note: "" };
+    var photoUrls = {};
+    var photoDbPromise = null;
+    var lastFamilyFiles = {};
     var nameState = { active: false, round: 0, target: null, choices: [], locked: false, lastTargetId: "", remaining: [], repeatTimer: null };
     var updateBannerShown = false;
     var outboxCount = 0;
@@ -2012,6 +2092,7 @@
     }
 
     function carById(id) {
+      if (familyIndex[id]) return familyIndex[id];
       var pool = allCars();
       for (var i = 0; i < pool.length; i++) if (pool[i].id === id) return pool[i];
       return null;
@@ -2909,6 +2990,8 @@
 
 
     function fillArt(holder, car) {
+      if (car && car.family) { fillFamilyArt(holder, car); return; }
+      holder.classList.remove("is-family");
       holder.innerHTML = "";
       var entry = customMedia[car.id] || {};
       var src = entry.thumbUrl || entry.imageUrl;
@@ -3645,6 +3728,7 @@
         { tab: "tab-cars", pane: "pane-cars" },
         { tab: "tab-difficulty", pane: "pane-difficulty" },
         { tab: "tab-names", pane: "pane-names" },
+        { tab: "tab-photos", pane: "pane-photos" },
         { tab: "tab-players", pane: "pane-players" },
         { tab: "tab-family", pane: "pane-family" }
       ];
@@ -3655,10 +3739,11 @@
         if (tb) tb.setAttribute("aria-selected", is ? "true" : "false");
         if (pn) pn.hidden = !is;
       });
+      if (name === "photos") renderPhotoPeople();
     }
 
     function bindSettingsTabs() {
-      ["cars", "difficulty", "names", "players", "family"].forEach(function (name) {
+      ["cars", "difficulty", "names", "photos", "players", "family"].forEach(function (name) {
         var tb = document.getElementById("tab-" + name);
         if (tb) tb.addEventListener("click", function () { showSettingsTab(name); });
       });
@@ -3850,8 +3935,15 @@
       hideWin();
       stopConfetti();
       clearPeekAndHint();
-      var chosen = pickCarsForLevel(level, fresh);
-      deck = dealDeck(chosen);
+      if (matchMode === "photos") {
+        deck = pendingFamilyDeck || dealFamilyDeck();
+        pendingFamilyDeck = null;
+        if (!deck.length) { matchMode = "cars"; }
+      }
+      if (matchMode !== "photos") {
+        var chosen = pickCarsForLevel(level, fresh);
+        deck = dealDeck(chosen);
+      }
       prevDeck = deck.slice();
       difficultyApplied = JSON.stringify(publicDifficulty(difficulty));
       document.getElementById("start-screen").hidden = true;
@@ -3875,7 +3967,7 @@
 
 
     function renderHUD() {
-      var total = pairsForLevel(level);
+      var total = currentPairTotal();
       document.getElementById("level-label").textContent = matchedCount + " / " + total;
       var pips = document.getElementById("pips");
       pips.innerHTML = "";
@@ -3992,7 +4084,7 @@
           matchedCount += 1;
           renderHUD();
           locked = false;
-          var won = matchedCount >= pairsForLevel(level);
+          var won = matchedCount >= currentPairTotal();
           setTimeout(function () {
             if (won) setTimeout(onLevelWin, 2000);
           }, 900);
@@ -4079,11 +4171,11 @@
       clearPeekAndHint();
       var cheer = hoorayWait || Promise.resolve();
       cheer.then(function () {
-        if (difficulty.revs !== false) playRoundRev();
+        if (difficulty.revs !== false && matchMode !== "photos") playRoundRev();
       });
       startConfetti();
       var sub = document.getElementById("win-sub");
-      if (sub) sub.textContent = "You matched all the cars";
+      if (sub) sub.textContent = matchMode === "photos" ? "You matched everyone!" : "You matched all the cars";
       var next = document.getElementById("next-btn");
       if (next) {
         next.textContent = "Play again";
@@ -4173,6 +4265,7 @@
       hideWin();
       stopConfetti();
       if (advanceTimer) { clearTimeout(advanceTimer); advanceTimer = null; }
+      if (matchMode === "photos") { startPhotoMatch(true); return; }
       startGame(0, true);
     }
 
@@ -4229,10 +4322,13 @@
       if (choices !== "auto" && !/^[4-6]$/.test(choices)) choices = "auto";
       var say = String(raw.say || "full");
       if (say !== "first" && say !== "last" && say !== "nick" && say !== "mix") say = "full";
+      var pool = String(raw.pool || "cars");
+      if (pool !== "family" && pool !== "both") pool = "cars";
       return {
         choices: choices,
         say: say,
-        celebration: raw.celebration !== false
+        celebration: raw.celebration !== false,
+        pool: pool
       };
     }
 
@@ -4261,6 +4357,10 @@
       if (c && document.activeElement !== c) c.value = nameSettings.choices;
       if (s && document.activeElement !== s) s.value = nameSettings.say;
       if (e) e.checked = nameSettings.celebration !== false;
+      var pl = document.getElementById("name-set-pool");
+      if (pl && document.activeElement !== pl) pl.value = nameSettings.pool || "cars";
+      var plRow = document.getElementById("name-pool-row");
+      if (plRow) plRow.hidden = !photosAllowedHere();
     }
 
     function bindNameGameUi() {
@@ -4268,10 +4368,11 @@
         saveNameSettings({
           choices: (document.getElementById("name-set-choices") || {}).value,
           say: (document.getElementById("name-set-say") || {}).value,
-          celebration: !!(document.getElementById("name-set-cele") || {}).checked
+          celebration: !!(document.getElementById("name-set-cele") || {}).checked,
+          pool: (document.getElementById("name-set-pool") || {}).value || "cars"
         });
       }
-      ["name-set-choices", "name-set-say", "name-set-cele"].forEach(function (id) {
+      ["name-set-choices", "name-set-say", "name-set-cele", "name-set-pool"].forEach(function (id) {
         var el = document.getElementById(id);
         if (el) el.addEventListener("change", read);
       });
@@ -4303,7 +4404,8 @@
         emoji: emoji,
         color: color,
         difficulty: normalizeDifficulty(raw.difficulty || difficulty),
-        nameSettings: normalizeNameSettings(raw.nameSettings || nameSettings)
+        nameSettings: normalizeNameSettings(raw.nameSettings || nameSettings),
+        photoSettings: normalizePhotoSettings(raw.photoSettings || photoSettings)
       };
     }
 
@@ -4323,6 +4425,7 @@
       if (!p) return;
       p.difficulty = JSON.parse(JSON.stringify(difficulty));
       p.nameSettings = JSON.parse(JSON.stringify(nameSettings));
+      p.photoSettings = JSON.parse(JSON.stringify(photoSettings));
       saveProfilesStore();
     }
 
@@ -4330,6 +4433,7 @@
       if (!p) return;
       difficulty = normalizeDifficulty(p.difficulty);
       nameSettings = normalizeNameSettings(p.nameSettings);
+      photoSettings = normalizePhotoSettings(p.photoSettings);
       applyDifficultyDom();
       try { localStorage.setItem("theo-car-match-difficulty", JSON.stringify(difficulty)); } catch (e) {}
       try { localStorage.setItem(NAME_SETTINGS_KEY, JSON.stringify(nameSettings)); } catch (e) {}
@@ -4338,6 +4442,7 @@
       }
       updateDifficultyUi();
       updateNameGameUi();
+      updatePhotoUi();
     }
 
     function harperSeeded() {
@@ -4428,6 +4533,7 @@
       var prof = sanitizeProfile(Object.assign({ id: newProfileId(), name: "Player", emoji: "😊", color: PROFILE_COLOURS[profilesState.profiles.length % PROFILE_COLOURS.length] }, patch || {}));
       if (!patch || !patch.difficulty) prof.difficulty = normalizeDifficulty(DIFF_PRESETS.age2);
       if (!patch || !patch.nameSettings) prof.nameSettings = normalizeNameSettings({ choices: "auto", say: "full", celebration: true });
+      if (!patch || !patch.photoSettings) prof.photoSettings = normalizePhotoSettings({});
       profilesState.profiles.push(prof);
       saveProfilesStore();
       renderPlayersSettings();
@@ -4616,8 +4722,8 @@
       if (showPicker) renderPlayerPicker();
     }
 
-    function nameChoiceCount() {
-      var cap = Math.max(1, allCars().length);
+    function nameChoiceCount(poolSize) {
+      var cap = Math.max(1, poolSize || allCars().length);
       var raw = nameSettings.choices;
       var n;
       if (raw && raw !== "auto") n = clampInt(raw, 4, 6, 4);
@@ -4743,6 +4849,12 @@
     function playNameGamePrompt(car) {
       if (!car) return;
       nameState.promptCount = (nameState.promptCount || 0) + 1;
+      if (car.family) {
+        var where = "Where's " + (car.say || car.name) + "?";
+        lastNamePrompt = { id: car.id, mode: "family", text: where, usedClip: false };
+        speak(where);
+        return;
+      }
       var pick = (nameState.sayPick && nameState.target && nameState.target.id === car.id)
         ? nameState.sayPick
         : chooseNameSayOption(car);
@@ -4848,9 +4960,9 @@
     }
 
     function pickNameRound() {
-      var pool = allCars().slice();
+      var pool = nameGamePool();
       if (!pool.length) return null;
-      var count = Math.min(nameChoiceCount(), pool.length);
+      var count = Math.min(nameChoiceCount(pool.length), pool.length);
       var targetPool = pool.slice();
       if (nameState.lastTargetId && targetPool.length > 1) {
         targetPool = targetPool.filter(function (c) { return c.id !== nameState.lastTargetId; });
@@ -4878,7 +4990,7 @@
         btn.className = "name-choice";
         btn.dataset.carId = car.id;
         btn.dataset.index = String(index);
-        btn.setAttribute("aria-label", "Car " + (index + 1));
+        btn.setAttribute("aria-label", (car.family ? "Person " : "Car ") + (index + 1));
         fillArt(btn, car);
         btn.addEventListener("click", function () { onNameChoice(car.id, btn); });
         grid.appendChild(btn);
@@ -4911,9 +5023,12 @@
       document.getElementById("game-screen").hidden = true;
       document.getElementById("name-screen").hidden = false;
       updatePlayerUi();
-      var picked = pickNameRound();
-      if (!picked) { goHome(); return; }
-      renderNameRound(picked);
+      preWarmNameFaces().then(function () {
+        if (!nameState.active) return;
+        var picked = pickNameRound();
+        if (!picked) { goHome(); return; }
+        renderNameRound(picked);
+      });
     }
 
     function celebrateNameCorrect(btn) {
@@ -5857,6 +5972,7 @@
 
     document.getElementById("play-btn").addEventListener("click", function () {
       unlockMedia();
+      matchMode = "cars";
       startGame(0);
       playPhrase("letsMatch", "Let's match the cars!");
     });
@@ -5864,6 +5980,11 @@
       unlockMedia();
       startNameGame();
     });
+    document.getElementById("photos-btn").addEventListener("click", function () {
+      unlockMedia();
+      startPhotoMatch(false).then(function (ok) { if (ok) speak("Let's match the family!"); });
+    });
+    bindPhotoUi();
     document.getElementById("next-btn").addEventListener("click", onNext);
     document.getElementById("match-home-btn").addEventListener("click", function () { goHome(); });
     document.getElementById("name-home-btn").addEventListener("click", function () { goHome(); });
@@ -5963,6 +6084,416 @@
         if (unused(car)) return car;
       }
       return null;
+    }
+
+
+    // ---- Family photos (from the home computer's Immich cache; never on the public web copy) ----
+    var PHOTO_DB_NAME = "theo-car-match-photos";
+
+    function photosAllowedHere() {
+      var h = String(location.hostname || "").toLowerCase();
+      if (/github\.io$/.test(h)) return false;
+      if (location.protocol === "file:") return false;
+      return true;
+    }
+
+    function photoDb() {
+      if (photoDbPromise) return photoDbPromise;
+      photoDbPromise = new Promise(function (resolve, reject) {
+        try {
+          var req = indexedDB.open(PHOTO_DB_NAME, 1);
+          req.onupgradeneeded = function () {
+            var db = req.result;
+            if (!db.objectStoreNames.contains("img")) db.createObjectStore("img");
+            if (!db.objectStoreNames.contains("meta")) db.createObjectStore("meta");
+          };
+          req.onsuccess = function () { resolve(req.result); };
+          req.onerror = function () { photoDbPromise = null; reject(req.error); };
+        } catch (e) { photoDbPromise = null; reject(e); }
+      });
+      return photoDbPromise;
+    }
+
+    function pdb(store, mode, fn) {
+      return photoDb().then(function (db) {
+        return new Promise(function (resolve, reject) {
+          var tx = db.transaction(store, mode);
+          var st = tx.objectStore(store);
+          var req = fn(st);
+          tx.oncomplete = function () { resolve(req ? req.result : undefined); };
+          tx.onerror = function () { reject(tx.error); };
+          tx.onabort = function () { reject(tx.error); };
+        });
+      });
+    }
+    function pdbGet(store, key) { return pdb(store, "readonly", function (st) { return st.get(key); }); }
+    function pdbPut(store, key, val) { return pdb(store, "readwrite", function (st) { return st.put(val, key); }); }
+    function pdbDel(store, key) { return pdb(store, "readwrite", function (st) { return st.delete(key); }); }
+    function pdbKeys(store) { return pdb(store, "readonly", function (st) { return st.getAllKeys ? st.getAllKeys() : null; }).then(function (k) { return k || []; }); }
+
+    function normalizePhotoSettings(raw) {
+      raw = raw && typeof raw === "object" ? raw : {};
+      var style = String(raw.style || "photos");
+      if (style !== "faces" && style !== "mix") style = "photos";
+      var off = {};
+      if (raw.off && typeof raw.off === "object") {
+        Object.keys(raw.off).forEach(function (k) { if (raw.off[k]) off[String(k).slice(0, 40)] = true; });
+      }
+      return { style: style, off: off };
+    }
+
+    function savePhotoSettings(patch) {
+      photoSettings = normalizePhotoSettings(Object.assign({}, photoSettings, patch || {}));
+      persistActiveProfileSettings();
+      updatePhotoUi();
+    }
+
+    function familyItem(person, file, kind) {
+      var pal = paletteFor(person.id);
+      var id = (kind === "face" ? "fam-" : "famp-") + (kind === "face" ? person.id : file.replace(/\.jpg$/, ""));
+      var item = familyIndex[id];
+      if (!item) {
+        item = {
+          id: id, family: true, custom: true, person: person.id, file: file, kind: kind,
+          name: person.name, fullName: person.say || person.name, say: person.say || person.name,
+          color: pal.color, dark: pal.dark, light: pal.light, window: pal.window
+        };
+        familyIndex[id] = item;
+      }
+      return item;
+    }
+
+    function buildFamily(manifest, haveKeys) {
+      var have = {};
+      (haveKeys || []).forEach(function (k) { have[k] = true; });
+      familyIndex = {};
+      familyPeople = [];
+      ((manifest && manifest.people) || []).forEach(function (p) {
+        if (!p || !p.id) return;
+        var person = { id: String(p.id), name: String(p.name || p.id), say: String(p.say || p.name || p.id), face: "", photos: [] };
+        if (p.face && have[p.face]) person.face = p.face;
+        (p.photos || []).forEach(function (f) { if (have[f]) person.photos.push(f); });
+        if (!person.face && person.photos.length) person.face = person.photos[0];
+        if (person.face || person.photos.length) familyPeople.push(person);
+      });
+    }
+
+    function loadFamilyLocal() {
+      if (!photosAllowedHere()) { updatePhotoUi(); return Promise.resolve(); }
+      return Promise.all([pdbGet("meta", "manifest"), pdbKeys("img")]).then(function (r) {
+        buildFamily(r[0], r[1]);
+      }).catch(function () {}).then(function () { updatePhotoUi(); });
+    }
+
+    function photosAvailable() {
+      return photosAllowedHere() && activeFamily().length >= 2;
+    }
+
+    function activeFamily() {
+      return familyPeople.filter(function (p) { return !photoSettings.off[p.id]; });
+    }
+
+    function photoUrlFor(file) {
+      if (photoUrls[file]) return Promise.resolve(photoUrls[file]);
+      return pdbGet("img", file).then(function (blob) {
+        if (!blob) return "";
+        if (!photoUrls[file]) photoUrls[file] = URL.createObjectURL(blob);
+        return photoUrls[file];
+      }).catch(function () { return ""; });
+    }
+
+    // Keep only the pictures in use as object URLs so big sets never sit in memory.
+    function releasePhotoUrls(keep) {
+      Object.keys(photoUrls).forEach(function (f) {
+        if (!keep[f]) { try { URL.revokeObjectURL(photoUrls[f]); } catch (e) {} delete photoUrls[f]; }
+      });
+    }
+
+    function warmPhotoUrls(files, release) {
+      var keep = {};
+      files.forEach(function (f) { if (f) keep[f] = true; });
+      if (release) {
+        Object.keys(lastFamilyFiles).forEach(function (f) { keep[f] = true; });
+        releasePhotoUrls(keep);
+      }
+      return Promise.all(Object.keys(keep).map(photoUrlFor));
+    }
+
+    function fillFamilyArt(holder, item) {
+      holder.innerHTML = "";
+      holder.classList.remove("has-photo");
+      holder.classList.add("is-family");
+      var img = document.createElement("img");
+      img.className = "family-art";
+      img.alt = "";
+      img.draggable = false;
+      img.decoding = "async";
+      img.loading = "lazy";
+      img.addEventListener("error", function () {
+        img.remove();
+        holder.classList.remove("is-family");
+        holder.innerHTML = placeholderSVG(item);
+      });
+      holder.appendChild(img);
+      var url = photoUrls[item.file];
+      if (url) img.src = url;
+      else photoUrlFor(item.file).then(function (u) { if (u) img.src = u; else img.dispatchEvent(new Event("error")); });
+    }
+
+    function currentPairTotal() {
+      if (matchMode === "photos") return Math.max(1, Math.floor(deck.length / 2));
+      return pairsForLevel(level);
+    }
+
+    var recentPhotoFiles = [];
+
+    function pickPersonPhoto(p) {
+      var list = p.photos.length ? p.photos : [p.face];
+      var fresh = list.filter(function (f) { return recentPhotoFiles.indexOf(f) === -1; });
+      var pick = shuffle((fresh.length ? fresh : list).slice())[0];
+      recentPhotoFiles.push(pick);
+      if (recentPhotoFiles.length > 40) recentPhotoFiles.shift();
+      return pick;
+    }
+
+    function dealFamilyDeck() {
+      var people = shuffle(activeFamily().slice());
+      var n = Math.min(pairsForLevel(0), MATCH_PAIR_CAP, people.length);
+      var style = photoSettings.style || "photos";
+      var items = [];
+      people.slice(0, n).forEach(function (p) {
+        var face = familyItem(p, p.face, "face");
+        var photo = familyItem(p, pickPersonPhoto(p), "photo");
+        var a = style === "faces" ? face : photo;
+        var b = style === "faces" ? face : (style === "mix" ? (face.file === photo.file ? photo : face) : photo);
+        items.push({ id: p.id, car: a });
+        items.push({ id: p.id, car: b });
+      });
+      items = shuffle(items);
+      return items.map(function (it, i) { return { uid: it.car.id + "-" + i, id: it.id, car: it.car }; });
+    }
+
+    function startPhotoMatch(fresh) {
+      if (!photosAvailable()) { goHome(); return Promise.resolve(false); }
+      matchMode = "photos";
+      var d = dealFamilyDeck();
+      var files = d.map(function (x) { return x.car.file; });
+      return warmPhotoUrls(files, true).then(function () {
+        pendingFamilyDeck = d;
+        startGame(0, !!fresh);
+        return true;
+      });
+    }
+
+    function nameGamePool() {
+      var pool = nameSettings.pool || "cars";
+      var fam = [];
+      if (pool !== "cars" && photosAllowedHere()) {
+        fam = activeFamily().filter(function (p) { return p.face; }).map(function (p) { return familyItem(p, p.face, "face"); });
+      }
+      if (pool === "family" && fam.length >= 2) return fam;
+      if (pool === "both" && fam.length) return allCars().concat(fam);
+      return allCars().slice();
+    }
+
+    function preWarmNameFaces() {
+      if ((nameSettings.pool || "cars") === "cars") return Promise.resolve();
+      var files = activeFamily().map(function (p) { return p.face; });
+      return warmPhotoUrls(files, true);
+    }
+
+    function setPhotoStatus(text) {
+      var el = document.getElementById("photo-status");
+      if (el) el.textContent = text || "";
+    }
+
+    function photoStatusText() {
+      if (!photosAllowedHere()) return "Family photos only work on the home computer copy of the game.";
+      if (photoSync.busy && photoSync.total) return "Syncing photos " + photoSync.done + " of " + photoSync.total + "…";
+      if (photoSync.busy) return "Checking for photos…";
+      var count = familyPeople.reduce(function (n, p) { return n + p.photos.length; }, 0);
+      var base = familyPeople.length ? (familyPeople.length + " people, " + count + " photos on this device.") : "No family photos on this device yet.";
+      if (photoSync.error) return base + " " + photoSync.error;
+      if (photoSync.note) return base + " " + photoSync.note;
+      return base;
+    }
+
+    function updatePhotoUi() {
+      var allowed = photosAllowedHere();
+      var tab = document.getElementById("tab-photos");
+      if (tab) tab.hidden = !allowed;
+      var btn = document.getElementById("photos-btn");
+      var show = photosAvailable();
+      if (btn) btn.hidden = !show;
+      var acts = document.getElementById("start-actions");
+      if (acts) acts.classList.toggle("has-three", !!show);
+      var st = document.getElementById("photo-style");
+      if (st && document.activeElement !== st) st.value = photoSettings.style;
+      var plRow = document.getElementById("name-pool-row");
+      if (plRow) plRow.hidden = !allowed;
+      setPhotoStatus(photoStatusText());
+      var pane = document.getElementById("pane-photos");
+      if (pane && !pane.hidden) renderPhotoPeople();
+    }
+
+    function renderPhotoPeople() {
+      var hold = document.getElementById("photo-people");
+      if (!hold) return;
+      hold.innerHTML = "";
+      if (!familyPeople.length) {
+        var none = document.createElement("p");
+        none.className = "settings-lead";
+        none.textContent = photosAllowedHere() ? "Photos arrive with the next sync on the home Wi-Fi." : "";
+        hold.appendChild(none);
+        return;
+      }
+      familyPeople.forEach(function (p) {
+        var b = document.createElement("button");
+        b.type = "button";
+        b.className = "photo-person";
+        var on = !photoSettings.off[p.id];
+        b.setAttribute("aria-pressed", on ? "true" : "false");
+        var face = document.createElement("span");
+        face.className = "photo-person-face";
+        var img = document.createElement("img");
+        img.alt = "";
+        img.loading = "lazy";
+        face.appendChild(img);
+        photoUrlFor(p.face).then(function (u) { if (u) img.src = u; });
+        var label = document.createElement("span");
+        label.textContent = p.name;
+        var small = document.createElement("small");
+        small.textContent = (on ? "On" : "Off") + " · " + p.photos.length + " photo" + (p.photos.length === 1 ? "" : "s");
+        label.appendChild(small);
+        b.appendChild(face);
+        b.appendChild(label);
+        b.addEventListener("click", function () {
+          var off = Object.assign({}, photoSettings.off);
+          if (off[p.id]) delete off[p.id]; else off[p.id] = true;
+          savePhotoSettings({ off: off });
+        });
+        hold.appendChild(b);
+      });
+    }
+
+    function pullPhotos(force) {
+      if (!photosAllowedHere() || !syncConfigured() || photoSync.busy) return Promise.resolve(false);
+      photoSync.busy = true;
+      photoSync.error = "";
+      photoSync.note = "";
+      photoSync.total = 0;
+      photoSync.done = 0;
+      updatePhotoUi();
+      var etagP = force ? Promise.resolve("") : pdbGet("meta", "etag").catch(function () { return ""; });
+      var usedProgress = false;
+      return etagP.then(function (etag) {
+        var h = syncAuthHeaders({ "Cache-Control": "no-store" });
+        if (etag) h["If-None-Match"] = '"' + etag + '"';
+        return syncFetch("/api/photos", { headers: h, cache: "no-store" });
+      }).then(function (r) {
+        if (r.status === 304) return null;
+        if (r.status === 404 || r.status === 403) { photoSync.note = r.status === 403 ? "Photos are only shared on the home Wi-Fi." : ""; return null; }
+        if (!r.ok) throw new Error("Could not get the photo list.");
+        return r.json();
+      }).then(function (man) {
+        if (!man) return false;
+        var need = {};
+        (man.people || []).forEach(function (p) {
+          if (p.face) need[p.face] = true;
+          (p.photos || []).forEach(function (f) { need[f] = true; });
+        });
+        return pdbKeys("img").then(function (keys) {
+          var have = {};
+          keys.forEach(function (k) { have[k] = true; });
+          var missing = Object.keys(need).filter(function (f) { return !have[f]; });
+          var stale = keys.filter(function (k) { return !need[k]; });
+          var failed = 0;
+          photoSync.total = missing.length;
+          updatePhotoUi();
+          if (missing.length && !syncProgress.active) {
+            usedProgress = true;
+            syncProgress = { active: true, total: missing.length, done: 0, unit: "photo" };
+            renderSyncProgress();
+          }
+          return mapPool(missing, 4, function (f) {
+            return syncFetch("/api/photos/img/" + encodeURIComponent(f), { headers: syncHeaders() }, BLOB_FETCH_MS).then(function (r) {
+              if (!r.ok) throw new Error("bad");
+              return r.blob();
+            }).then(function (b) {
+              if (!b || !b.size) throw new Error("empty");
+              return pdbPut("img", f, b);
+            }).catch(function () { failed += 1; }).then(function () {
+              photoSync.done += 1;
+              if (usedProgress) bumpSyncProgress();
+              if (photoSync.done % 5 === 0 || photoSync.done === photoSync.total) setPhotoStatus(photoStatusText());
+            });
+          }).then(function () {
+            return Promise.all(stale.map(function (k) {
+              if (photoUrls[k]) { try { URL.revokeObjectURL(photoUrls[k]); } catch (e) {} delete photoUrls[k]; }
+              return pdbDel("img", k).catch(function () {});
+            }));
+          }).then(function () {
+            return pdbPut("meta", "manifest", man);
+          }).then(function () {
+            if (!failed && man.etag) return pdbPut("meta", "etag", man.etag);
+            if (failed) photoSync.error = failed + " photo" + (failed === 1 ? "" : "s") + " didn't arrive. They'll come next sync.";
+          }).then(function () {
+            return pdbKeys("img");
+          }).then(function (k2) {
+            buildFamily(man, k2);
+            return true;
+          });
+        });
+      }).catch(function (e) {
+        photoSync.error = (e && e.message) || "Could not sync photos.";
+        return false;
+      }).then(function (changed) {
+        photoSync.busy = false;
+        photoSync.at = Date.now();
+        if (usedProgress) settleSyncProgress(function () { updateSyncUi(); });
+        updatePhotoUi();
+        return changed;
+      });
+    }
+
+    function refreshPhotosOnServer() {
+      var pinEl = document.getElementById("photo-pin");
+      var pin = pinEl ? String(pinEl.value || "").trim() : "";
+      if (!syncConfigured()) { setPhotoStatus("Connect to the home computer on the Family tab first."); return; }
+      if (!pin) { setPhotoStatus("Type the parent PIN first."); if (pinEl) pinEl.focus(); return; }
+      setPhotoStatus("Asking the home computer for new photos…");
+      var h = syncHeaders();
+      h["X-Parent-Pin"] = pin;
+      syncFetch("/api/photos/refresh", { method: "POST", headers: h }).then(function (r) {
+        if (pinEl) pinEl.value = "";
+        return r.json().catch(function () { return {}; }).then(function (j) {
+          if (!r.ok) throw new Error((j && j.message) || "The home computer said no.");
+          var tries = 0;
+          function poll() {
+            tries += 1;
+            return new Promise(function (res) { setTimeout(res, 3000); }).then(function () {
+              return syncFetch("/api/photos/status", { headers: syncHeaders(), cache: "no-store" });
+            }).then(function (r2) { return r2.json(); }).then(function (st) {
+              if (st.refreshing && tries < 100) { setPhotoStatus("Picking photos on the home computer…"); return poll(); }
+              if (st.lastError) throw new Error("Photo refresh failed on the home computer.");
+              return pullPhotos(true);
+            });
+          }
+          return poll();
+        });
+      }).catch(function (e) {
+        photoSync.error = e.message || "Could not refresh photos.";
+        updatePhotoUi();
+      });
+    }
+
+    function bindPhotoUi() {
+      var st = document.getElementById("photo-style");
+      if (st) st.addEventListener("change", function () { savePhotoSettings({ style: st.value }); });
+      var sb = document.getElementById("photo-sync-btn");
+      if (sb) sb.addEventListener("click", function () { pullPhotos(true); });
+      var rb = document.getElementById("photo-refresh-btn");
+      if (rb) rb.addEventListener("click", refreshPhotosOnServer);
     }
 
     function paintHero() {
@@ -6283,7 +6814,8 @@
 
     function syncProgressLabel() {
       var total = syncProgress.total;
-      var unit = total === 1 ? "car" : "cars";
+      var base = syncProgress.unit || "car";
+      var unit = total === 1 ? base : base + "s";
       return "Syncing " + syncProgress.done + " of " + total + " " + unit + "…";
     }
 
@@ -6780,6 +7312,7 @@
         updateSyncUi();
         flashHudTick();
         checkGameUpdate();
+        pullPhotos();
       });
     }
 
@@ -7396,6 +7929,7 @@
         loadProfiles();
         paintHero();
         updatePlayerUi();
+        return loadFamilyLocal();
       });
     });
     requestWorkerUpdate();
@@ -7514,7 +8048,18 @@
       seedHarperIfNeeded: seedHarperIfNeeded,
       harperSeeded: harperSeeded,
       updatePlayerUi: updatePlayerUi,
-      recMetaPayload: recMetaPayload
+      recMetaPayload: recMetaPayload,
+      pullPhotos: pullPhotos,
+      loadFamilyLocal: loadFamilyLocal,
+      startPhotoMatch: startPhotoMatch,
+      getFamily: function () { return familyPeople.map(function (p) { return { id: p.id, name: p.name, say: p.say, face: !!p.face, photos: p.photos.length }; }); },
+      getPhotoSettings: function () { return JSON.parse(JSON.stringify(photoSettings)); },
+      setPhotoSettings: savePhotoSettings,
+      photosAvailable: photosAvailable,
+      getPhotoSync: function () { return JSON.parse(JSON.stringify(photoSync)); },
+      getDeck: function () { return deck.map(function (d) { return { id: d.id, car: d.car.id, family: !!d.car.family }; }); },
+      getMatchMode: function () { return matchMode; },
+      familyFace: function (id) { var p = familyPeople.filter(function (x) { return x.id === id; })[0]; return p ? familyItem(p, p.face, "face") : null; }
     };
 
   })();
