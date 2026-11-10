@@ -6,6 +6,7 @@ var https = require("https");
 var fs = require("fs");
 var path = require("path");
 var crypto = require("crypto");
+var zlib = require("zlib");
 var os = require("os");
 var querystring = require("querystring");
 var certs = require("./certs");
@@ -23,7 +24,7 @@ var MAX_JSON = 512 * 1024;
 var MAX_BLOB = 12 * 1024 * 1024;
 var PAGES_ORIGIN = "https://knoddy86-lab.github.io";
 var ID_RE = /^[a-zA-Z0-9_-]{1,80}$/;
-var GAME_VERSION_FALLBACK = { version: "12", cache: "theo-car-match-v12", name: "Theo's Car Match" };
+var GAME_VERSION_FALLBACK = { version: "13", cache: "theo-car-match-v13", name: "Theo's Car Match" };
 
 function readGameVersion() {
   try {
@@ -119,27 +120,57 @@ function allowedOrigin(origin) {
   return null;
 }
 
+function addVary(res, token) {
+  var cur = res.getHeader("Vary");
+  if (!cur) {
+    res.setHeader("Vary", token);
+    return;
+  }
+  var parts = String(cur).split(/,\s*/);
+  if (parts.indexOf(token) === -1) res.setHeader("Vary", String(cur) + ", " + token);
+}
+
 function setCors(req, res) {
   var origin = allowedOrigin(req.headers.origin);
   if (origin) {
     res.setHeader("Access-Control-Allow-Origin", origin);
-    res.setHeader("Vary", "Origin");
-    res.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type, X-Family-Key");
+    addVary(res, "Origin");
+    res.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type, X-Family-Key, X-Parent-Pin, X-Updated-At, If-None-Match");
     res.setHeader("Access-Control-Allow-Methods", "GET, PUT, POST, DELETE, OPTIONS");
+    res.setHeader("Access-Control-Expose-Headers", "ETag");
     res.setHeader("Access-Control-Max-Age", "86400");
   }
+}
+
+function wantsGzip(req) {
+  var ae = (req && req.headers && req.headers["accept-encoding"]) || "";
+  return /\bgzip\b/i.test(ae);
+}
+
+function shouldGzipType(type) {
+  if (!type) return false;
+  var t = String(type).split(";")[0].trim().toLowerCase();
+  return t === "application/json" || t.indexOf("text/") === 0 || t === "application/javascript" || t === "text/javascript" || t === "application/xml" || t === "image/svg+xml";
 }
 
 function send(res, code, type, body, extra) {
   res.statusCode = code;
   if (type) res.setHeader("Content-Type", type);
-  res.setHeader("Cache-Control", "no-store");
+  if (!res.getHeader("Cache-Control")) res.setHeader("Cache-Control", "no-store");
   if (extra) Object.keys(extra).forEach(function (k) { res.setHeader(k, extra[k]); });
-  res.end(body);
+  var buf = Buffer.isBuffer(body) ? body : Buffer.from(body == null ? "" : String(body));
+  var req = res.req;
+  if (buf.length >= 256 && shouldGzipType(type) && wantsGzip(req) && !res.getHeader("Content-Encoding")) {
+    buf = zlib.gzipSync(buf);
+    res.setHeader("Content-Encoding", "gzip");
+    addVary(res, "Accept-Encoding");
+  }
+  res.setHeader("Content-Length", buf.length);
+  res.end(buf);
 }
 
-function sendJson(res, code, obj) {
-  send(res, code, "application/json; charset=utf-8", JSON.stringify(obj));
+function sendJson(res, code, obj, extra) {
+  send(res, code, "application/json; charset=utf-8", JSON.stringify(obj), extra);
 }
 
 function readRequest(req, max) {
@@ -192,6 +223,7 @@ function readMeta(id) {
 function writeMeta(id, meta) {
   var p = cardPath(id, "meta");
   fs.writeFileSync(p, JSON.stringify(meta, null, 2));
+  invalidateManifest();
 }
 
 function blobInfo(id, kind) {
@@ -260,6 +292,7 @@ function writeSettings(incoming) {
   var next = sanitizeSettings(Object.assign({}, current, incoming || {}));
   next.updatedAt = Number(incoming && incoming.updatedAt) || Date.now();
   fs.writeFileSync(settingsPath(), JSON.stringify(next, null, 2));
+  invalidateManifest();
   return next;
 }
 
@@ -358,6 +391,7 @@ function removeBlob(id, kind) {
   var typeFile = cardPath(id, kind + "-type");
   try { if (file && fs.existsSync(file)) fs.unlinkSync(file); } catch (e) {}
   try { if (typeFile && fs.existsSync(typeFile)) fs.unlinkSync(typeFile); } catch (e) {}
+  invalidateManifest();
 }
 
 function saveBlob(id, kind, buf, type, updatedAt) {
@@ -365,6 +399,7 @@ function saveBlob(id, kind, buf, type, updatedAt) {
   var typeFile = cardPath(id, kind + "-type");
   fs.writeFileSync(file, buf);
   fs.writeFileSync(typeFile, (type || "application/octet-stream").split(";")[0].slice(0, 80));
+  invalidateManifest();
   var meta = readMeta(id) || { id: id, updatedAt: 0 };
   var ts = Number(updatedAt) || Date.now();
   if (kind === "image") meta.imageUpdatedAt = ts;
@@ -402,6 +437,75 @@ function serveGame(req, res, urlPath) {
   });
 }
 
+var manifestCache = null;
+
+function invalidateManifest() {
+  manifestCache = null;
+}
+
+function lightCard(id) {
+  var meta = readMeta(id) || { id: id, updatedAt: 0 };
+  return {
+    id: id,
+    updatedAt: meta.updatedAt || 0,
+    imageUpdatedAt: meta.imageUpdatedAt || 0,
+    originalUpdatedAt: meta.originalUpdatedAt || 0,
+    audioUpdatedAt: meta.audioUpdatedAt || 0,
+    deleted: !!meta.deleted,
+    hasImage: !meta.deleted && fs.existsSync(cardPath(id, "image")),
+    hasOriginal: !meta.deleted && fs.existsSync(cardPath(id, "original")),
+    hasAudio: !meta.deleted && fs.existsSync(cardPath(id, "audio"))
+  };
+}
+
+function manifestState() {
+  if (manifestCache) return manifestCache;
+  var cards = {};
+  var maxAt = 0;
+  var parts = [];
+  listIds().sort().forEach(function (id) {
+    var c = lightCard(id);
+    cards[id] = c;
+    if ((c.updatedAt || 0) > maxAt) maxAt = c.updatedAt || 0;
+    parts.push(
+      id,
+      String(c.updatedAt || 0),
+      String(c.imageUpdatedAt || 0),
+      String(c.originalUpdatedAt || 0),
+      String(c.audioUpdatedAt || 0),
+      c.deleted ? "1" : "0",
+      c.hasImage ? "1" : "0",
+      c.hasOriginal ? "1" : "0",
+      c.hasAudio ? "1" : "0"
+    );
+  });
+  var etag = crypto.createHash("sha1").update(parts.join("|")).digest("hex").slice(0, 16);
+  manifestCache = { etag: etag, updatedAt: maxAt, count: Object.keys(cards).length, cards: cards };
+  return manifestCache;
+}
+
+function etagMatches(req, etag) {
+  var inm = req.headers["if-none-match"];
+  if (!inm || !etag) return false;
+  var want = String(etag);
+  return String(inm).split(",").some(function (part) {
+    var t = part.trim().replace(/^W\//, "").replace(/^"|"$/g, "");
+    return t === want || t === "*";
+  });
+}
+
+function sendEtagJson(req, res, etag, obj) {
+  var tag = '"' + etag + '"';
+  res.setHeader("ETag", tag);
+  if (etagMatches(req, etag)) {
+    res.statusCode = 304;
+    res.setHeader("Cache-Control", "no-store");
+    res.setHeader("Content-Length", 0);
+    return res.end();
+  }
+  sendJson(res, 200, obj);
+}
+
 function handleApi(req, res, url) {
   var parts = url.pathname.replace(/\/+$/, "").split("/").filter(Boolean);
   // parts[0] === "api"
@@ -419,10 +523,22 @@ function handleApi(req, res, url) {
     return sendJson(res, 200, { ok: true, set: pinStore.hasPin() });
   }
 
+  if (req.method === "GET" && parts.length === 2 && parts[1] === "manifest") {
+    var man = manifestState();
+    return sendEtagJson(req, res, man.etag, {
+      ok: true,
+      etag: man.etag,
+      updatedAt: man.updatedAt,
+      count: man.count,
+      cards: man.cards
+    });
+  }
+
   if (req.method === "GET" && parts.length === 2 && parts[1] === "sync") {
+    var man = manifestState();
     var cards = {};
     listIds().forEach(function (id) { cards[id] = publicCard(id); });
-    return sendJson(res, 200, { ok: true, cards: cards, settings: readSettings() });
+    return sendEtagJson(req, res, man.etag, { ok: true, etag: man.etag, cards: cards, settings: readSettings() });
   }
 
   if (parts.length === 2 && parts[1] === "settings") {
@@ -840,6 +956,8 @@ function onRequest(req, res) {
 
 var server = http.createServer(onRequest);
 var httpsServer = null;
+server.keepAliveTimeout = 30000;
+server.headersTimeout = 35000;
 
 function printBanner() {
   var ips = lanIPv4();
@@ -885,6 +1003,8 @@ server.listen(PORT, HOST, function () {
     key: tlsBundle.serverKeyPem,
     ca: tlsBundle.caCertPem
   }, onRequest);
+  httpsServer.keepAliveTimeout = 30000;
+  httpsServer.headersTimeout = 35000;
   httpsServer.listen(HTTPS_PORT, HOST, function () {
     printBanner();
   });

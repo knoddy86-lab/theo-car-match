@@ -547,36 +547,43 @@
 
     .sync-hud {
       position: absolute;
-      top: calc(var(--safe-t) + 48px);
-      left: var(--safe-l);
+      top: calc(var(--safe-t) + 46px);
+      left: calc(var(--safe-l) + 8px);
       z-index: 8;
       display: flex;
-      flex-direction: column;
-      align-items: flex-start;
+      flex-direction: row;
+      align-items: center;
       gap: 4px;
-      max-width: min(200px, calc(100vw - 32px));
     }
     .sync-hud[hidden] { display: none; }
     .sync-hud-status {
+      width: 22px;
+      height: 22px;
       display: flex;
-      align-items: flex-start;
-      gap: 6px;
-      background: rgba(255,255,255,0.92);
-      border-radius: 14px;
-      padding: 5px 8px 5px 6px;
-      box-shadow: 0 3px 0 rgba(0,0,0,0.08), 0 6px 14px rgba(0,0,0,0.1);
-      color: #33691E;
-      font-weight: 800;
-      font-size: 11px;
-      line-height: 1.2;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.35s ease;
     }
-    .sync-hud-status.is-offline { color: #546E7A; }
-    .sync-hud-status.is-syncing { color: #1565C0; }
-    .sync-hud-icon { width: 16px; height: 16px; flex: 0 0 16px; margin-top: 1px; }
-    .sync-hud-text small { display: block; font-size: 9px; font-weight: 700; opacity: 0.85; }
+    .sync-hud-status.is-flash {
+      opacity: 1;
+    }
+    .sync-hud-status.is-error-dot {
+      opacity: 1;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #C62828;
+      box-shadow: 0 0 0 2px rgba(255,255,255,0.92);
+    }
+    .sync-hud-status.is-error-dot .sync-hud-icon,
+    .sync-hud-status.is-error-dot .sync-hud-text { display: none; }
+    .sync-hud-icon { width: 20px; height: 20px; flex: 0 0 20px; margin: 0; filter: drop-shadow(0 1px 1px rgba(0,0,0,0.25)); }
+    .sync-hud-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
     .sync-hud-refresh {
-      width: 32px;
-      height: 32px;
+      width: 28px;
+      height: 28px;
       border: 0;
       border-radius: 50%;
       background: rgba(255,255,255,0.92);
@@ -587,7 +594,7 @@
       justify-content: center;
       padding: 0;
     }
-    .sync-hud-refresh svg { width: 16px; height: 16px; display: block; }
+    .sync-hud-refresh svg { width: 14px; height: 14px; display: block; }
     .sync-hud-refresh:focus {
       outline: 4px solid var(--focus);
       outline-offset: 2px;
@@ -1187,7 +1194,7 @@
     </button>
 
     <div class="sync-hud" id="sync-hud" hidden>
-      <div class="sync-hud-status" id="sync-hud-status">
+      <div class="sync-hud-status" id="sync-hud-status" hidden aria-live="polite">
         <span class="sync-hud-icon" id="sync-hud-icon" aria-hidden="true"></span>
         <span class="sync-hud-text" id="sync-hud-text"></span>
       </div>
@@ -1464,8 +1471,12 @@
     var lastSyncError = "";
     var lastSyncOk = false;
     var lastSyncChanges = 0;
+    var hudTickTimer = null;
+    var lastManifestEtag = "";
+    var BLOB_FETCH_MS = 20000;
+    var bootStartedAt = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
     var keyChangeOpen = false;
-    var APP_VERSION = "12";
+    var APP_VERSION = "13";
     var updateBannerShown = false;
     var outboxCount = 0;
     var syncNotice = "";
@@ -4385,36 +4396,91 @@
       return !!(msg && /reach|network|Failed to fetch|Load failed|offline|NetworkError/i.test(msg));
     }
 
-    function updateSyncHud() {
-      var hud = document.getElementById("sync-hud");
+    function hideHudStatus() {
+      var status = document.getElementById("sync-hud-status");
+      var text = document.getElementById("sync-hud-text");
+      if (hudTickTimer) {
+        clearTimeout(hudTickTimer);
+        hudTickTimer = null;
+      }
+      if (status) {
+        status.classList.remove("is-flash", "is-error-dot", "is-offline", "is-syncing");
+        status.hidden = true;
+      }
+      if (text) text.textContent = "";
+    }
+
+    function flashHudTick() {
       var status = document.getElementById("sync-hud-status");
       var icon = document.getElementById("sync-hud-icon");
       var text = document.getElementById("sync-hud-text");
+      if (!status) return;
+      if (hudTickTimer) {
+        clearTimeout(hudTickTimer);
+        hudTickTimer = null;
+      }
+      status.hidden = false;
+      status.classList.remove("is-error-dot", "is-offline", "is-syncing");
+      if (icon) icon.outerHTML = svgTick();
+      if (text) {
+        var label = lastSyncChanges > 0 ? ("Synced " + lastSyncChanges + " change" + (lastSyncChanges === 1 ? "" : "s")) : "Up to date";
+        text.textContent = label;
+      }
+      status.classList.add("is-flash");
+      hudTickTimer = setTimeout(function () {
+        hudTickTimer = null;
+        var st = document.getElementById("sync-hud-status");
+        var tx = document.getElementById("sync-hud-text");
+        if (st) {
+          st.classList.remove("is-flash");
+          setTimeout(function () {
+            var live = document.getElementById("sync-hud-status");
+            if (live && !live.classList.contains("is-flash") && !live.classList.contains("is-error-dot")) {
+              live.hidden = true;
+              if (tx) tx.textContent = "";
+            }
+          }, 400);
+        }
+      }, 1500);
+    }
+
+    function showHudErrorDot() {
+      var status = document.getElementById("sync-hud-status");
+      var text = document.getElementById("sync-hud-text");
+      if (hudTickTimer) {
+        clearTimeout(hudTickTimer);
+        hudTickTimer = null;
+      }
+      if (!status) return;
+      status.hidden = false;
+      status.classList.remove("is-flash", "is-offline", "is-syncing");
+      status.classList.add("is-error-dot");
+      if (text) text.textContent = lastSyncError || "Sync failed";
+    }
+
+    function updateSyncHud() {
+      var hud = document.getElementById("sync-hud");
       if (!hud) return;
       if (!syncConfigured()) {
         hud.hidden = true;
+        hideHudStatus();
+        updateFamilySyncStatus();
         return;
       }
       hud.hidden = false;
-      var unreachable = isUnreachableError(lastSyncError) || (lastSyncError && !lastSyncOk && !pulling);
-      if (status) status.classList.remove("is-offline", "is-syncing");
+      var unreachable = isUnreachableError(lastSyncError) || (lastSyncError && !lastSyncOk && !pulling) || !navigator.onLine;
       if (pulling) {
-        if (status) status.classList.add("is-syncing");
-        if (icon) icon.outerHTML = svgSpin();
-        if (text) text.innerHTML = "Syncing…";
-      } else if (unreachable || !navigator.onLine) {
-        if (status) status.classList.add("is-offline");
-        if (icon) icon.outerHTML = svgCloudOff();
-        if (text) text.innerHTML = "Offline<small>Not on the home Wi-Fi</small>";
+        hideHudStatus();
+      } else if (unreachable) {
+        hideHudStatus();
+      } else if (lastSyncError && !lastSyncOk) {
+        showHudErrorDot();
       } else if (lastSyncOk || lastSyncAt) {
-        if (icon) icon.outerHTML = svgTick();
-        var when = formatSyncTime(lastSyncAt);
-        var label = lastSyncChanges > 0 ? ("Synced " + lastSyncChanges + " change" + (lastSyncChanges === 1 ? "" : "s")) : "Up to date";
-        if (text) text.innerHTML = label + (when ? "<small>" + when + "</small>" : "");
+        if (!document.getElementById("sync-hud-status") || !document.getElementById("sync-hud-status").classList.contains("is-flash")) {
+          /* tick is flashed explicitly from a just-finished sync */
+        }
       } else {
-        if (status) status.classList.add("is-offline");
-        if (icon) icon.outerHTML = svgCloudOff();
-        if (text) text.innerHTML = "Waiting to sync";
+        hideHudStatus();
       }
       updateFamilySyncStatus();
     }
@@ -4565,13 +4631,39 @@
       return h;
     }
 
-    function syncFetch(path, opts) {
-      return lanFetch(syncRoot() + path, opts || {}).then(function (r) {
+    function syncFetch(path, opts, ms) {
+      return lanFetch(syncRoot() + path, opts || {}, ms || LAN_FETCH_MS).then(function (r) {
         if (r.status === 401) {
           clearRejectedKey();
           throw new Error("The family key was not accepted.");
         }
         return r;
+      });
+    }
+
+    function nowMs() {
+      return (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
+    }
+
+    function mapPool(items, limit, fn) {
+      var i = 0;
+      var active = 0;
+      return new Promise(function (resolve, reject) {
+        function next() {
+          if (i >= items.length && active === 0) return resolve();
+          while (active < limit && i < items.length) {
+            (function (item) {
+              active += 1;
+              Promise.resolve(fn(item)).then(function () {
+                active -= 1;
+                next();
+              }, function (err) {
+                reject(err);
+              });
+            })(items[i++]);
+          }
+        }
+        next();
       });
     }
 
@@ -4674,7 +4766,7 @@
           return h;
         })(),
         body: blob
-      }).then(function (r) {
+      }, BLOB_FETCH_MS).then(function (r) {
         if (!r.ok) throw new Error("Could not save a " + kind + " to the computer.");
       });
     }
@@ -4719,26 +4811,40 @@
       if (remote.dark) patch.dark = remote.dark;
       if (remote.light) patch.light = remote.light;
       if (remote.window) patch.window = remote.window;
-      var fetches = [];
+      var local = customMedia[id] || {};
+      var jobs = [];
+      function fetchBlob(kind) {
+        return syncFetch("/api/cards/" + encodeURIComponent(id) + "/" + kind, { headers: syncHeaders() }, BLOB_FETCH_MS).then(function (r) {
+          return r.ok ? r.blob() : null;
+        });
+      }
+      function blobChanged(has, remoteAt, localAt, localBlob) {
+        if (!has) return !!localBlob;
+        if (!localBlob) return true;
+        return Number(remoteAt) !== Number(localAt);
+      }
       if (remote.hasImage) {
-        fetches.push(syncFetch("/api/cards/" + encodeURIComponent(id) + "/image", { headers: syncHeaders() }).then(function (r) {
-          return r.ok ? r.blob() : null;
-        }));
-      } else fetches.push(Promise.resolve(null));
+        if (blobChanged(true, remote.imageUpdatedAt, local.imageUpdatedAt, local.imageBlob)) {
+          jobs.push(fetchBlob("image").then(function (b) { if (b) patch.image = b; }));
+        }
+      } else if (local.imageBlob) {
+        patch.image = null;
+      }
       if (remote.hasAudio) {
-        fetches.push(syncFetch("/api/cards/" + encodeURIComponent(id) + "/audio", { headers: syncHeaders() }).then(function (r) {
-          return r.ok ? r.blob() : null;
-        }));
-      } else fetches.push(Promise.resolve(null));
+        if (blobChanged(true, remote.audioUpdatedAt, local.audioUpdatedAt, local.audioBlob)) {
+          jobs.push(fetchBlob("audio").then(function (b) { if (b) patch.audio = b; }));
+        }
+      } else if (local.audioBlob) {
+        patch.audio = null;
+      }
       if (remote.hasOriginal) {
-        fetches.push(syncFetch("/api/cards/" + encodeURIComponent(id) + "/original", { headers: syncHeaders() }).then(function (r) {
-          return r.ok ? r.blob() : null;
-        }));
-      } else fetches.push(Promise.resolve(null));
-      return Promise.all(fetches).then(function (files) {
-        patch.image = files[0] || null;
-        patch.audio = files[1] || null;
-        patch.imageOriginal = files[2] || null;
+        if (blobChanged(true, remote.originalUpdatedAt, local.originalUpdatedAt, local.imageOriginalBlob)) {
+          jobs.push(fetchBlob("original").then(function (b) { if (b) patch.imageOriginal = b; }));
+        }
+      } else if (local.imageOriginalBlob) {
+        patch.imageOriginal = null;
+      }
+      return Promise.all(jobs).then(function () {
         return saveCustom(id, patch);
       });
     }
@@ -4755,17 +4861,101 @@
     function loadServerSeen() {
       return metaGet("serverSeen").then(function (val) {
         lastServerSeen = val && typeof val === "object" ? val : {};
-      }).catch(function () { lastServerSeen = {}; });
+        return metaGet("manifestEtag");
+      }).then(function (etag) {
+        lastManifestEtag = etag ? String(etag) : "";
+      }).catch(function () { lastServerSeen = lastServerSeen || {}; });
     }
 
     function saveServerSeen() {
-      return metaSet("serverSeen", lastServerSeen).catch(function () {});
+      return metaSet("serverSeen", lastServerSeen).then(function () {
+        return metaSet("manifestEtag", lastManifestEtag || "");
+      }).catch(function () {});
     }
 
     function dropOutboxFor(id) {
       return outboxAll().then(function (items) {
         var qids = items.filter(function (it) { return it.cardId === id; }).map(function (it) { return it.qid; });
         return outboxClearIds(qids);
+      });
+    }
+
+    function syncAuthHeaders(extra) {
+      var h = syncHeaders();
+      if (extra) {
+        var k;
+        for (k in extra) {
+          if (Object.prototype.hasOwnProperty.call(extra, k) && extra[k]) h[k] = extra[k];
+        }
+      }
+      return h;
+    }
+
+    function finishPullOk(changeCount, mode, timing) {
+      lastSyncAt = Date.now();
+      lastSyncOk = true;
+      lastSyncError = "";
+      lastSyncChanges = changeCount;
+      pullBackoff = 30000;
+      if (timing) {
+        timing.totalMs = Math.round(nowMs() - timing.t0);
+        timing.changes = changeCount;
+        timing.mode = mode;
+        timing.sinceBootMs = Math.round(nowMs() - bootStartedAt);
+        window.__theoSyncTiming = timing;
+        try { console.log("theo-sync", timing); } catch (e) {}
+      }
+      saveServerSeen();
+      updateSyncUi();
+      flashHudTick();
+      checkGameUpdate();
+    }
+
+    function applyChangedCards(remote, timing) {
+      var dropped = [];
+      var changeIds = [];
+      return outboxAll().then(function (items) {
+        var pending = {};
+        items.forEach(function (it) { if (it.cardId && it.cardId !== SETTINGS_ID && it.type !== "settings") pending[it.cardId] = true; });
+        Object.keys(remote).forEach(function (id) {
+          var rem = remote[id];
+          var stamp = serverStamp(rem);
+          var prev = lastServerSeen[id] || "";
+          if (stamp === prev) return;
+          changeIds.push(id);
+          if (pending[id]) dropped.push(id);
+        });
+        if (timing) timing.changeIds = changeIds.length;
+        if (!changeIds.length) return 0;
+        var tBlobs = nowMs();
+        syncApplying = true;
+        return mapPool(changeIds, 4, function (id) {
+          return applyRemoteCard(id, remote[id]).then(function () {
+            rememberServerCard(id, remote[id]);
+            return dropOutboxFor(id);
+          });
+        }).then(function () {
+          if (timing) timing.blobsMs = Math.round(nowMs() - tBlobs);
+          syncApplying = false;
+          return refreshOutboxCount();
+        }).then(function () {
+          return saveServerSeen();
+        }).then(function () {
+          if (dropped.length) {
+            var names = dropped.map(function (id) {
+              var car = carById(id);
+              return car ? displayFullName(car) : id;
+            });
+            syncNotice = "Home computer was updated. " +
+              (dropped.length === 1 ? "1 local edit was replaced by the home copy (" + names[0] + ")."
+                : dropped.length + " local edits were replaced by the home copy.");
+          }
+          refreshVisibleArt();
+          paintHero();
+          refreshAllAutoClips();
+          if (!document.getElementById("settings-screen").hidden) renderSettings();
+          return changeIds.length;
+        });
       });
     }
 
@@ -4779,58 +4969,51 @@
       pulling = true;
       lastSyncError = "";
       updateSyncUi();
-      return syncFetch("/api/sync", { headers: syncHeaders() }).then(function (r) {
+      var timing = { t0: nowMs() };
+      function headersFor(etag) {
+        var extra = { "Cache-Control": "no-store" };
+        if (etag) extra["If-None-Match"] = '"' + etag + '"';
+        return { headers: syncAuthHeaders(extra), cache: "no-store" };
+      }
+      return syncFetch("/api/manifest", headersFor(lastManifestEtag)).then(function (r) {
+        timing.manifestMs = Math.round(nowMs() - timing.t0);
+        timing.manifestStatus = r.status;
+        if (r.status === 304) {
+          finishPullOk(0, "manifest-304", timing);
+          return true;
+        }
+        if (r.status === 404) return null;
         if (!r.ok) throw new Error("Could not reach the family computer.");
         return r.json();
-      }).then(function (data) {
-        var remote = (data && data.cards) || {};
-        var dropped = [];
-        var changeCount = 0;
-        var chain = Promise.resolve();
-        return outboxAll().then(function (items) {
-          var pending = {};
-          items.forEach(function (it) { if (it.cardId && it.cardId !== SETTINGS_ID && it.type !== "settings") pending[it.cardId] = true; });
-          syncApplying = true;
-          Object.keys(remote).forEach(function (id) {
-            var rem = remote[id];
-            var stamp = serverStamp(rem);
-            var prev = lastServerSeen[id] || "";
-            if (stamp === prev) return;
-            changeCount += 1;
-            if (pending[id]) dropped.push(id);
-            chain = chain.then(function () {
-              return applyRemoteCard(id, rem).then(function () {
-                rememberServerCard(id, rem);
-                return dropOutboxFor(id);
-              });
-            });
+      }).then(function (man) {
+        if (man === true) return true;
+        if (man && man.etag && lastManifestEtag && man.etag === lastManifestEtag) {
+          lastManifestEtag = man.etag;
+          finishPullOk(0, "manifest-match", timing);
+          return true;
+        }
+        var changed = [];
+        if (man && man.cards) {
+          Object.keys(man.cards).forEach(function (id) {
+            if (serverStamp(man.cards[id]) !== (lastServerSeen[id] || "")) changed.push(id);
           });
-          return chain.then(function () {
-            syncApplying = false;
-            return refreshOutboxCount();
-          }).then(function () {
-            return saveServerSeen();
-          }).then(function () {
-            if (dropped.length) {
-              var names = dropped.map(function (id) {
-                var car = carById(id);
-                return car ? displayFullName(car) : id;
-              });
-              syncNotice = "Home computer was updated. " +
-                (dropped.length === 1 ? "1 local edit was replaced by the home copy (" + names[0] + ")."
-                  : dropped.length + " local edits were replaced by the home copy.");
-            }
-            refreshVisibleArt();
-            paintHero();
-            refreshAllAutoClips();
-            if (!document.getElementById("settings-screen").hidden) renderSettings();
-            lastSyncAt = Date.now();
-            lastSyncOk = true;
-            lastSyncError = "";
-            lastSyncChanges = changeCount;
-            pullBackoff = 30000;
-            updateSyncUi();
-            checkGameUpdate();
+          if (man.etag) lastManifestEtag = man.etag;
+          if (!changed.length) {
+            return saveServerSeen().then(function () {
+              finishPullOk(0, "manifest-stamps", timing);
+              return true;
+            });
+          }
+        }
+        var tSync = nowMs();
+        return syncFetch("/api/sync", headersFor("")).then(function (r) {
+          if (!r.ok) throw new Error("Could not reach the family computer.");
+          return r.json();
+        }).then(function (data) {
+          timing.syncMs = Math.round(nowMs() - tSync);
+          if (data && data.etag) lastManifestEtag = data.etag;
+          return applyChangedCards((data && data.cards) || {}, timing).then(function (n) {
+            finishPullOk(n || 0, changed.length ? "manifest+sync" : "sync", timing);
             return true;
           });
         });
@@ -4839,6 +5022,9 @@
         lastSyncError = e.message || "Can't reach home computer.";
         lastSyncOk = false;
         pullBackoff = Math.min(pullBackoff * 2, 300000);
+        timing.totalMs = Math.round(nowMs() - timing.t0);
+        timing.error = lastSyncError;
+        window.__theoSyncTiming = timing;
         updateSyncUi();
         return false;
       }).then(function (ok) {
@@ -4884,6 +5070,7 @@
           lastSyncChanges = 0;
           return (settingsQids.length ? outboxClearIds(settingsQids).then(refreshOutboxCount) : Promise.resolve()).then(function () {
             updateSyncUi();
+            flashHudTick();
             return true;
           });
         }
@@ -4915,6 +5102,7 @@
           lastSyncChanges = jobs.length;
           syncNotice = "";
           updateSyncUi();
+          flashHudTick();
           checkGameUpdate();
           return true;
         });
@@ -5213,23 +5401,24 @@
     preloadRevs();
     preloadHoorays();
     paintHero();
-    loadAllCustom().then(function () {
-      return loadDifficulty().then(function () {
-        return loadServerSeen().then(function () { return refreshOutboxCount(); }).then(function () {
+    var healthP = detectSync();
+    var dataP = loadAllCustom().then(function () {
+      return Promise.all([
+        loadDifficulty(),
+        loadServerSeen().then(function () { return refreshOutboxCount(); }).then(function () {
           return dropOutboxFor(SETTINGS_ID);
-        }).then(function () { return refreshOutboxCount(); }).then(function () {
-          return loadSyncSettings();
-        }).then(function () {
-          paintHero();
-          return detectSync().then(function () {
-            if (syncConfigured()) {
-              return pullFromServer().then(function () { checkGameUpdate(); });
-            }
-            if (sameOriginSync) checkGameUpdate();
-          }).catch(function () {});
-        });
+        }).then(function () { return refreshOutboxCount(); }),
+        loadSyncSettings()
+      ]).then(function () { paintHero(); });
+    });
+    Promise.all([healthP, dataP]).then(function () {
+      var p = syncConfigured() ? pullFromServer() : Promise.resolve();
+      return p.then(function () {
+        if (sameOriginSync || syncConfigured()) checkGameUpdate();
+        paintHero();
+        refreshAllAutoClips();
       });
-    }).then(function () { paintHero(); refreshAllAutoClips(); }).catch(function () { paintHero(); });
+    }).catch(function () { paintHero(); });
 
     document.getElementById("play-btn").focus();
 
