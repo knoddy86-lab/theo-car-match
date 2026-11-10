@@ -24,7 +24,7 @@ var MAX_JSON = 512 * 1024;
 var MAX_BLOB = 12 * 1024 * 1024;
 var PAGES_ORIGIN = "https://knoddy86-lab.github.io";
 var ID_RE = /^[a-zA-Z0-9_-]{1,80}$/;
-var GAME_VERSION_FALLBACK = { version: "13", cache: "theo-car-match-v13", name: "Theo's Car Match" };
+var GAME_VERSION_FALLBACK = { version: "14", cache: "theo-car-match-v14", name: "Theo's Car Match" };
 
 function readGameVersion() {
   try {
@@ -315,6 +315,7 @@ function publicCard(id) {
     updatedAt: meta.updatedAt || 0,
     name: meta.name || "",
     sayLike: meta.sayLike || "",
+    nickname: meta.nickname || "",
     line: meta.line || "",
     custom: !!meta.custom,
     deleted: !!meta.deleted,
@@ -346,6 +347,7 @@ function mergeMeta(id, incoming) {
     updatedAt: nextUpdated || Date.now(),
     name: incoming.name ? String(incoming.name).slice(0, 80) : "",
     sayLike: incoming.sayLike ? String(incoming.sayLike).slice(0, 80) : "",
+    nickname: incoming.nickname ? String(incoming.nickname).slice(0, 80) : "",
     line: incoming.line ? String(incoming.line).slice(0, 120) : "",
     custom: !!incoming.custom,
     deleted: !!incoming.deleted,
