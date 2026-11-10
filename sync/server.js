@@ -23,6 +23,15 @@ var MAX_JSON = 512 * 1024;
 var MAX_BLOB = 12 * 1024 * 1024;
 var PAGES_ORIGIN = "https://knoddy86-lab.github.io";
 var ID_RE = /^[a-zA-Z0-9_-]{1,80}$/;
+var GAME_VERSION_FALLBACK = { version: "9", cache: "theo-car-match-v9", name: "Theo's Car Match" };
+
+function readGameVersion() {
+  try {
+    var raw = JSON.parse(fs.readFileSync(path.join(GAME_DIR, "version.json"), "utf8"));
+    if (raw && raw.version) return { version: String(raw.version), cache: raw.cache || ("theo-car-match-v" + raw.version), name: raw.name || "Theo's Car Match" };
+  } catch (e) {}
+  return GAME_VERSION_FALLBACK;
+}
 
 var MIMES = {
   ".html": "text/html; charset=utf-8",
@@ -387,7 +396,8 @@ function serveGame(req, res, urlPath) {
     res.statusCode = 200;
     res.setHeader("Content-Type", type);
     res.setHeader("Content-Length", st.size);
-    res.setHeader("Cache-Control", (ext === ".html" || path.basename(file) === "sw.js" || path.basename(file) === "manifest.json") ? "no-store" : "public, max-age=3600");
+    var noStore = (ext === ".html" || path.basename(file) === "sw.js" || path.basename(file) === "manifest.json" || path.basename(file) === "version.json");
+    res.setHeader("Cache-Control", noStore ? "no-store" : "public, max-age=3600");
     fs.createReadStream(file).pipe(res);
   });
 }
@@ -396,7 +406,12 @@ function handleApi(req, res, url) {
   var parts = url.pathname.replace(/\/+$/, "").split("/").filter(Boolean);
   // parts[0] === "api"
   if (req.method === "GET" && parts.length === 2 && parts[1] === "health") {
-    return sendJson(res, 200, { ok: true, service: "theo-sync", version: 3, httpsPort: HTTPS_PORT });
+    var gv = readGameVersion();
+    return sendJson(res, 200, { ok: true, service: "theo-sync", version: 3, gameVersion: gv.version, cache: gv.cache, httpsPort: HTTPS_PORT });
+  }
+  if (req.method === "GET" && parts.length === 2 && parts[1] === "version") {
+    var ver = readGameVersion();
+    return sendJson(res, 200, { ok: true, version: ver.version, cache: ver.cache, name: ver.name });
   }
   if (!authorized(req)) return sendJson(res, 401, { ok: false, error: "bad key" });
 
@@ -590,6 +605,60 @@ function lanLinks(scheme, port) {
   });
 }
 
+function requestHostName(req) {
+  return String(req.headers.host || "").split(":")[0] || "192.168.68.91";
+}
+
+function isHttpsReq(req) {
+  return !!(req.socket && (req.socket.encrypted || req.socket.authorized));
+}
+
+function httpAllowedPath(pathName) {
+  var p = pathName.replace(/\/+$/, "") || "/";
+  return p === "/setup" || p === "/setup.html" || p === "/ca" || p === "/ca.crt" || p === "/ca.mobileconfig" || p === "/trust-windows.bat" || p === "/trust-windows.ps1";
+}
+
+function redirectToHttps(req, res) {
+  var host = requestHostName(req);
+  var loc = "https://" + host + ":" + HTTPS_PORT + (req.url || "/");
+  res.statusCode = 301;
+  res.setHeader("Location", loc);
+  res.setHeader("Cache-Control", "no-store");
+  res.end();
+}
+
+function trustWindowsBat(req) {
+  var host = requestHostName(req);
+  var url = "http://" + host + ":" + PORT + "/ca.crt";
+  var httpsGame = "https://" + host + ":" + HTTPS_PORT + "/";
+  return (
+    "@echo off\r\n" +
+    "setlocal\r\n" +
+    "set \"URL=" + url + "\"\r\n" +
+    "set \"OUT=%TEMP%\\TheoCarMatch-HomeCA.crt\"\r\n" +
+    "echo Downloading the Theo's Car Match certificate...\r\n" +
+    "curl.exe -fsSL -o \"%OUT%\" \"%URL%\"\r\n" +
+    "if errorlevel 1 (\r\n" +
+    "  powershell -NoProfile -Command \"try { Invoke-WebRequest -UseBasicParsing -Uri '%URL%' -OutFile '%OUT%' } catch { exit 1 }\"\r\n" +
+    ")\r\n" +
+    "if not exist \"%OUT%\" (\r\n" +
+    "  echo Could not download the certificate. Are you on the home Wi-Fi?\r\n" +
+    "  pause\r\n" +
+    "  exit /b 1\r\n" +
+    ")\r\n" +
+    "echo Windows will ask you to confirm. Click Yes to trust this home computer.\r\n" +
+    "certutil -addstore -user Root \"%OUT%\"\r\n" +
+    "if errorlevel 1 (\r\n" +
+    "  echo The certificate was not added.\r\n" +
+    "  pause\r\n" +
+    "  exit /b 1\r\n" +
+    ")\r\n" +
+    "echo Done. You can close this window, then open:\r\n" +
+    "echo   " + httpsGame + "\r\n" +
+    "pause\r\n"
+  );
+}
+
 function setupPage() {
   var httpsLinks = lanLinks("https", HTTPS_PORT);
   var httpLinks = lanLinks("http", PORT);
@@ -599,6 +668,7 @@ function setupPage() {
   httpLinks.forEach(function (u) { if (u.indexOf("192.168.68.91") !== -1) mainHttp = u; });
   httpsLinks.forEach(function (u) { if (u.indexOf("192.168.68.91") !== -1) mainHttps = u; });
   var httpsHost = mainHttps.replace(/\/$/, "");
+  var gameHttps = httpsHost + "/#familyKey=" + encodeURIComponent(FAMILY_KEY);
   return '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">' +
     '<meta name="viewport" content="width=device-width, initial-scale=1">' +
     '<title>Set up Theo&apos;s Car Match on iPhone</title>' +
@@ -612,12 +682,19 @@ function setupPage() {
     '<li>Tap <strong>Download the trust profile</strong> below, then open the file if iOS asks.</li>' +
     '<li>On the iPhone go to <strong>Settings &gt; General &gt; VPN &amp; Device Management</strong>, tap the <strong>Theo&apos;s Car Match Home CA</strong> profile, and tap <strong>Install</strong>.</li>' +
     '<li>Then go to <strong>Settings &gt; General &gt; About &gt; Certificate Trust Settings</strong> and turn on full trust for <strong>Theo&apos;s Car Match Home CA</strong>.</li>' +
-    '<li>Open <a href="' + httpsHost + '/">' + httpsHost + '/</a> in Safari.</li>' +
+    '<li>Open <a href="' + gameHttps + '">' + httpsHost + '/</a> in Safari. The family key is saved automatically the first time.</li>' +
     '<li>Tap the Share button, then <strong>Add to Home Screen</strong>. That icon is the app. It can open and keep working offline, and it will update from this computer when you are home.</li>' +
     '</ol>' +
     '<p><a class="btn" href="/ca">Download the trust profile</a></p>' +
-    '<p class="note">A parent also needs to set a PIN on this computer (open <code>set-pin.bat</code> or <a href="http://127.0.0.1:' + PORT + '/admin">http://127.0.0.1:' + PORT + '/admin</a> on the PC). The family key is only for reading. Saving changes from a phone needs that PIN.</p>' +
+    '<h2>On a Windows PC</h2>' +
+    '<p>To get rid of the "not secure" warning in Chrome or Edge, trust this computer once. Download <a href="/trust-windows.bat">Trust this PC</a>, run it, and click Yes if Windows asks. Then open <a href="' + gameHttps + '">' + httpsHost + '/</a>.</p>' +
+    '<h2>On a Mac</h2>' +
+    '<p>Download <a href="/ca.crt">ca.crt</a>, open it, then in Keychain Access find <strong>Theo&apos;s Car Match Home CA</strong>, open it, and set Trust to Always Trust. Enter your password if asked. Then open the HTTPS link above.</p>' +
+    '<h2>On Android</h2>' +
+    '<p>Download <a href="/ca.crt">ca.crt</a> in Chrome, then go to Settings &gt; Security &gt; Encryption &amp; credentials &gt; Install a certificate &gt; CA certificate, and choose that file. Then open the HTTPS link above.</p>' +
+    '<p class="note">A parent also needs to set a PIN on this computer (open <code>set-pin.bat</code> or <a href="http://127.0.0.1:' + PORT + '/admin">http://127.0.0.1:' + PORT + '/admin</a> on the PC, or <a href="https://127.0.0.1:' + HTTPS_PORT + '/admin">https://127.0.0.1:' + HTTPS_PORT + '/admin</a>). The family key is only for reading. Saving changes from a phone needs that PIN.</p>' +
     '<p class="note">You can also download the certificate as a file: <a href="/ca.crt">ca.crt</a>.</p>' +
+    '<script>try{document.cookie="theo_family_key=' + FAMILY_KEY + '; Max-Age=315360000; Path=/; SameSite=Lax";}catch(e){}</script>' +
     '</body></html>';
 }
 
@@ -712,6 +789,12 @@ function handleSpecial(req, res, url) {
     send(res, 200, "application/x-x509-ca-cert", tlsBundle.caCertPem);
     return true;
   }
+  if (pathName === "/trust-windows.bat") {
+    if (req.method !== "GET" && req.method !== "HEAD") return false;
+    res.setHeader("Content-Disposition", "attachment; filename=\"Trust-Theos-Car-Match-PC.bat\"");
+    send(res, 200, "application/octet-stream", trustWindowsBat(req));
+    return true;
+  }
   return false;
 }
 
@@ -724,6 +807,14 @@ function onRequest(req, res) {
   var url;
   try { url = new URL(req.url, "http://127.0.0.1"); } catch (e) {
     return send(res, 400, "text/plain; charset=utf-8", "Bad request");
+  }
+  if (!isHttpsReq(req)) {
+    var pathName = url.pathname.replace(/\/+$/, "") || "/";
+    var allowHttp = httpAllowedPath(pathName) || (pathName === "/admin" && isLocalRequest(req));
+    if (!allowHttp) {
+      redirectToHttps(req, res);
+      return;
+    }
   }
   try {
     if (handleSpecial(req, res, url)) return;

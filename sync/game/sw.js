@@ -1,9 +1,10 @@
 /* Theo's Car Match service worker — caches the game for offline play. Never caches /api. */
-var CACHE = "theo-car-match-v8";
+var CACHE = "theo-car-match-v9";
 var PRECACHE = [
   "./",
   "./index.html",
   "./manifest.json",
+  "./version.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/apple-touch-icon.png",
@@ -33,8 +34,17 @@ self.addEventListener("install", function (event) {
   event.waitUntil(
     caches.open(CACHE).then(function (cache) {
       return cache.addAll(PRECACHE);
-    }).then(function () { return self.skipWaiting(); })
+    }).then(function () {
+      return caches.keys().then(function (keys) {
+        var older = keys.some(function (k) { return k !== CACHE; });
+        if (!older) return self.skipWaiting();
+      });
+    })
   );
+});
+
+self.addEventListener("message", function (event) {
+  if (event.data && event.data.type === "SKIP_WAITING") self.skipWaiting();
 });
 
 self.addEventListener("activate", function (event) {

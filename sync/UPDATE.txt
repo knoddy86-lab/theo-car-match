@@ -18,10 +18,14 @@ What this update adds
 - The home computer is the master copy: phones pull automatically
 - Phone edits stay on the phone until a parent saves them with a PIN
 - Matches are a silent wiggle and confetti (the name is still said when a card is turned)
-- Finishing a round plays a V8 engine rev (12 synthesised clips, shuffled)
+- Finishing a round plays a V8 engine rev (12 real CC0 recordings from Freesound, shuffled)
 - Settings is organised into tabs: Cars, Difficulty, Family
 - Difficulty age presets (Age 2 is the default) and custom options
-- Difficulty is synced the same way as cards (PIN to save to the PC)
+- Difficulty and other play settings stay on each device and are not synced
+- Family key is remembered on the device (and in the Home Screen app) after being entered once
+- A sync status cue sits under the settings gear, with a tap-to-sync button
+- When the home computer has a newer game, a 'New version available' banner is shown
+- http://…:8787 now redirects to https://…:8788 (setup, certificates and the Windows trust tool stay on http)
 
 1. Stop the running server
 --------------------------

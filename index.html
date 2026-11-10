@@ -515,6 +515,82 @@
       transition: stroke-dashoffset 2s linear;
     }
 
+    .sync-hud {
+      position: absolute;
+      top: calc(var(--safe-t) + 48px);
+      left: var(--safe-l);
+      z-index: 8;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+      max-width: min(200px, calc(100vw - 32px));
+    }
+    .sync-hud[hidden] { display: none; }
+    .sync-hud-status {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      background: rgba(255,255,255,0.92);
+      border-radius: 14px;
+      padding: 5px 8px 5px 6px;
+      box-shadow: 0 3px 0 rgba(0,0,0,0.08), 0 6px 14px rgba(0,0,0,0.1);
+      color: #33691E;
+      font-weight: 800;
+      font-size: 11px;
+      line-height: 1.2;
+    }
+    .sync-hud-status.is-offline { color: #546E7A; }
+    .sync-hud-status.is-syncing { color: #1565C0; }
+    .sync-hud-icon { width: 16px; height: 16px; flex: 0 0 16px; margin-top: 1px; }
+    .sync-hud-text small { display: block; font-size: 9px; font-weight: 700; opacity: 0.85; }
+    .sync-hud-refresh {
+      width: 32px;
+      height: 32px;
+      border: 0;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.92);
+      color: #1565C0;
+      box-shadow: 0 3px 0 rgba(0,0,0,0.08), 0 6px 14px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
+    .sync-hud-refresh svg { width: 16px; height: 16px; display: block; }
+    .sync-hud-refresh:focus {
+      outline: 4px solid var(--focus);
+      outline-offset: 2px;
+    }
+    @keyframes sync-spin { to { transform: rotate(360deg); } }
+    .sync-spin { animation: sync-spin 0.8s linear infinite; transform-origin: 50% 50%; }
+
+    .update-banner {
+      position: absolute;
+      left: 50%;
+      bottom: calc(var(--safe-b) + 12px);
+      transform: translateX(-50%);
+      z-index: 14;
+      width: min(420px, calc(100vw - 24px));
+      background: #fff;
+      color: #1A237E;
+      border-radius: 18px;
+      box-shadow: 0 8px 28px rgba(0,0,0,0.22);
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-weight: 800;
+    }
+    .update-banner[hidden] { display: none; }
+    .update-banner p { margin: 0; font-size: 15px; line-height: 1.25; }
+    .update-banner-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+    .sync-key-saved { margin: 0 0 8px; font-size: 13px; font-weight: 700; color: #33691E; }
+    .sync-key-saved button { margin-left: 6px; }
+    .device-only-note { margin: 8px 0 0; font-size: 13px; font-weight: 700; color: #3949AB; }
+
     #settings-screen {
       z-index: 12;
       justify-content: flex-start;
@@ -1060,6 +1136,24 @@
       </svg>
     </button>
 
+    <div class="sync-hud" id="sync-hud" hidden>
+      <div class="sync-hud-status" id="sync-hud-status">
+        <span class="sync-hud-icon" id="sync-hud-icon" aria-hidden="true"></span>
+        <span class="sync-hud-text" id="sync-hud-text"></span>
+      </div>
+      <button type="button" class="sync-hud-refresh" id="sync-hud-refresh" aria-label="Sync now">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M17.65 6.35A7.95 7.95 0 0 0 12 4a8 8 0 1 0 8 8h-2a6 6 0 1 1-6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+      </button>
+    </div>
+
+    <div id="update-banner" class="update-banner" hidden role="status">
+      <p>New version available — Update</p>
+      <div class="update-banner-actions">
+        <button type="button" class="btn-mini primary" id="update-now-btn">Update</button>
+        <button type="button" class="btn-mini" id="update-later-btn">Later</button>
+      </div>
+    </div>
+
     <section id="settings-screen" class="screen" hidden aria-label="Parent Settings">
       <div class="settings-panel">
         <h2>Parent Settings</h2>
@@ -1088,6 +1182,7 @@
         </div>
         <div id="pane-difficulty" class="settings-pane" role="tabpanel" aria-labelledby="tab-difficulty" hidden>
           <p class="settings-lead">Pick a starting age, or make your own. Endless play keeps using these settings.</p>
+          <p class="device-only-note">This device only — not synced.</p>
           <div class="diff-presets" id="diff-presets">
             <button type="button" id="diff-age2" data-preset="age2" aria-pressed="true">Age 2<small>2 pairs, very big cards, a long first look</small></button>
             <button type="button" id="diff-age3" data-preset="age3" aria-pressed="false">Age 3<small>Start with 3 pairs</small></button>
@@ -1171,10 +1266,11 @@
             <label for="sync-url">Server URL</label>
             <input id="sync-url" type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://your-pc.ts.net" aria-label="Sync server URL">
           </div>
-          <div class="sync-field">
+          <div class="sync-field" id="sync-key-field">
             <label for="sync-key">Family key</label>
             <input id="sync-key" type="text" autocomplete="off" spellcheck="false" autocapitalize="off" placeholder="The key shown on the family computer" aria-label="Family key">
           </div>
+          <p class="sync-key-saved" id="sync-key-saved" hidden>Family key saved on this device. <button type="button" class="btn-mini" id="sync-key-change">Change</button></p>
           <div class="settings-btns">
             <button type="button" class="btn-mini primary" id="sync-now-btn">Sync now</button>
             <button type="button" class="btn-mini primary" id="sync-save-btn">Save my changes to home computer</button>
@@ -1294,6 +1390,10 @@
     var lastSyncAt = 0;
     var lastSyncError = "";
     var lastSyncOk = false;
+    var lastSyncChanges = 0;
+    var keyChangeOpen = false;
+    var APP_VERSION = "9";
+    var updateBannerShown = false;
     var outboxCount = 0;
     var syncNotice = "";
     var pullTimer = null;
@@ -2575,34 +2675,35 @@
     }
 
     function loadDifficulty() {
+      var storedLs = null;
+      try {
+        var raw = localStorage.getItem("theo-car-match-difficulty");
+        if (raw) storedLs = JSON.parse(raw);
+      } catch (e) { storedLs = null; }
       return metaGet("difficulty").then(function (val) {
         if (val && typeof val === "object") difficulty = normalizeDifficulty(val);
+        else if (storedLs && typeof storedLs === "object") difficulty = normalizeDifficulty(storedLs);
         else difficulty = normalizeDifficulty(DIFF_PRESETS.age2);
         if (!difficulty.preset || (difficulty.preset !== "custom" && !sameDifficulty(difficulty, DIFF_PRESETS[difficulty.preset] || {}))) {
           difficulty.preset = matchPreset(difficulty);
         }
         applyDifficultyDom();
+        try { localStorage.setItem("theo-car-match-difficulty", JSON.stringify(difficulty)); } catch (e) {}
       }).catch(function () {
-        difficulty = normalizeDifficulty(DIFF_PRESETS.age2);
+        if (storedLs && typeof storedLs === "object") difficulty = normalizeDifficulty(storedLs);
+        else difficulty = normalizeDifficulty(DIFF_PRESETS.age2);
         applyDifficultyDom();
       });
     }
 
-    function saveDifficulty(patch, fromSync) {
+    function saveDifficulty(patch) {
       var next = normalizeDifficulty(Object.assign({}, difficulty, patch || {}));
-      if (!fromSync) {
-        next.preset = (patch && patch.preset) || matchPreset(next);
-        next.updatedAt = Date.now();
-      } else {
-        next.preset = matchPreset(next) === (patch && patch.preset) ? (patch.preset || matchPreset(next)) : matchPreset(next);
-        if (patch && patch.preset === "custom") next.preset = "custom";
-        next.updatedAt = Number(patch && patch.updatedAt) || next.updatedAt || Date.now();
-      }
+      next.preset = (patch && patch.preset) || matchPreset(next);
+      next.updatedAt = Date.now();
       difficulty = next;
       applyDifficultyDom();
+      try { localStorage.setItem("theo-car-match-difficulty", JSON.stringify(difficulty)); } catch (e) {}
       return metaSet("difficulty", difficulty).then(function () {
-        if (!fromSync && !syncApplying) return enqueueOutbox(SETTINGS_ID, "settings");
-      }).then(function () {
         updateDifficultyUi();
         return difficulty;
       });
@@ -2827,17 +2928,7 @@
     }
 
     function pushSettings() {
-      return syncFetch("/api/settings", {
-        method: "PUT",
-        headers: syncHeaders(true, true),
-        body: JSON.stringify(Object.assign({}, publicDifficulty(difficulty), { updatedAt: difficulty.updatedAt }))
-      }).then(function (r) {
-        if (!r.ok) throw new Error("Could not save difficulty settings to the computer.");
-        return r.json();
-      }).then(function (data) {
-        if (data && data.settings && data.settings.updatedAt) difficulty.updatedAt = data.settings.updatedAt;
-        return metaSet("difficulty", difficulty);
-      });
+      return Promise.resolve();
     }
 
     function pickCarsForLevel(lvl, fresh) {
@@ -4023,14 +4114,61 @@
     }
 
 
+    function cookieGet(name) {
+      try {
+        var parts = ("; " + document.cookie).split("; " + name + "=");
+        if (parts.length < 2) return "";
+        return decodeURIComponent(parts.pop().split(";")[0] || "").trim();
+      } catch (e) { return ""; }
+    }
+
+    function cookieSet(name, value) {
+      try {
+        if (!value) {
+          document.cookie = name + "=; Max-Age=0; Path=/; SameSite=Lax";
+          return;
+        }
+        document.cookie = name + "=" + encodeURIComponent(value) + "; Max-Age=315360000; Path=/; SameSite=Lax";
+      } catch (e) {}
+    }
+
+    function adoptKeyFromLocation() {
+      var key = "", url = "";
+      try {
+        var u = new URL(location.href);
+        key = (u.searchParams.get("familyKey") || u.searchParams.get("key") || u.searchParams.get("k") || "").trim();
+        url = (u.searchParams.get("syncUrl") || u.searchParams.get("server") || "").trim();
+        var hash = (u.hash || "").replace(/^#/, "");
+        if (hash) {
+          var hp = new URLSearchParams(hash.indexOf("=") === -1 && hash.indexOf("&") === -1 ? "familyKey=" + hash : hash);
+          if (!key) key = (hp.get("familyKey") || hp.get("key") || hp.get("k") || "").trim();
+          if (!url) url = (hp.get("syncUrl") || hp.get("server") || "").trim();
+        }
+        if (key || url) {
+          u.searchParams.delete("familyKey");
+          u.searchParams.delete("key");
+          u.searchParams.delete("k");
+          u.searchParams.delete("syncUrl");
+          u.searchParams.delete("server");
+          history.replaceState(null, "", u.pathname + u.search);
+        }
+      } catch (e) {}
+      return { key: key, url: url };
+    }
+
     function readSyncSettings() {
+      var adopted = adoptKeyFromLocation();
       try {
         syncBaseOverride = (localStorage.getItem(SYNC_URL_KEY) || "").trim().replace(/\/+$/, "");
         syncFamilyKey = (localStorage.getItem(SYNC_KEY_KEY) || "").trim();
       } catch (e) {
-        syncBaseOverride = "";
-        syncFamilyKey = "";
+        syncBaseOverride = syncBaseOverride || "";
+        syncFamilyKey = syncFamilyKey || "";
       }
+      if (!syncFamilyKey) syncFamilyKey = cookieGet("theo_family_key");
+      if (!syncBaseOverride) syncBaseOverride = (cookieGet("theo_sync_url") || "").replace(/\/+$/, "");
+      if (adopted.url) syncBaseOverride = adopted.url.replace(/\/+$/, "");
+      if (adopted.key) syncFamilyKey = adopted.key;
     }
 
     function persistSyncSettings() {
@@ -4040,6 +4178,33 @@
         if (syncFamilyKey) localStorage.setItem(SYNC_KEY_KEY, syncFamilyKey);
         else localStorage.removeItem(SYNC_KEY_KEY);
       } catch (e) {}
+      cookieSet("theo_family_key", syncFamilyKey);
+      cookieSet("theo_sync_url", syncBaseOverride);
+      metaSet("familyKey", syncFamilyKey || "").catch(function () {});
+      metaSet("syncUrl", syncBaseOverride || "").catch(function () {});
+    }
+
+    function loadSyncSettings() {
+      readSyncSettings();
+      return metaGet("familyKey").then(function (k) {
+        if (!syncFamilyKey && k) syncFamilyKey = String(k).trim();
+        return metaGet("syncUrl");
+      }).then(function (u) {
+        if (!syncBaseOverride && u) syncBaseOverride = String(u).trim().replace(/\/+$/, "");
+        if (syncFamilyKey || syncBaseOverride) persistSyncSettings();
+        updateSyncUi();
+      }).catch(function () { updateSyncUi(); });
+    }
+
+    function clearRejectedKey() {
+      syncFamilyKey = "";
+      keyChangeOpen = true;
+      try { localStorage.removeItem(SYNC_KEY_KEY); } catch (e) {}
+      cookieSet("theo_family_key", "");
+      metaSet("familyKey", "").catch(function () {});
+      lastSyncError = "The family key was not accepted. Enter it again.";
+      lastSyncOk = false;
+      updateSyncUi();
     }
 
     function syncConfigured() {
@@ -4054,28 +4219,88 @@
       return sameOriginSync || !!syncBaseOverride;
     }
 
+    function formatSyncTime(ts) {
+      if (!ts) return "";
+      try {
+        return new Date(ts).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+      } catch (e) { return ""; }
+    }
+
+    function svgTick() {
+      return '<svg id="sync-hud-icon" class="sync-hud-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="#2E7D32" d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>';
+    }
+    function svgSpin() {
+      return '<svg id="sync-hud-icon" class="sync-hud-icon sync-spin" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0 0 20 12c0-4.42-3.58-8-8-8zm-5.3 2.2L5.24 4.74A7.93 7.93 0 0 0 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8z"/></svg>';
+    }
+    function svgCloudOff() {
+      return '<svg id="sync-hud-icon" class="sync-hud-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="#607D8B" d="M19.35 10.04A7.49 7.49 0 0 0 12 4c-1.48 0-2.85.43-4.01 1.17L9.9 7.07A5.48 5.48 0 0 1 12 6.5c2.5 0 4.54 1.86 4.92 4.26l.09.74h.59c1.66 0 3 1.34 3 3 0 .83-.34 1.58-.88 2.12l1.45 1.45C22.32 17 23 15.82 23 14.5c0-2.25-1.68-4.12-3.85-4.46zM3 5.27 5.75 8C2.56 8.15 0 10.77 0 14c0 3.31 2.69 6 6 6h11.73l2 2L21.15 20.6 4.41 3.86 3 5.27zM7.73 10l8 8H6c-2.21 0-4-1.79-4-4s1.79-4 4-4h1.73z"/></svg>';
+    }
+
+    function isUnreachableError(msg) {
+      return !!(msg && /reach|network|Failed to fetch|Load failed|offline|NetworkError/i.test(msg));
+    }
+
+    function updateSyncHud() {
+      var hud = document.getElementById("sync-hud");
+      var status = document.getElementById("sync-hud-status");
+      var icon = document.getElementById("sync-hud-icon");
+      var text = document.getElementById("sync-hud-text");
+      if (!hud) return;
+      if (!syncConfigured()) {
+        hud.hidden = true;
+        return;
+      }
+      hud.hidden = false;
+      var unreachable = isUnreachableError(lastSyncError) || (lastSyncError && !lastSyncOk && !pulling);
+      if (status) status.classList.remove("is-offline", "is-syncing");
+      if (pulling) {
+        if (status) status.classList.add("is-syncing");
+        if (icon) icon.outerHTML = svgSpin();
+        if (text) text.innerHTML = "Syncing…";
+      } else if (unreachable || !navigator.onLine) {
+        if (status) status.classList.add("is-offline");
+        if (icon) icon.outerHTML = svgCloudOff();
+        if (text) text.innerHTML = "Offline<small>Not on the home Wi-Fi</small>";
+      } else if (lastSyncOk || lastSyncAt) {
+        if (icon) icon.outerHTML = svgTick();
+        var when = formatSyncTime(lastSyncAt);
+        var label = lastSyncChanges > 0 ? ("Synced " + lastSyncChanges + " change" + (lastSyncChanges === 1 ? "" : "s")) : "Up to date";
+        if (text) text.innerHTML = label + (when ? "<small>" + when + "</small>" : "");
+      } else {
+        if (status) status.classList.add("is-offline");
+        if (icon) icon.outerHTML = svgCloudOff();
+        if (text) text.innerHTML = "Waiting to sync";
+      }
+    }
+
     function updateSyncUi() {
       var lead = document.getElementById("sync-lead");
       var urlField = document.getElementById("sync-url-field");
       var urlInput = document.getElementById("sync-url");
       var keyInput = document.getElementById("sync-key");
+      var keyField = document.getElementById("sync-key-field");
+      var keySaved = document.getElementById("sync-key-saved");
       var status = document.getElementById("sync-status");
       var notice = document.getElementById("sync-notice");
       var saveBtn = document.getElementById("sync-save-btn");
       var discardBtn = document.getElementById("sync-discard-btn");
-      if (!lead) return;
       if (urlInput && document.activeElement !== urlInput) urlInput.value = syncBaseOverride;
       if (keyInput && document.activeElement !== keyInput) keyInput.value = syncFamilyKey;
       if (urlField) urlField.hidden = !!sameOriginSync;
-      if (sameOriginSync) {
-        lead.textContent = "This phone updates from the home computer automatically. Edits stay on this phone until a parent saves them with the PIN.";
-      } else {
-        lead.textContent = "Optional. Leave this blank to keep everything on this device. To use a home computer later, enter the server URL and family key.";
+      var showKeyEntry = !syncFamilyKey || keyChangeOpen;
+      if (keyField) keyField.hidden = !showKeyEntry;
+      if (keySaved) keySaved.hidden = showKeyEntry;
+      if (lead) {
+        if (sameOriginSync) {
+          lead.textContent = "This phone updates from the home computer automatically. Edits stay on this phone until a parent saves them with the PIN.";
+        } else {
+          lead.textContent = "Optional. Leave this blank to keep everything on this device. To use a home computer later, enter the server URL and family key.";
+        }
       }
       if (saveBtn) saveBtn.hidden = !syncConfigured();
       if (discardBtn) discardBtn.hidden = !syncConfigured() || outboxCount === 0;
       if (status) {
-        var unreachable = lastSyncError && /reach|network|Failed to fetch|Load failed|offline/i.test(lastSyncError);
+        var unreachable = isUnreachableError(lastSyncError);
         status.classList.toggle("is-error", !!lastSyncError && outboxCount === 0);
         if (!syncConfigured()) {
           status.textContent = sameOriginSync ? "Enter the family key to start syncing." : "Sync is off until you enter a server URL and family key.";
@@ -4086,14 +4311,18 @@
         } else if (unreachable || (lastSyncError && !lastSyncOk)) {
           status.classList.add("is-error");
           status.textContent = unreachable ? "Can't reach home computer." : lastSyncError;
+        } else if (lastSyncOk || lastSyncAt) {
+          var when = formatSyncTime(lastSyncAt);
+          status.textContent = (lastSyncChanges > 0 ? ("Synced " + lastSyncChanges + " change" + (lastSyncChanges === 1 ? "" : "s")) : "Up to date") + (when ? " · " + when : "");
         } else {
-          status.textContent = "Synced";
+          status.textContent = "Ready to sync.";
         }
       }
       if (notice) {
         if (syncNotice) { notice.hidden = false; notice.textContent = syncNotice; }
         else { notice.hidden = true; notice.textContent = ""; }
       }
+      updateSyncHud();
     }
 
     function detectSync() {
@@ -4113,7 +4342,10 @@
 
     function syncFetch(path, opts) {
       return fetch(syncRoot() + path, opts || {}).then(function (r) {
-        if (r.status === 401) throw new Error("The family key was not accepted.");
+        if (r.status === 401) {
+          clearRejectedKey();
+          throw new Error("The family key was not accepted.");
+        }
         return r;
       });
     }
@@ -4149,6 +4381,7 @@
     }
 
     function enqueueOutbox(id, type) {
+      if (id === SETTINGS_ID || type === "settings") return Promise.resolve();
       if (!syncTargetKnown() || syncApplying || !id) return Promise.resolve();
       return outboxAdd({ cardId: id, type: type || "upsert", queuedAt: Date.now() }).then(function () {
         return refreshOutboxCount();
@@ -4320,35 +4553,25 @@
       if (pulling) return Promise.resolve(false);
       pulling = true;
       lastSyncError = "";
+      updateSyncHud();
       return syncFetch("/api/sync", { headers: syncHeaders() }).then(function (r) {
         if (!r.ok) throw new Error("Could not reach the family computer.");
         return r.json();
       }).then(function (data) {
         var remote = (data && data.cards) || {};
-        var remoteSettings = data && data.settings;
         var dropped = [];
+        var changeCount = 0;
         var chain = Promise.resolve();
         return outboxAll().then(function (items) {
           var pending = {};
-          items.forEach(function (it) { if (it.cardId) pending[it.cardId] = true; });
+          items.forEach(function (it) { if (it.cardId && it.cardId !== SETTINGS_ID && it.type !== "settings") pending[it.cardId] = true; });
           syncApplying = true;
-          if (remoteSettings && remoteSettings.updatedAt) {
-            var setStamp = serverStamp(remoteSettings);
-            if (setStamp !== (lastServerSeen[SETTINGS_ID] || "")) {
-              if (pending[SETTINGS_ID]) dropped.push(SETTINGS_ID);
-              chain = chain.then(function () {
-                return saveDifficulty(remoteSettings, true).then(function () {
-                  rememberServerCard(SETTINGS_ID, remoteSettings);
-                  return dropOutboxFor(SETTINGS_ID);
-                });
-              });
-            }
-          }
           Object.keys(remote).forEach(function (id) {
             var rem = remote[id];
             var stamp = serverStamp(rem);
             var prev = lastServerSeen[id] || "";
             if (stamp === prev) return;
+            changeCount += 1;
             if (pending[id]) dropped.push(id);
             chain = chain.then(function () {
               return applyRemoteCard(id, rem).then(function () {
@@ -4365,7 +4588,6 @@
           }).then(function () {
             if (dropped.length) {
               var names = dropped.map(function (id) {
-                if (id === SETTINGS_ID) return "Difficulty settings";
                 var car = carById(id);
                 return car ? displayFullName(car) : id;
               });
@@ -4380,8 +4602,10 @@
             lastSyncAt = Date.now();
             lastSyncOk = true;
             lastSyncError = "";
+            lastSyncChanges = changeCount;
             pullBackoff = 30000;
             updateSyncUi();
+            checkGameUpdate();
             return true;
           });
         });
@@ -4421,30 +4645,33 @@
         return Promise.resolve(false);
       }
       parentPinOnce = pin;
+      pulling = true;
+      updateSyncHud();
       return outboxAll().then(function (items) {
-        var jobs = compactOutbox(items);
+        var settingsQids = items.filter(function (it) { return it.cardId === SETTINGS_ID || it.type === "settings"; }).map(function (it) { return it.qid; });
+        var jobs = compactOutbox(items).filter(function (job) { return job.cardId !== SETTINGS_ID && job.type !== "settings"; });
         if (!jobs.length) {
           parentPinOnce = "";
-          updateSyncUi();
-          return true;
+          pulling = false;
+          lastSyncAt = Date.now();
+          lastSyncOk = true;
+          lastSyncError = "";
+          lastSyncChanges = 0;
+          return (settingsQids.length ? outboxClearIds(settingsQids).then(refreshOutboxCount) : Promise.resolve()).then(function () {
+            updateSyncUi();
+            return true;
+          });
         }
         var chain = Promise.resolve();
-        var doneQids = [];
+        var doneQids = settingsQids.slice();
         jobs.forEach(function (job) {
           chain = chain.then(function () {
-            var act;
-            if (job.cardId === SETTINGS_ID || job.type === "settings") act = pushSettings();
-            else if (job.type === "tombstone") act = pushTombstone(job.cardId);
-            else act = pushOneCard(job.cardId);
+            var act = job.type === "tombstone" ? pushTombstone(job.cardId) : pushOneCard(job.cardId);
             return act.then(function () {
               items.forEach(function (it) { if (it.cardId === job.cardId) doneQids.push(it.qid); });
-              if (job.cardId === SETTINGS_ID || job.type === "settings") {
-                rememberServerCard(SETTINGS_ID, difficulty);
-              } else {
-                var rec = customMedia[job.cardId];
-                if (rec) rememberServerCard(job.cardId, recMetaPayload(job.cardId));
-                else rememberServerCard(job.cardId, { updatedAt: Date.now(), deleted: true });
-              }
+              var rec = customMedia[job.cardId];
+              if (rec) rememberServerCard(job.cardId, recMetaPayload(job.cardId));
+              else rememberServerCard(job.cardId, { updatedAt: Date.now(), deleted: true });
             });
           });
         });
@@ -4456,15 +4683,19 @@
           return refreshOutboxCount();
         }).then(function () {
           parentPinOnce = "";
+          pulling = false;
           lastSyncAt = Date.now();
           lastSyncOk = true;
           lastSyncError = "";
+          lastSyncChanges = jobs.length;
           syncNotice = "";
           updateSyncUi();
+          checkGameUpdate();
           return true;
         });
       }).catch(function (e) {
         parentPinOnce = "";
+        pulling = false;
         var msg = e.message || "Could not save to the home computer.";
         lastSyncError = msg;
         lastSyncOk = false;
@@ -4579,8 +4810,17 @@
       var pinInput = document.getElementById("sync-pin");
       var pinGo = document.getElementById("sync-pin-go");
       function commit() {
-        if (urlInput) syncBaseOverride = (urlInput.value || "").trim().replace(/\/+$/, "");
-        if (keyInput) syncFamilyKey = (keyInput.value || "").trim();
+        if (urlInput) {
+          var nextUrl = (urlInput.value || "").trim().replace(/\/+$/, "");
+          if (nextUrl) syncBaseOverride = nextUrl;
+        }
+        if (keyInput) {
+          var nextKey = (keyInput.value || "").trim();
+          if (nextKey) {
+            syncFamilyKey = nextKey;
+            keyChangeOpen = false;
+          }
+        }
         persistSyncSettings();
         updateSyncUi();
       }
@@ -4592,6 +4832,12 @@
         keyInput.addEventListener("change", commit);
         keyInput.addEventListener("blur", commit);
       }
+      var changeBtn = document.getElementById("sync-key-change");
+      if (changeBtn) changeBtn.addEventListener("click", function () {
+        keyChangeOpen = true;
+        updateSyncUi();
+        if (keyInput) keyInput.focus();
+      });
       if (nowBtn) nowBtn.addEventListener("click", function () { commit(); pullFromServer(); });
       if (saveBtn) saveBtn.addEventListener("click", function () {
         commit();
@@ -4615,7 +4861,8 @@
     }
 
     function bindSyncHooks() {
-      window.addEventListener("online", function () { if (syncConfigured()) pullFromServer(); });
+      window.addEventListener("online", function () { if (syncConfigured()) pullFromServer(); else updateSyncHud(); });
+      window.addEventListener("offline", function () { updateSyncHud(); });
       document.addEventListener("visibilitychange", function () {
         if (!document.hidden && syncConfigured()) pullFromServer();
       });
@@ -4624,12 +4871,100 @@
       }, 30000);
     }
 
+    function showUpdateBanner() {
+      var banner = document.getElementById("update-banner");
+      if (!banner) return;
+      try {
+        if (sessionStorage.getItem("theo-dismissed-version") === APP_VERSION + "->" + (window.__theoServerVersion || "newer")) return;
+      } catch (e) {}
+      banner.hidden = false;
+      updateBannerShown = true;
+    }
+
+    function hideUpdateBanner() {
+      var banner = document.getElementById("update-banner");
+      if (banner) banner.hidden = true;
+      updateBannerShown = false;
+    }
+
+    function applyGameUpdate() {
+      window.__theoReloading = true;
+      if (navigator.serviceWorker && navigator.serviceWorker.getRegistration) {
+        navigator.serviceWorker.getRegistration("./").then(function (reg) {
+          if (reg && reg.waiting) reg.waiting.postMessage({ type: "SKIP_WAITING" });
+          setTimeout(function () { location.reload(); }, 350);
+        }).catch(function () { location.reload(); });
+      } else {
+        location.reload();
+      }
+    }
+
+    function versionNewer(remote, local) {
+      var r = parseInt(remote, 10);
+      var l = parseInt(local, 10);
+      if (isFinite(r) && isFinite(l)) return r > l;
+      return String(remote) !== String(local) && remote != null && remote !== "";
+    }
+
+    function checkGameUpdate() {
+      var root;
+      if (sameOriginSync) root = "";
+      else if (syncBaseOverride) root = syncBaseOverride;
+      else return;
+      if (navigator.serviceWorker && navigator.serviceWorker.getRegistration) {
+        navigator.serviceWorker.getRegistration("./").then(function (reg) {
+          if (reg && reg.update) reg.update();
+        }).catch(function () {});
+      }
+      function consider(j) {
+        if (!j) return;
+        var ver = String(j.version || j.gameVersion || "");
+        if (!ver) return;
+        window.__theoServerVersion = ver;
+        if (versionNewer(ver, APP_VERSION)) showUpdateBanner();
+      }
+      fetch(root + "/version.json", { cache: "no-store" }).then(function (r) {
+        return r.ok ? r.json() : null;
+      }).then(consider).catch(function () {
+        return fetch(root + "/api/version", { cache: "no-store", headers: { Accept: "application/json" } }).then(function (r) {
+          return r.ok ? r.json() : null;
+        }).then(consider).catch(function () {});
+      });
+    }
+
     function registerAppWorker() {
       try {
         if (window.isSecureContext && navigator.serviceWorker) {
-          navigator.serviceWorker.register("./sw.js").catch(function () {});
+          navigator.serviceWorker.addEventListener("controllerchange", function () {
+            if (window.__theoReloading) location.reload();
+          });
+          navigator.serviceWorker.register("./sw.js").then(function (reg) {
+            if (reg.waiting && navigator.serviceWorker.controller) {
+              /* waiting worker is offered by the LAN version check banner */
+            }
+            reg.addEventListener("updatefound", function () {
+              var w = reg.installing;
+              if (!w) return;
+              w.addEventListener("statechange", function () {
+                if (w.state === "installed" && navigator.serviceWorker.controller && sameOriginSync) {
+                  checkGameUpdate();
+                }
+              });
+            });
+          }).catch(function () {});
         }
       } catch (e) {}
+      var nowBtn = document.getElementById("update-now-btn");
+      var laterBtn = document.getElementById("update-later-btn");
+      if (nowBtn) nowBtn.addEventListener("click", applyGameUpdate);
+      if (laterBtn) laterBtn.addEventListener("click", function () {
+        try { sessionStorage.setItem("theo-dismissed-version", APP_VERSION + "->" + (window.__theoServerVersion || "newer")); } catch (e) {}
+        hideUpdateBanner();
+      });
+      var hudRefresh = document.getElementById("sync-hud-refresh");
+      if (hudRefresh) hudRefresh.addEventListener("click", function () {
+        if (syncConfigured()) pullFromServer();
+      });
     }
 
     function getSyncStatus() {
@@ -4653,8 +4988,15 @@
     loadAllCustom().then(function () {
       return loadDifficulty().then(function () {
         return loadServerSeen().then(function () { return refreshOutboxCount(); }).then(function () {
+          return dropOutboxFor(SETTINGS_ID);
+        }).then(function () { return refreshOutboxCount(); }).then(function () {
+          return loadSyncSettings();
+        }).then(function () {
           return detectSync().then(function () {
-            if (syncConfigured()) return pullFromServer();
+            if (syncConfigured()) {
+              return pullFromServer().then(function () { checkGameUpdate(); });
+            }
+            if (sameOriginSync) checkGameUpdate();
           });
         });
       });
