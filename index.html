@@ -246,12 +246,7 @@
     .btn-names {
       background: #3949AB;
       box-shadow: 0 8px 0 #1A237E, 0 12px 24px rgba(0,0,0,0.18);
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.22em;
     }
-    .btn-names svg { width: 0.72em; height: 0.72em; flex: 0 0 auto; }
     .btn-names:active { box-shadow: 0 2px 0 #1A237E, 0 6px 12px rgba(0,0,0,0.18); }
     .btn-names:focus {
       box-shadow:
@@ -285,10 +280,10 @@
       background: #1565C0;
       color: #fff;
       font-weight: 800;
-      font-size: clamp(18px, 4vmin, 32px);
-      min-height: 72px;
-      min-width: min(80vw, 420px);
-      margin: 4px auto 8px;
+      font-size: clamp(22px, 4.6vmin, 36px);
+      min-height: 84px;
+      min-width: min(86vw, 480px);
+      margin: 8px auto 10px;
       padding: 0.3em 1em;
       display: inline-flex;
       align-items: center;
@@ -1384,10 +1379,7 @@
         <div class="hero-cars" id="hero-cars"></div>
         <div class="start-actions">
           <button type="button" class="btn btn-play" id="play-btn" aria-label="Match Game">MATCH</button>
-          <button type="button" class="btn btn-names" id="names-btn" aria-label="Name Game">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1-3.29-2.5-4.03v8.05c1.5-.74 2.5-2.26 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
-            NAME
-          </button>
+          <button type="button" class="btn btn-names" id="names-btn" aria-label="Name Game">NAME</button>
         </div>
       </div>
     </section>
@@ -1482,8 +1474,8 @@
         <h2>Parent Settings</h2>
         <div class="settings-tabs" role="tablist" aria-label="Settings sections">
           <button type="button" role="tab" id="tab-cars" aria-controls="pane-cars" aria-selected="true">Cars</button>
-          <button type="button" role="tab" id="tab-difficulty" aria-controls="pane-difficulty" aria-selected="false">Difficulty</button>
-          <button type="button" role="tab" id="tab-names" aria-controls="pane-names" aria-selected="false">Name Game</button>
+          <button type="button" role="tab" id="tab-difficulty" aria-controls="pane-difficulty" aria-selected="false">Match</button>
+          <button type="button" role="tab" id="tab-names" aria-controls="pane-names" aria-selected="false">Names</button>
           <button type="button" role="tab" id="tab-family" aria-controls="pane-family" aria-selected="false">Family</button>
         </div>
         <div id="pane-cars" class="settings-pane" role="tabpanel" aria-labelledby="tab-cars">
@@ -1503,7 +1495,7 @@
         </div>
         </div>
         <div id="pane-difficulty" class="settings-pane" role="tabpanel" aria-labelledby="tab-difficulty" hidden>
-          <p class="settings-lead">Pick a starting age, or make your own. Endless play keeps using these settings.</p>
+          <p class="settings-lead">How Match Game works on this device. Pick a starting age, or make your own.</p>
           <p class="device-only-note">This device only — not synced.</p>
           <div class="diff-presets" id="diff-presets">
             <button type="button" id="diff-age2" data-preset="age2" aria-pressed="true">Age 2<small>2 pairs, very big cards, a long first look</small></button>
@@ -1591,9 +1583,7 @@
             <div class="diff-row">
               <label for="name-set-choices">Choices</label>
               <select id="name-set-choices">
-                <option value="auto">Auto (follow difficulty)</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
+                <option value="auto">Auto (at least 4)</option>
                 <option value="4">4</option>
                 <option value="5">5</option>
                 <option value="6">6</option>
@@ -1607,10 +1597,6 @@
                 <option value="last">Last name</option>
                 <option value="nick">Nickname</option>
               </select>
-            </div>
-            <div class="diff-row">
-              <label for="name-set-repeat">Say the name again if no one taps</label>
-              <input id="name-set-repeat" type="checkbox" checked>
             </div>
             <div class="diff-row">
               <label for="name-set-cele">End celebration screen</label>
@@ -1792,7 +1778,7 @@
     var BLOB_FETCH_MS = 20000;
     var bootStartedAt = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
     var keyChangeOpen = false;
-    var APP_VERSION = "18";
+    var APP_VERSION = "19";
     var MATCH_PAIR_CAP = 6;
     var NAME_ROUNDS = 6;
     var THUMB_MAX = 256;
@@ -1801,7 +1787,7 @@
     var speakTimer = null;
     var padsRunning = false;
     var NAME_SETTINGS_KEY = "theo-car-match-name-game";
-    var nameSettings = { choices: "auto", say: "full", repeat: true, celebration: true };
+    var nameSettings = { choices: "auto", say: "full", celebration: true };
     var nameState = { active: false, round: 0, target: null, choices: [], locked: false, lastTargetId: "", remaining: [], repeatTimer: null };
     var updateBannerShown = false;
     var outboxCount = 0;
@@ -3978,13 +3964,13 @@
     function normalizeNameSettings(raw) {
       raw = raw && typeof raw === "object" ? raw : {};
       var choices = String(raw.choices || "auto");
-      if (choices !== "auto" && !/^[2-6]$/.test(choices)) choices = "auto";
+      if (choices === "2" || choices === "3") choices = "4";
+      if (choices !== "auto" && !/^[4-6]$/.test(choices)) choices = "auto";
       var say = String(raw.say || "full");
       if (say !== "first" && say !== "last" && say !== "nick") say = "full";
       return {
         choices: choices,
         say: say,
-        repeat: raw.repeat !== false,
         celebration: raw.celebration !== false
       };
     }
@@ -4009,11 +3995,9 @@
     function updateNameGameUi() {
       var c = document.getElementById("name-set-choices");
       var s = document.getElementById("name-set-say");
-      var r = document.getElementById("name-set-repeat");
       var e = document.getElementById("name-set-cele");
       if (c && document.activeElement !== c) c.value = nameSettings.choices;
       if (s && document.activeElement !== s) s.value = nameSettings.say;
-      if (r) r.checked = nameSettings.repeat !== false;
       if (e) e.checked = nameSettings.celebration !== false;
     }
 
@@ -4022,11 +4006,10 @@
         saveNameSettings({
           choices: (document.getElementById("name-set-choices") || {}).value,
           say: (document.getElementById("name-set-say") || {}).value,
-          repeat: !!(document.getElementById("name-set-repeat") || {}).checked,
           celebration: !!(document.getElementById("name-set-cele") || {}).checked
         });
       }
-      ["name-set-choices", "name-set-say", "name-set-repeat", "name-set-cele"].forEach(function (id) {
+      ["name-set-choices", "name-set-say", "name-set-cele"].forEach(function (id) {
         var el = document.getElementById(id);
         if (el) el.addEventListener("change", read);
       });
@@ -4036,8 +4019,8 @@
       var cap = Math.max(1, allCars().length);
       var raw = nameSettings.choices;
       var n;
-      if (raw && raw !== "auto") n = clampInt(raw, 2, 6, 2);
-      else n = Math.max(2, Math.min(6, difficulty.startPairs || 2));
+      if (raw && raw !== "auto") n = clampInt(raw, 4, 6, 4);
+      else n = Math.max(4, Math.min(6, difficulty.startPairs || 4));
       return Math.max(1, Math.min(n, cap));
     }
 
@@ -4068,22 +4051,12 @@
 
     function playNameGamePrompt(car) {
       if (!car) return;
+      nameState.promptCount = (nameState.promptCount || 0) + 1;
       if ((nameSettings.say || "full") === "full") {
         playSources(soundSourcesFor(car), spokenNameGameText(car));
       } else {
         speak(spokenNameGameText(car));
       }
-      scheduleNameRepeat();
-    }
-
-    function scheduleNameRepeat() {
-      stopNameRepeat();
-      if (nameSettings.repeat === false || !nameState.active || !document.getElementById("name-win-overlay").hidden) return;
-      nameState.repeatTimer = setTimeout(function () {
-        nameState.repeatTimer = null;
-        if (!nameState.active || nameState.locked) return;
-        if (nameState.target) playNameGamePrompt(nameState.target);
-      }, 5000);
     }
 
     function preloadFarts() {
@@ -4314,7 +4287,6 @@
             return;
           }
           nameState.locked = false;
-          if (nameState.target) playNameGamePrompt(nameState.target);
         }
         fartP.then(afterFunny, afterFunny);
       }, poofMs);
@@ -6713,7 +6685,7 @@
       pairSteps: pairSteps,
       startNameGame: startNameGame,
       goHome: goHome,
-      getNameState: function () { return { active: nameState.active, round: nameState.round, target: nameState.target && nameState.target.id, remaining: (nameState.remaining || []).map(function (c) { return c.id; }), locked: nameState.locked, lastTargetId: nameState.lastTargetId }; },
+      getNameState: function () { return { active: nameState.active, round: nameState.round, target: nameState.target && nameState.target.id, remaining: (nameState.remaining || []).map(function (c) { return c.id; }), locked: nameState.locked, lastTargetId: nameState.lastTargetId, promptCount: nameState.promptCount || 0, repeatTimer: nameState.repeatTimer }; },
       getNameSettings: function () { return JSON.parse(JSON.stringify(nameSettings)); },
       setNameSettings: saveNameSettings,
       spokenNameGameText: spokenNameGameText,
