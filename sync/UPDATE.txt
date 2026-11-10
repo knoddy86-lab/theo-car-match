@@ -1,0 +1,115 @@
+Theo's Car Match — update for the home computer (WIN11A)
+=======================================================
+
+Apply this zip on the family PC only. Do not skip the firewall step:
+this update also uses HTTPS on port 8788.
+
+Where things already live
+-------------------------
+Folder:   C:\Users\admin\theo-sync
+HTTP:     http://192.168.68.91:8787/
+HTTPS:    https://192.168.68.91:8788/
+Data:     C:\Users\admin\theo-sync\data\   (cards, family key, PIN hash, certificates)
+Startup:  a shortcut to start-hidden.vbs
+
+What this update adds
+---------------------
+- An iPhone Home Screen app (HTTPS + a service worker so the game works offline)
+- The home computer is the master copy: phones pull automatically
+- Phone edits stay on the phone until a parent saves them with a PIN
+- Matches are a silent wiggle and confetti (the name is still said when a card is turned)
+- Finishing a round plays a V8 engine rev (12 synthesised clips, shuffled)
+- Settings is organised into tabs: Cars, Difficulty, Family
+- Difficulty age presets (Age 2 is the default) and custom options
+- Difficulty is synced the same way as cards (PIN to save to the PC)
+
+1. Stop the running server
+--------------------------
+On WIN11A:
+
+- If a "Theo's Car Match" or "node" window is visible, close it.
+- Otherwise open Task Manager, find "Node.js JavaScript Runtime" that was
+  started from C:\Users\admin\theo-sync, and End task.
+- You can also open a Command Prompt and run:
+
+    taskkill /IM node.exe /F
+
+  Only do that if this PC is not using node.exe for something else.
+
+2. Copy the new files (keep your data and Node)
+-----------------------------------------------
+1. Unzip theo-sync-update.zip somewhere temporary, for example
+   C:\Users\admin\Downloads\theo-sync-update\
+   You should see server.js, start-hidden.vbs, a game\ folder, and this UPDATE.txt.
+2. Copy everything from the unzipped folder into C:\Users\admin\theo-sync\
+   and replace existing files when Windows asks.
+3. Do NOT delete or replace these folders if they already exist:
+
+     data\
+     node\
+     logs\
+
+   The family key, saved cards, PIN and HTTPS certificates stay in data\.
+   The portable Node.js program stays in node\.
+
+3. Open the firewall for both ports (once)
+------------------------------------------
+Right-click C:\Users\admin\theo-sync\install-firewall.bat
+Choose "Run as administrator".
+This allows TCP 8787 (http) and 8788 (https) on the Private profile only.
+
+4. Start the server again
+-------------------------
+Double-click C:\Users\admin\theo-sync\start-hidden.vbs
+
+Or, to watch it start, double-click start.bat and leave that window open.
+
+Confirm you can open http://127.0.0.1:8787/ in a browser on this PC and
+see the game. The first start may print a new HTTPS certificate if one
+was not created yet.
+
+5. Set the parent PIN (first time only)
+---------------------------------------
+On this PC only, open http://127.0.0.1:8787/admin
+or double-click set-pin.bat.
+
+Choose a PIN of at least 4 characters. You cannot set this PIN from a phone.
+Saving changes from any browser, including this PC, needs the PIN.
+
+6. iPhone: trust the certificate, then add the app
+--------------------------------------------------
+On the iPhone, on the home Wi-Fi, open Safari and go to:
+
+  http://192.168.68.91:8787/setup
+
+Follow the page:
+
+1. Download the profile / certificate from the link on that page.
+2. Open Settings → Profile Downloaded (or Settings → General → VPN & Device Management)
+   and install the profile.
+3. Then go to Settings → General → About → Certificate Trust Settings
+   and enable full trust for the "Theo's Car Match" certificate.
+4. In Safari open:
+
+     https://192.168.68.91:8788/
+
+   (note the https and port 8788). There should be no certificate warning
+   after step 3.
+5. Tap the Share button, then Add to Home Screen. The app name is
+   "Theo's Car Match".
+6. Open the Home Screen icon, hold the gear, open the Family tab, and type
+   the family key from data\family-key.txt (or the text the server printed).
+
+GitHub Pages (https://knoddy86-lab.github.io/theo-car-match/) stays a
+standalone copy until you enter a server URL there. Prefer the Home Screen
+app on the home Wi-Fi so cards and difficulty stay in sync.
+
+7. If something does not start
+------------------------------
+- Confirm node.exe is still at C:\Users\admin\theo-sync\node\node.exe
+  If it is missing, right-click get-node.ps1 and "Run with PowerShell".
+- Confirm data\family-key.txt is still there. If it was deleted, the
+  server will make a new key and phones will need the new one.
+- After this update, if a phone still shows the old game, delete the
+  Home Screen icon, revisit https://192.168.68.91:8788/ and add it again,
+  or wait a moment for the new service worker (v8) to install.

@@ -2,10 +2,14 @@
 "use strict";
 
 var http = require("http");
+var https = require("https");
 var fs = require("fs");
 var path = require("path");
 var crypto = require("crypto");
 var os = require("os");
+var querystring = require("querystring");
+var certs = require("./certs");
+var pinLib = require("./pin");
 
 var ROOT = path.resolve(__dirname);
 var DATA_DIR = path.resolve(process.env.DATA_DIR || path.join(ROOT, "data"));
@@ -13,6 +17,7 @@ var GAME_DIR = path.resolve(process.env.GAME_DIR || path.join(ROOT, "game"));
 var CARDS_DIR = path.join(DATA_DIR, "cards");
 var KEY_FILE = path.join(DATA_DIR, "family-key.txt");
 var PORT = parseInt(process.env.PORT || "8787", 10);
+var HTTPS_PORT = parseInt(process.env.HTTPS_PORT || "8788", 10);
 var HOST = process.env.HOST || "0.0.0.0";
 var MAX_JSON = 512 * 1024;
 var MAX_BLOB = 12 * 1024 * 1024;
@@ -36,7 +41,11 @@ var MIMES = {
   ".svg": "image/svg+xml",
   ".ico": "image/x-icon",
   ".json": "application/json; charset=utf-8",
-  ".txt": "text/plain; charset=utf-8"
+  ".txt": "text/plain; charset=utf-8",
+  ".webmanifest": "application/manifest+json",
+  ".crt": "application/x-x509-ca-cert",
+  ".mobileconfig": "application/x-apple-aspen-config",
+  ".webapp": "application/x-web-app-manifest+json"
 };
 
 function ensureDirs() {
@@ -63,6 +72,13 @@ function loadOrCreateKey() {
 ensureDirs();
 var FAMILY_KEY = loadOrCreateKey();
 var KEY_BUF = Buffer.from(FAMILY_KEY);
+var pinStore = new pinLib.PinStore(DATA_DIR);
+var tlsBundle = null;
+try {
+  tlsBundle = certs.ensureCerts(DATA_DIR);
+} catch (e) {
+  console.error("Could not create HTTPS certificates:", e && e.message ? e.message : e);
+}
 
 function safeEqual(a, b) {
   var ba = Buffer.from(String(a || ""), "utf8");
@@ -176,6 +192,66 @@ function blobInfo(id, kind) {
   var type = "";
   try { if (tp && fs.existsSync(tp)) type = fs.readFileSync(tp, "utf8").trim(); } catch (e) {}
   return { has: true, size: fs.statSync(p).size, type: type };
+}
+
+
+function settingsPath() {
+  return path.join(DATA_DIR, "settings.json");
+}
+
+function readSettings() {
+  try {
+    var raw = JSON.parse(fs.readFileSync(settingsPath(), "utf8"));
+    return sanitizeSettings(raw);
+  } catch (e) {
+    return null;
+  }
+}
+
+function clampInt(n, lo, hi, fallback) {
+  n = parseInt(n, 10);
+  if (!isFinite(n)) n = fallback;
+  return Math.max(lo, Math.min(hi, n));
+}
+
+function sanitizeSettings(raw) {
+  raw = raw && typeof raw === "object" ? raw : {};
+  var preset = raw.preset;
+  if (["age2", "age3", "age45", "age6", "custom"].indexOf(preset) < 0) preset = "custom";
+  var grow = raw.grow !== false;
+  var startPairs = clampInt(raw.startPairs, 2, 10, 2);
+  var maxPairs = clampInt(raw.maxPairs, 2, 10, Math.max(startPairs, 4));
+  if (!grow) maxPairs = startPairs;
+  if (maxPairs < startPairs) maxPairs = startPairs;
+  var cardSize = raw.cardSize;
+  if (cardSize !== "large" && cardSize !== "xl") cardSize = "auto";
+  var peek = clampInt(raw.peek, 0, 3, 0);
+  var flipBack = raw.flipBack;
+  if (flipBack !== "slow" && flipBack !== "fast") flipBack = "normal";
+  var shuffle = raw.shuffle === "keep" ? "keep" : "reshuffle";
+  var hint = (raw.hint === 20 || raw.hint === "20") ? 20 : ((raw.hint === 10 || raw.hint === "10") ? 10 : 0);
+  return {
+    preset: preset,
+    grow: grow,
+    startPairs: startPairs,
+    maxPairs: maxPairs,
+    cardSize: cardSize,
+    peek: peek,
+    flipBack: flipBack,
+    shuffle: shuffle,
+    hint: hint,
+    speakFlip: raw.speakFlip !== false,
+    revs: raw.revs !== false,
+    updatedAt: Number(raw.updatedAt) || Date.now()
+  };
+}
+
+function writeSettings(incoming) {
+  var current = readSettings() || {};
+  var next = sanitizeSettings(Object.assign({}, current, incoming || {}));
+  next.updatedAt = Number(incoming && incoming.updatedAt) || Date.now();
+  fs.writeFileSync(settingsPath(), JSON.stringify(next, null, 2));
+  return next;
 }
 
 function listIds() {
@@ -311,7 +387,7 @@ function serveGame(req, res, urlPath) {
     res.statusCode = 200;
     res.setHeader("Content-Type", type);
     res.setHeader("Content-Length", st.size);
-    res.setHeader("Cache-Control", ext === ".html" ? "no-store" : "public, max-age=3600");
+    res.setHeader("Cache-Control", (ext === ".html" || path.basename(file) === "sw.js" || path.basename(file) === "manifest.json") ? "no-store" : "public, max-age=3600");
     fs.createReadStream(file).pipe(res);
   });
 }
@@ -320,14 +396,38 @@ function handleApi(req, res, url) {
   var parts = url.pathname.replace(/\/+$/, "").split("/").filter(Boolean);
   // parts[0] === "api"
   if (req.method === "GET" && parts.length === 2 && parts[1] === "health") {
-    return sendJson(res, 200, { ok: true, service: "theo-sync", version: 1 });
+    return sendJson(res, 200, { ok: true, service: "theo-sync", version: 3, httpsPort: HTTPS_PORT });
   }
   if (!authorized(req)) return sendJson(res, 401, { ok: false, error: "bad key" });
+
+  if (req.method === "GET" && parts.length === 2 && parts[1] === "pin") {
+    return sendJson(res, 200, { ok: true, set: pinStore.hasPin() });
+  }
 
   if (req.method === "GET" && parts.length === 2 && parts[1] === "sync") {
     var cards = {};
     listIds().forEach(function (id) { cards[id] = publicCard(id); });
-    return sendJson(res, 200, { ok: true, cards: cards });
+    return sendJson(res, 200, { ok: true, cards: cards, settings: readSettings() });
+  }
+
+  if (parts.length === 2 && parts[1] === "settings") {
+    if (req.method === "GET") {
+      return sendJson(res, 200, { ok: true, settings: readSettings() });
+    }
+    if (req.method === "PUT") {
+      var pinGate = requireParentPin(req, res);
+      if (pinGate !== true) return pinGate;
+      return readRequest(req, MAX_JSON).then(function (buf) {
+        var incoming;
+        try { incoming = JSON.parse(buf.toString("utf8") || "{}"); } catch (e) {
+          return sendJson(res, 400, { ok: false, error: "bad json" });
+        }
+        var saved = writeSettings(incoming);
+        sendJson(res, 200, { ok: true, settings: saved });
+      }).catch(function (e) {
+        sendJson(res, e.code === 413 ? 413 : 400, { ok: false, error: e.message });
+      });
+    }
   }
 
   if (parts.length >= 3 && parts[1] === "cards") {
@@ -336,6 +436,11 @@ function handleApi(req, res, url) {
     var kind = parts[3]; // image | audio | undefined
 
     if (req.method === "GET" && !kind) return sendJson(res, 200, { ok: true, card: publicCard(id) });
+
+    if (req.method !== "GET") {
+      var pinGate = requireParentPin(req, res);
+      if (pinGate !== true) return pinGate;
+    }
 
     if (req.method === "PUT" && !kind) {
       return readRequest(req, MAX_JSON).then(function (buf) {
@@ -401,7 +506,216 @@ function handleApi(req, res, url) {
   sendJson(res, 404, { ok: false, error: "not found" });
 }
 
-var server = http.createServer(function (req, res) {
+
+function clientIp(req) {
+  return String(req.socket && req.socket.remoteAddress || "").replace(/^::ffff:/, "");
+}
+
+function isLocalRequest(req) {
+  var ip = clientIp(req);
+  return ip === "127.0.0.1" || ip === "::1" || ip === "localhost";
+}
+
+function parentPinFrom(req) {
+  return String(req.headers["x-parent-pin"] || "").trim();
+}
+
+function requireParentPin(req, res) {
+  if (!pinStore.hasPin()) {
+    sendJson(res, 403, { ok: false, error: "pin not set", message: "A parent PIN has not been set on the home computer yet. On the computer, open http://127.0.0.1:8787/admin or run set-pin.bat." });
+    return false;
+  }
+  var ip = clientIp(req);
+  if (pinStore.isLimited(ip)) {
+    sendJson(res, 429, { ok: false, error: "rate limited", message: "Too many wrong PIN tries. Wait 15 minutes and try again." });
+    return false;
+  }
+  var pin = parentPinFrom(req);
+  if (!pin) {
+    sendJson(res, 403, { ok: false, error: "pin required", message: "A parent PIN is required to save changes to the home computer." });
+    return false;
+  }
+  if (!pinStore.verify(pin)) {
+    var n = pinStore.recordFail(ip);
+    sendJson(res, 403, { ok: false, error: "bad pin", message: "That PIN was not accepted.", remaining: Math.max(0, pinLib.MAX_FAILS - n) });
+    return false;
+  }
+  pinStore.clearFails(ip);
+  return true;
+}
+
+function profileUuid() {
+  if (crypto.randomUUID) return crypto.randomUUID().toUpperCase();
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (ch) {
+    var r = crypto.randomBytes(1)[0] % 16;
+    var v = ch === "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  }).toUpperCase();
+}
+
+function mobileconfig() {
+  if (!tlsBundle) return null;
+  var b64 = tlsBundle.caCertDer.toString("base64").replace(/(.{64})/g, "$1\n").trim();
+  var uuid1 = profileUuid();
+  var uuid2 = profileUuid();
+  return '<?xml version="1.0" encoding="UTF-8"?>\n' +
+    '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n' +
+    '<plist version="1.0"><dict>\n' +
+    '<key>PayloadContent</key><array><dict>\n' +
+    '<key>PayloadCertificateFileName</key><string>TheoCarMatch-HomeCA.crt</string>\n' +
+    '<key>PayloadContent</key><data>\n' + b64 + '\n</data>\n' +
+    '<key>PayloadDescription</key><string>Lets this iPhone open Theo&apos;s Car Match securely on your home Wi-Fi.</string>\n' +
+    '<key>PayloadDisplayName</key><string>Theo&apos;s Car Match Home CA</string>\n' +
+    '<key>PayloadIdentifier</key><string>lab.knoddy86.theo-car-match.ca</string>\n' +
+    '<key>PayloadType</key><string>com.apple.security.root</string>\n' +
+    '<key>PayloadUUID</key><string>' + uuid1 + '</string>\n' +
+    '<key>PayloadVersion</key><integer>1</integer>\n' +
+    '</dict></array>\n' +
+    '<key>PayloadDescription</key><string>Install this profile so your iPhone can open Theo&apos;s Car Match over HTTPS on your home Wi-Fi.</string>\n' +
+    '<key>PayloadDisplayName</key><string>Theo&apos;s Car Match Home CA</string>\n' +
+    '<key>PayloadIdentifier</key><string>lab.knoddy86.theo-car-match.profile</string>\n' +
+    '<key>PayloadRemovalDisallowed</key><false/>\n' +
+    '<key>PayloadType</key><string>Configuration</string>\n' +
+    '<key>PayloadUUID</key><string>' + uuid2 + '</string>\n' +
+    '<key>PayloadVersion</key><integer>1</integer>\n' +
+    '</dict></plist>\n';
+}
+
+function lanLinks(scheme, port) {
+  var ips = (tlsBundle && tlsBundle.sans && tlsBundle.sans.ips) ? tlsBundle.sans.ips : lanIPv4();
+  var extra = lanIPv4();
+  extra.forEach(function (ip) { if (ips.indexOf(ip) === -1) ips.push(ip); });
+  return ips.filter(function (ip) { return ip !== "127.0.0.1"; }).map(function (ip) {
+    return scheme + "://" + ip + ":" + port + "/";
+  });
+}
+
+function setupPage() {
+  var httpsLinks = lanLinks("https", HTTPS_PORT);
+  var httpLinks = lanLinks("http", PORT);
+  var mainHttp = httpLinks[0] || ("http://192.168.68.91:" + PORT + "/");
+  var mainHttps = httpsLinks[0] || ("https://192.168.68.91:" + HTTPS_PORT + "/");
+  // Prefer the known home IP if present
+  httpLinks.forEach(function (u) { if (u.indexOf("192.168.68.91") !== -1) mainHttp = u; });
+  httpsLinks.forEach(function (u) { if (u.indexOf("192.168.68.91") !== -1) mainHttps = u; });
+  var httpsHost = mainHttps.replace(/\/$/, "");
+  return '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">' +
+    '<meta name="viewport" content="width=device-width, initial-scale=1">' +
+    '<title>Set up Theo&apos;s Car Match on iPhone</title>' +
+    '<style>body{font-family:system-ui,Segoe UI,sans-serif;max-width:40rem;margin:2rem auto;padding:0 1.2rem;color:#1A237E;line-height:1.45}' +
+    'h1{font-size:1.6rem}ol{padding-left:1.3rem}li{margin:0.7rem 0}' +
+    'a.btn{display:inline-block;background:#1565C0;color:#fff;text-decoration:none;font-weight:700;padding:0.7rem 1rem;border-radius:999px}' +
+    'code{background:#E8EAF6;padding:0.1em 0.35em;border-radius:6px}p.note{color:#3949AB}</style></head><body>' +
+    '<h1>Set up the iPhone app</h1>' +
+    '<p>The game on GitHub Pages cannot talk to this computer over plain http. Follow these steps once on the iPhone, while you are on the home Wi-Fi.</p>' +
+    '<ol>' +
+    '<li>Tap <strong>Download the trust profile</strong> below, then open the file if iOS asks.</li>' +
+    '<li>On the iPhone go to <strong>Settings &gt; General &gt; VPN &amp; Device Management</strong>, tap the <strong>Theo&apos;s Car Match Home CA</strong> profile, and tap <strong>Install</strong>.</li>' +
+    '<li>Then go to <strong>Settings &gt; General &gt; About &gt; Certificate Trust Settings</strong> and turn on full trust for <strong>Theo&apos;s Car Match Home CA</strong>.</li>' +
+    '<li>Open <a href="' + httpsHost + '/">' + httpsHost + '/</a> in Safari.</li>' +
+    '<li>Tap the Share button, then <strong>Add to Home Screen</strong>. That icon is the app. It can open and keep working offline, and it will update from this computer when you are home.</li>' +
+    '</ol>' +
+    '<p><a class="btn" href="/ca">Download the trust profile</a></p>' +
+    '<p class="note">A parent also needs to set a PIN on this computer (open <code>set-pin.bat</code> or <a href="http://127.0.0.1:' + PORT + '/admin">http://127.0.0.1:' + PORT + '/admin</a> on the PC). The family key is only for reading. Saving changes from a phone needs that PIN.</p>' +
+    '<p class="note">You can also download the certificate as a file: <a href="/ca.crt">ca.crt</a>.</p>' +
+    '</body></html>';
+}
+
+function adminPage(msg, isError) {
+  var has = pinStore.hasPin();
+  return '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">' +
+    '<meta name="viewport" content="width=device-width, initial-scale=1">' +
+    '<title>Theo&apos;s Car Match — parent PIN</title>' +
+    '<style>body{font-family:system-ui,Segoe UI,sans-serif;max-width:28rem;margin:2.5rem auto;padding:0 1.2rem;color:#1A237E;line-height:1.45}' +
+    'label{display:block;font-weight:700;margin:0.8rem 0 0.3rem}' +
+    'input{width:100%;font-size:1.1rem;padding:0.5rem 0.6rem;border:3px solid #C5CAE9;border-radius:10px}' +
+    'button{margin-top:1rem;background:#1565C0;color:#fff;border:0;border-radius:999px;font-weight:800;font-size:1rem;padding:0.6rem 1.1rem;cursor:pointer}' +
+    '.msg{padding:0.6rem 0.8rem;border-radius:10px;font-weight:700}' +
+    '.ok{background:#E8F5E9;color:#1B5E20}.err{background:#FFEBEE;color:#B71C1C}</style></head><body>' +
+    '<h1>Parent PIN</h1>' +
+    '<p>This PIN is needed to save changes from a phone or this browser to the home computer copy. The family key is only for reading.</p>' +
+    (msg ? '<p class="msg ' + (isError ? 'err' : 'ok') + '">' + msg + '</p>' : '') +
+    '<form method="POST" action="/admin">' +
+    (has ? '<label for="current">Current PIN</label><input id="current" name="current" type="password" inputmode="numeric" autocomplete="current-password" required>' : '') +
+    '<label for="pin">' + (has ? 'New PIN' : 'Choose a PIN') + '</label>' +
+    '<input id="pin" name="pin" type="password" inputmode="numeric" minlength="4" autocomplete="new-password" required>' +
+    '<label for="confirm">Type it again</label>' +
+    '<input id="confirm" name="confirm" type="password" inputmode="numeric" minlength="4" autocomplete="new-password" required>' +
+    '<button type="submit">' + (has ? 'Change PIN' : 'Save PIN') + '</button></form>' +
+    '<p>Use at least 4 characters. Open this page only on this computer: <code>http://127.0.0.1:' + PORT + '/admin</code>.</p>' +
+    '</body></html>';
+}
+
+function handleAdmin(req, res) {
+  if (!isLocalRequest(req)) {
+    return send(res, 403, "text/plain; charset=utf-8", "The parent PIN can only be set from this computer (http://127.0.0.1:" + PORT + "/admin).");
+  }
+  if (req.method === "GET" || req.method === "HEAD") {
+    return send(res, 200, "text/html; charset=utf-8", adminPage());
+  }
+  if (req.method !== "POST") {
+    res.setHeader("Allow", "GET, POST");
+    return send(res, 405, "text/plain; charset=utf-8", "Method not allowed");
+  }
+  return readRequest(req, 8192).then(function (buf) {
+    var type = String(req.headers["content-type"] || "");
+    var body = {};
+    if (type.indexOf("application/json") !== -1) {
+      try { body = JSON.parse(buf.toString("utf8") || "{}"); } catch (e) { body = {}; }
+    } else {
+      body = querystring.parse(buf.toString("utf8"));
+    }
+    var current = String(body.current || "");
+    var pin = String(body.pin || "");
+    var confirm = String(body.confirm || "");
+    try {
+      if (pinStore.hasPin()) {
+        if (!pinStore.verify(current)) {
+          return send(res, 200, "text/html; charset=utf-8", adminPage("Current PIN was not accepted.", true));
+        }
+      }
+      if (pin.length < 4) return send(res, 200, "text/html; charset=utf-8", adminPage("Use at least 4 characters.", true));
+      if (pin !== confirm) return send(res, 200, "text/html; charset=utf-8", adminPage("The two PINs did not match.", true));
+      pinStore.setPin(pin);
+      return send(res, 200, "text/html; charset=utf-8", adminPage("The parent PIN was saved. Phones will need this PIN to save changes to this computer."));
+    } catch (e) {
+      return send(res, 200, "text/html; charset=utf-8", adminPage(e.message || "Could not save the PIN.", true));
+    }
+  }).catch(function () {
+    send(res, 400, "text/plain; charset=utf-8", "Bad request");
+  });
+}
+
+function handleSpecial(req, res, url) {
+  var pathName = url.pathname.replace(/\/+$/, "") || "/";
+  if (pathName === "/setup" || pathName === "/setup.html") {
+    if (req.method !== "GET" && req.method !== "HEAD") return false;
+    send(res, 200, "text/html; charset=utf-8", setupPage());
+    return true;
+  }
+  if (pathName === "/admin") {
+    handleAdmin(req, res);
+    return true;
+  }
+  if (pathName === "/ca" || pathName === "/ca.mobileconfig") {
+    if (req.method !== "GET" && req.method !== "HEAD") return false;
+    var cfg = mobileconfig();
+    if (!cfg) return send(res, 503, "text/plain; charset=utf-8", "Certificates are not ready.");
+    res.setHeader("Content-Disposition", "attachment; filename=\"TheoCarMatch-HomeCA.mobileconfig\"");
+    send(res, 200, "application/x-apple-aspen-config", cfg);
+    return true;
+  }
+  if (pathName === "/ca.crt") {
+    if (req.method !== "GET" && req.method !== "HEAD") return false;
+    if (!tlsBundle) return send(res, 503, "text/plain; charset=utf-8", "Certificates are not ready.");
+    res.setHeader("Content-Disposition", "attachment; filename=\"TheoCarMatch-HomeCA.crt\"");
+    send(res, 200, "application/x-x509-ca-cert", tlsBundle.caCertPem);
+    return true;
+  }
+  return false;
+}
+
+function onRequest(req, res) {
   setCors(req, res);
   if (req.method === "OPTIONS") {
     res.statusCode = 204;
@@ -410,6 +724,13 @@ var server = http.createServer(function (req, res) {
   var url;
   try { url = new URL(req.url, "http://127.0.0.1"); } catch (e) {
     return send(res, 400, "text/plain; charset=utf-8", "Bad request");
+  }
+  try {
+    if (handleSpecial(req, res, url)) return;
+  } catch (e) {
+    console.error(e);
+    if (!res.headersSent) sendJson(res, 500, { ok: false, error: "server error" });
+    return;
   }
   if (url.pathname === "/api" || url.pathname.indexOf("/api/") === 0) {
     try { return handleApi(req, res, url); } catch (e) {
@@ -423,33 +744,71 @@ var server = http.createServer(function (req, res) {
     return send(res, 405, "text/plain; charset=utf-8", "Method not allowed");
   }
   serveGame(req, res, url.pathname);
-});
+}
 
-server.listen(PORT, HOST, function () {
+
+var server = http.createServer(onRequest);
+var httpsServer = null;
+
+function printBanner() {
   var ips = lanIPv4();
   console.log("");
   console.log("  Theo's Car Match — family sync server");
   console.log("  =====================================");
-  console.log("  On this computer:   http://127.0.0.1:" + PORT + "/");
+  console.log("  On this computer:     http://127.0.0.1:" + PORT + "/");
+  console.log("  Set or change PIN:    http://127.0.0.1:" + PORT + "/admin");
   if (ips.length) {
     ips.forEach(function (ip) {
-      console.log("  On your Wi-Fi:      http://" + ip + ":" + PORT + "/");
+      console.log("  iPhone setup (http):  http://" + ip + ":" + PORT + "/setup");
+      console.log("  iPhone app (https):   https://" + ip + ":" + HTTPS_PORT + "/");
     });
   } else {
-    console.log("  On your Wi-Fi:      http://<this-PC-LAN-IP>:" + PORT + "/");
+    console.log("  iPhone setup (http):  http://192.168.68.91:" + PORT + "/setup");
+    console.log("  iPhone app (https):   https://192.168.68.91:" + HTTPS_PORT + "/");
+  }
+  if (tlsBundle && tlsBundle.regenerated) {
+    console.log("");
+    console.log("  HTTPS certificate was created or renewed for: " + (tlsBundle.sans.ips.concat(tlsBundle.sans.dns).join(", ")));
   }
   console.log("");
   console.log("  Family key (type this in the game Settings):");
   console.log("  " + FAMILY_KEY);
   console.log("");
-  console.log("  Open the Wi-Fi address on the iPhone (not the GitHub Pages site).");
+  if (!pinStore.hasPin()) {
+    console.log("  No parent PIN yet. On this PC, open http://127.0.0.1:" + PORT + "/admin or run set-pin.bat.");
+    console.log("");
+  }
   console.log("  Leave this window open while you play. Ctrl+C to stop.");
   console.log("");
+}
+
+server.listen(PORT, HOST, function () {
+  if (!tlsBundle) {
+    printBanner();
+    console.log("  HTTPS is not available (certificate setup failed). HTTP still works.");
+    console.log("");
+    return;
+  }
+  httpsServer = https.createServer({
+    cert: tlsBundle.serverCertPem,
+    key: tlsBundle.serverKeyPem,
+    ca: tlsBundle.caCertPem
+  }, onRequest);
+  httpsServer.listen(HTTPS_PORT, HOST, function () {
+    printBanner();
+  });
+  httpsServer.on("error", function (err) {
+    console.error("HTTPS server error:", err && err.message ? err.message : err);
+    printBanner();
+  });
 });
 
 function shutdown() {
-  server.close(function () { process.exit(0); });
-  setTimeout(function () { process.exit(0); }, 1000).unref();
+  var left = 1;
+  function done() { left--; if (left <= 0) process.exit(0); }
+  server.close(done);
+  if (httpsServer) { left++; httpsServer.close(done); }
+  setTimeout(function () { process.exit(0); }, 1500).unref();
 }
 process.on("SIGINT", shutdown);
 process.on("SIGTERM", shutdown);

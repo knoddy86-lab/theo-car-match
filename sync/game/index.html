@@ -8,6 +8,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Theo's Car Match">
   <meta name="theme-color" content="#4FC3F7">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <title>Theo's Car Match</title>
   <style>
     :root {
@@ -277,6 +279,7 @@
       align-items: center;
       justify-content: center;
       padding: 4px 8px 8px;
+      overflow: hidden;
     }
     .grid {
       display: grid;
@@ -304,6 +307,8 @@
       transition: transform 0.55s cubic-bezier(0.22, 0.8, 0.3, 1);
       box-shadow: 0 8px 0 rgba(0,0,0,0.12), 0 14px 24px rgba(0,0,0,0.12);
     }
+    body[data-flip-back="slow"] .card-inner { transition-duration: 0.95s; }
+    body[data-flip-back="fast"] .card-inner { transition-duration: 0.32s; }
     .card.is-flipped .card-inner,
     .card.is-matched .card-inner { transform: rotateY(180deg); }
     .face {
@@ -347,13 +352,36 @@
     }
     .card.is-matched { pointer-events: none; }
     .card .art { width: 100%; height: 100%; display: block; }
-    .card.vroom .art { animation: vroom 0.7s ease-in-out; }
+    .card.vroom .art, .card.vroom .custom-art { animation: vroom 0.7s ease-in-out; }
     @keyframes vroom {
       0%, 100% { transform: translateX(0) rotate(0); }
       18% { transform: translateX(10%) rotate(-6deg); }
       40% { transform: translateX(-10%) rotate(6deg); }
       62% { transform: translateX(6%) rotate(-3deg); }
       80% { transform: translateX(-3%) rotate(2deg); }
+    }
+    .card.match-happy {
+      z-index: 4;
+    }
+    .card.match-happy .card-inner {
+      animation: match-happy 0.6s ease-in-out;
+    }
+    @keyframes match-happy {
+      0%, 100% { transform: rotateY(180deg) translateY(0) scale(1); }
+      22% { transform: rotateY(180deg) translateY(-12%) rotate(-5deg) scale(1.07); }
+      44% { transform: rotateY(180deg) translateY(0) rotate(5deg) scale(1.03); }
+      66% { transform: rotateY(180deg) translateY(-8%) rotate(-3deg) scale(1.05); }
+      84% { transform: rotateY(180deg) translateY(0) rotate(2deg) scale(1.01); }
+    }
+    .card.match-glow .card-inner {
+      box-shadow:
+        0 0 0 7px var(--focus),
+        0 0 0 14px rgba(255, 213, 79, 0.5),
+        0 10px 24px rgba(0,0,0,0.2);
+      transition: box-shadow 0.35s ease;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .card.match-happy .card-inner { animation: none; }
     }
 
     .card:focus {
@@ -368,6 +396,30 @@
     }
 
     /* ---- Win overlay ---- */
+    .card.hint-wiggle .card-inner {
+      animation: hint-wiggle 0.7s ease-in-out 2;
+    }
+    @keyframes hint-wiggle {
+      0%, 100% { transform: rotateY(0) rotate(0); }
+      25% { transform: rotateY(0) rotate(-8deg) scale(1.05); }
+      75% { transform: rotateY(0) rotate(8deg) scale(1.05); }
+    }
+    .card.is-flipped.hint-wiggle .card-inner,
+    .card.is-matched.hint-wiggle .card-inner {
+      animation: hint-wiggle-back 0.7s ease-in-out 2;
+    }
+    @keyframes hint-wiggle-back {
+      0%, 100% { transform: rotateY(180deg) rotate(0); }
+      25% { transform: rotateY(180deg) rotate(-8deg) scale(1.05); }
+      75% { transform: rotateY(180deg) rotate(8deg) scale(1.05); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .card.hint-wiggle .card-inner,
+      .card.is-flipped.hint-wiggle .card-inner,
+      .card.is-matched.hint-wiggle .card-inner { animation: none; }
+      .card.hint-wiggle { box-shadow: 0 0 0 6px rgba(255, 193, 7, 0.7); }
+    }
+
     #win-overlay {
       position: absolute;
       inset: 0;
@@ -727,6 +779,9 @@
     }
     .sync-status { margin: 8px 0 0; color: #33691E; }
     .sync-status.is-error { color: #C62828; }
+    .sync-notice { margin: 8px 0 0; font-size: 13px; font-weight: 700; color: #E65100; }
+    #sync-pin-row { margin: 8px 0 0; }
+    #sync-pin-row[hidden] { display: none; }
     .sync-field { margin: 0 0 8px; }
     .sync-field label {
       display: block;
@@ -748,6 +803,105 @@
       background: #fff;
     }
     .sync-field input:focus { outline: 4px solid var(--focus); outline-offset: 2px; }
+
+    .settings-tabs {
+      display: flex;
+      gap: 6px;
+      margin: 0 0 12px;
+    }
+    .settings-tabs button {
+      flex: 1 1 0;
+      min-height: 44px;
+      font-family: inherit;
+      font-weight: 800;
+      font-size: 15px;
+      border-radius: 14px;
+      border: 3px solid #C5CAE9;
+      background: #EEF1FF;
+      color: #1A237E;
+      cursor: pointer;
+      padding: 6px 8px;
+    }
+    .settings-tabs button[aria-selected="true"] {
+      background: #3949AB;
+      color: #fff;
+      border-color: #1A237E;
+    }
+    .settings-tabs button:focus { outline: 4px solid var(--focus); outline-offset: 2px; }
+    .settings-pane { min-width: 0; }
+    .settings-pane[hidden] { display: none !important; }
+    .diff-presets {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 0 0 14px;
+    }
+    .diff-presets button {
+      min-height: 72px;
+      font-family: inherit;
+      font-weight: 800;
+      font-size: 17px;
+      line-height: 1.15;
+      border-radius: 16px;
+      border: 3px solid #C5CAE9;
+      background: #fff;
+      color: #1A237E;
+      padding: 8px 10px;
+      cursor: pointer;
+      text-align: center;
+    }
+    .diff-presets button small {
+      display: block;
+      margin-top: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #5C6BC0;
+      line-height: 1.25;
+    }
+    .diff-presets button[aria-pressed="true"] {
+      background: #FFF8E1;
+      border-color: #F9A825;
+      box-shadow: 0 3px 0 #F9A825;
+    }
+    .diff-presets button:focus { outline: 4px solid var(--focus); outline-offset: 2px; }
+    .diff-custom h3 {
+      margin: 0 0 4px;
+      font-size: 16px;
+      color: #1A237E;
+    }
+    .diff-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+      border-top: 2px solid #E8EAF6;
+    }
+    .diff-row label {
+      font-weight: 800;
+      font-size: 14px;
+      color: #1A237E;
+      flex: 1 1 auto;
+    }
+    .diff-row select, .diff-row input[type="number"] {
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 15px;
+      min-height: 40px;
+      min-width: 108px;
+      max-width: 46%;
+      border-radius: 10px;
+      border: 3px solid #C5CAE9;
+      color: #1A237E;
+      background: #fff;
+      padding: 4px 8px;
+    }
+    .diff-row input[type="checkbox"] {
+      width: 22px;
+      height: 22px;
+      accent-color: #3949AB;
+    }
+    #diff-max-row[hidden], #diff-fixed-row[hidden] { display: none !important; }
     .settings-actions {
       display: flex;
       flex-wrap: wrap;
@@ -909,6 +1063,12 @@
     <section id="settings-screen" class="screen" hidden aria-label="Parent Settings">
       <div class="settings-panel">
         <h2>Parent Settings</h2>
+        <div class="settings-tabs" role="tablist" aria-label="Settings sections">
+          <button type="button" role="tab" id="tab-cars" aria-controls="pane-cars" aria-selected="true">Cars</button>
+          <button type="button" role="tab" id="tab-difficulty" aria-controls="pane-difficulty" aria-selected="false">Difficulty</button>
+          <button type="button" role="tab" id="tab-family" aria-controls="pane-family" aria-selected="false">Family</button>
+        </div>
+        <div id="pane-cars" class="settings-pane" role="tabpanel" aria-labelledby="tab-cars">
         <p class="settings-lead">Add your own names, pictures and sounds for each car, or add a new card. If a name is said wrong, type how it should sound under Say it like.</p>
         <div class="voice-picker">
           <label for="voice-select">Voice</label>
@@ -925,6 +1085,85 @@
           <div id="settings-custom-list"></div>
           <button type="button" class="btn btn-add" id="add-card-btn">Add a card</button>
         </div>
+        </div>
+        <div id="pane-difficulty" class="settings-pane" role="tabpanel" aria-labelledby="tab-difficulty" hidden>
+          <p class="settings-lead">Pick a starting age, or make your own. Endless play keeps using these settings.</p>
+          <div class="diff-presets" id="diff-presets">
+            <button type="button" id="diff-age2" data-preset="age2" aria-pressed="true">Age 2<small>2 pairs, very big cards, a long first look</small></button>
+            <button type="button" id="diff-age3" data-preset="age3" aria-pressed="false">Age 3<small>Start with 3 pairs</small></button>
+            <button type="button" id="diff-age45" data-preset="age45" aria-pressed="false">Age 4–5<small>Start with 4 pairs, up to 6</small></button>
+            <button type="button" id="diff-age6" data-preset="age6" aria-pressed="false">Age 6+<small>Start with 6 pairs, up to 10</small></button>
+            <button type="button" id="diff-custom" data-preset="custom" aria-pressed="false">Custom<small>Make your own</small></button>
+          </div>
+          <div class="diff-custom" id="diff-options">
+            <h3>Options</h3>
+            <div class="diff-row">
+              <label for="diff-grow">Grow each round</label>
+              <input id="diff-grow" type="checkbox" checked>
+            </div>
+            <div class="diff-row" id="diff-fixed-row" hidden>
+              <label for="diff-pairs">Number of pairs</label>
+              <select id="diff-pairs" aria-label="Number of pairs"></select>
+            </div>
+            <div class="diff-row" id="diff-start-row">
+              <label for="diff-start">Start with</label>
+              <select id="diff-start" aria-label="Starting number of pairs"></select>
+            </div>
+            <div class="diff-row" id="diff-max-row">
+              <label for="diff-max">Most pairs</label>
+              <select id="diff-max" aria-label="Maximum number of pairs"></select>
+            </div>
+            <div class="diff-row">
+              <label for="diff-size">Card size</label>
+              <select id="diff-size" aria-label="Card size">
+                <option value="auto">Auto</option>
+                <option value="large">Large</option>
+                <option value="xl">Extra large</option>
+              </select>
+            </div>
+            <div class="diff-row">
+              <label for="diff-peek">First look at all cards</label>
+              <select id="diff-peek" aria-label="Show-all peek at the start">
+                <option value="0">Off</option>
+                <option value="1">1 second</option>
+                <option value="2">2 seconds</option>
+                <option value="3">3 seconds</option>
+              </select>
+            </div>
+            <div class="diff-row">
+              <label for="diff-flip">Flip-back speed</label>
+              <select id="diff-flip" aria-label="Flip-back delay">
+                <option value="slow">Slow</option>
+                <option value="normal">Normal</option>
+                <option value="fast">Fast</option>
+              </select>
+            </div>
+            <div class="diff-row">
+              <label for="diff-shuffle">Shuffle style</label>
+              <select id="diff-shuffle" aria-label="Shuffle style">
+                <option value="reshuffle">New places each round</option>
+                <option value="keep">Keep positions</option>
+              </select>
+            </div>
+            <div class="diff-row">
+              <label for="diff-hint">Hint wiggle after</label>
+              <select id="diff-hint" aria-label="Hint after N seconds">
+                <option value="0">Off</option>
+                <option value="10">10 seconds</option>
+                <option value="20">20 seconds</option>
+              </select>
+            </div>
+            <div class="diff-row">
+              <label for="diff-speak">Say the name when a card is turned</label>
+              <input id="diff-speak" type="checkbox" checked>
+            </div>
+            <div class="diff-row">
+              <label for="diff-revs">Rev the engine when a round is finished</label>
+              <input id="diff-revs" type="checkbox" checked>
+            </div>
+          </div>
+        </div>
+        <div id="pane-family" class="settings-pane" role="tabpanel" aria-labelledby="tab-family" hidden>
         <div class="sync-box" id="sync-box">
           <h3>Family sync</h3>
           <p class="sync-lead" id="sync-lead"></p>
@@ -938,8 +1177,19 @@
           </div>
           <div class="settings-btns">
             <button type="button" class="btn-mini primary" id="sync-now-btn">Sync now</button>
+            <button type="button" class="btn-mini primary" id="sync-save-btn">Save my changes to home computer</button>
+            <button type="button" class="btn-mini warn" id="sync-discard-btn">Discard my changes</button>
+          </div>
+          <div class="sync-field" id="sync-pin-row" hidden>
+            <label for="sync-pin">Parent PIN</label>
+            <div class="say-row">
+              <input id="sync-pin" type="password" inputmode="numeric" autocomplete="off" minlength="4" placeholder="PIN from the home computer" aria-label="Parent PIN">
+              <button type="button" class="btn-mini primary" id="sync-pin-go">Save</button>
+            </div>
           </div>
           <p class="sync-status" id="sync-status"></p>
+          <p class="sync-notice" id="sync-notice" hidden></p>
+        </div>
         </div>
         <div class="settings-actions">
           <button type="button" class="btn btn-reset" id="reset-all-btn">Reset all</button>
@@ -969,13 +1219,28 @@
       { id: "pip",     name: "Pip",         fullName: "Pip",          kind: "forklift", colorName: "Green",          typeName: "forklift", phrase: "Lift it up!",       line: "Lift it up! Green forklift, Pip!",           color: "#43A047", dark: "#1B5E20", light: "#A5D6A7", window: "#E8F5E9", voiceIndex: 3, rate: 1.28, pitch: 1.55 },
       { id: "sunny",   name: "Sunny",       fullName: "Sunny",        kind: "city",     colorName: "Yellow",         typeName: "car",      phrase: "Sunny day!",        line: "Sunny day! Yellow car, Sunny!",              color: "#F6C800", dark: "#C49000", light: "#FFF59D", window: "#FFF8E1", voiceIndex: 4, rate: 1.00, pitch: 1.22 },
       { id: "hank",    name: "Hank",        fullName: "Hank",         kind: "sedan",    colorName: "Dark green",     typeName: "car",      phrase: "Slow and steady!",  line: "Slow and steady! Dark green car, Hank!",     color: "#2E7D32", dark: "#1B5E20", light: "#81C784", window: "#E8F5E9", voiceIndex: 5, rate: 0.78, pitch: 0.62 },
-      { id: "officer", name: "Officer Dot", fullName: "Officer Dot",  kind: "police",   colorName: "Black and white", typeName: "car",     phrase: "Wee-woo!",          line: "Wee-woo! Black and white car, Officer Dot!", color: "#37474F", dark: "#212121", light: "#ECEFF1", window: "#E3F2FD", voiceIndex: 6, rate: 0.96, pitch: 1.00 }
+      { id: "officer", name: "Officer Dot", fullName: "Officer Dot",  kind: "police",   colorName: "Black and white", typeName: "car",     phrase: "Wee-woo!",          line: "Wee-woo! Black and white car, Officer Dot!", color: "#37474F", dark: "#212121", light: "#ECEFF1", window: "#E3F2FD", voiceIndex: 6, rate: 0.96, pitch: 1.00 },
+      { id: "berry",   name: "Berry",       fullName: "Berry",        kind: "city",     colorName: "Pink",           typeName: "car",      phrase: "Berry roll!",       line: "Berry roll! Pink car, Berry!",              color: "#EC407A", dark: "#AD1457", light: "#F8BBD0", window: "#FCE4EC", voiceIndex: 0, rate: 1.16, pitch: 1.50 },
+      { id: "moss",    name: "Moss",        fullName: "Moss",         kind: "tow",      colorName: "Olive",          typeName: "truck",    phrase: "Nice and leafy!",   line: "Nice and leafy! Olive truck, Moss!",        color: "#558B2F", dark: "#33691E", light: "#C5E1A5", window: "#F1F8E9", voiceIndex: 1, rate: 0.86, pitch: 0.72 },
+      { id: "dart",    name: "Dart",        fullName: "Dart",         kind: "sports",   colorName: "Purple",         typeName: "car",      phrase: "Dash dash!",        line: "Dash dash! Purple car, Dart!",              color: "#7E57C2", dark: "#4527A0", light: "#D1C4E9", window: "#EDE7F6", voiceIndex: 2, rate: 1.20, pitch: 1.35 }
     ];
-
-    var PAIRS = [2, 3, 4];
+    var SETTINGS_ID = "__settings";
+    var DIFF_PRESETS = {
+      age2:  { preset: "age2",  grow: true,  startPairs: 2, maxPairs: 4,  cardSize: "xl",    peek: 3, flipBack: "slow",   shuffle: "reshuffle", hint: 0,  speakFlip: true,  revs: true },
+      age3:  { preset: "age3",  grow: true,  startPairs: 3, maxPairs: 5,  cardSize: "large", peek: 2, flipBack: "normal", shuffle: "reshuffle", hint: 0,  speakFlip: true,  revs: true },
+      age45: { preset: "age45", grow: true,  startPairs: 4, maxPairs: 6,  cardSize: "auto",  peek: 1, flipBack: "normal", shuffle: "reshuffle", hint: 10, speakFlip: true,  revs: true },
+      age6:  { preset: "age6",  grow: true,  startPairs: 6, maxPairs: 10, cardSize: "auto",  peek: 0, flipBack: "fast",   shuffle: "reshuffle", hint: 20, speakFlip: true,  revs: true }
+    };
+    var difficulty = normalizeDifficulty(DIFF_PRESETS.age2);
+    var difficultyApplied = "";
+    var peekTimer = null;
+    var hintTimer = null;
+    var prevDeck = null;
     var DB_NAME = "theo-car-match";
-    var DB_VERSION = 1;
+    var DB_VERSION = 2;
     var STORE = "media";
+    var OUTBOX = "outbox";
+    var SYNC_META = "syncmeta";
     var level = 0;
     var deck = [];
     var levelCars = [];
@@ -997,7 +1262,24 @@
     var roundCount = 0;
     var advanceTimer = null;
     var SOUND_DIR = "sounds/";
-    var PHRASE_CLIPS = { letsMatch: "lets-match.mp3", greatJob: "great-job.mp3" };
+    var PHRASE_CLIPS = { letsMatch: "lets-match.mp3" };
+    var REV_CLIPS = [
+      "01-idle-blip.mp3",
+      "02-idle-blip-high.mp3",
+      "03-double-blip.mp3",
+      "04-triple-blip.mp3",
+      "05-long-rev-up.mp3",
+      "06-rev-up-hold.mp3",
+      "07-burble-crackle.mp3",
+      "08-aggressive-short.mp3",
+      "09-slow-rumble-blip.mp3",
+      "10-long-crackle-down.mp3",
+      "11-two-step.mp3",
+      "12-gentle-blip.mp3"
+    ];
+    var revQueue = [];
+    var lastRev = "";
+    var revPreloads = [];
     var extraCars = [];
     var recState = { carId: null, recorder: null, stream: null, chunks: [], timer: null, tick: null, mime: "" };
     var forcedPick = null;
@@ -1012,6 +1294,13 @@
     var lastSyncAt = 0;
     var lastSyncError = "";
     var lastSyncOk = false;
+    var outboxCount = 0;
+    var syncNotice = "";
+    var pullTimer = null;
+    var pullBackoff = 30000;
+    var pulling = false;
+    var lastServerSeen = {};
+    var parentPinOnce = "";
     var customAudioEl = null;
     var dbPromise = null;
     var confettiBits = [];
@@ -1251,6 +1540,8 @@
           req.onupgradeneeded = function () {
             var db = req.result;
             if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE);
+            if (!db.objectStoreNames.contains(OUTBOX)) db.createObjectStore(OUTBOX, { keyPath: "qid", autoIncrement: true });
+            if (!db.objectStoreNames.contains(SYNC_META)) db.createObjectStore(SYNC_META);
           };
           req.onsuccess = function () { resolve(req.result); };
           req.onerror = function () { dbPromise = null; reject(req.error); };
@@ -1319,6 +1610,78 @@
           tx.onerror = function () { reject(tx.error); };
         });
       });
+    }
+
+    function outboxAdd(item) {
+      return openDB().then(function (db) {
+        return new Promise(function (resolve, reject) {
+          var req = db.transaction(OUTBOX, "readwrite").objectStore(OUTBOX).add(item);
+          req.onsuccess = function () { resolve(req.result); };
+          req.onerror = function () { reject(req.error); };
+        });
+      });
+    }
+
+    function outboxAll() {
+      return openDB().then(function (db) {
+        return new Promise(function (resolve, reject) {
+          var req = db.transaction(OUTBOX, "readonly").objectStore(OUTBOX).getAll();
+          req.onsuccess = function () { resolve(req.result || []); };
+          req.onerror = function () { reject(req.error); };
+        });
+      });
+    }
+
+    function outboxClearIds(qids) {
+      if (!qids || !qids.length) return Promise.resolve();
+      return openDB().then(function (db) {
+        return new Promise(function (resolve, reject) {
+          var tx = db.transaction(OUTBOX, "readwrite");
+          var store = tx.objectStore(OUTBOX);
+          qids.forEach(function (id) { store.delete(id); });
+          tx.oncomplete = function () { resolve(); };
+          tx.onerror = function () { reject(tx.error); };
+        });
+      });
+    }
+
+    function outboxClearAll() {
+      return openDB().then(function (db) {
+        return new Promise(function (resolve, reject) {
+          var req = db.transaction(OUTBOX, "readwrite").objectStore(OUTBOX).clear();
+          req.onsuccess = function () { resolve(); };
+          req.onerror = function () { reject(req.error); };
+        });
+      });
+    }
+
+    function metaGet(key) {
+      return openDB().then(function (db) {
+        return new Promise(function (resolve, reject) {
+          var req = db.transaction(SYNC_META, "readonly").objectStore(SYNC_META).get(key);
+          req.onsuccess = function () { resolve(req.result); };
+          req.onerror = function () { reject(req.error); };
+        });
+      }).catch(function () { return undefined; });
+    }
+
+    function metaSet(key, value) {
+      return openDB().then(function (db) {
+        return new Promise(function (resolve, reject) {
+          var req = db.transaction(SYNC_META, "readwrite").objectStore(SYNC_META).put(value, key);
+          req.onsuccess = function () { resolve(); };
+          req.onerror = function () { reject(req.error); };
+        });
+      });
+    }
+
+    function refreshOutboxCount() {
+      return outboxAll().then(function (items) {
+        var ids = {};
+        items.forEach(function (it) { if (it.cardId) ids[it.cardId] = true; });
+        outboxCount = Object.keys(ids).length;
+        return outboxCount;
+      }).catch(function () { outboxCount = 0; return 0; });
     }
 
     function recordToEntry(rec) {
@@ -1454,7 +1817,7 @@
             if (idx >= 0) extraCars[idx] = car;
             else extraCars.push(car);
           }
-          if (!syncApplying) scheduleSyncPush(id);
+          if (!syncApplying) return enqueueOutbox(id, "upsert");
         });
       });
       saveQueues[id] = next;
@@ -1477,7 +1840,14 @@
         });
         extraCars.forEach(function (car) { revokeMedia(customMedia[car.id]); });
         extraCars = [];
-        return pushResetState(gone);
+        var chain = Promise.resolve();
+        gone.forEach(function (id) {
+          chain = chain.then(function () { return enqueueOutbox(id, "tombstone"); });
+        });
+        CARS.forEach(function (car) {
+          chain = chain.then(function () { return enqueueOutbox(car.id, "upsert"); });
+        });
+        return chain;
       });
     }
 
@@ -1486,7 +1856,7 @@
         revokeMedia(customMedia[id]);
         delete customMedia[id];
         extraCars = extraCars.filter(function (c) { return c.id !== id; });
-        if (!syncApplying) pushTombstone(id).catch(function () {});
+        if (!syncApplying) enqueueOutbox(id, "tombstone");
       });
     }
 
@@ -1802,7 +2172,7 @@
         if (!a.dataset.unlocked) {
           a.dataset.unlocked = "1";
           a.muted = true;
-          a.src = SOUND_DIR + PHRASE_CLIPS.greatJob;
+          a.src = SOUND_DIR + PHRASE_CLIPS.letsMatch;
           var pr = a.play();
           if (pr && pr.then) pr.then(function () { a.pause(); a.muted = false; }, function () { a.muted = false; });
         }
@@ -1984,6 +2354,32 @@
       playSources([SOUND_DIR + PHRASE_CLIPS[key]], text);
     }
 
+    function preloadRevs() {
+      if (revPreloads.length) return;
+      REV_CLIPS.forEach(function (name) {
+        var a = new Audio();
+        a.preload = "auto";
+        a.src = SOUND_DIR + "revs/" + name;
+        try { a.load(); } catch (e) {}
+        revPreloads.push(a);
+      });
+    }
+
+    function nextRevSrc() {
+      if (!revQueue.length) {
+        revQueue = shuffle(REV_CLIPS.slice());
+        if (revQueue.length > 1 && lastRev && revQueue[0] === lastRev) {
+          revQueue.push(revQueue.shift());
+        }
+      }
+      lastRev = revQueue.shift();
+      return SOUND_DIR + "revs/" + lastRev;
+    }
+
+    function playRoundRev() {
+      playSources([nextRevSrc()], "");
+    }
+
     /* Natural voice for renamed / custom names: Sound of Text (soundoftext.com, Google en-AU voice).
        Only the spoken text is sent. Files can't be fetched as blobs (no CORS), so the URL is
        cached in IndexedDB and played via <audio src>. Offline, the device voice is used. */
@@ -2070,8 +2466,382 @@
       tone(640, audioCtx.currentTime, 0.08, "sine", 0.05);
     }
 
+
+    function clampInt(n, lo, hi, fallback) {
+      n = parseInt(n, 10);
+      if (!isFinite(n)) n = fallback;
+      return Math.max(lo, Math.min(hi, n));
+    }
+
+    function normalizeDifficulty(raw) {
+      raw = raw && typeof raw === "object" ? raw : {};
+      var presets = DIFF_PRESETS;
+      var preset = raw.preset;
+      if (!presets[preset] && preset !== "custom") preset = "custom";
+      var grow = raw.grow !== false;
+      var startPairs = clampInt(raw.startPairs, 2, 10, 2);
+      var maxPairs = clampInt(raw.maxPairs, 2, 10, Math.max(startPairs, 4));
+      if (!grow) maxPairs = startPairs;
+      if (maxPairs < startPairs) maxPairs = startPairs;
+      var cardSize = raw.cardSize;
+      if (cardSize !== "large" && cardSize !== "xl") cardSize = "auto";
+      var peek = clampInt(raw.peek, 0, 3, 0);
+      var flipBack = raw.flipBack;
+      if (flipBack !== "slow" && flipBack !== "fast") flipBack = "normal";
+      var shuffle = raw.shuffle === "keep" ? "keep" : "reshuffle";
+      var hint = raw.hint === 20 || raw.hint === "20" ? 20 : (raw.hint === 10 || raw.hint === "10" ? 10 : 0);
+      var speakFlip = raw.speakFlip !== false;
+      var revs = raw.revs !== false;
+      var updatedAt = Number(raw.updatedAt) || 0;
+      if (preset !== "custom" && preset !== "age2" && preset !== "age3" && preset !== "age45" && preset !== "age6") {
+        preset = "custom";
+      }
+      return {
+        preset: preset || "custom",
+        grow: grow,
+        startPairs: startPairs,
+        maxPairs: maxPairs,
+        cardSize: cardSize,
+        peek: peek,
+        flipBack: flipBack,
+        shuffle: shuffle,
+        hint: hint,
+        speakFlip: speakFlip,
+        revs: revs,
+        updatedAt: updatedAt
+      };
+    }
+
+    function publicDifficulty(d) {
+      d = d || difficulty;
+      return {
+        preset: d.preset || "custom",
+        grow: d.grow !== false,
+        startPairs: Number(d.startPairs) || 2,
+        maxPairs: Number(d.maxPairs) || 4,
+        cardSize: d.cardSize || "auto",
+        peek: Number(d.peek) || 0,
+        flipBack: d.flipBack || "normal",
+        shuffle: d.shuffle || "reshuffle",
+        hint: Number(d.hint) || 0,
+        speakFlip: d.speakFlip !== false,
+        revs: d.revs !== false
+      };
+    }
+
+    function sameDifficulty(a, b, ignoreMeta) {
+      a = publicDifficulty(a);
+      b = publicDifficulty(b);
+      var keys = ["grow", "startPairs", "maxPairs", "cardSize", "peek", "flipBack", "shuffle", "hint", "speakFlip", "revs"];
+      for (var i = 0; i < keys.length; i++) {
+        if (a[keys[i]] !== b[keys[i]]) return false;
+      }
+      return true;
+    }
+
+    function matchPreset(d) {
+      var names = ["age2", "age3", "age45", "age6"];
+      for (var i = 0; i < names.length; i++) {
+        if (sameDifficulty(d, DIFF_PRESETS[names[i]])) return names[i];
+      }
+      return "custom";
+    }
+
+    function maxAvailablePairs() {
+      return Math.max(2, allCars().length);
+    }
+
+    function pairSteps() {
+      var cap = maxAvailablePairs();
+      var start = Math.min(Math.max(2, difficulty.startPairs), cap);
+      var max = difficulty.grow ? difficulty.maxPairs : difficulty.startPairs;
+      max = Math.min(Math.max(start, max), cap);
+      var list = [];
+      for (var n = start; n <= max; n++) list.push(n);
+      if (!list.length) list = [start];
+      return list;
+    }
+
+    function pairsForLevel(lvl) {
+      var steps = pairSteps();
+      if (lvl < 0) lvl = 0;
+      if (lvl >= steps.length) return steps[steps.length - 1];
+      return steps[lvl];
+    }
+
+    function applyDifficultyDom() {
+      document.body.setAttribute("data-flip-back", difficulty.flipBack || "normal");
+      document.body.setAttribute("data-card-size", difficulty.cardSize || "auto");
+    }
+
+    function loadDifficulty() {
+      return metaGet("difficulty").then(function (val) {
+        if (val && typeof val === "object") difficulty = normalizeDifficulty(val);
+        else difficulty = normalizeDifficulty(DIFF_PRESETS.age2);
+        if (!difficulty.preset || (difficulty.preset !== "custom" && !sameDifficulty(difficulty, DIFF_PRESETS[difficulty.preset] || {}))) {
+          difficulty.preset = matchPreset(difficulty);
+        }
+        applyDifficultyDom();
+      }).catch(function () {
+        difficulty = normalizeDifficulty(DIFF_PRESETS.age2);
+        applyDifficultyDom();
+      });
+    }
+
+    function saveDifficulty(patch, fromSync) {
+      var next = normalizeDifficulty(Object.assign({}, difficulty, patch || {}));
+      if (!fromSync) {
+        next.preset = (patch && patch.preset) || matchPreset(next);
+        next.updatedAt = Date.now();
+      } else {
+        next.preset = matchPreset(next) === (patch && patch.preset) ? (patch.preset || matchPreset(next)) : matchPreset(next);
+        if (patch && patch.preset === "custom") next.preset = "custom";
+        next.updatedAt = Number(patch && patch.updatedAt) || next.updatedAt || Date.now();
+      }
+      difficulty = next;
+      applyDifficultyDom();
+      return metaSet("difficulty", difficulty).then(function () {
+        if (!fromSync && !syncApplying) return enqueueOutbox(SETTINGS_ID, "settings");
+      }).then(function () {
+        updateDifficultyUi();
+        return difficulty;
+      });
+    }
+
+    function applyDifficultyPreset(name) {
+      if (name !== "custom" && DIFF_PRESETS[name]) {
+        return saveDifficulty(Object.assign({}, DIFF_PRESETS[name], { preset: name }));
+      }
+      return saveDifficulty({ preset: "custom" });
+    }
+
+    function fillPairSelect(sel, value) {
+      if (!sel) return;
+      var cap = maxAvailablePairs();
+      var html = "";
+      for (var n = 2; n <= 10; n++) {
+        var disabled = n > cap ? " disabled" : "";
+        var lab = n + (n === 1 ? " pair" : " pairs");
+        if (n > cap) lab += " (add cards)";
+        html += '<option value="' + n + '"' + disabled + (n === value ? " selected" : "") + ">" + lab + "</option>";
+      }
+      sel.innerHTML = html;
+      sel.value = String(Math.min(value, cap));
+    }
+
+    function updateDifficultyUi() {
+      var d = difficulty;
+      var btns = document.querySelectorAll("#diff-presets [data-preset]");
+      for (var i = 0; i < btns.length; i++) {
+        btns[i].setAttribute("aria-pressed", btns[i].getAttribute("data-preset") === d.preset ? "true" : "false");
+      }
+      var grow = document.getElementById("diff-grow");
+      if (grow) grow.checked = !!d.grow;
+      var startRow = document.getElementById("diff-start-row");
+      var maxRow = document.getElementById("diff-max-row");
+      var fixedRow = document.getElementById("diff-fixed-row");
+      if (startRow) startRow.hidden = !d.grow;
+      if (maxRow) maxRow.hidden = !d.grow;
+      if (fixedRow) fixedRow.hidden = !!d.grow;
+      fillPairSelect(document.getElementById("diff-start"), d.startPairs);
+      fillPairSelect(document.getElementById("diff-max"), d.maxPairs);
+      fillPairSelect(document.getElementById("diff-pairs"), d.startPairs);
+      var setv = function (id, val) {
+        var el = document.getElementById(id);
+        if (el) el.value = String(val);
+      };
+      setv("diff-size", d.cardSize);
+      setv("diff-peek", d.peek);
+      setv("diff-flip", d.flipBack);
+      setv("diff-shuffle", d.shuffle);
+      setv("diff-hint", d.hint);
+      var speak = document.getElementById("diff-speak");
+      if (speak) speak.checked = d.speakFlip !== false;
+      var revs = document.getElementById("diff-revs");
+      if (revs) revs.checked = d.revs !== false;
+    }
+
+    function readDifficultyForm() {
+      var grow = document.getElementById("diff-grow");
+      var growing = !!(grow && grow.checked);
+      var startEl = document.getElementById(growing ? "diff-start" : "diff-pairs");
+      var maxEl = document.getElementById("diff-max");
+      var startPairs = clampInt(startEl && startEl.value, 2, 10, 2);
+      var maxPairs = growing ? clampInt(maxEl && maxEl.value, 2, 10, startPairs) : startPairs;
+      return {
+        preset: "custom",
+        grow: growing,
+        startPairs: startPairs,
+        maxPairs: maxPairs,
+        cardSize: (document.getElementById("diff-size") || {}).value || "auto",
+        peek: clampInt((document.getElementById("diff-peek") || {}).value, 0, 3, 0),
+        flipBack: (document.getElementById("diff-flip") || {}).value || "normal",
+        shuffle: (document.getElementById("diff-shuffle") || {}).value || "reshuffle",
+        hint: clampInt((document.getElementById("diff-hint") || {}).value, 0, 20, 0),
+        speakFlip: !!(document.getElementById("diff-speak") && document.getElementById("diff-speak").checked),
+        revs: !!(document.getElementById("diff-revs") && document.getElementById("diff-revs").checked)
+      };
+    }
+
+    function bindDifficultyUi() {
+      var presets = document.getElementById("diff-presets");
+      if (presets) {
+        presets.addEventListener("click", function (e) {
+          var btn = e.target.closest("[data-preset]");
+          if (!btn) return;
+          applyDifficultyPreset(btn.getAttribute("data-preset"));
+        });
+      }
+      ["diff-grow", "diff-start", "diff-max", "diff-pairs", "diff-size", "diff-peek", "diff-flip", "diff-shuffle", "diff-hint", "diff-speak", "diff-revs"].forEach(function (id) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener("change", function () {
+          saveDifficulty(readDifficultyForm());
+        });
+      });
+      updateDifficultyUi();
+    }
+
+    function showSettingsTab(name) {
+      var tabs = [
+        { tab: "tab-cars", pane: "pane-cars" },
+        { tab: "tab-difficulty", pane: "pane-difficulty" },
+        { tab: "tab-family", pane: "pane-family" }
+      ];
+      tabs.forEach(function (t) {
+        var is = t.tab === "tab-" + name;
+        var tb = document.getElementById(t.tab);
+        var pn = document.getElementById(t.pane);
+        if (tb) tb.setAttribute("aria-selected", is ? "true" : "false");
+        if (pn) pn.hidden = !is;
+      });
+    }
+
+    function bindSettingsTabs() {
+      ["cars", "difficulty", "family"].forEach(function (name) {
+        var tb = document.getElementById("tab-" + name);
+        if (tb) tb.addEventListener("click", function () { showSettingsTab(name); });
+      });
+    }
+
+    function clearPeekAndHint() {
+      if (peekTimer) { clearTimeout(peekTimer); peekTimer = null; }
+      if (hintTimer) { clearTimeout(hintTimer); hintTimer = null; }
+      var list = cards();
+      for (var i = 0; i < list.length; i++) list[i].classList.remove("hint-wiggle", "is-peeking");
+    }
+
+    function resetHintTimer() {
+      if (hintTimer) { clearTimeout(hintTimer); hintTimer = null; }
+      var sec = Number(difficulty.hint) || 0;
+      if (!sec) return;
+      if (document.getElementById("game-screen").hidden) return;
+      if (document.getElementById("win-overlay").hidden === false) return;
+      hintTimer = setTimeout(showHint, sec * 1000);
+    }
+
+    function showHint() {
+      hintTimer = null;
+      if (locked) { resetHintTimer(); return; }
+      if (document.getElementById("win-overlay").hidden === false) return;
+      var list = cards();
+      var target = -1;
+      if (flipped.length === 1) {
+        var want = deck[flipped[0]].id;
+        for (var i = 0; i < deck.length; i++) {
+          if (i !== flipped[0] && deck[i].id === want && list[i] && !list[i].classList.contains("is-matched")) {
+            target = i;
+            break;
+          }
+        }
+      } else if (flipped.length === 0) {
+        for (var j = 0; j < deck.length; j++) {
+          if (list[j] && !list[j].classList.contains("is-matched") && !list[j].classList.contains("is-flipped")) {
+            target = j;
+            break;
+          }
+        }
+      }
+      if (target >= 0 && list[target]) {
+        list[target].classList.remove("hint-wiggle");
+        void list[target].offsetWidth;
+        list[target].classList.add("hint-wiggle");
+      }
+    }
+
+    function startPeek() {
+      var secs = Number(difficulty.peek) || 0;
+      if (!secs) {
+        resetHintTimer();
+        return;
+      }
+      locked = true;
+      var list = cards();
+      for (var i = 0; i < list.length; i++) {
+        list[i].classList.add("is-flipped", "is-peeking");
+        list[i].setAttribute("aria-label", displayFullName(deck[i].car));
+      }
+      peekTimer = setTimeout(function () {
+        peekTimer = null;
+        var els = cards();
+        for (var k = 0; k < els.length; k++) {
+          if (!els[k].classList.contains("is-matched")) {
+            els[k].classList.remove("is-flipped", "is-peeking");
+            els[k].setAttribute("aria-label", "Hidden car card");
+          }
+        }
+        locked = false;
+        resetHintTimer();
+      }, secs * 1000);
+    }
+
+    function dealDeck(chosen) {
+      var slots = chosen.length * 2;
+      var placed = new Array(slots);
+      if (difficulty.shuffle === "keep" && prevDeck && prevDeck.length) {
+        var remain = {};
+        chosen.forEach(function (c) { remain[c.id] = 2; });
+        for (var i = 0; i < Math.min(prevDeck.length, slots); i++) {
+          var id = prevDeck[i].id;
+          if (remain[id]) {
+            placed[i] = id;
+            remain[id]--;
+          }
+        }
+      }
+      var leftover = [];
+      chosen.forEach(function (c) {
+        var used = 0;
+        for (var j = 0; j < slots; j++) if (placed[j] === c.id) used++;
+        for (var k = used; k < 2; k++) leftover.push(c);
+      });
+      leftover = shuffle(leftover);
+      var out = [];
+      for (var s = 0; s < slots; s++) {
+        var car = null;
+        if (placed[s]) car = carById(placed[s]);
+        else car = leftover.shift();
+        out.push({ uid: car.id + "-" + s, id: car.id, car: car });
+      }
+      return out;
+    }
+
+    function pushSettings() {
+      return syncFetch("/api/settings", {
+        method: "PUT",
+        headers: syncHeaders(true, true),
+        body: JSON.stringify(Object.assign({}, publicDifficulty(difficulty), { updatedAt: difficulty.updatedAt }))
+      }).then(function (r) {
+        if (!r.ok) throw new Error("Could not save difficulty settings to the computer.");
+        return r.json();
+      }).then(function (data) {
+        if (data && data.settings && data.settings.updatedAt) difficulty.updatedAt = data.settings.updatedAt;
+        return metaSet("difficulty", difficulty);
+      });
+    }
+
     function pickCarsForLevel(lvl, fresh) {
-      var n = PAIRS[lvl];
+      var n = pairsForLevel(lvl);
       var pool = allCars();
       if (forcedPick && forcedPick.length) {
         var forced = [];
@@ -2117,10 +2887,11 @@
       locked = false;
       hideWin();
       stopConfetti();
+      clearPeekAndHint();
       var chosen = pickCarsForLevel(level, fresh);
-      deck = shuffle(chosen.concat(chosen).map(function (c, i) {
-        return { uid: c.id + "-" + i, id: c.id, car: c };
-      }));
+      deck = dealDeck(chosen);
+      prevDeck = deck.slice();
+      difficultyApplied = JSON.stringify(publicDifficulty(difficulty));
       document.getElementById("start-screen").hidden = true;
       document.getElementById("game-screen").hidden = false;
       renderHUD();
@@ -2130,6 +2901,7 @@
         layoutGrid();
         focusIndex = 0;
         focusCard(0);
+        startPeek();
       });
     }
 
@@ -2137,7 +2909,8 @@
       document.getElementById("level-label").textContent = "Level " + (level + 1);
       var pips = document.getElementById("pips");
       pips.innerHTML = "";
-      for (var i = 0; i < 3; i++) {
+      var steps = pairSteps();
+      for (var i = 0; i < steps.length; i++) {
         var s = document.createElement("span");
         s.className = "pip" + (i <= level ? " on" : "");
         pips.appendChild(s);
@@ -2183,19 +2956,35 @@
       var w = board.clientWidth;
       var h = board.clientHeight;
       var aspect = w / Math.max(h, 1);
-      var cols, rows;
-      if (n === 4) { cols = 2; rows = 2; }
-      else if (n === 6) {
-        if (aspect >= 1.15) { cols = 3; rows = 2; } else { cols = 2; rows = 3; }
-      } else {
-        if (aspect >= 1.15) { cols = 4; rows = 2; }
-        else { cols = 2; rows = 4; }
+      var sizePref = difficulty.cardSize || "auto";
+      var maxCols = sizePref === "xl" ? 3 : 5;
+      var preferCols = sizePref === "xl" ? 2 : (sizePref === "large" ? 3 : 0);
+      var best = null;
+      var cols, rows, gap, card;
+      for (cols = 2; cols <= Math.min(maxCols, n); cols++) {
+        rows = Math.ceil(n / cols);
+        gap = Math.max(4, Math.min(18, Math.round(Math.min(w, h) * 0.02)));
+        var cw = Math.floor((w - gap * (cols + 1)) / cols);
+        var ch = Math.floor((h - gap * (rows + 1)) / rows);
+        card = Math.floor(Math.min(cw, ch));
+        if (card < 36) continue;
+        var empty = cols * rows - n;
+        var pref = preferCols && cols <= preferCols ? 8 : 0;
+        var score = card * 10 + pref - empty * 2;
+        if (!best || score > best.score) best = { cols: cols, rows: rows, gap: gap, card: card, score: score };
       }
-      if (cols * rows < n) { cols = Math.ceil(Math.sqrt(n)); rows = Math.ceil(n / cols); }
+      if (!best) {
+        cols = Math.min(4, n);
+        rows = Math.ceil(n / cols);
+        gap = 4;
+        card = Math.max(32, Math.floor(Math.min((w - gap * (cols + 1)) / cols, (h - gap * (rows + 1)) / rows)));
+        best = { cols: cols, rows: rows, gap: gap, card: card };
+      }
+      cols = best.cols;
+      rows = best.rows;
+      gap = best.gap;
+      card = best.card;
       gridCols = cols;
-      var gap = Math.max(8, Math.min(22, Math.round(Math.min(w, h) * 0.025)));
-      var card = Math.floor(Math.min((w - gap * (cols + 1)) / cols, (h - gap * (rows + 1)) / rows));
-      card = Math.max(72, card);
       grid.style.gridTemplateColumns = "repeat(" + cols + ", " + card + "px)";
       grid.style.gap = gap + "px";
       grid.style.setProperty("--card", card + "px");
@@ -2214,8 +3003,9 @@
       el.classList.add("is-flipped");
       el.setAttribute("aria-label", displayFullName(item.car));
       playFlipTick();
-      speakCar(item.car);
+      if (difficulty.speakFlip !== false) speakCar(item.car);
       flipped.push(index);
+      resetHintTimer();
 
       if (flipped.length < 2) return;
 
@@ -2228,12 +3018,11 @@
         setTimeout(function () {
           markMatched(i0);
           markMatched(i1);
-          playMatchSound();
+          celebrateMatch(i0, i1);
           matchedCount += 1;
           locked = false;
-          var won = matchedCount >= PAIRS[level];
+          var won = matchedCount >= pairsForLevel(level);
           setTimeout(function () {
-            speakCar(a.car);
             if (won) setTimeout(onLevelWin, 2000);
           }, 900);
         }, 450);
@@ -2241,6 +3030,7 @@
         locked = true;
         var x0 = flipped[0], x1 = flipped[1];
         flipped = [];
+        var backMs = difficulty.flipBack === "slow" ? 1500 : (difficulty.flipBack === "fast" ? 500 : 900);
         setTimeout(function () {
           var list = cards();
           if (list[x0]) {
@@ -2252,25 +3042,73 @@
             list[x1].setAttribute("aria-label", "Hidden car card");
           }
           locked = false;
-        }, 900);
+          resetHintTimer();
+        }, backMs);
       }
     }
 
     function markMatched(index) {
       var el = cards()[index];
       if (!el) return;
-      el.classList.add("is-matched", "vroom");
+      el.classList.add("is-matched");
       el.setAttribute("aria-label", "Matched " + displayFullName(deck[index].car));
-      setTimeout(function () { el.classList.remove("vroom"); }, 800);
+    }
+
+    function celebrateMatch(i0, i1) {
+      var list = cards();
+      var els = [list[i0], list[i1]].filter(Boolean);
+      els.forEach(function (el) {
+        if (reduced) {
+          el.classList.add("match-glow");
+          setTimeout(function () { el.classList.remove("match-glow"); }, 1000);
+        } else {
+          el.classList.add("match-happy");
+          setTimeout(function () { el.classList.remove("match-happy"); }, 600);
+        }
+      });
+      if (!reduced) startMatchBurst(els);
+    }
+
+    function startMatchBurst(els) {
+      if (!els || !els.length || !fxCtx) return;
+      resizeFx();
+      var colors = ["#E53935", "#4FC3F7", "#F6C800", "#43A047", "#FFD54F", "#fff", "#E07A3A"];
+      var now = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
+      for (var e = 0; e < els.length; e++) {
+        var box = els[e].getBoundingClientRect();
+        var cx = box.left + box.width / 2;
+        var cy = box.top + box.height / 2;
+        for (var i = 0; i < 16; i++) {
+          var ang = Math.random() * Math.PI * 2;
+          var sp = 1.4 + Math.random() * 3.2;
+          confettiBits.push({
+            x: cx,
+            y: cy,
+            r: 3 + Math.random() * 5,
+            c: colors[i % colors.length],
+            vx: Math.cos(ang) * sp,
+            vy: Math.sin(ang) * sp - 2.2,
+            rot: Math.random() * Math.PI,
+            vr: -0.2 + Math.random() * 0.4,
+            star: i % 3 === 0,
+            gravity: 0.14,
+            die: now + 1000
+          });
+        }
+      }
+      if (!confettiOn) {
+        confettiOn = true;
+        requestAnimationFrame(tickConfetti);
+      }
     }
 
     function onLevelWin() {
-      playWinSound();
-      playPhrase("greatJob", "Great job!");
+      clearPeekAndHint();
+      if (difficulty.revs !== false) playRoundRev();
       startConfetti();
-      var top = level >= PAIRS.length - 1;
+      var top = level >= pairSteps().length - 1;
       document.getElementById("win-sub").textContent = top
-        ? "Here come more cars!"
+        ? ""
         : "On to level " + (level + 2) + "!";
       document.getElementById("next-btn").textContent = top ? "More cars" : "Next";
       document.getElementById("win-overlay").hidden = false;
@@ -2339,9 +3177,9 @@
       hideWin();
       stopConfetti();
       if (advanceTimer) { clearTimeout(advanceTimer); advanceTimer = null; }
-      if (level >= PAIRS.length - 1) {
+      if (level >= pairSteps().length - 1) {
         roundCount += 1;
-        startGame(PAIRS.length - 1, true);
+        startGame(pairSteps().length - 1, true);
       } else {
         startGame(level + 1);
       }
@@ -2924,6 +3762,7 @@
       document.getElementById("reset-confirm").hidden = true;
       refreshVoices();
       renderSettings();
+      updateDifficultyUi();
       updateSyncUi();
       var screen = document.getElementById("settings-screen");
       screen.hidden = false;
@@ -2941,7 +3780,9 @@
         document.getElementById("settings-screen").hidden = true;
         document.getElementById("reset-confirm").hidden = true;
         refreshVisibleArt();
-        if (!document.getElementById("start-screen").hidden) {
+        if (!document.getElementById("game-screen").hidden && JSON.stringify(publicDifficulty(difficulty)) !== difficultyApplied) {
+          startGame(0);
+        } else if (!document.getElementById("start-screen").hidden) {
           document.getElementById("play-btn").focus();
         } else if (!document.getElementById("win-overlay").hidden) {
           document.getElementById("next-btn").focus();
@@ -3000,6 +3841,8 @@
       speak("Hello Theo! Let's match the cars!");
     });
     bindSyncUi();
+    bindSettingsTabs();
+    bindDifficultyUi();
     document.getElementById("reset-all-btn").addEventListener("click", function () {
       document.getElementById("reset-confirm").hidden = false;
     });
@@ -3073,18 +3916,27 @@
       var alive = false;
       for (var i = 0; i < confettiBits.length; i++) {
         var p = confettiBits[i];
+        if (p.gravity) p.vy += p.gravity;
         p.x += p.vx;
         p.y += p.vy;
         p.rot += p.vr;
-        if (p.y < h + 30) alive = true;
-        fxCtx.fillStyle = p.c;
-        if (p.star) starPath(fxCtx, p.x, p.y, p.r, p.rot);
-        else {
-          fxCtx.beginPath();
-          fxCtx.arc(p.x, p.y, p.r * 0.7, 0, Math.PI * 2);
-          fxCtx.fill();
+        var now = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
+        var dead = (p.die && now > p.die) || p.y > h + 30;
+        if (!dead) {
+          alive = true;
+          fxCtx.fillStyle = p.c;
+          if (p.star) starPath(fxCtx, p.x, p.y, p.r, p.rot);
+          else {
+            fxCtx.beginPath();
+            fxCtx.arc(p.x, p.y, p.r * 0.7, 0, Math.PI * 2);
+            fxCtx.fill();
+          }
         }
       }
+      confettiBits = confettiBits.filter(function (p) {
+        var now2 = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
+        return !((p.die && now2 > p.die) || p.y > h + 30);
+      });
       if (alive) requestAnimationFrame(tickConfetti);
       else confettiOn = false;
     }
@@ -3198,31 +4050,49 @@
       return sameOriginSync ? "" : syncBaseOverride;
     }
 
+    function syncTargetKnown() {
+      return sameOriginSync || !!syncBaseOverride;
+    }
+
     function updateSyncUi() {
       var lead = document.getElementById("sync-lead");
       var urlField = document.getElementById("sync-url-field");
       var urlInput = document.getElementById("sync-url");
       var keyInput = document.getElementById("sync-key");
       var status = document.getElementById("sync-status");
+      var notice = document.getElementById("sync-notice");
+      var saveBtn = document.getElementById("sync-save-btn");
+      var discardBtn = document.getElementById("sync-discard-btn");
       if (!lead) return;
       if (urlInput && document.activeElement !== urlInput) urlInput.value = syncBaseOverride;
       if (keyInput && document.activeElement !== keyInput) keyInput.value = syncFamilyKey;
       if (urlField) urlField.hidden = !!sameOriginSync;
       if (sameOriginSync) {
-        lead.textContent = "This copy can share cards with other phones on your Wi-Fi. Type the family key shown in the server window on the computer, then tap Sync now.";
+        lead.textContent = "This phone updates from the home computer automatically. Edits stay on this phone until a parent saves them with the PIN.";
       } else {
-        lead.textContent = "Optional. Leave this blank to keep everything on this device. To sync later (for example over Tailscale), enter the server URL and family key.";
+        lead.textContent = "Optional. Leave this blank to keep everything on this device. To use a home computer later, enter the server URL and family key.";
       }
+      if (saveBtn) saveBtn.hidden = !syncConfigured();
+      if (discardBtn) discardBtn.hidden = !syncConfigured() || outboxCount === 0;
       if (status) {
-        status.classList.toggle("is-error", !!lastSyncError);
-        if (lastSyncError) status.textContent = lastSyncError;
-        else if (!syncConfigured()) {
+        var unreachable = lastSyncError && /reach|network|Failed to fetch|Load failed|offline/i.test(lastSyncError);
+        status.classList.toggle("is-error", !!lastSyncError && outboxCount === 0);
+        if (!syncConfigured()) {
           status.textContent = sameOriginSync ? "Enter the family key to start syncing." : "Sync is off until you enter a server URL and family key.";
-        } else if (lastSyncAt) {
-          status.textContent = "Last synced " + new Date(lastSyncAt).toLocaleTimeString() + ".";
+        } else if (outboxCount > 0 && unreachable) {
+          status.textContent = outboxCount + " local changes not saved to home computer. Can't reach home computer.";
+        } else if (outboxCount > 0) {
+          status.textContent = outboxCount + " local changes not saved to home computer.";
+        } else if (unreachable || (lastSyncError && !lastSyncOk)) {
+          status.classList.add("is-error");
+          status.textContent = unreachable ? "Can't reach home computer." : lastSyncError;
         } else {
-          status.textContent = "Ready to sync.";
+          status.textContent = "Synced";
         }
+      }
+      if (notice) {
+        if (syncNotice) { notice.hidden = false; notice.textContent = syncNotice; }
+        else { notice.hidden = true; notice.textContent = ""; }
       }
     }
 
@@ -3234,9 +4104,10 @@
         .then(function () { updateSyncUi(); });
     }
 
-    function syncHeaders(isJson) {
+    function syncHeaders(isJson, withPin) {
       var h = { Authorization: "Bearer " + syncFamilyKey };
       if (isJson) h["Content-Type"] = "application/json";
+      if (withPin && parentPinOnce) h["X-Parent-Pin"] = parentPinOnce;
       return h;
     }
 
@@ -3277,19 +4148,15 @@
       };
     }
 
+    function enqueueOutbox(id, type) {
+      if (!syncTargetKnown() || syncApplying || !id) return Promise.resolve();
+      return outboxAdd({ cardId: id, type: type || "upsert", queuedAt: Date.now() }).then(function () {
+        return refreshOutboxCount();
+      }).then(function () { updateSyncUi(); }).catch(function () {});
+    }
+
     function scheduleSyncPush(id) {
-      if (!syncConfigured() || syncApplying || !id) return;
-      syncPushIds[id] = true;
-      if (syncPushTimer) clearTimeout(syncPushTimer);
-      syncPushTimer = setTimeout(function () {
-        syncPushTimer = null;
-        var ids = Object.keys(syncPushIds);
-        syncPushIds = {};
-        pushCards(ids).catch(function (e) {
-          lastSyncError = e.message || "Could not sync.";
-          updateSyncUi();
-        });
-      }, 800);
+      return enqueueOutbox(id, "upsert");
     }
 
     function pushCards(ids) {
@@ -3319,7 +4186,7 @@
       if (!rec) return pushTombstone(id);
       return syncFetch("/api/cards/" + encodeURIComponent(id), {
         method: "PUT",
-        headers: syncHeaders(true),
+        headers: syncHeaders(true, true),
         body: JSON.stringify(recMetaPayload(id))
       }).then(function (r) {
         if (!r.ok) throw new Error("Could not save a card to the computer.");
@@ -3337,11 +4204,17 @@
       var ts = (kind === "image" ? rec.imageUpdatedAt : rec.audioUpdatedAt) || rec.updatedAt || Date.now();
       return syncFetch("/api/cards/" + encodeURIComponent(id) + "/" + kind, {
         method: "PUT",
-        headers: {
-          Authorization: "Bearer " + syncFamilyKey,
-          "Content-Type": blob.type || "application/octet-stream",
-          "X-Updated-At": String(ts)
-        },
+        headers: (function () {
+          var tsFix = ts;
+          if (kind === "original") tsFix = rec.originalUpdatedAt || rec.updatedAt || Date.now();
+          var h = {
+            Authorization: "Bearer " + syncFamilyKey,
+            "Content-Type": blob.type || "application/octet-stream",
+            "X-Updated-At": String(tsFix)
+          };
+          if (parentPinOnce) h["X-Parent-Pin"] = parentPinOnce;
+          return h;
+        })(),
         body: blob
       }).then(function (r) {
         if (!r.ok) throw new Error("Could not save a " + kind + " to the computer.");
@@ -3352,7 +4225,7 @@
       if (!syncConfigured()) return Promise.resolve();
       return syncFetch("/api/cards/" + encodeURIComponent(id), {
         method: "PUT",
-        headers: syncHeaders(true),
+        headers: syncHeaders(true, true),
         body: JSON.stringify({ id: id, updatedAt: Date.now(), deleted: true, custom: true })
       }).then(function (r) {
         if (!r.ok) throw new Error("Could not remove a card on the computer.");
@@ -3412,58 +4285,253 @@
       });
     }
 
-    function syncNow() {
+    function serverStamp(rem) {
+      if (!rem) return "";
+      return [Number(rem.updatedAt) || 0, Number(rem.imageUpdatedAt) || 0, Number(rem.originalUpdatedAt) || 0, Number(rem.audioUpdatedAt) || 0, rem.deleted ? 1 : 0].join(":");
+    }
+
+    function rememberServerCard(id, rem) {
+      lastServerSeen[id] = serverStamp(rem);
+    }
+
+    function loadServerSeen() {
+      return metaGet("serverSeen").then(function (val) {
+        lastServerSeen = val && typeof val === "object" ? val : {};
+      }).catch(function () { lastServerSeen = {}; });
+    }
+
+    function saveServerSeen() {
+      return metaSet("serverSeen", lastServerSeen).catch(function () {});
+    }
+
+    function dropOutboxFor(id) {
+      return outboxAll().then(function (items) {
+        var qids = items.filter(function (it) { return it.cardId === id; }).map(function (it) { return it.qid; });
+        return outboxClearIds(qids);
+      });
+    }
+
+    function pullFromServer() {
       if (!syncConfigured()) {
         lastSyncError = sameOriginSync ? "Enter the family key first." : "Enter a server URL and family key first.";
         updateSyncUi();
         return Promise.resolve(false);
       }
+      if (pulling) return Promise.resolve(false);
+      pulling = true;
       lastSyncError = "";
       return syncFetch("/api/sync", { headers: syncHeaders() }).then(function (r) {
         if (!r.ok) throw new Error("Could not reach the family computer.");
         return r.json();
       }).then(function (data) {
         var remote = (data && data.cards) || {};
+        var remoteSettings = data && data.settings;
+        var dropped = [];
         var chain = Promise.resolve();
-        syncApplying = true;
-        Object.keys(remote).forEach(function (id) {
-          var rem = remote[id];
-          var loc = localUpdatedAt(id);
-          if ((rem.updatedAt || 0) > loc) {
-            chain = chain.then(function () { return applyRemoteCard(id, rem); });
+        return outboxAll().then(function (items) {
+          var pending = {};
+          items.forEach(function (it) { if (it.cardId) pending[it.cardId] = true; });
+          syncApplying = true;
+          if (remoteSettings && remoteSettings.updatedAt) {
+            var setStamp = serverStamp(remoteSettings);
+            if (setStamp !== (lastServerSeen[SETTINGS_ID] || "")) {
+              if (pending[SETTINGS_ID]) dropped.push(SETTINGS_ID);
+              chain = chain.then(function () {
+                return saveDifficulty(remoteSettings, true).then(function () {
+                  rememberServerCard(SETTINGS_ID, remoteSettings);
+                  return dropOutboxFor(SETTINGS_ID);
+                });
+              });
+            }
           }
+          Object.keys(remote).forEach(function (id) {
+            var rem = remote[id];
+            var stamp = serverStamp(rem);
+            var prev = lastServerSeen[id] || "";
+            if (stamp === prev) return;
+            if (pending[id]) dropped.push(id);
+            chain = chain.then(function () {
+              return applyRemoteCard(id, rem).then(function () {
+                rememberServerCard(id, rem);
+                return dropOutboxFor(id);
+              });
+            });
+          });
+          return chain.then(function () {
+            syncApplying = false;
+            return refreshOutboxCount();
+          }).then(function () {
+            return saveServerSeen();
+          }).then(function () {
+            if (dropped.length) {
+              var names = dropped.map(function (id) {
+                if (id === SETTINGS_ID) return "Difficulty settings";
+                var car = carById(id);
+                return car ? displayFullName(car) : id;
+              });
+              syncNotice = "Home computer was updated. " +
+                (dropped.length === 1 ? "1 local edit was replaced by the home copy (" + names[0] + ")."
+                  : dropped.length + " local edits were replaced by the home copy.");
+            }
+            refreshVisibleArt();
+            paintHero();
+            refreshAllAutoClips();
+            if (!document.getElementById("settings-screen").hidden) renderSettings();
+            lastSyncAt = Date.now();
+            lastSyncOk = true;
+            lastSyncError = "";
+            pullBackoff = 30000;
+            updateSyncUi();
+            return true;
+          });
+        });
+      }).catch(function (e) {
+        syncApplying = false;
+        lastSyncError = e.message || "Can't reach home computer.";
+        lastSyncOk = false;
+        pullBackoff = Math.min(pullBackoff * 2, 300000);
+        updateSyncUi();
+        return false;
+      }).then(function (ok) {
+        pulling = false;
+        return ok;
+      });
+    }
+
+    function syncNow() {
+      return pullFromServer();
+    }
+
+    function compactOutbox(items) {
+      var latest = {};
+      items.forEach(function (it) { latest[it.cardId] = it; });
+      return Object.keys(latest).map(function (id) { return latest[id]; });
+    }
+
+    function pushWithPin(pin) {
+      pin = String(pin || "").trim();
+      if (!syncConfigured()) {
+        lastSyncError = "Enter the family key first.";
+        updateSyncUi();
+        return Promise.resolve(false);
+      }
+      if (!pin) {
+        lastSyncError = "Enter the parent PIN to save changes to the home computer.";
+        updateSyncUi();
+        return Promise.resolve(false);
+      }
+      parentPinOnce = pin;
+      return outboxAll().then(function (items) {
+        var jobs = compactOutbox(items);
+        if (!jobs.length) {
+          parentPinOnce = "";
+          updateSyncUi();
+          return true;
+        }
+        var chain = Promise.resolve();
+        var doneQids = [];
+        jobs.forEach(function (job) {
+          chain = chain.then(function () {
+            var act;
+            if (job.cardId === SETTINGS_ID || job.type === "settings") act = pushSettings();
+            else if (job.type === "tombstone") act = pushTombstone(job.cardId);
+            else act = pushOneCard(job.cardId);
+            return act.then(function () {
+              items.forEach(function (it) { if (it.cardId === job.cardId) doneQids.push(it.qid); });
+              if (job.cardId === SETTINGS_ID || job.type === "settings") {
+                rememberServerCard(SETTINGS_ID, difficulty);
+              } else {
+                var rec = customMedia[job.cardId];
+                if (rec) rememberServerCard(job.cardId, recMetaPayload(job.cardId));
+                else rememberServerCard(job.cardId, { updatedAt: Date.now(), deleted: true });
+              }
+            });
+          });
         });
         return chain.then(function () {
-          syncApplying = false;
-          var toPush = [];
-          var ids = {};
-          Object.keys(customMedia).forEach(function (id) { ids[id] = true; });
-          Object.keys(remote).forEach(function (id) { ids[id] = true; });
-          Object.keys(ids).forEach(function (id) {
-            var rem = remote[id];
-            var loc = localUpdatedAt(id);
-            if (!customMedia[id]) return;
-            if (!rem || loc > (rem.updatedAt || 0)) toPush.push(id);
-          });
-          return pushCards(toPush);
+          return outboxClearIds(doneQids);
         }).then(function () {
-          refreshVisibleArt();
-          paintHero();
-          refreshAllAutoClips();
-          if (!document.getElementById("settings-screen").hidden) renderSettings();
+          return saveServerSeen();
+        }).then(function () {
+          return refreshOutboxCount();
+        }).then(function () {
+          parentPinOnce = "";
           lastSyncAt = Date.now();
           lastSyncOk = true;
           lastSyncError = "";
+          syncNotice = "";
           updateSyncUi();
           return true;
         });
       }).catch(function (e) {
-        syncApplying = false;
-        lastSyncError = e.message || "Could not sync.";
+        parentPinOnce = "";
+        var msg = e.message || "Could not save to the home computer.";
+        lastSyncError = msg;
         lastSyncOk = false;
         updateSyncUi();
         return false;
       });
+    }
+
+    function discardLocalChanges() {
+      if (!syncConfigured()) return Promise.resolve(false);
+      return outboxClearAll().then(function () {
+        lastServerSeen = {};
+        return saveServerSeen();
+      }).then(function () {
+        return refreshOutboxCount();
+      }).then(function () {
+        return syncFetch("/api/sync", { headers: syncHeaders() }).then(function (r) {
+          if (!r.ok) throw new Error("Could not reach the family computer.");
+          return r.json();
+        });
+      }).then(function (data) {
+        var remote = (data && data.cards) || {};
+        var keep = {};
+        Object.keys(remote).forEach(function (id) {
+          if (!remote[id].deleted) keep[id] = true;
+        });
+        var extraIds = extraCars.map(function (c) { return c.id; });
+        var chain = Promise.resolve();
+        syncApplying = true;
+        extraIds.forEach(function (id) {
+          if (!keep[id]) chain = chain.then(function () { return deleteCustomCardLocal(id); });
+        });
+        CARS.forEach(function (car) {
+          if (!keep[car.id]) {
+            chain = chain.then(function () {
+              return saveCustom(car.id, { image: null, imageOriginal: null, audio: null, name: "", sayLike: "", line: "", updatedAt: 0 });
+            });
+          }
+        });
+        return chain.then(function () {
+          syncApplying = false;
+          syncNotice = "";
+          return pullFromServer();
+        });
+      }).then(function (ok) {
+        syncApplying = false;
+        if (ok) syncNotice = "This phone was reset to the home computer copy.";
+        updateSyncUi();
+        if (!document.getElementById("settings-screen").hidden) renderSettings();
+        refreshVisibleArt();
+        paintHero();
+        return ok;
+      }).catch(function (e) {
+        syncApplying = false;
+        lastSyncError = e.message || "Can't reach home computer.";
+        updateSyncUi();
+        return false;
+      });
+    }
+
+    function schedulePull(delayMs) {
+      if (pullTimer) clearTimeout(pullTimer);
+      pullTimer = setTimeout(function () {
+        pullTimer = null;
+        if (document.hidden) return;
+        if (syncConfigured()) pullFromServer();
+      }, delayMs != null ? delayMs : pullBackoff);
     }
 
     function pushResetState(customIds) {
@@ -3505,6 +4573,11 @@
       var urlInput = document.getElementById("sync-url");
       var keyInput = document.getElementById("sync-key");
       var nowBtn = document.getElementById("sync-now-btn");
+      var saveBtn = document.getElementById("sync-save-btn");
+      var discardBtn = document.getElementById("sync-discard-btn");
+      var pinRow = document.getElementById("sync-pin-row");
+      var pinInput = document.getElementById("sync-pin");
+      var pinGo = document.getElementById("sync-pin-go");
       function commit() {
         if (urlInput) syncBaseOverride = (urlInput.value || "").trim().replace(/\/+$/, "");
         if (keyInput) syncFamilyKey = (keyInput.value || "").trim();
@@ -3519,9 +4592,44 @@
         keyInput.addEventListener("change", commit);
         keyInput.addEventListener("blur", commit);
       }
-      if (nowBtn) nowBtn.addEventListener("click", function () { commit(); syncNow(); });
+      if (nowBtn) nowBtn.addEventListener("click", function () { commit(); pullFromServer(); });
+      if (saveBtn) saveBtn.addEventListener("click", function () {
+        commit();
+        if (pinRow) pinRow.hidden = false;
+        if (pinInput) pinInput.focus();
+      });
+      if (pinGo) pinGo.addEventListener("click", function () {
+        commit();
+        var pin = pinInput ? pinInput.value : "";
+        pushWithPin(pin).then(function (ok) {
+          if (ok && pinInput) pinInput.value = "";
+          if (ok && pinRow) pinRow.hidden = true;
+        });
+      });
+      if (discardBtn) discardBtn.addEventListener("click", function () {
+        if (!window.confirm("Throw away unsaved changes on this phone and use the home computer copy?")) return;
+        discardLocalChanges();
+      });
       readSyncSettings();
       updateSyncUi();
+    }
+
+    function bindSyncHooks() {
+      window.addEventListener("online", function () { if (syncConfigured()) pullFromServer(); });
+      document.addEventListener("visibilitychange", function () {
+        if (!document.hidden && syncConfigured()) pullFromServer();
+      });
+      setInterval(function () {
+        if (!document.hidden && syncConfigured()) pullFromServer();
+      }, 30000);
+    }
+
+    function registerAppWorker() {
+      try {
+        if (window.isSecureContext && navigator.serviceWorker) {
+          navigator.serviceWorker.register("./sw.js").catch(function () {});
+        }
+      } catch (e) {}
     }
 
     function getSyncStatus() {
@@ -3532,14 +4640,23 @@
         configured: syncConfigured(),
         lastSyncAt: lastSyncAt,
         lastError: lastSyncError,
-        lastOk: lastSyncOk
+        lastOk: lastSyncOk,
+        outboxCount: outboxCount,
+        notice: syncNotice
       };
     }
 
+    registerAppWorker();
+    bindSyncHooks();
+    preloadRevs();
     paintHero();
     loadAllCustom().then(function () {
-      return detectSync().then(function () {
-        if (syncConfigured()) return syncNow();
+      return loadDifficulty().then(function () {
+        return loadServerSeen().then(function () { return refreshOutboxCount(); }).then(function () {
+          return detectSync().then(function () {
+            if (syncConfigured()) return pullFromServer();
+          });
+        });
       });
     }).then(function () { paintHero(); refreshAllAutoClips(); });
 
@@ -3581,9 +4698,20 @@
       applyPickedImage: applyPickedImage,
       reprocessCardImage: reprocessCardImage,
       syncNow: syncNow,
+      pullFromServer: pullFromServer,
+      pushWithPin: pushWithPin,
+      discardLocalChanges: discardLocalChanges,
+      enqueueOutbox: enqueueOutbox,
       detectSync: detectSync,
       getSyncStatus: getSyncStatus,
-      getState: function () { return { level: level, roundCount: roundCount, levelCars: levelCars.map(function (c) { return c.id; }) }; }
+      nextRevSrc: nextRevSrc,
+      playRoundRev: playRoundRev,
+      getRevState: function () { return { clips: REV_CLIPS.slice(), queue: revQueue.slice(), last: lastRev }; },
+      getState: function () { return { level: level, roundCount: roundCount, levelCars: levelCars.map(function (c) { return c.id; }), pairs: pairsForLevel(level), steps: pairSteps(), deckLen: deck.length }; },
+      getDifficulty: function () { return JSON.parse(JSON.stringify(difficulty)); },
+      setDifficulty: saveDifficulty,
+      applyDifficultyPreset: applyDifficultyPreset,
+      pairSteps: pairSteps
     };
 
   })();
