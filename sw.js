@@ -1,6 +1,6 @@
 /* Theo's Car Match service worker — cache-first so the game opens offline
    even when the home computer is unreachable (mobile data). Never caches /api. */
-var CACHE = "theo-car-match-v17";
+var CACHE = "theo-car-match-v18";
 var CORE = [
   "./",
   "./index.html",
@@ -98,6 +98,7 @@ function isApiOrSetup(url) {
   if (path.indexOf("/api/") !== -1 || path === "/api") return true;
   if (path === "/ca" || path.indexOf("/ca.") === 0 || path === "/setup" || path === "/admin") return true;
   if (path.slice(-13) === "/version.json" || path === "/version.json") return true;
+  if (path === "/sw.js" || path.slice(-6) === "/sw.js") return true;
   return false;
 }
 
@@ -172,18 +173,16 @@ self.addEventListener("fetch", function (event) {
 
   if (isNavigation(req, url)) {
     event.respondWith(
-      matchShell().then(function (hit) {
-        if (hit) {
-          fetchWithTimeout(req, 3000).then(function (res) { putInCache(req, res); putInCache("./index.html", res); }).catch(function () {});
-          return hit;
-        }
-        return fetchWithTimeout(req, 3000).then(function (res) {
+      fetchWithTimeout(req, 3000).then(function (res) {
+        if (res && res.ok) {
           putInCache(req, res);
+          putInCache("./index.html", res);
           return res;
-        }).catch(function () {
-          return matchShell().then(function (again) {
-            return again || new Response("Theo's Car Match is offline just now.", { status: 503, statusText: "Offline", headers: { "Content-Type": "text/plain; charset=utf-8" } });
-          });
+        }
+        return matchShell().then(function (hit) { return hit || res; });
+      }).catch(function () {
+        return matchShell().then(function (hit) {
+          return hit || new Response("Theo's Car Match is offline just now.", { status: 503, statusText: "Offline", headers: { "Content-Type": "text/plain; charset=utf-8" } });
         });
       })
     );

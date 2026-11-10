@@ -1792,7 +1792,7 @@
     var BLOB_FETCH_MS = 20000;
     var bootStartedAt = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
     var keyChangeOpen = false;
-    var APP_VERSION = "17";
+    var APP_VERSION = "18";
     var MATCH_PAIR_CAP = 6;
     var NAME_ROUNDS = 6;
     var THUMB_MAX = 256;
@@ -5269,6 +5269,35 @@
       return next;
     }
 
+    function joinSyncUrl(base, path) {
+      var root = normalizeSyncUrl(base || "");
+      var p = String(path || "");
+      if (!p) return root;
+      if (!root) return p.charAt(0) === "/" ? p : "/" + p;
+      if (p.charAt(0) !== "/") p = "/" + p;
+      return root + p;
+    }
+
+    function defaultPort(protocol) {
+      if (protocol === "https:") return "443";
+      if (protocol === "http:") return "80";
+      return "";
+    }
+
+    function savedUrlIsThisOrigin(value) {
+      try {
+        var saved = normalizeSyncUrl(value || syncBaseOverride || "");
+        if (!saved) return false;
+        var here = normalizeSyncUrl(location.origin);
+        if (saved === here) return true;
+        var a = new URL(saved);
+        var b = new URL(location.href);
+        return a.protocol === b.protocol && a.hostname === b.hostname && (a.port || defaultPort(a.protocol)) === (b.port || defaultPort(b.protocol));
+      } catch (e) {
+        return false;
+      }
+    }
+
     function adoptKeyFromLocation() {
       var key = "", url = "";
       try {
@@ -5313,11 +5342,10 @@
       try {
         localStorage.setItem(SYNC_URL_KEY, syncBaseOverride);
         if (syncFamilyKey) localStorage.setItem(SYNC_KEY_KEY, syncFamilyKey);
-        else localStorage.removeItem(SYNC_KEY_KEY);
       } catch (e) {}
-      cookieSet("theo_family_key", syncFamilyKey);
+      if (syncFamilyKey) cookieSet("theo_family_key", syncFamilyKey);
       cookieSet("theo_sync_url", syncBaseOverride);
-      metaSet("familyKey", syncFamilyKey || "").catch(function () {});
+      if (syncFamilyKey) metaSet("familyKey", syncFamilyKey).catch(function () {});
       metaSet("syncUrl", syncBaseOverride).catch(function () {});
     }
 
@@ -5354,11 +5382,12 @@
     }
 
     function syncRoot() {
-      return sameOriginSync ? "" : syncBaseOverride;
+      if (sameOriginSync || savedUrlIsThisOrigin(syncBaseOverride)) return "";
+      return normalizeSyncUrl(syncBaseOverride);
     }
 
     function syncTargetKnown() {
-      return sameOriginSync || !!syncBaseOverride;
+      return sameOriginSync || savedUrlIsThisOrigin(syncBaseOverride) || !!syncBaseOverride;
     }
 
     function formatSyncTime(ts) {
@@ -5695,7 +5724,7 @@
         .then(function (r) { return r.ok ? r.json() : null; })
         .then(function (j) { sameOriginSync = !!(j && j.ok && j.service === "theo-sync"); })
         .catch(function () { sameOriginSync = false; })
-        .then(function () { updateSyncUi(); });
+        .then(function () { try { updateSyncUi(); } catch (e) {} });
     }
 
     function syncHeaders(isJson, withPin) {
@@ -5706,7 +5735,7 @@
     }
 
     function syncFetch(path, opts, ms) {
-      return lanFetch(syncRoot() + path, opts || {}, ms || LAN_FETCH_MS).then(function (r) {
+      return lanFetch(joinSyncUrl(syncRoot(), path), opts || {}, ms || LAN_FETCH_MS).then(function (r) {
         if (r.status === 401) {
           clearRejectedKey();
           throw new Error("The family key was not accepted.");
@@ -6369,14 +6398,14 @@
       updateSyncUi();
       var base = ensureSyncUrl();
       showUrlTest(null, "Checking…");
-      return lanFetch(base + "/api/health", { headers: { Accept: "application/json" }, cache: "no-store" }).then(function (r) {
+      return lanFetch(joinSyncUrl(base, "/api/health"), { headers: { Accept: "application/json" }, cache: "no-store" }).then(function (r) {
         return r.ok ? r.json() : null;
       }).then(function (j) {
         if (j && j.ok && j.service === "theo-sync") {
           showUrlTest(true, "Reachable");
           return true;
         }
-        return lanFetch(base + "/version.json", { cache: "no-store" }).then(function (r) {
+        return lanFetch(joinSyncUrl(base, "/version.json"), { cache: "no-store" }).then(function (r) {
           if (r.ok) {
             showUrlTest(true, "Reachable");
             return true;
@@ -6500,16 +6529,21 @@
       return String(remote) !== String(local) && remote != null && remote !== "";
     }
 
-    function checkGameUpdate() {
-      var root;
-      if (sameOriginSync) root = "";
-      else if (syncBaseOverride) root = syncBaseOverride;
-      else return;
-      if (navigator.serviceWorker && navigator.serviceWorker.getRegistration) {
+    function requestWorkerUpdate() {
+      try {
+        if (!navigator.serviceWorker || !navigator.serviceWorker.getRegistration) return;
         navigator.serviceWorker.getRegistration("./").then(function (reg) {
           if (reg && reg.update) reg.update();
         }).catch(function () {});
-      }
+      } catch (e) {}
+    }
+
+    function checkGameUpdate() {
+      var root;
+      if (sameOriginSync || savedUrlIsThisOrigin(syncBaseOverride)) root = "";
+      else if (syncBaseOverride) root = normalizeSyncUrl(syncBaseOverride);
+      else root = "";
+      requestWorkerUpdate();
       function consider(j) {
         if (!j) return;
         var ver = String(j.version || j.gameVersion || "");
@@ -6517,10 +6551,10 @@
         window.__theoServerVersion = ver;
         if (versionNewer(ver, APP_VERSION)) showUpdateBanner();
       }
-      lanFetch(root + "/version.json", { cache: "no-store" }).then(function (r) {
+      lanFetch(joinSyncUrl(root, "/version.json"), { cache: "no-store" }).then(function (r) {
         return r.ok ? r.json() : null;
       }).then(consider).catch(function () {
-        return lanFetch(root + "/api/version", { cache: "no-store", headers: { Accept: "application/json" } }).then(function (r) {
+        return lanFetch(joinSyncUrl(root, "/api/version"), { cache: "no-store", headers: { Accept: "application/json" } }).then(function (r) {
           return r.ok ? r.json() : null;
         }).then(consider).catch(function () {});
       });
@@ -6533,14 +6567,15 @@
             if (window.__theoReloading) location.reload();
           });
           navigator.serviceWorker.register("./sw.js").then(function (reg) {
+            requestWorkerUpdate();
             if (reg.waiting && navigator.serviceWorker.controller) {
-              /* waiting worker is offered by the LAN version check banner */
+              checkGameUpdate();
             }
             reg.addEventListener("updatefound", function () {
               var w = reg.installing;
               if (!w) return;
               w.addEventListener("statechange", function () {
-                if (w.state === "installed" && navigator.serviceWorker.controller && sameOriginSync) {
+                if (w.state === "installed" && navigator.serviceWorker.controller) {
                   checkGameUpdate();
                 }
               });
@@ -6597,14 +6632,19 @@
         loadSyncSettings()
       ]).then(function () { paintHero(); });
     });
+    requestWorkerUpdate();
     Promise.all([healthP, dataP]).then(function () {
       var p = syncConfigured() ? pullFromServer() : Promise.resolve();
       return p.then(function () {
-        if (sameOriginSync || syncConfigured()) checkGameUpdate();
+        checkGameUpdate();
         paintHero();
         refreshAllAutoClips();
       });
-    }).catch(function () { paintHero(); });
+    }).catch(function () {
+      paintHero();
+      try { checkGameUpdate(); } catch (e) {}
+      try { if (syncConfigured()) pullFromServer(); } catch (e2) {}
+    });
 
     document.getElementById("play-btn").focus();
 
@@ -6655,6 +6695,8 @@
       copySyncUrl: copySyncUrl,
       connectSyncServer: connectSyncServer,
       displaySyncUrl: displaySyncUrl,
+      joinSyncUrl: joinSyncUrl,
+      savedUrlIsThisOrigin: savedUrlIsThisOrigin,
       getSyncProgress: function () { return { active: syncProgress.active, total: syncProgress.total, done: syncProgress.done }; },
       beginSyncProgress: beginSyncProgress,
       bumpSyncProgress: bumpSyncProgress,

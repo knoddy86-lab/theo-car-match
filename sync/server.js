@@ -60,6 +60,7 @@ var MIMES = {
 
 function ensureDirs() {
   fs.mkdirSync(CARDS_DIR, { recursive: true });
+  fs.mkdirSync(path.join(ROOT, "logs"), { recursive: true });
 }
 
 function generateKey() {
@@ -111,12 +112,17 @@ function lanIPv4() {
   return out;
 }
 
-function allowedOrigin(origin) {
+function allowedOrigin(origin, req) {
   if (!origin) return null;
   if (origin === PAGES_ORIGIN) return origin;
-  if (process.env.ALLOW_LOCAL === "1") {
-    if (/^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/.test(origin)) return origin;
-  }
+  try {
+    var u = new URL(origin);
+    var host = (req && req.headers && req.headers.host) || "";
+    if (host && u.host === host) return origin;
+    var ips = lanIPv4();
+    if (ips.indexOf(u.hostname) !== -1) return origin;
+    if (process.env.ALLOW_LOCAL === "1" && (u.hostname === "localhost" || u.hostname === "127.0.0.1" || u.hostname === "[::1]")) return origin;
+  } catch (e) {}
   return null;
 }
 
@@ -131,7 +137,7 @@ function addVary(res, token) {
 }
 
 function setCors(req, res) {
-  var origin = allowedOrigin(req.headers.origin);
+  var origin = allowedOrigin(req.headers.origin, req);
   if (origin) {
     res.setHeader("Access-Control-Allow-Origin", origin);
     addVary(res, "Origin");
@@ -916,7 +922,25 @@ function handleSpecial(req, res, url) {
   return false;
 }
 
+function safeAccessLog(req, res) {
+  var done = false;
+  function write() {
+    if (done) return;
+    done = true;
+    try {
+      var ip = (req.socket && req.socket.remoteAddress) || "";
+      var pathOnly = String(req.url || "/").split("?")[0];
+      if (pathOnly.length > 160) pathOnly = pathOnly.slice(0, 160);
+      var line = new Date().toISOString() + " " + ip + " " + (req.method || "?") + " " + pathOnly + " " + res.statusCode + "\n";
+      fs.appendFile(path.join(ROOT, "logs", "access.log"), line, function () {});
+    } catch (e) {}
+  }
+  res.on("finish", write);
+  res.on("close", write);
+}
+
 function onRequest(req, res) {
+  safeAccessLog(req, res);
   setCors(req, res);
   if (req.method === "OPTIONS") {
     res.statusCode = 204;
