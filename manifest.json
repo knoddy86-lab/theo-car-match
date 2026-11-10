@@ -2,7 +2,7 @@
   "name": "Theo's Car Match",
   "short_name": "Car Match",
   "description": "A gentle car matching game for Theo.",
-  "start_url": "./",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",

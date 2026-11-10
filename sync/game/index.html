@@ -2,6 +2,36 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <script>
+  (function () {
+    function show(msg) {
+      try {
+        var el = document.getElementById("boot-error");
+        if (!el) {
+          el = document.createElement("div");
+          el.id = "boot-error";
+          el.setAttribute("role", "alert");
+          el.style.cssText = "position:fixed;left:12px;right:12px;bottom:12px;z-index:99999;background:#fff;color:#B71C1C;border-radius:14px;padding:10px 12px;font:700 14px/1.3 system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.25);";
+          (document.body || document.documentElement).appendChild(el);
+        }
+        el.hidden = false;
+        el.textContent = "The game had a problem: " + msg;
+      } catch (e) {}
+    }
+    function isAbort(r) {
+      var n = (r && (r.name || r)) || "";
+      return String(n).indexOf("Abort") !== -1;
+    }
+    window.onerror = function (m, s, l) {
+      show((m || "error") + (l ? " (line " + l + ")" : ""));
+    };
+    window.onunhandledrejection = function (ev) {
+      var r = ev && ev.reason;
+      if (isAbort(r)) return;
+      show((r && (r.message || r)) || "Something went wrong");
+    };
+  })();
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
@@ -1409,9 +1439,10 @@
     var revPreloads = [];
     var HOORAY_CLIPS = [
       "01-girl-woohoo.mp3",
-      "02-yay.mp3",
       "03-joyful-yay.mp3",
-      "04-celebration-yay.mp3"
+      "05-hooray.mp3",
+      "06-hip-hip-hooray-a.mp3",
+      "07-hip-hip-hooray-b.mp3"
     ];
     var hoorayQueue = [];
     var lastHooray = "";
@@ -1434,7 +1465,7 @@
     var lastSyncOk = false;
     var lastSyncChanges = 0;
     var keyChangeOpen = false;
-    var APP_VERSION = "10";
+    var APP_VERSION = "11";
     var updateBannerShown = false;
     var outboxCount = 0;
     var syncNotice = "";
@@ -4222,9 +4253,17 @@
 
     function cookieGet(name) {
       try {
-        var parts = ("; " + document.cookie).split("; " + name + "=");
-        if (parts.length < 2) return "";
-        return decodeURIComponent(parts.pop().split(";")[0] || "").trim();
+        if (!document.cookie) return "";
+        var cookies = document.cookie.split(";");
+        var prefix = name + "=";
+        for (var i = 0; i < cookies.length; i++) {
+          var c = cookies[i].replace(/^\s+/, "");
+          if (c.indexOf(prefix) === 0) {
+            try { return decodeURIComponent(c.slice(prefix.length) || "").trim(); }
+            catch (e2) { return (c.slice(prefix.length) || "").trim(); }
+          }
+        }
+        return "";
       } catch (e) { return ""; }
     }
 
@@ -4490,8 +4529,29 @@
       updateSyncHud();
     }
 
+    var LAN_FETCH_MS = 3000;
+
+    function lanFetch(url, opts, ms) {
+      ms = ms || LAN_FETCH_MS;
+      var ctrl = typeof AbortController !== "undefined" ? new AbortController() : null;
+      var timer = setTimeout(function () { try { if (ctrl) ctrl.abort(); } catch (e) {} }, ms);
+      var o = {};
+      if (opts) {
+        var k;
+        for (k in opts) { if (Object.prototype.hasOwnProperty.call(opts, k)) o[k] = opts[k]; }
+      }
+      if (ctrl) o.signal = ctrl.signal;
+      return fetch(url, o).then(function (r) {
+        clearTimeout(timer);
+        return r;
+      }, function (e) {
+        clearTimeout(timer);
+        throw e;
+      });
+    }
+
     function detectSync() {
-      return fetch("/api/health", { headers: { Accept: "application/json" } })
+      return lanFetch("/api/health", { headers: { Accept: "application/json" } })
         .then(function (r) { return r.ok ? r.json() : null; })
         .then(function (j) { sameOriginSync = !!(j && j.ok && j.service === "theo-sync"); })
         .catch(function () { sameOriginSync = false; })
@@ -4506,7 +4566,7 @@
     }
 
     function syncFetch(path, opts) {
-      return fetch(syncRoot() + path, opts || {}).then(function (r) {
+      return lanFetch(syncRoot() + path, opts || {}).then(function (r) {
         if (r.status === 401) {
           clearRejectedKey();
           throw new Error("The family key was not accepted.");
@@ -5090,10 +5150,10 @@
         window.__theoServerVersion = ver;
         if (versionNewer(ver, APP_VERSION)) showUpdateBanner();
       }
-      fetch(root + "/version.json", { cache: "no-store" }).then(function (r) {
+      lanFetch(root + "/version.json", { cache: "no-store" }).then(function (r) {
         return r.ok ? r.json() : null;
       }).then(consider).catch(function () {
-        return fetch(root + "/api/version", { cache: "no-store", headers: { Accept: "application/json" } }).then(function (r) {
+        return lanFetch(root + "/api/version", { cache: "no-store", headers: { Accept: "application/json" } }).then(function (r) {
           return r.ok ? r.json() : null;
         }).then(consider).catch(function () {});
       });
@@ -5160,15 +5220,16 @@
         }).then(function () { return refreshOutboxCount(); }).then(function () {
           return loadSyncSettings();
         }).then(function () {
+          paintHero();
           return detectSync().then(function () {
             if (syncConfigured()) {
               return pullFromServer().then(function () { checkGameUpdate(); });
             }
             if (sameOriginSync) checkGameUpdate();
-          });
+          }).catch(function () {});
         });
       });
-    }).then(function () { paintHero(); refreshAllAutoClips(); });
+    }).then(function () { paintHero(); refreshAllAutoClips(); }).catch(function () { paintHero(); });
 
     document.getElementById("play-btn").focus();
 
