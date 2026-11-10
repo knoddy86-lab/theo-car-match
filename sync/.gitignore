@@ -1,0 +1,4 @@
+node/node.exe
+data/
+logs/
+*.log

@@ -1,0 +1,3592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Theo's Car Match">
+  <meta name="theme-color" content="#4FC3F7">
+  <title>Theo's Car Match</title>
+  <style>
+    :root {
+      --sky-top: #7ED6FF;
+      --sky-mid: #B3ECFF;
+      --sky-bot: #FFF6C2;
+      --grass: #6FCF6A;
+      --grass-dark: #4CAF50;
+      --road: #5C6770;
+      --focus: #FFD54F;
+      --play: #34C759;
+      --play-dark: #248A3D;
+      --ink: #1A237E;
+      --card-back: #1565C0;
+      --card-back-2: #0D47A1;
+      --safe-t: max(12px, env(safe-area-inset-top));
+      --safe-b: max(12px, env(safe-area-inset-bottom));
+      --safe-l: max(16px, env(safe-area-inset-left));
+      --safe-r: max(16px, env(safe-area-inset-right));
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      overscroll-behavior: none;
+      touch-action: none;
+      background: var(--sky-top);
+      font-family: "Trebuchet MS", "Segoe UI", "Avenir Next", "Arial Rounded MT Bold", "Chalkboard SE", "Comic Sans MS", sans-serif;
+      color: var(--ink);
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+    button { font-family: inherit; touch-action: manipulation; cursor: pointer; }
+    button:disabled { cursor: default; }
+
+    #app {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      height: 100dvh;
+      height: var(--vh, 100dvh);
+      overflow: hidden;
+    }
+
+    .scene {
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 42%, var(--sky-bot) 70%, #F3E08A 78%, var(--grass) 78%, var(--grass-dark) 100%);
+    }
+    .sun {
+      position: absolute;
+      top: 4%;
+      right: 8%;
+      width: min(18vmin, 140px);
+      height: min(18vmin, 140px);
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #FFFCE0, #FFE566 55%, #FFC107 100%);
+      box-shadow: 0 0 40px 12px rgba(255, 215, 64, 0.55);
+      pointer-events: none;
+    }
+    .hill {
+      position: absolute;
+      bottom: 18%;
+      width: 55%;
+      height: 22%;
+      background: #81C784;
+      border-radius: 50% 50% 0 0;
+      pointer-events: none;
+    }
+    .hill.a { left: -18%; width: 70%; background: #66BB6A; }
+    .hill.b { right: -18%; width: 72%; height: 20%; background: #7CB342; }
+    .road {
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      height: 16%;
+      background: #607080;
+      pointer-events: none;
+    }
+    .road::before {
+      content: "";
+      position: absolute;
+      left: 0; right: 0; top: 48%;
+      height: 8px;
+      background: repeating-linear-gradient(90deg, #FFEE58 0 36px, transparent 36px 68px);
+      transform: translateY(-50%);
+    }
+
+    .screen {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: var(--safe-t) var(--safe-r) var(--safe-b) var(--safe-l);
+      z-index: 2;
+    }
+    .screen[hidden] { display: none !important; }
+
+    /* ---- Start ---- */
+    .splash {
+      text-align: center;
+      width: min(920px, 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: clamp(10px, 2.4vh, 28px);
+    }
+    .banner {
+      background: rgba(255,255,255,0.92);
+      border: 6px solid #FFF;
+      border-radius: 28px;
+      padding: clamp(10px, 2vh, 22px) clamp(18px, 4vw, 48px);
+      box-shadow: 0 10px 0 rgba(25, 40, 90, 0.12), 0 18px 40px rgba(0,0,0,0.12);
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(28px, 7.2vmin, 84px);
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      color: #D32F2F;
+      text-shadow: 0 3px 0 #FFCDD2;
+    }
+    .tag {
+      margin: 6px 0 0;
+      font-size: clamp(16px, 3.2vmin, 32px);
+      color: #283593;
+      font-weight: 700;
+    }
+    .for-theo {
+      margin-top: 2px;
+      font-size: clamp(13px, 2.2vmin, 20px);
+      color: #5C6BC0;
+      font-weight: 700;
+    }
+    .hero-cars {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: clamp(8px, 2vw, 24px);
+      width: min(720px, 92%);
+      height: clamp(90px, 22vh, 200px);
+    }
+    .hero-cars .car-wrap {
+      flex: 1 1 0;
+      max-width: 220px;
+      animation: idle 2.4s ease-in-out infinite;
+    }
+    .hero-cars .car-wrap:nth-child(2) { animation-delay: -0.7s; transform: scale(1.08); }
+    .hero-cars .car-wrap:nth-child(3) { animation-delay: -1.4s; }
+    @keyframes idle {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+    .hero-cars .car-wrap:nth-child(2) { animation-name: idle-mid; }
+    @keyframes idle-mid {
+      0%, 100% { transform: scale(1.08) translateY(0); }
+      50% { transform: scale(1.08) translateY(-8px); }
+    }
+
+    .btn {
+      appearance: none;
+      border: 0;
+      border-radius: 999px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      color: #fff;
+      background: var(--play);
+      box-shadow: 0 8px 0 var(--play-dark), 0 12px 24px rgba(0,0,0,0.18);
+      padding: 0.35em 1.1em 0.45em;
+      line-height: 1;
+      transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+    }
+    .btn:active { transform: translateY(6px); box-shadow: 0 2px 0 var(--play-dark), 0 6px 12px rgba(0,0,0,0.18); }
+    .btn-play {
+      font-size: clamp(36px, 9vmin, 96px);
+      min-width: min(70vw, 420px);
+      min-height: clamp(72px, 16vmin, 130px);
+      margin-top: 4px;
+      animation: pulse 1.8s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { filter: brightness(1); transform: scale(1); }
+      50% { filter: brightness(1.06); transform: scale(1.04); }
+    }
+    .btn-play:active { animation: none; }
+
+    .btn-next {
+      font-size: clamp(28px, 6.5vmin, 64px);
+      min-width: min(72vw, 380px);
+      min-height: clamp(64px, 14vmin, 110px);
+      background: #FF9800;
+      box-shadow: 0 8px 0 #E65100, 0 12px 24px rgba(0,0,0,0.18);
+    }
+    .btn-next:active { box-shadow: 0 2px 0 #E65100, 0 6px 12px rgba(0,0,0,0.18); }
+
+    .btn:focus, .card:focus {
+      outline: 7px solid var(--focus);
+      outline-offset: 6px;
+      box-shadow:
+        0 8px 0 var(--play-dark),
+        0 0 0 10px rgba(255, 213, 79, 0.45),
+        0 12px 28px rgba(0,0,0,0.2);
+    }
+    .btn-next:focus {
+      box-shadow:
+        0 8px 0 #E65100,
+        0 0 0 10px rgba(255, 213, 79, 0.45),
+        0 12px 28px rgba(0,0,0,0.2);
+    }
+
+    /* ---- Game ---- */
+    #game-screen {
+      justify-content: stretch;
+      align-items: stretch;
+    }
+    .hud {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 4px 8px 8px;
+    }
+    .hud-title {
+      font-size: clamp(16px, 3.4vmin, 32px);
+      font-weight: 800;
+      color: #C62828;
+      background: rgba(255,255,255,0.88);
+      border-radius: 999px;
+      padding: 0.2em 0.7em;
+      box-shadow: 0 3px 0 rgba(0,0,0,0.08);
+    }
+    .hud-level {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: clamp(16px, 3.4vmin, 32px);
+      font-weight: 800;
+      color: #1A237E;
+      background: rgba(255,255,255,0.88);
+      border-radius: 999px;
+      padding: 0.2em 0.7em;
+      box-shadow: 0 3px 0 rgba(0,0,0,0.08);
+    }
+    .pips { display: flex; gap: 6px; }
+    .pip {
+      width: clamp(12px, 2.2vmin, 20px);
+      height: clamp(12px, 2.2vmin, 20px);
+      border-radius: 50%;
+      background: #C5CAE9;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
+    }
+    .pip.on { background: #FFCA28; box-shadow: 0 0 0 2px #F9A825; }
+
+    .board {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px 8px 8px;
+    }
+    .grid {
+      display: grid;
+      justify-content: center;
+      align-content: center;
+    }
+
+    .card {
+      position: relative;
+      width: var(--card, 160px);
+      height: var(--card, 160px);
+      padding: 0;
+      border: 0;
+      background: transparent;
+      border-radius: 22px;
+      perspective: 900px;
+      -webkit-perspective: 900px;
+    }
+    .card-inner {
+      position: absolute;
+      inset: 0;
+      border-radius: 22px;
+      transform-style: preserve-3d;
+      -webkit-transform-style: preserve-3d;
+      transition: transform 0.55s cubic-bezier(0.22, 0.8, 0.3, 1);
+      box-shadow: 0 8px 0 rgba(0,0,0,0.12), 0 14px 24px rgba(0,0,0,0.12);
+    }
+    .card.is-flipped .card-inner,
+    .card.is-matched .card-inner { transform: rotateY(180deg); }
+    .face {
+      position: absolute;
+      inset: 0;
+      border-radius: 22px;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .back {
+      background-color: #1565C0;
+      background-image:
+        linear-gradient(45deg, #0D47A1 25%, transparent 25%),
+        linear-gradient(-45deg, #0D47A1 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #0D47A1 75%),
+        linear-gradient(-45deg, transparent 75%, #0D47A1 75%),
+        linear-gradient(160deg, rgba(66,165,245,0.55), rgba(13,71,161,0.4));
+      background-size: 28px 28px, 28px 28px, 28px 28px, 28px 28px, 100% 100%;
+      background-position: 0 0, 0 14px, 14px -14px, -14px 0, 0 0;
+      border: 6px solid #fff;
+    }
+    .front {
+      background: linear-gradient(180deg, #FFFFFF 0%, #F5F7FF 100%);
+      border: 6px solid #fff;
+      transform: rotateY(180deg);
+      padding: 3% 2% 0;
+    }
+    .front.has-photo, .settings-preview.has-photo, .hero-cars .car-wrap.has-photo {
+      background: linear-gradient(180deg, var(--photo-bg-light, #fff) 0%, var(--photo-bg, #e3f2fd) 100%);
+    }
+    .card.is-matched .front.has-photo {
+      background: linear-gradient(180deg, var(--photo-bg-light, #FFFDE7) 0%, var(--photo-bg, #FFE082) 100%);
+    }
+    .card.is-matched .front {
+      background: linear-gradient(180deg, #FFFDE7, #FFF8E1);
+      box-shadow: inset 0 0 0 5px #FFD54F;
+    }
+    .card.is-matched { pointer-events: none; }
+    .card .art { width: 100%; height: 100%; display: block; }
+    .card.vroom .art { animation: vroom 0.7s ease-in-out; }
+    @keyframes vroom {
+      0%, 100% { transform: translateX(0) rotate(0); }
+      18% { transform: translateX(10%) rotate(-6deg); }
+      40% { transform: translateX(-10%) rotate(6deg); }
+      62% { transform: translateX(6%) rotate(-3deg); }
+      80% { transform: translateX(-3%) rotate(2deg); }
+    }
+
+    .card:focus {
+      box-shadow: none;
+      z-index: 3;
+    }
+    .card:focus .card-inner {
+      box-shadow:
+        0 0 0 7px var(--focus),
+        0 0 0 14px rgba(255, 213, 79, 0.45),
+        0 10px 24px rgba(0,0,0,0.2);
+    }
+
+    /* ---- Win overlay ---- */
+    #win-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: clamp(12px, 3vh, 28px);
+      background: rgba(13, 40, 80, 0.28);
+      padding: var(--safe-t) var(--safe-r) var(--safe-b) var(--safe-l);
+    }
+    #win-overlay[hidden] { display: none !important; }
+    .win-banner {
+      background: rgba(255,255,255,0.96);
+      border-radius: 32px;
+      padding: clamp(16px, 3vh, 32px) clamp(22px, 5vw, 56px);
+      box-shadow: 0 14px 40px rgba(0,0,0,0.2);
+      text-align: center;
+    }
+    .win-banner h2 {
+      margin: 0;
+      font-size: clamp(36px, 9vmin, 96px);
+      color: #F9A825;
+      text-shadow: 0 3px 0 #FFF8E1, 0 6px 0 rgba(0,0,0,0.08);
+      line-height: 1;
+    }
+    .win-sub {
+      margin: 8px 0 0;
+      font-size: clamp(16px, 3.2vmin, 28px);
+      color: #283593;
+      font-weight: 700;
+    }
+
+    #fx {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 6;
+    }
+
+    .card .art, .card .custom-art, .hero-cars .art, .hero-cars .custom-art {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: contain;
+      pointer-events: none;
+    }
+    .card.vroom .custom-art { animation: vroom 0.7s ease-in-out; }
+    .hud { padding-left: calc(52px + var(--safe-l)); }
+
+    .gear-btn {
+      position: absolute;
+      top: var(--safe-t);
+      left: var(--safe-l);
+      z-index: 8;
+      width: 44px;
+      height: 44px;
+      border: 0;
+      border-radius: 50%;
+      padding: 0;
+      color: #3949AB;
+      background: rgba(255,255,255,0.9);
+      box-shadow: 0 3px 0 rgba(0,0,0,0.1), 0 6px 14px rgba(0,0,0,0.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-touch-callout: none;
+    }
+    .gear-btn:focus {
+      outline: 4px solid var(--focus);
+      outline-offset: 3px;
+      box-shadow: 0 3px 0 rgba(0,0,0,0.1), 0 0 0 8px rgba(255, 213, 79, 0.4);
+    }
+    .gear-btn .gear-icon { width: 22px; height: 22px; display: block; }
+    .gear-btn .hold-ring {
+      position: absolute;
+      inset: 0;
+      width: 44px;
+      height: 44px;
+      pointer-events: none;
+    }
+    .gear-btn .hold-progress {
+      transform: rotate(-90deg);
+      transform-origin: 50% 50%;
+      stroke-dashoffset: 100;
+      transition: none;
+    }
+    .gear-btn.holding .hold-progress {
+      stroke-dashoffset: 0;
+      transition: stroke-dashoffset 2s linear;
+    }
+
+    #settings-screen {
+      z-index: 12;
+      justify-content: flex-start;
+      background: rgba(13, 40, 80, 0.45);
+      overflow: auto;
+      touch-action: pan-y;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+    }
+    .settings-panel {
+      width: min(720px, 100%);
+      margin: 8px auto;
+      background: rgba(255,255,255,0.97);
+      border-radius: 28px;
+      border: 6px solid #fff;
+      box-shadow: 0 14px 40px rgba(0,0,0,0.2);
+      padding: clamp(14px, 2.4vh, 28px) clamp(14px, 3vw, 28px) 20px;
+      color: var(--ink);
+    }
+    .settings-panel h2 {
+      margin: 0 0 4px;
+      font-size: clamp(22px, 4.6vmin, 36px);
+      color: #1A237E;
+    }
+    .settings-lead {
+      margin: 0 0 16px;
+      font-size: clamp(14px, 2.2vmin, 18px);
+      font-weight: 700;
+      color: #3949AB;
+    }
+    .voice-picker { margin: 0 0 18px; }
+    .voice-picker label {
+      display: block;
+      font-size: 13px;
+      font-weight: 800;
+      color: #1A237E;
+      margin: 0 0 6px;
+    }
+    .voice-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    #voice-select {
+      flex: 1 1 220px;
+      max-width: 420px;
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 15px;
+      padding: 8px 10px;
+      border: 3px solid #C5CAE9;
+      border-radius: 12px;
+      color: #1A237E;
+      background: #fff;
+    }
+    #voice-select:focus { outline: 4px solid var(--focus); outline-offset: 2px; }
+    .voice-help {
+      margin: 8px 0 0;
+      font-size: 12px;
+      font-weight: 700;
+      color: #5C6BC0;
+      line-height: 1.35;
+    }
+    .settings-row {
+      display: grid;
+      grid-template-columns: 92px 1fr;
+      gap: 12px;
+      align-items: start;
+      padding: 12px 0;
+      border-top: 2px solid #E8EAF6;
+    }
+    .settings-preview-wrap {
+      position: relative;
+      width: 92px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .settings-preview {
+      width: 92px;
+      height: 80px;
+      border-radius: 16px;
+      background: linear-gradient(180deg, #FFF, #F5F7FF);
+      border: 3px solid #C5CAE9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      padding: 2px;
+      cursor: pointer;
+    }
+    .preview-badge {
+      position: absolute;
+      right: -4px;
+      top: 58px;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: #3949AB;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      box-shadow: 0 2px 0 #1A237E;
+      z-index: 1;
+    }
+    .preview-hint {
+      margin: 10px 0 0;
+      font-size: 11px;
+      font-weight: 800;
+      color: #3949AB;
+      text-align: center;
+      line-height: 1.15;
+    }
+    .settings-preview:focus {
+      outline: 4px solid var(--focus);
+      outline-offset: 2px;
+    }
+    .settings-preview .art,
+    .settings-preview .custom-art {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+    .settings-meta h3 {
+      margin: 0 0 2px;
+      font-size: clamp(16px, 2.8vmin, 22px);
+    }
+    .settings-line {
+      margin: 0 0 6px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #5C6BC0;
+    }
+    .settings-status {
+      margin: 0 0 8px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #455A64;
+    }
+    .settings-btns { display: flex; flex-wrap: wrap; gap: 6px; }
+    .btn-mini {
+      appearance: none;
+      border: 0;
+      border-radius: 999px;
+      font-family: inherit;
+      font-weight: 800;
+      font-size: 13px;
+      padding: 0.4em 0.85em;
+      color: #1A237E;
+      background: #E8EAF6;
+      box-shadow: 0 3px 0 #C5CAE9;
+    }
+    .btn-mini:active { transform: translateY(2px); box-shadow: 0 1px 0 #C5CAE9; }
+    .btn-mini:focus { outline: 4px solid var(--focus); outline-offset: 2px; }
+    .btn-mini.primary { background: #BBDEFB; box-shadow: 0 3px 0 #64B5F6; }
+    .btn-mini.warn { background: #FFE0B2; box-shadow: 0 3px 0 #FFB74D; }
+    .btn-mini.record { background: #FFCDD2; box-shadow: 0 3px 0 #E57373; color: #B71C1C; }
+    .btn-mini.stop { background: #FF8A80; box-shadow: 0 3px 0 #E53935; color: #fff; }
+    .btn-mini.stop:disabled, .btn-mini.record:disabled { opacity: 0.45; box-shadow: 0 3px 0 #C5CAE9; }
+    .name-field { margin: 4px 0 8px; }
+    .name-field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 800;
+      color: #3949AB;
+      margin: 0 0 4px;
+    }
+    .name-input {
+      width: 100%;
+      max-width: 320px;
+      font-family: inherit;
+      font-weight: 800;
+      font-size: 16px;
+      padding: 7px 10px;
+      border: 3px solid #C5CAE9;
+      border-radius: 12px;
+      color: #1A237E;
+      background: #fff;
+    }
+    .name-input:focus { outline: 4px solid var(--focus); outline-offset: 2px; }
+    .say-field { margin: 0 0 8px; }
+    .say-field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 800;
+      color: #3949AB;
+      margin: 0 0 4px;
+    }
+    .say-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .say-input {
+      flex: 1 1 160px;
+      max-width: 320px;
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 15px;
+      padding: 7px 10px;
+      border: 3px solid #C5CAE9;
+      border-radius: 12px;
+      color: #1A237E;
+      background: #fff;
+    }
+    .say-input:focus { outline: 4px solid var(--focus); outline-offset: 2px; }
+    .cutout-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 0 8px;
+      font-size: 13px;
+      font-weight: 800;
+      color: #3949AB;
+      cursor: pointer;
+    }
+    .cutout-toggle input {
+      width: 20px;
+      height: 20px;
+      accent-color: #3949AB;
+    }
+    .rec-indicator {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      margin: 8px 0 0;
+      font-weight: 800;
+      font-size: 13px;
+      color: #C62828;
+    }
+    .rec-indicator.on { display: flex; }
+    .rec-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #E53935;
+      box-shadow: 0 0 0 0 rgba(229, 57, 53, 0.6);
+      animation: recpulse 1s ease-out infinite;
+    }
+    @keyframes recpulse {
+      0% { box-shadow: 0 0 0 0 rgba(229, 57, 53, 0.55); }
+      100% { box-shadow: 0 0 0 10px rgba(229, 57, 53, 0); }
+    }
+    .rec-msg {
+      margin: 6px 0 0;
+      font-size: 12px;
+      font-weight: 700;
+      color: #6A1B9A;
+    }
+    .sync-box {
+      margin: 18px 0 8px;
+      padding: 14px 14px 12px;
+      border-radius: 18px;
+      background: #E8F5E9;
+      border: 3px solid #A5D6A7;
+    }
+    .sync-box h3 {
+      margin: 0 0 6px;
+      font-size: clamp(16px, 2.6vmin, 20px);
+      color: #1B5E20;
+    }
+    .sync-lead, .sync-status {
+      margin: 0 0 8px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #2E7D32;
+    }
+    .sync-status { margin: 8px 0 0; color: #33691E; }
+    .sync-status.is-error { color: #C62828; }
+    .sync-field { margin: 0 0 8px; }
+    .sync-field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 800;
+      color: #1B5E20;
+      margin: 0 0 4px;
+    }
+    .sync-field input {
+      width: 100%;
+      max-width: 420px;
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 15px;
+      padding: 7px 10px;
+      border: 3px solid #A5D6A7;
+      border-radius: 12px;
+      color: #1B5E20;
+      background: #fff;
+    }
+    .sync-field input:focus { outline: 4px solid var(--focus); outline-offset: 2px; }
+    .settings-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 16px;
+    }
+    .btn-reset {
+      font-size: 18px;
+      min-height: 52px;
+      padding: 0.35em 1em;
+      background: #EF5350;
+      box-shadow: 0 6px 0 #C62828, 0 10px 18px rgba(0,0,0,0.16);
+    }
+    .btn-reset:active { box-shadow: 0 2px 0 #C62828, 0 6px 12px rgba(0,0,0,0.16); }
+    .btn-reset:focus { box-shadow: 0 6px 0 #C62828, 0 0 0 8px rgba(255, 213, 79, 0.45); }
+    .btn-done {
+      font-size: 18px;
+      min-height: 52px;
+      padding: 0.35em 1.2em;
+      margin-left: auto;
+    }
+    .settings-friends {
+      margin-top: 8px;
+      padding-top: 8px;
+    }
+    .friends-title {
+      margin: 12px 0 4px;
+      font-size: clamp(18px, 3.6vmin, 26px);
+      color: #1A237E;
+    }
+    .friends-lead {
+      margin: 0 0 10px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #5C6BC0;
+    }
+    .btn-add {
+      font-size: 18px;
+      min-height: 52px;
+      padding: 0.35em 1.2em;
+      margin: 12px 0 4px;
+      background: #5C6BC0;
+      box-shadow: 0 6px 0 #283593, 0 10px 18px rgba(0,0,0,0.16);
+    }
+    .btn-add:active { box-shadow: 0 2px 0 #283593, 0 6px 12px rgba(0,0,0,0.16); }
+    .btn-add:focus { box-shadow: 0 6px 0 #283593, 0 0 0 8px rgba(255, 213, 79, 0.45); }
+    .line-field { margin: 0 0 8px; }
+    .line-field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 800;
+      color: #3949AB;
+      margin: 0 0 4px;
+    }
+    .line-input {
+      width: 100%;
+      max-width: 420px;
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 15px;
+      padding: 7px 10px;
+      border: 3px solid #C5CAE9;
+      border-radius: 12px;
+      color: #1A237E;
+      background: #fff;
+    }
+    .line-input:focus { outline: 4px solid var(--focus); outline-offset: 2px; }
+    .delete-confirm {
+      margin-top: 8px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: #FFEBEE;
+      font-weight: 700;
+      font-size: 13px;
+      color: #B71C1C;
+    }
+    .delete-confirm p { margin: 0 0 8px; }
+    .settings-row.custom-row { background: linear-gradient(90deg, rgba(126,87,194,0.06), transparent 70%); border-radius: 16px; padding-left: 8px; padding-right: 8px; }
+    .reset-confirm {
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: #FFF3E0;
+      font-weight: 700;
+    }
+    .reset-confirm p { margin: 0 0 10px; }
+    .sr-file {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+    }
+
+    @media (min-aspect-ratio: 16/9) {
+      .sun { top: 6%; right: 10%; }
+      .hud { padding-left: max(4vw, calc(52px + var(--safe-l))); padding-right: 4vw; }
+    }
+    @media (max-width: 500px) and (orientation: portrait) {
+      .hero-cars { height: clamp(80px, 18vh, 140px); }
+      .settings-row { grid-template-columns: 76px 1fr; }
+      .settings-preview { width: 76px; height: 68px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="scene" aria-hidden="true">
+      <div class="sun"></div>
+      <div class="hill a"></div>
+      <div class="hill b"></div>
+      <div class="road"></div>
+    </div>
+
+    <section id="start-screen" class="screen" aria-label="Start">
+      <div class="splash">
+        <div class="banner">
+          <h1>Theo's Car Match</h1>
+          <p class="tag">Match the cars!</p>
+          <p class="for-theo">For Theo</p>
+        </div>
+        <div class="hero-cars" id="hero-cars"></div>
+        <button type="button" class="btn btn-play" id="play-btn">PLAY</button>
+      </div>
+    </section>
+
+    <section id="game-screen" class="screen" hidden aria-label="Game">
+      <div class="hud">
+        <div class="hud-title">Theo's Car Match</div>
+        <div class="hud-level">
+          <span id="level-label">Level 1</span>
+          <div class="pips" id="pips" aria-hidden="true"></div>
+        </div>
+      </div>
+      <div class="board" id="board">
+        <div class="grid" id="grid" role="group" aria-label="Cards"></div>
+      </div>
+    </section>
+
+    <div id="win-overlay" hidden>
+      <div class="win-banner">
+        <h2>Great job!</h2>
+        <p class="win-sub" id="win-sub">You matched all the cars</p>
+      </div>
+      <button type="button" class="btn btn-next" id="next-btn">Next</button>
+    </div>
+
+    <button type="button" class="gear-btn" id="settings-btn" aria-label="Parent settings. Press and hold for two seconds.">
+      <svg class="hold-ring" viewBox="0 0 44 44" aria-hidden="true">
+        <circle cx="22" cy="22" r="18" fill="none" stroke="rgba(255,152,0,0.28)" stroke-width="3"></circle>
+        <circle class="hold-progress" cx="22" cy="22" r="18" fill="none" stroke="#FF9800" stroke-width="3.5" stroke-linecap="round" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100"></circle>
+      </svg>
+      <svg class="gear-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path fill="currentColor" d="M19.14 12.94c.04-.31.06-.63.06-.94s-.02-.63-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.04 7.04 0 0 0-1.63-.94l-.36-2.54A.5.5 0 0 0 13.9 2h-3.8a.5.5 0 0 0-.49.42l-.36 2.54c-.59.22-1.14.53-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.81 8.48a.5.5 0 0 0 .12.64l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94L2.93 14.16a.5.5 0 0 0-.12.64l1.92 3.32c.13.22.39.32.6.22l2.39-.96c.49.41 1.04.72 1.63.94l.36 2.54c.05.24.25.42.49.42h3.8c.24 0 .44-.18.49-.42l.36-2.54c.59-.22 1.14-.53 1.63-.94l2.39.96c.22.1.47 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58zM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7z"/>
+      </svg>
+    </button>
+
+    <section id="settings-screen" class="screen" hidden aria-label="Parent Settings">
+      <div class="settings-panel">
+        <h2>Parent Settings</h2>
+        <p class="settings-lead">Add your own names, pictures and sounds for each car, or add a new card. If a name is said wrong, type how it should sound under Say it like.</p>
+        <div class="voice-picker">
+          <label for="voice-select">Voice</label>
+          <div class="voice-row">
+            <select id="voice-select" aria-label="Voice"></select>
+            <button type="button" class="btn-mini primary" id="voice-test-btn">Test</button>
+          </div>
+          <p class="voice-help">For a nicer voice on iPhone: Settings &gt; Accessibility &gt; Spoken Content &gt; Voices &gt; English, and download an Enhanced or Premium voice.</p>
+        </div>
+        <div id="settings-list"></div>
+        <div class="settings-friends">
+          <h3 class="friends-title">Your cards</h3>
+          <p class="friends-lead">Add a photo of a family member, a pet, or a favourite toy.</p>
+          <div id="settings-custom-list"></div>
+          <button type="button" class="btn btn-add" id="add-card-btn">Add a card</button>
+        </div>
+        <div class="sync-box" id="sync-box">
+          <h3>Family sync</h3>
+          <p class="sync-lead" id="sync-lead"></p>
+          <div class="sync-field" id="sync-url-field">
+            <label for="sync-url">Server URL</label>
+            <input id="sync-url" type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://your-pc.ts.net" aria-label="Sync server URL">
+          </div>
+          <div class="sync-field">
+            <label for="sync-key">Family key</label>
+            <input id="sync-key" type="text" autocomplete="off" spellcheck="false" autocapitalize="off" placeholder="The key shown on the family computer" aria-label="Family key">
+          </div>
+          <div class="settings-btns">
+            <button type="button" class="btn-mini primary" id="sync-now-btn">Sync now</button>
+          </div>
+          <p class="sync-status" id="sync-status"></p>
+        </div>
+        <div class="settings-actions">
+          <button type="button" class="btn btn-reset" id="reset-all-btn">Reset all</button>
+          <button type="button" class="btn btn-done" id="settings-done-btn">Done</button>
+        </div>
+        <div id="reset-confirm" class="reset-confirm" hidden>
+          <p>Reset all custom names, pictures, sounds and added cards?</p>
+          <div class="settings-btns">
+            <button type="button" class="btn-mini warn" id="reset-yes">Yes, reset</button>
+            <button type="button" class="btn-mini" id="reset-no">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <canvas id="fx"></canvas>
+  </div>
+
+  <script>
+  (function () {
+    "use strict";
+
+    var CARS = [
+      { id: "rosie",   name: "Rosie",       fullName: "Rosie Racer",  kind: "racer",    colorName: "Red",            typeName: "car",      phrase: "Zoom zoom!",        line: "Zoom zoom! Red car, Rosie!",                 color: "#E53935", dark: "#9B1B1B", light: "#FFCDD2", window: "#B3E5FC", voiceIndex: 0, rate: 1.18, pitch: 1.45 },
+      { id: "tugger",  name: "Tugger",      fullName: "Tugger",       kind: "tow",      colorName: "Orange",         typeName: "truck",    phrase: "Hooky hook!",       line: "Hooky hook! Orange truck, Tugger!",          color: "#F07830", dark: "#8D3B16", light: "#F0B27A", window: "#FFF3E0", voiceIndex: 1, rate: 0.82, pitch: 0.68 },
+      { id: "skye",    name: "Skye",        fullName: "Skye",         kind: "sports",   colorName: "Blue",           typeName: "car",      phrase: "Beep beep!",        line: "Beep beep! Blue car, Skye!",                 color: "#4FC3F7", dark: "#0277BD", light: "#B3E5FC", window: "#E1F5FE", voiceIndex: 2, rate: 1.22, pitch: 1.65 },
+      { id: "pip",     name: "Pip",         fullName: "Pip",          kind: "forklift", colorName: "Green",          typeName: "forklift", phrase: "Lift it up!",       line: "Lift it up! Green forklift, Pip!",           color: "#43A047", dark: "#1B5E20", light: "#A5D6A7", window: "#E8F5E9", voiceIndex: 3, rate: 1.28, pitch: 1.55 },
+      { id: "sunny",   name: "Sunny",       fullName: "Sunny",        kind: "city",     colorName: "Yellow",         typeName: "car",      phrase: "Sunny day!",        line: "Sunny day! Yellow car, Sunny!",              color: "#F6C800", dark: "#C49000", light: "#FFF59D", window: "#FFF8E1", voiceIndex: 4, rate: 1.00, pitch: 1.22 },
+      { id: "hank",    name: "Hank",        fullName: "Hank",         kind: "sedan",    colorName: "Dark green",     typeName: "car",      phrase: "Slow and steady!",  line: "Slow and steady! Dark green car, Hank!",     color: "#2E7D32", dark: "#1B5E20", light: "#81C784", window: "#E8F5E9", voiceIndex: 5, rate: 0.78, pitch: 0.62 },
+      { id: "officer", name: "Officer Dot", fullName: "Officer Dot",  kind: "police",   colorName: "Black and white", typeName: "car",     phrase: "Wee-woo!",          line: "Wee-woo! Black and white car, Officer Dot!", color: "#37474F", dark: "#212121", light: "#ECEFF1", window: "#E3F2FD", voiceIndex: 6, rate: 0.96, pitch: 1.00 }
+    ];
+
+    var PAIRS = [2, 3, 4];
+    var DB_NAME = "theo-car-match";
+    var DB_VERSION = 1;
+    var STORE = "media";
+    var level = 0;
+    var deck = [];
+    var levelCars = [];
+    var flipped = [];
+    var matchedCount = 0;
+    var locked = false;
+    var focusIndex = 0;
+    var gridCols = 2;
+    var audioCtx = null;
+    var voicesCache = [];
+    var defaultVoice = null;
+    var customMedia = {};
+    var VOICE_KEY = "theo-car-match-voice";
+    var voicePref = "";
+    try { voicePref = localStorage.getItem(VOICE_KEY) || ""; } catch (e) {}
+    var sharedAudio = null;
+    var playToken = 0;
+    var autoTimers = {};
+    var roundCount = 0;
+    var advanceTimer = null;
+    var SOUND_DIR = "sounds/";
+    var PHRASE_CLIPS = { letsMatch: "lets-match.mp3", greatJob: "great-job.mp3" };
+    var extraCars = [];
+    var recState = { carId: null, recorder: null, stream: null, chunks: [], timer: null, tick: null, mime: "" };
+    var forcedPick = null;
+    var syncApplying = false;
+    var SYNC_URL_KEY = "theo-car-match-sync-url";
+    var SYNC_KEY_KEY = "theo-car-match-sync-key";
+    var sameOriginSync = false;
+    var syncBaseOverride = "";
+    var syncFamilyKey = "";
+    var syncPushTimer = null;
+    var syncPushIds = {};
+    var lastSyncAt = 0;
+    var lastSyncError = "";
+    var lastSyncOk = false;
+    var customAudioEl = null;
+    var dbPromise = null;
+    var confettiBits = [];
+    var confettiOn = false;
+    var fx = document.getElementById("fx");
+    var fxCtx = fx.getContext("2d");
+    var reduced = false;
+    try { reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) {}
+
+    function allCars() {
+      return CARS.concat(extraCars);
+    }
+
+    function carById(id) {
+      var pool = allCars();
+      for (var i = 0; i < pool.length; i++) if (pool[i].id === id) return pool[i];
+      return null;
+    }
+
+    var FRIEND_PALETTE = [
+      { color: "#7E57C2", dark: "#4527A0", light: "#D1C4E9", window: "#EDE7F6" },
+      { color: "#00897B", dark: "#004D40", light: "#B2DFDB", window: "#E0F2F1" },
+      { color: "#E91E63", dark: "#880E4F", light: "#F8BBD0", window: "#FCE4EC" },
+      { color: "#039BE5", dark: "#01579B", light: "#B3E5FC", window: "#E1F5FE" },
+      { color: "#F9A825", dark: "#F57F17", light: "#FFE082", window: "#FFF8E1" },
+      { color: "#6D4C41", dark: "#3E2723", light: "#D7CCC8", window: "#EFEBE9" },
+      { color: "#43A047", dark: "#1B5E20", light: "#C8E6C9", window: "#E8F5E9" }
+    ];
+
+    function paletteFor(id) {
+      var h = 0, s = String(id);
+      for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+      return FRIEND_PALETTE[h % FRIEND_PALETTE.length];
+    }
+
+    function newCustomId() {
+      return "custom-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8);
+    }
+
+    function shadow() {
+      return '<ellipse cx="140" cy="166" rx="92" ry="10" fill="rgba(0,0,0,0.18)"/>';
+    }
+
+    function wheel(cx, cy, r) {
+      r = r || 22;
+      return '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="#222"/>' +
+        '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r * 0.58).toFixed(1) + '" fill="#B0BEC5"/>' +
+        '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r * 0.27).toFixed(1) + '" fill="#ECEFF1"/>';
+    }
+
+    function eyes(x1, x2, y, r) {
+      r = r || 12;
+      var p = r * 0.55;
+      var s = r * 0.2;
+      return '<circle cx="' + x1 + '" cy="' + y + '" r="' + r + '" fill="#fff"/>' +
+        '<circle cx="' + x2 + '" cy="' + y + '" r="' + r + '" fill="#fff"/>' +
+        '<circle cx="' + (x1 + 1.6) + '" cy="' + (y + 1.6) + '" r="' + p + '" fill="#2E2A28"/>' +
+        '<circle cx="' + (x2 + 1.6) + '" cy="' + (y + 1.6) + '" r="' + p + '" fill="#2E2A28"/>' +
+        '<circle cx="' + (x1 + 3.2) + '" cy="' + (y - 1.2) + '" r="' + s + '" fill="#fff"/>' +
+        '<circle cx="' + (x2 + 3.2) + '" cy="' + (y - 1.2) + '" r="' + s + '" fill="#fff"/>';
+    }
+
+    function smile(cx, cy, rw, color, tooth) {
+      var d = (cx - rw) + " " + cy + " Q" + cx + " " + (cy + 10) + " " + (cx + rw) + " " + cy;
+      var s = '<path d="M' + d + '" fill="none" stroke="' + color + '" stroke-width="3" stroke-linecap="round"/>';
+      if (tooth) {
+        s += '<rect x="' + (cx - 3) + '" y="' + (cy + 1) + '" width="6" height="8" rx="1.2" fill="#FFFDE7" stroke="' + color + '" stroke-width="1"/>';
+      }
+      return s;
+    }
+
+    function star(cx, cy, r, fill) {
+      var pts = [];
+      for (var i = 0; i < 5; i++) {
+        var a = (i * 2 * Math.PI) / 5 - Math.PI / 2;
+        var b = a + Math.PI / 5;
+        pts.push((cx + Math.cos(a) * r).toFixed(1) + "," + (cy + Math.sin(a) * r).toFixed(1));
+        pts.push((cx + Math.cos(b) * r * 0.42).toFixed(1) + "," + (cy + Math.sin(b) * r * 0.42).toFixed(1));
+      }
+      return '<polygon points="' + pts.join(" ") + '" fill="' + fill + '"/>';
+    }
+
+    function svgWrap(inner) {
+      return '<svg class="art" viewBox="0 0 280 180" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' + inner + "</svg>";
+    }
+
+    function carSVG(car) {
+      var c = car.color, d = car.dark, l = car.light, w = car.window;
+      if (car.kind === "racer") {
+        return svgWrap(shadow() +
+          '<path d="M58 86 L58 72 L86 72 L90 86 Z" fill="' + d + '"/>' +
+          '<path d="M60 84 L62 74 L84 74 L86 84 Z" fill="' + c + '"/>' +
+          '<rect x="62" y="70" width="22" height="5" rx="1.5" fill="' + d + '"/>' +
+          '<path d="M52 128 C50 102 70 90 96 90 L118 90 L132 50 C138 40 150 36 168 36 L214 36 C234 36 246 54 250 68 L258 70 C266 72 266 88 266 98 L262 128 C260 140 248 148 232 148 L70 148 C56 148 52 138 52 128 Z" fill="' + d + '"/>' +
+          '<path d="M54 124 C52 102 72 92 98 92 L120 92 L134 52 C140 44 151 40 168 40 L212 40 C230 40 242 56 246 68 L256 70 C262 72 262 88 262 96 L258 124 C256 136 246 144 232 144 L72 144 C58 144 54 136 54 124 Z" fill="' + c + '"/>' +
+          '<path d="M126 92 L138 56 C142 48 154 46 168 46 L206 46 C220 46 230 56 236 66 L230 92 Z" fill="' + w + '"/>' +
+          '<path d="M134 90 L144 58 C148 52 158 50 168 50 L200 50 C212 50 222 58 228 66 L224 90 Z" fill="#F5FBFF" opacity="0.5"/>' +
+          eyes(162, 200, 68, 12) +
+          smile(181, 84, 16, d, false) +
+          '<rect x="150" y="40" width="10" height="50" rx="2" fill="#fff" opacity="0.92"/>' +
+          '<rect x="164" y="40" width="10" height="50" rx="2" fill="#fff" opacity="0.92"/>' +
+          star(108, 116, 11, "#fff") +
+          star(132, 118, 8, "#fff") +
+          '<circle cx="96" cy="118" r="16" fill="#fff" stroke="' + d + '" stroke-width="2.5"/>' +
+          '<text x="96" y="126" text-anchor="middle" font-size="22" font-weight="800" font-family="Trebuchet MS, Arial Black, sans-serif" fill="' + d + '">7</text>' +
+          '<ellipse cx="256" cy="94" rx="8" ry="6" fill="#FFF8E1" stroke="' + d + '" stroke-width="2"/>' +
+          '<path d="M80 108 H230" stroke="' + l + '" stroke-width="6" stroke-linecap="round" opacity="0.7"/>' +
+          wheel(92, 146, 22) + wheel(210, 146, 22));
+      }
+      if (car.kind === "tow") {
+        return svgWrap(shadow() +
+          '<path d="M46 118 L46 102 Q52 90 70 90 L78 90 L78 118 Z" fill="' + d + '"/>' +
+          '<path d="M50 116 L50 104 Q56 94 70 94 L76 94 L76 116 Z" fill="#A35424"/>' +
+          '<path d="M38 132 C38 88 70 70 118 70 L150 70 L164 108 L250 108 C262 108 266 120 266 130 L266 142 C266 150 256 154 244 154 L58 154 C44 154 38 144 38 132 Z" fill="' + d + '"/>' +
+          '<path d="M42 130 C42 90 72 74 118 74 L148 74 L162 110 L248 110 C258 110 262 120 262 130 L262 140 C262 148 254 150 244 150 L60 150 C48 150 42 142 42 130 Z" fill="' + c + '"/>' +
+          '<ellipse cx="86" cy="112" rx="16" ry="10" fill="#8D3B16" opacity="0.45"/>' +
+          '<ellipse cx="200" cy="128" rx="18" ry="8" fill="#6D3B1E" opacity="0.35"/>' +
+          '<ellipse cx="150" cy="124" rx="10" ry="6" fill="#A35424" opacity="0.4"/>' +
+          '<path d="M150 74 L162 42 C166 34 176 32 190 32 L226 32 C240 32 250 44 254 56 L254 108 L166 108 Z" fill="' + d + '"/>' +
+          '<path d="M152 76 L164 44 C168 38 178 36 190 36 L224 36 C236 36 246 46 250 56 L250 108 L164 108 Z" fill="' + c + '"/>' +
+          '<path d="M172 76 L180 50 C182 44 190 42 200 42 L226 42 C234 42 242 48 244 56 L244 76 Z" fill="' + w + '"/>' +
+          eyes(196, 226, 58, 11) +
+          smile(211, 72, 14, d, true) +
+          '<rect x="248" y="86" width="10" height="8" rx="2" fill="#FFF8E1" stroke="' + d + '" stroke-width="1.4"/>' +
+          '<path d="M70 90 L28 128" stroke="#5D4037" stroke-width="6" stroke-linecap="round"/>' +
+          '<path d="M28 128 C22 140 22 148 32 152 C40 154 48 148 46 138 C44 130 36 128 28 128 Z" fill="none" stroke="#5D4037" stroke-width="5" stroke-linecap="round"/>' +
+          '<circle cx="28" cy="128" r="4" fill="#795548"/>' +
+          wheel(100, 152, 22) + wheel(214, 152, 22));
+      }
+      if (car.kind === "sports") {
+        return svgWrap(shadow() +
+          '<path d="M48 128 C46 108 66 98 96 92 L130 70 C140 64 156 62 176 64 L230 78 C250 84 262 98 262 114 L258 132 C254 144 240 148 222 148 L70 148 C52 148 48 138 48 128 Z" fill="' + d + '"/>' +
+          '<path d="M50 126 C48 108 68 100 98 94 L132 72 C142 66 156 64 176 66 L228 80 C246 86 258 100 258 114 L254 128 C250 140 238 144 222 144 L72 144 C54 144 50 136 50 126 Z" fill="' + c + '"/>' +
+          '<path d="M128 90 L140 74 C148 68 160 66 178 68 L220 80 L214 102 L124 100 Z" fill="' + w + '"/>' +
+          '<path d="M136 90 L146 76 C152 72 164 70 178 72 L210 82 L206 98 L132 98 Z" fill="#F5FBFF" opacity="0.5"/>' +
+          eyes(160, 196, 84, 11) +
+          smile(178, 96, 14, d, false) +
+          '<ellipse cx="252" cy="108" rx="7" ry="5" fill="#FFF8E1" stroke="' + d + '" stroke-width="1.8"/>' +
+          '<path d="M90 118 Q160 108 230 118" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity="0.45"/>' +
+          '<circle cx="108" cy="122" r="6" fill="#fff" opacity="0.8"/>' +
+          wheel(96, 146, 20) + wheel(214, 146, 20));
+      }
+      if (car.kind === "forklift") {
+        return svgWrap(shadow() +
+          '<rect x="230" y="100" width="36" height="6" rx="2" fill="#90A4AE" stroke="' + d + '" stroke-width="1.5"/>' +
+          '<rect x="230" y="128" width="36" height="6" rx="2" fill="#90A4AE" stroke="' + d + '" stroke-width="1.5"/>' +
+          '<rect x="224" y="46" width="10" height="102" rx="3" fill="#78909C" stroke="' + d + '" stroke-width="2"/>' +
+          '<rect x="218" y="46" width="22" height="10" rx="2" fill="#607D8B"/>' +
+          '<path d="M58 136 C58 100 74 86 110 86 L200 86 L200 136 C200 148 188 152 174 152 L74 152 C62 152 58 144 58 136 Z" fill="' + d + '"/>' +
+          '<path d="M62 134 C62 102 78 90 110 90 L196 90 L196 134 C196 144 186 148 174 148 L76 148 C66 148 62 142 62 134 Z" fill="' + c + '"/>' +
+          '<path d="M126 86 L126 48 C126 38 136 34 150 34 L196 34 C208 34 216 44 216 56 L216 86 Z" fill="' + d + '"/>' +
+          '<path d="M130 86 L130 50 C130 42 138 38 150 38 L192 38 C202 38 210 46 210 56 L210 86 Z" fill="' + c + '"/>' +
+          '<path d="M138 86 L138 54 C138 48 146 46 156 46 L190 46 C198 46 204 52 204 58 L204 86 Z" fill="' + w + '"/>' +
+          eyes(160, 188, 64, 11) +
+          smile(174, 78, 12, d, false) +
+          '<rect x="70" y="108" width="40" height="16" rx="3" fill="' + d + '" opacity="0.35"/>' +
+          wheel(96, 152, 20) + wheel(176, 152, 20));
+      }
+      if (car.kind === "city") {
+        return svgWrap(shadow() +
+          '<path d="M58 130 C50 86 78 42 140 38 C202 34 236 70 236 110 C244 112 256 120 256 132 C256 146 240 152 220 152 L70 152 C52 152 48 140 58 130 Z" fill="' + d + '"/>' +
+          '<path d="M62 128 C54 86 82 46 140 42 C196 38 232 72 232 110 C240 112 252 120 252 132 C252 144 238 148 220 148 L74 148 C58 148 52 138 62 128 Z" fill="' + c + '"/>' +
+          '<ellipse cx="148" cy="88" rx="58" ry="42" fill="' + w + '"/>' +
+          '<ellipse cx="148" cy="86" rx="46" ry="32" fill="#F5FBFF" opacity="0.45"/>' +
+          eyes(128, 168, 82, 14) +
+          smile(148, 102, 16, d, false) +
+          '<circle cx="200" cy="70" r="10" fill="#FFF8E1" stroke="#F9A825" stroke-width="2"/>' +
+          '<circle cx="200" cy="70" r="4" fill="#F9A825"/>' +
+          '<ellipse cx="248" cy="122" rx="8" ry="6" fill="#FFF8E1" stroke="' + d + '" stroke-width="2"/>' +
+          wheel(96, 150, 22) + wheel(200, 150, 22));
+      }
+      if (car.kind === "sedan") {
+        return svgWrap(shadow() +
+          '<rect x="72" y="126" width="150" height="10" rx="3" fill="' + d + '"/>' +
+          '<path d="M40 128 C40 112 52 104 72 104 L92 104 L108 58 C114 46 128 40 150 40 L196 40 C216 40 228 54 234 68 L250 80 C262 86 264 100 264 114 L258 136 C254 148 240 152 220 152 L62 152 C46 152 40 140 40 128 Z" fill="' + d + '"/>' +
+          '<path d="M44 126 C44 114 56 108 74 108 L94 108 L110 60 C116 50 130 44 150 44 L194 44 C212 44 224 56 230 68 L246 80 C256 86 258 100 258 114 L252 134 C248 144 236 148 220 148 L64 148 C50 148 44 138 44 126 Z" fill="' + c + '"/>' +
+          '<path d="M112 108 L122 64 C126 54 138 50 152 50 L190 50 C206 50 216 60 222 70 L230 108 Z" fill="' + w + '"/>' +
+          '<path d="M120 106 L128 66 C132 58 142 54 152 54 L186 54 C198 54 208 62 214 70 L220 106 Z" fill="#F5FBFF" opacity="0.4"/>' +
+          eyes(150, 190, 76, 12) +
+          smile(170, 94, 16, d, false) +
+          '<ellipse cx="250" cy="104" rx="9" ry="9" fill="#FFF8E1" stroke="' + d + '" stroke-width="2.4"/>' +
+          '<ellipse cx="236" cy="92" rx="6" ry="6" fill="#FFF8E1" stroke="' + d + '" stroke-width="2"/>' +
+          '<path d="M80 118 H230" stroke="' + l + '" stroke-width="5" stroke-linecap="round" opacity="0.65"/>' +
+          '<rect x="84" y="112" width="22" height="12" rx="2" fill="' + l + '" opacity="0.8"/>' +
+          wheel(92, 150, 22) + wheel(208, 150, 22));
+      }
+      return svgWrap(shadow() +
+        '<g transform="translate(148 36)">' +
+          '<rect x="-28" y="-10" width="56" height="16" rx="5" fill="#263238"/>' +
+          '<circle cx="-14" cy="-2" r="5" fill="#E53935"/>' +
+          '<circle cx="0" cy="-2" r="5" fill="#FFF8E1"/>' +
+          '<circle cx="14" cy="-2" r="5" fill="#1E88E5"/>' +
+        '</g>' +
+        '<path d="M44 128 C44 108 62 96 90 96 L112 96 L126 56 C132 44 146 38 166 38 L210 38 C230 38 242 54 246 68 L258 72 C266 76 266 92 266 104 L260 132 C256 144 242 150 222 150 L66 150 C48 150 44 138 44 128 Z" fill="#212121"/>' +
+        '<path d="M48 126 C48 110 64 100 90 100 L114 100 L128 58 C134 48 147 42 166 42 L208 42 C226 42 238 56 242 68 L256 72 C262 76 262 92 262 104 L256 128 C252 140 240 146 222 146 L68 146 C52 146 48 136 48 126 Z" fill="#FAFAFA"/>' +
+        '<path d="M48 126 C48 110 64 100 90 100 L118 100 L118 146 L68 146 C52 146 48 136 48 126 Z" fill="#212121"/>' +
+        '<path d="M210 100 L242 68 L256 72 C262 76 262 92 262 104 L256 128 C252 140 240 146 222 146 L210 146 Z" fill="#212121"/>' +
+        '<path d="M122 100 L132 60 C136 50 148 46 166 46 L204 46 C218 46 228 56 234 66 L222 100 Z" fill="' + w + '"/>' +
+        eyes(160, 198, 72, 12) +
+        smile(179, 88, 15, "#212121", false) +
+        '<circle cx="150" cy="120" r="12" fill="#1565C0" stroke="#0D47A1" stroke-width="2"/>' +
+        '<circle cx="150" cy="120" r="5" fill="#FFF8E1"/>' +
+        '<ellipse cx="256" cy="96" rx="7" ry="5" fill="#FFF8E1" stroke="#212121" stroke-width="1.8"/>' +
+        wheel(96, 148, 22) + wheel(214, 148, 22));
+    }
+
+    function cardBackSVG() {
+      return '<svg class="art" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+        '<circle cx="60" cy="60" r="30" fill="#1565C0" stroke="#fff" stroke-width="5"/>' +
+        '<polygon points="60,34 66.5,53.5 87,54 71,66.5 76.5,86 60,74.5 43.5,86 49,66.5 33,54 53.5,53.5" fill="#FFD54F" stroke="#FFF8E1" stroke-width="1.5"/>' +
+      '</svg>';
+    }
+
+    function setVH() {
+      document.documentElement.style.setProperty("--vh", window.innerHeight + "px");
+    }
+
+    function shuffle(arr) {
+      for (var i = arr.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+      }
+      return arr;
+    }
+
+    function revokeMedia(entry) {
+      if (!entry) return;
+      try { if (entry.imageUrl) URL.revokeObjectURL(entry.imageUrl); } catch (e) {}
+      try { if (entry.audioUrl) URL.revokeObjectURL(entry.audioUrl); } catch (e) {}
+    }
+
+    function openDB() {
+      if (dbPromise) return dbPromise;
+      dbPromise = new Promise(function (resolve, reject) {
+        try {
+          var req = indexedDB.open(DB_NAME, DB_VERSION);
+          req.onupgradeneeded = function () {
+            var db = req.result;
+            if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE);
+          };
+          req.onsuccess = function () { resolve(req.result); };
+          req.onerror = function () { dbPromise = null; reject(req.error); };
+        } catch (err) {
+          dbPromise = null;
+          reject(err);
+        }
+      });
+      return dbPromise;
+    }
+
+    function idbGet(key) {
+      return openDB().then(function (db) {
+        return new Promise(function (resolve, reject) {
+          var req = db.transaction(STORE, "readonly").objectStore(STORE).get(key);
+          req.onsuccess = function () { resolve(req.result || null); };
+          req.onerror = function () { reject(req.error); };
+        });
+      });
+    }
+
+    function idbSet(key, value) {
+      return openDB().then(function (db) {
+        return new Promise(function (resolve, reject) {
+          var req = db.transaction(STORE, "readwrite").objectStore(STORE).put(value, key);
+          req.onsuccess = function () { resolve(); };
+          req.onerror = function () { reject(req.error); };
+        });
+      });
+    }
+
+    function idbDel(key) {
+      return openDB().then(function (db) {
+        return new Promise(function (resolve, reject) {
+          var req = db.transaction(STORE, "readwrite").objectStore(STORE).delete(key);
+          req.onsuccess = function () { resolve(); };
+          req.onerror = function () { reject(req.error); };
+        });
+      });
+    }
+
+    function idbClear() {
+      return openDB().then(function (db) {
+        return new Promise(function (resolve, reject) {
+          var req = db.transaction(STORE, "readwrite").objectStore(STORE).clear();
+          req.onsuccess = function () { resolve(); };
+          req.onerror = function () { reject(req.error); };
+        });
+      });
+    }
+
+    function idbEntries() {
+      return openDB().then(function (db) {
+        return new Promise(function (resolve, reject) {
+          var tx = db.transaction(STORE, "readonly");
+          var store = tx.objectStore(STORE);
+          var keysReq = store.getAllKeys();
+          var valsReq = store.getAll();
+          tx.oncomplete = function () {
+            var keys = keysReq.result || [];
+            var vals = valsReq.result || [];
+            var out = [];
+            for (var i = 0; i < keys.length; i++) out.push({ id: keys[i], rec: vals[i] });
+            resolve(out);
+          };
+          tx.onerror = function () { reject(tx.error); };
+        });
+      });
+    }
+
+    function recordToEntry(rec) {
+      if (!rec) return { imageUrl: "", audioUrl: "", imageBlob: null, audioBlob: null, imageOriginalBlob: null, name: "", line: "", sayLike: "", autoText: "", autoSrc: "", custom: false, updatedAt: 0, removeWhite: true };
+      var imageBlob = rec.image || null;
+      var audioBlob = rec.audio || null;
+      var imageOriginalBlob = rec.imageOriginal || null;
+      var name = rec.name ? String(rec.name) : "";
+      var line = rec.line ? String(rec.line) : "";
+      return {
+        imageBlob: imageBlob,
+        audioBlob: audioBlob,
+        imageOriginalBlob: imageOriginalBlob,
+        name: name,
+        line: line,
+        sayLike: rec.sayLike ? String(rec.sayLike) : "",
+        autoText: rec.autoText ? String(rec.autoText) : "",
+        autoSrc: rec.autoSrc ? String(rec.autoSrc) : "",
+        custom: !!rec.custom,
+        removeWhite: rec.removeWhite !== false,
+        updatedAt: rec.updatedAt || 0,
+        imageUpdatedAt: rec.imageUpdatedAt || 0,
+        audioUpdatedAt: rec.audioUpdatedAt || 0,
+        originalUpdatedAt: rec.originalUpdatedAt || 0,
+        imageUrl: imageBlob ? URL.createObjectURL(imageBlob) : "",
+        audioUrl: audioBlob ? URL.createObjectURL(audioBlob) : ""
+      };
+    }
+
+    function recToCustomCar(id, rec) {
+      rec = rec || {};
+      var pal = paletteFor(id);
+      var name = (rec.name && String(rec.name).trim()) || "New friend";
+      var line = rec.line ? String(rec.line).trim() : "";
+      var hash = 0, s = String(id);
+      for (var i = 0; i < s.length; i++) hash = (hash * 31 + s.charCodeAt(i)) >>> 0;
+      return {
+        id: id,
+        custom: true,
+        name: name,
+        fullName: name,
+        kind: "custom",
+        colorName: "Friend",
+        typeName: "card",
+        phrase: "",
+        line: line,
+        color: rec.color || pal.color,
+        dark: rec.dark || pal.dark,
+        light: rec.light || pal.light,
+        window: rec.window || pal.window,
+        voiceIndex: rec.voiceIndex != null ? rec.voiceIndex : (hash % 7),
+        rate: rec.rate != null ? rec.rate : 1.05,
+        pitch: rec.pitch != null ? rec.pitch : 1.2
+      };
+    }
+
+    function loadAllCustom() {
+      extraCars.forEach(function (car) { revokeMedia(customMedia[car.id]); });
+      extraCars = [];
+      return idbEntries().then(function (entries) {
+        var seen = {};
+        entries.forEach(function (e) {
+          seen[e.id] = true;
+          revokeMedia(customMedia[e.id]);
+          customMedia[e.id] = recordToEntry(e.rec);
+          if (e.rec && e.rec.custom) extraCars.push(recToCustomCar(e.id, e.rec));
+        });
+        CARS.forEach(function (car) {
+          if (!seen[car.id]) {
+            revokeMedia(customMedia[car.id]);
+            customMedia[car.id] = recordToEntry(null);
+          }
+        });
+      }).catch(function () {
+        CARS.forEach(function (car) {
+          if (!customMedia[car.id]) customMedia[car.id] = recordToEntry(null);
+        });
+      });
+    }
+
+    var saveQueues = {};
+    function saveCustom(id, patch) {
+      var next = (saveQueues[id] || Promise.resolve()).catch(function () {}).then(function () {
+        return idbGet(id).catch(function () { return null; }).then(function (rec) {
+          rec = rec && typeof rec === "object" ? rec : {};
+          if (patch.image !== undefined) rec.image = patch.image || undefined;
+          if (patch.imageOriginal !== undefined) rec.imageOriginal = patch.imageOriginal || undefined;
+          if (patch.image !== undefined && !patch.image && patch.imageOriginal === undefined) rec.imageOriginal = undefined;
+          if (patch.removeWhite !== undefined) rec.removeWhite = patch.removeWhite !== false;
+          if (patch.audio !== undefined) rec.audio = patch.audio || undefined;
+          if (patch.name !== undefined) rec.name = (patch.name && String(patch.name).trim()) || undefined;
+          if (patch.line !== undefined) rec.line = (patch.line && String(patch.line).trim()) || undefined;
+          if (patch.sayLike !== undefined) rec.sayLike = (patch.sayLike && String(patch.sayLike).trim()) || undefined;
+          if (patch.autoText !== undefined) rec.autoText = patch.autoText || undefined;
+          if (patch.autoSrc !== undefined) rec.autoSrc = patch.autoSrc || undefined;
+          if (patch.deleted !== undefined) rec.deleted = patch.deleted ? true : undefined;
+          if (patch.custom !== undefined) rec.custom = patch.custom ? true : undefined;
+          if (patch.color !== undefined) rec.color = patch.color;
+          if (patch.dark !== undefined) rec.dark = patch.dark;
+          if (patch.light !== undefined) rec.light = patch.light;
+          if (patch.window !== undefined) rec.window = patch.window;
+          if (patch.voiceIndex !== undefined) rec.voiceIndex = patch.voiceIndex;
+          if (patch.rate !== undefined) rec.rate = patch.rate;
+          if (patch.pitch !== undefined) rec.pitch = patch.pitch;
+          var userTouch = ["image","imageOriginal","audio","name","line","sayLike","custom","color","dark","light","window","deleted","removeWhite"];
+          var touched = false;
+          for (var ui = 0; ui < userTouch.length; ui++) if (patch[userTouch[ui]] !== undefined) touched = true;
+          if (patch.updatedAt !== undefined) rec.updatedAt = patch.updatedAt;
+          else if (touched) rec.updatedAt = Date.now();
+          if (patch.image !== undefined) rec.imageUpdatedAt = rec.updatedAt || Date.now();
+          if (patch.imageOriginal !== undefined) rec.originalUpdatedAt = rec.updatedAt || Date.now();
+          if (patch.audio !== undefined) rec.audioUpdatedAt = rec.updatedAt || Date.now();
+          if (patch.imageUpdatedAt !== undefined) rec.imageUpdatedAt = patch.imageUpdatedAt;
+          if (patch.originalUpdatedAt !== undefined) rec.originalUpdatedAt = patch.originalUpdatedAt;
+          if (patch.audioUpdatedAt !== undefined) rec.audioUpdatedAt = patch.audioUpdatedAt;
+          if (rec.custom) {
+            rec.custom = true;
+            if (!rec.name) rec.name = "New friend";
+            return idbSet(id, rec);
+          }
+          if (!rec.name && !rec.sayLike) { rec.autoText = undefined; rec.autoSrc = undefined; }
+          if (!rec.image && !rec.imageOriginal && !rec.audio && !rec.name && !rec.sayLike && !rec.deleted) return idbDel(id);
+          return idbSet(id, rec);
+        }).then(function () {
+          return idbGet(id).catch(function () { return null; });
+        }).then(function (rec) {
+          revokeMedia(customMedia[id]);
+          customMedia[id] = recordToEntry(rec);
+          if (rec && rec.custom) {
+            var car = recToCustomCar(id, rec);
+            var idx = -1;
+            for (var i = 0; i < extraCars.length; i++) if (extraCars[i].id === id) idx = i;
+            if (idx >= 0) extraCars[idx] = car;
+            else extraCars.push(car);
+          }
+          if (!syncApplying) scheduleSyncPush(id);
+        });
+      });
+      saveQueues[id] = next;
+      return next;
+    }
+
+    function clearCustom(id) {
+      return idbDel(id).catch(function () {}).then(function () {
+        revokeMedia(customMedia[id]);
+        customMedia[id] = recordToEntry(null);
+      });
+    }
+
+    function resetAllCustom() {
+      var gone = extraCars.map(function (c) { return c.id; });
+      return idbClear().catch(function () {}).then(function () {
+        CARS.forEach(function (car) {
+          revokeMedia(customMedia[car.id]);
+          customMedia[car.id] = recordToEntry(null);
+        });
+        extraCars.forEach(function (car) { revokeMedia(customMedia[car.id]); });
+        extraCars = [];
+        return pushResetState(gone);
+      });
+    }
+
+    function deleteCustomCard(id) {
+      return idbDel(id).catch(function () {}).then(function () {
+        revokeMedia(customMedia[id]);
+        delete customMedia[id];
+        extraCars = extraCars.filter(function (c) { return c.id !== id; });
+        if (!syncApplying) pushTombstone(id).catch(function () {});
+      });
+    }
+
+    function customName(car) {
+      var entry = customMedia[car.id] || {};
+      var n = entry.name ? String(entry.name).trim() : "";
+      return n;
+    }
+
+    function displayName(car) {
+      return customName(car) || car.name;
+    }
+
+    function displayFullName(car) {
+      return customName(car) || car.fullName;
+    }
+
+    function customSayLike(car) {
+      var entry = customMedia[car.id] || {};
+      var s = entry.sayLike ? String(entry.sayLike).trim() : "";
+      return s;
+    }
+
+    function spokenLine(car) {
+      return customSayLike(car) || displayFullName(car);
+    }
+
+    function refreshCardLabels() {
+      var list = cards();
+      for (var i = 0; i < list.length; i++) {
+        if (!deck[i]) continue;
+        if (list[i].classList.contains("is-matched")) {
+          list[i].setAttribute("aria-label", "Matched " + displayFullName(deck[i].car));
+        } else if (list[i].classList.contains("is-flipped")) {
+          list[i].setAttribute("aria-label", displayFullName(deck[i].car));
+        }
+      }
+    }
+
+    function placeholderSVG(car) {
+      var name = displayName(car) || "N";
+      var letter = name.charAt(0).toUpperCase();
+      var c = car.color || "#7E57C2";
+      var d = car.dark || "#4527A0";
+      var l = car.light || "#D1C4E9";
+      return svgWrap(shadow() +
+        '<rect x="56" y="36" width="168" height="116" rx="30" fill="' + d + '"/>' +
+        '<rect x="60" y="40" width="160" height="108" rx="26" fill="' + c + '"/>' +
+        '<circle cx="106" cy="84" r="11" fill="#fff"/>' +
+        '<circle cx="150" cy="84" r="11" fill="#fff"/>' +
+        '<circle cx="108" cy="86" r="5.5" fill="#2E2A28"/>' +
+        '<circle cx="152" cy="86" r="5.5" fill="#2E2A28"/>' +
+        '<path d="M114 104 Q128 116 142 104" fill="none" stroke="' + d + '" stroke-width="3" stroke-linecap="round"/>' +
+        '<circle cx="188" cy="62" r="26" fill="#fff" stroke="' + d + '" stroke-width="3"/>' +
+        '<text x="188" y="72" text-anchor="middle" font-size="28" font-weight="800" font-family="Trebuchet MS, Arial Black, sans-serif" fill="' + d + '">' + letter + "</text>" +
+        '<path d="M78 128 H202" stroke="' + l + '" stroke-width="8" stroke-linecap="round" opacity="0.7"/>');
+    }
+
+    function defaultArt(car) {
+      return car.custom ? placeholderSVG(car) : carSVG(car);
+    }
+
+
+    var CUTOUT_MAX = 512;
+    var CUTOUT_TOLERANCE = 30;
+    var CUTOUT_FEATHER = 2;
+    var CUTOUT_PAD = 8;
+
+    function isNearWhitePixel(r, g, b, a, tol) {
+      if (a < 8) return true;
+      return (255 - r) <= tol && (255 - g) <= tol && (255 - b) <= tol;
+    }
+
+    function loadImageSource(blob) {
+      if (window.createImageBitmap) {
+        return createImageBitmap(blob, { imageOrientation: "from-image" }).catch(function () {
+          return createImageBitmap(blob).catch(function () { return loadImageTag(blob); });
+        });
+      }
+      return loadImageTag(blob);
+    }
+
+    function loadImageTag(blob) {
+      return new Promise(function (resolve, reject) {
+        var url = URL.createObjectURL(blob);
+        var img = new Image();
+        img.onload = function () { URL.revokeObjectURL(url); resolve(img); };
+        img.onerror = function () { URL.revokeObjectURL(url); reject(new Error("Could not read the photo")); };
+        img.src = url;
+      });
+    }
+
+    function canvasToPng(canvas) {
+      return new Promise(function (resolve, reject) {
+        if (canvas.toBlob) {
+          canvas.toBlob(function (blob) {
+            if (blob) resolve(blob);
+            else reject(new Error("Could not save the photo"));
+          }, "image/png");
+        } else {
+          try {
+            var data = canvas.toDataURL("image/png");
+            fetch(data).then(function (r) { return r.blob(); }).then(resolve, reject);
+          } catch (e) { reject(e); }
+        }
+      });
+    }
+
+    function fitCanvas(canvas, maxSize) {
+      var w = canvas.width, h = canvas.height;
+      var scale = Math.min(1, maxSize / Math.max(w, h));
+      if (scale >= 1) return canvas;
+      var out = document.createElement("canvas");
+      out.width = Math.max(1, Math.round(w * scale));
+      out.height = Math.max(1, Math.round(h * scale));
+      var ctx = out.getContext("2d");
+      ctx.imageSmoothingEnabled = true;
+      if (ctx.imageSmoothingQuality) ctx.imageSmoothingQuality = "high";
+      ctx.drawImage(canvas, 0, 0, out.width, out.height);
+      return out;
+    }
+
+    function processCutout(sourceBlob, opts) {
+      opts = opts || {};
+      var enabled = opts.enabled !== false;
+      var tol = opts.tolerance != null ? opts.tolerance : CUTOUT_TOLERANCE;
+      var feather = opts.feather != null ? opts.feather : CUTOUT_FEATHER;
+      var pad = opts.pad != null ? opts.pad : CUTOUT_PAD;
+      var maxSize = opts.maxSize || CUTOUT_MAX;
+      return loadImageSource(sourceBlob).then(function (img) {
+        var w = img.width || img.naturalWidth;
+        var h = img.height || img.naturalHeight;
+        if (!w || !h) throw new Error("Empty photo");
+        var workScale = Math.min(1, 1024 / Math.max(w, h));
+        var cw = Math.max(1, Math.round(w * workScale));
+        var ch = Math.max(1, Math.round(h * workScale));
+        var canvas = document.createElement("canvas");
+        canvas.width = cw;
+        canvas.height = ch;
+        var ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, cw, ch);
+        if (img.close) try { img.close(); } catch (e) {}
+        if (!enabled) return canvasToPng(fitCanvas(canvas, maxSize));
+
+        var imageData = ctx.getImageData(0, 0, cw, ch);
+        var data = imageData.data;
+        var visited = new Uint8Array(cw * ch);
+        var mask = new Uint8Array(cw * ch);
+        var queue = [];
+        function at(x, y) { return y * cw + x; }
+        function enqueue(x, y) {
+          if (x < 0 || y < 0 || x >= cw || y >= ch) return;
+          var i = at(x, y);
+          if (visited[i]) return;
+          visited[i] = 1;
+          var o = i * 4;
+          if (isNearWhitePixel(data[o], data[o + 1], data[o + 2], data[o + 3], tol)) {
+            mask[i] = 1;
+            queue.push(x, y);
+          }
+        }
+        var x, y, i, o;
+        for (x = 0; x < cw; x++) { enqueue(x, 0); enqueue(x, ch - 1); }
+        for (y = 0; y < ch; y++) { enqueue(0, y); enqueue(cw - 1, y); }
+        for (var q = 0; q < queue.length; q += 2) {
+          x = queue[q]; y = queue[q + 1];
+          enqueue(x - 1, y); enqueue(x + 1, y); enqueue(x, y - 1); enqueue(x, y + 1);
+        }
+
+        var dist = null;
+        if (feather > 0) {
+          dist = new Float32Array(cw * ch);
+          for (i = 0; i < cw * ch; i++) dist[i] = mask[i] ? 0 : 1e9;
+          for (var pass = 0; pass < feather + 1; pass++) {
+            for (y = 0; y < ch; y++) {
+              for (x = 0; x < cw; x++) {
+                i = at(x, y);
+                if (mask[i]) continue;
+                var d = dist[i];
+                if (x > 0) d = Math.min(d, dist[i - 1] + 1);
+                if (y > 0) d = Math.min(d, dist[i - cw] + 1);
+                if (x < cw - 1) d = Math.min(d, dist[i + 1] + 1);
+                if (y < ch - 1) d = Math.min(d, dist[i + cw] + 1);
+                dist[i] = d;
+              }
+            }
+            for (y = ch - 1; y >= 0; y--) {
+              for (x = cw - 1; x >= 0; x--) {
+                i = at(x, y);
+                if (mask[i]) continue;
+                var d2 = dist[i];
+                if (x > 0) d2 = Math.min(d2, dist[i - 1] + 1);
+                if (y > 0) d2 = Math.min(d2, dist[i - cw] + 1);
+                if (x < cw - 1) d2 = Math.min(d2, dist[i + 1] + 1);
+                if (y < ch - 1) d2 = Math.min(d2, dist[i + cw] + 1);
+                dist[i] = d2;
+              }
+            }
+          }
+        }
+
+        var minX = cw, minY = ch, maxX = -1, maxY = -1;
+        for (y = 0; y < ch; y++) {
+          for (x = 0; x < cw; x++) {
+            i = at(x, y);
+            o = i * 4;
+            if (mask[i]) data[o + 3] = 0;
+            else if (dist && dist[i] <= feather) {
+              data[o + 3] = Math.max(0, Math.round(data[o + 3] * (dist[i] / (feather + 0.25))));
+            }
+            if (data[o + 3] > 8) {
+              if (x < minX) minX = x;
+              if (y < minY) minY = y;
+              if (x > maxX) maxX = x;
+              if (y > maxY) maxY = y;
+            }
+          }
+        }
+        ctx.putImageData(imageData, 0, 0);
+        if (maxX < minX) return canvasToPng(fitCanvas(canvas, maxSize));
+        minX = Math.max(0, minX - pad);
+        minY = Math.max(0, minY - pad);
+        maxX = Math.min(cw - 1, maxX + pad);
+        maxY = Math.min(ch - 1, maxY + pad);
+        var rw = maxX - minX + 1, rh = maxY - minY + 1;
+        var cropped = document.createElement("canvas");
+        cropped.width = rw;
+        cropped.height = rh;
+        cropped.getContext("2d").drawImage(canvas, minX, minY, rw, rh, 0, 0, rw, rh);
+        return canvasToPng(fitCanvas(cropped, maxSize));
+      });
+    }
+
+    function applyPickedImage(carOrId, file, removeWhite) {
+      var id = typeof carOrId === "string" ? carOrId : carOrId.id;
+      var entry = customMedia[id] || {};
+      var cut = removeWhite != null ? !!removeWhite : entry.removeWhite !== false;
+      if (!file) return Promise.resolve();
+      return processCutout(file, { enabled: cut }).catch(function () { return file; }).then(function (display) {
+        return saveCustom(id, { imageOriginal: file, image: display, removeWhite: cut });
+      });
+    }
+
+    function reprocessCardImage(id) {
+      var entry = customMedia[id] || {};
+      var src = entry.imageOriginalBlob || entry.imageBlob;
+      if (!src) return Promise.resolve();
+      var cut = entry.removeWhite !== false;
+      return processCutout(src, { enabled: cut }).catch(function () { return src; }).then(function (display) {
+        var patch = { image: display, removeWhite: cut };
+        if (!entry.imageOriginalBlob) patch.imageOriginal = src;
+        return saveCustom(id, patch);
+      });
+    }
+
+    function fillArt(holder, car) {
+      holder.innerHTML = "";
+      var entry = customMedia[car.id] || {};
+      if (entry.imageUrl) {
+        holder.classList.add("has-photo");
+        holder.style.setProperty("--photo-bg", car.color || "#90CAF9");
+        holder.style.setProperty("--photo-bg-light", car.light || "#E3F2FD");
+        var img = document.createElement("img");
+        img.className = "custom-art";
+        img.alt = "";
+        img.draggable = false;
+        var fallback = document.createElement("div");
+        fallback.hidden = true;
+        fallback.innerHTML = defaultArt(car);
+        img.addEventListener("error", function () {
+          img.hidden = true;
+          fallback.hidden = false;
+          holder.classList.remove("has-photo");
+        });
+        img.src = entry.imageUrl;
+        holder.appendChild(img);
+        holder.appendChild(fallback);
+      } else {
+        holder.classList.remove("has-photo");
+        holder.style.removeProperty("--photo-bg");
+        holder.style.removeProperty("--photo-bg-light");
+        holder.innerHTML = defaultArt(car);
+      }
+    }
+
+    function refreshVisibleArt() {
+      var list = cards();
+      for (var i = 0; i < list.length; i++) {
+        var front = list[i].querySelector(".front");
+        if (!front || !deck[i]) continue;
+        fillArt(front, deck[i].car);
+      }
+      paintHero();
+      if (!document.getElementById("settings-screen").hidden) renderSettings();
+    }
+
+    function unlockMedia() {
+      try {
+        var AC = window.AudioContext || window.webkitAudioContext;
+        if (AC && !audioCtx) audioCtx = new AC();
+        if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+      } catch (e) {}
+      try {
+        if (window.speechSynthesis) {
+          var u = new SpeechSynthesisUtterance(" ");
+          u.volume = 0;
+          speechSynthesis.speak(u);
+          refreshVoices();
+        }
+      } catch (e) {}
+      try {
+        var a = getSharedAudio();
+        if (!a.dataset.unlocked) {
+          a.dataset.unlocked = "1";
+          a.muted = true;
+          a.src = SOUND_DIR + PHRASE_CLIPS.greatJob;
+          var pr = a.play();
+          if (pr && pr.then) pr.then(function () { a.pause(); a.muted = false; }, function () { a.muted = false; });
+        }
+      } catch (e) {}
+    }
+
+    function englishVoices(voices) {
+      var out = [];
+      for (var i = 0; i < voices.length; i++) {
+        if (/^en/i.test(voices[i].lang)) out.push(voices[i]);
+      }
+      return out;
+    }
+
+    function voiceScore(v) {
+      var s = 0;
+      var name = v.name || "";
+      var lang = (v.lang || "").replace("_", "-");
+      if (/premium/i.test(name)) s += 120;
+      if (/enhanced|natural|neural/i.test(name)) s += 100;
+      if (/samantha|karen|daniel|google us english|google uk english female|catherine|lee|moira|serena|arthur|martha/i.test(name)) s += 60;
+      if (/en-AU/i.test(lang)) s += 40;
+      else if (/en-GB|en-US/i.test(lang)) s += 25;
+      else if (/^en/i.test(lang)) s += 10;
+      if (/compact|eloquence|novelty|albert|bad news|bahh|bells|boing|bubbles|cellos|good news|jester|organ|superstar|trinoids|whisper|wobble|zarvox|fred|junior|ralph/i.test(name)) s -= 200;
+      return s;
+    }
+
+    function rankedEnglishVoices() {
+      var en = englishVoices(voicesCache);
+      return en.slice().sort(function (a, b) {
+        var d = voiceScore(b) - voiceScore(a);
+        return d || String(a.name).localeCompare(String(b.name));
+      });
+    }
+
+    function refreshVoices() {
+      try {
+        if (!window.speechSynthesis) { voicesCache = []; defaultVoice = null; return; }
+        voicesCache = speechSynthesis.getVoices() || [];
+        var ranked = rankedEnglishVoices();
+        defaultVoice = ranked[0] || voicesCache[0] || null;
+      } catch (e) {
+        voicesCache = [];
+        defaultVoice = null;
+      }
+      fillVoiceSelect();
+    }
+
+    function chosenVoice() {
+      if (voicePref) {
+        for (var i = 0; i < voicesCache.length; i++) {
+          if (voicesCache[i].voiceURI === voicePref || voicesCache[i].name === voicePref) return voicesCache[i];
+        }
+      }
+      return defaultVoice;
+    }
+
+    function voiceFor() {
+      return chosenVoice();
+    }
+
+    function fillVoiceSelect() {
+      var sel = document.getElementById("voice-select");
+      if (!sel) return;
+      var ranked = rankedEnglishVoices();
+      sel.innerHTML = "";
+      var auto = document.createElement("option");
+      auto.value = "";
+      auto.textContent = defaultVoice ? ("Best available (" + defaultVoice.name + ")") : "Best available";
+      sel.appendChild(auto);
+      ranked.forEach(function (v) {
+        var o = document.createElement("option");
+        o.value = v.voiceURI || v.name;
+        o.textContent = v.name + " (" + v.lang + ")";
+        sel.appendChild(o);
+      });
+      sel.value = voicePref;
+      if (sel.value !== voicePref) sel.value = "";
+    }
+
+    function getSharedAudio() {
+      if (!sharedAudio) {
+        sharedAudio = new Audio();
+        sharedAudio.preload = "auto";
+        sharedAudio.setAttribute("playsinline", "");
+      }
+      return sharedAudio;
+    }
+
+    function stopSpeechAndAudio() {
+      playToken++;
+      try { if (window.speechSynthesis) speechSynthesis.cancel(); } catch (e) {}
+      if (sharedAudio) {
+        try { sharedAudio.pause(); } catch (e) {}
+      }
+      if (customAudioEl && customAudioEl !== sharedAudio) {
+        try { customAudioEl.pause(); customAudioEl.src = ""; } catch (e) {}
+      }
+      customAudioEl = null;
+    }
+
+    function speakText(text) {
+      try {
+        if (!window.speechSynthesis || !text) return;
+        var u = new SpeechSynthesisUtterance(text);
+        u.rate = 0.95;
+        u.pitch = 1;
+        var voice = chosenVoice();
+        u.lang = (voice && voice.lang) || "en-AU";
+        if (voice) u.voice = voice;
+        speechSynthesis.speak(u);
+      } catch (e) {}
+    }
+
+    function speak(text) {
+      stopSpeechAndAudio();
+      speakText(text);
+    }
+
+    function playSources(sources, fallbackText) {
+      stopSpeechAndAudio();
+      var token = playToken;
+      var idx = 0;
+      function next() {
+        if (token !== playToken) return;
+        if (idx >= sources.length) { speakText(fallbackText); return; }
+        var src = sources[idx++];
+        var a = getSharedAudio();
+        customAudioEl = a;
+        var done = false;
+        function fail() {
+          if (done) return;
+          done = true;
+          a.removeEventListener("error", fail);
+          if (token === playToken) next();
+        }
+        a.addEventListener("error", fail);
+        try {
+          a.muted = false;
+          a.src = src;
+          var p = a.play();
+          if (p && p.then) {
+            p.then(function () { a.removeEventListener("error", fail); done = true; }, fail);
+          }
+        } catch (e) { fail(); }
+      }
+      next();
+    }
+
+    function soundSourcesFor(car) {
+      var entry = customMedia[car.id] || {};
+      var text = spokenLine(car);
+      var out = [];
+      if (entry.audioUrl) out.push(entry.audioUrl);
+      if (!car.custom && !customName(car) && !customSayLike(car)) out.push(SOUND_DIR + car.id + ".mp3");
+      if (entry.autoSrc && entry.autoText === text) out.push(entry.autoSrc);
+      return out;
+    }
+
+    function pronunciationSources(car) {
+      var entry = customMedia[car.id] || {};
+      var text = spokenLine(car);
+      var out = [];
+      if (!car.custom && !customName(car) && !customSayLike(car)) out.push(SOUND_DIR + car.id + ".mp3");
+      if (entry.autoSrc && entry.autoText === text) out.push(entry.autoSrc);
+      return out;
+    }
+
+    function playPronunciation(car) {
+      playSources(pronunciationSources(car), spokenLine(car));
+    }
+
+    function speakCar(car) {
+      playSources(soundSourcesFor(car), spokenLine(car));
+    }
+
+    function playPhrase(key, text) {
+      playSources([SOUND_DIR + PHRASE_CLIPS[key]], text);
+    }
+
+    /* Natural voice for renamed / custom names: Sound of Text (soundoftext.com, Google en-AU voice).
+       Only the spoken text is sent. Files can't be fetched as blobs (no CORS), so the URL is
+       cached in IndexedDB and played via <audio src>. Offline, the device voice is used. */
+    function fetchNameClip(text) {
+      var api = "https://api.soundoftext.com/sounds";
+      return fetch(api, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ engine: "Google", data: { text: text, voice: "en-AU" } })
+      }).then(function (r) { return r.json(); }).then(function (j) {
+        if (!j || !j.success || !j.id) throw new Error("tts create failed");
+        var tries = 0;
+        function poll() {
+          tries++;
+          return fetch(api + "/" + encodeURIComponent(j.id)).then(function (r) { return r.json(); }).then(function (s) {
+            if (s && s.status === "Done" && s.location) return s.location;
+            if (tries >= 10 || (s && s.status === "Error")) throw new Error("tts not ready");
+            return new Promise(function (res) { setTimeout(res, 600); }).then(poll);
+          });
+        }
+        return poll();
+      });
+    }
+
+    function needsAutoClip(car) {
+      return car.custom || !!customName(car) || !!customSayLike(car);
+    }
+
+    function refreshAutoClip(car, immediate) {
+      if (!car) return;
+      if (autoTimers[car.id]) clearTimeout(autoTimers[car.id]);
+      autoTimers[car.id] = setTimeout(function () {
+        autoTimers[car.id] = null;
+        var live = carById(car.id) || car;
+        var entry = customMedia[live.id] || {};
+        if (!needsAutoClip(live)) return;
+        var text = spokenLine(live);
+        if (!text || (entry.autoSrc && entry.autoText === text)) return;
+        if (!window.fetch) return;
+        fetchNameClip(text).then(function (src) {
+          var cur = carById(live.id);
+          if (!cur || spokenLine(cur) !== text) return;
+          return saveCustom(live.id, { autoText: text, autoSrc: src });
+        }).catch(function () {});
+      }, immediate ? 0 : 900);
+    }
+
+    function refreshAllAutoClips() {
+      allCars().forEach(function (car) { if (needsAutoClip(car)) refreshAutoClip(car, true); });
+    }
+
+    function tone(freq, start, dur, type, gain) {
+      if (!audioCtx) return;
+      try {
+        var o = audioCtx.createOscillator();
+        var g = audioCtx.createGain();
+        o.type = type || "triangle";
+        o.frequency.value = freq;
+        g.gain.setValueAtTime(0, start);
+        g.gain.linearRampToValueAtTime(gain || 0.12, start + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.001, start + dur);
+        o.connect(g); g.connect(audioCtx.destination);
+        o.start(start); o.stop(start + dur + 0.02);
+      } catch (e) {}
+    }
+
+    function playMatchSound() {
+      if (!audioCtx) return;
+      var t = audioCtx.currentTime;
+      tone(523.25, t, 0.18, "triangle", 0.12);
+      tone(659.25, t + 0.12, 0.18, "triangle", 0.12);
+      tone(783.99, t + 0.24, 0.28, "triangle", 0.14);
+    }
+
+    function playWinSound() {
+      if (!audioCtx) return;
+      var t = audioCtx.currentTime;
+      var notes = [523.25, 659.25, 783.99, 1046.5];
+      for (var i = 0; i < notes.length; i++) tone(notes[i], t + i * 0.14, 0.28, "triangle", 0.14);
+    }
+
+    function playFlipTick() {
+      if (!audioCtx) return;
+      tone(640, audioCtx.currentTime, 0.08, "sine", 0.05);
+    }
+
+    function pickCarsForLevel(lvl, fresh) {
+      var n = PAIRS[lvl];
+      var pool = allCars();
+      if (forcedPick && forcedPick.length) {
+        var forced = [];
+        for (var f = 0; f < forcedPick.length; f++) {
+          var found = carById(forcedPick[f]);
+          if (found) forced.push(found);
+        }
+        forcedPick = null;
+        if (forced.length) {
+          levelCars = forced.slice(0, n);
+          return levelCars;
+        }
+      }
+      if (lvl === 0) {
+        levelCars = shuffle(pool.slice()).slice(0, n);
+      } else if (fresh) {
+        var prev = {};
+        levelCars.forEach(function (c) { prev[c.id] = true; });
+        var newer = shuffle(pool.filter(function (c) { return !prev[c.id]; }));
+        var older = shuffle(pool.filter(function (c) { return prev[c.id]; }));
+        var pick = newer.slice(0, n);
+        if (pick.length < n) pick = pick.concat(older.slice(0, n - pick.length));
+        levelCars = shuffle(pick);
+      } else {
+        var have = {};
+        var i;
+        for (i = 0; i < levelCars.length; i++) have[levelCars[i].id] = true;
+        var remaining = [];
+        for (i = 0; i < pool.length; i++) if (!have[pool[i].id]) remaining.push(pool[i]);
+        shuffle(remaining);
+        while (levelCars.length < n && remaining.length) levelCars.push(remaining.shift());
+        if (levelCars.length > n) levelCars = levelCars.slice(0, n);
+      }
+      return levelCars;
+    }
+
+    function startGame(lvl, fresh) {
+      if (advanceTimer) { clearTimeout(advanceTimer); advanceTimer = null; }
+      if (lvl === 0 && !fresh) roundCount = 0;
+      level = lvl;
+      matchedCount = 0;
+      flipped = [];
+      locked = false;
+      hideWin();
+      stopConfetti();
+      var chosen = pickCarsForLevel(level, fresh);
+      deck = shuffle(chosen.concat(chosen).map(function (c, i) {
+        return { uid: c.id + "-" + i, id: c.id, car: c };
+      }));
+      document.getElementById("start-screen").hidden = true;
+      document.getElementById("game-screen").hidden = false;
+      renderHUD();
+      renderGrid();
+      layoutGrid();
+      requestAnimationFrame(function () {
+        layoutGrid();
+        focusIndex = 0;
+        focusCard(0);
+      });
+    }
+
+    function renderHUD() {
+      document.getElementById("level-label").textContent = "Level " + (level + 1);
+      var pips = document.getElementById("pips");
+      pips.innerHTML = "";
+      for (var i = 0; i < 3; i++) {
+        var s = document.createElement("span");
+        s.className = "pip" + (i <= level ? " on" : "");
+        pips.appendChild(s);
+      }
+    }
+
+    function renderGrid() {
+      var grid = document.getElementById("grid");
+      grid.innerHTML = "";
+      deck.forEach(function (item, index) {
+        var btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "card";
+        btn.dataset.index = String(index);
+        btn.dataset.carId = item.id;
+        btn.setAttribute("aria-label", "Hidden car card");
+        var inner = document.createElement("div");
+        inner.className = "card-inner";
+        var back = document.createElement("div");
+        back.className = "face back";
+        back.innerHTML = cardBackSVG();
+        var front = document.createElement("div");
+        front.className = "face front";
+        fillArt(front, item.car);
+        inner.appendChild(back);
+        inner.appendChild(front);
+        btn.appendChild(inner);
+        btn.addEventListener("click", function () { onCardActivate(index); });
+        btn.addEventListener("focus", function () { focusIndex = index; });
+        grid.appendChild(btn);
+      });
+    }
+
+    function cards() {
+      return Array.prototype.slice.call(document.querySelectorAll(".card"));
+    }
+
+    function layoutGrid() {
+      var board = document.getElementById("board");
+      var grid = document.getElementById("grid");
+      var n = deck.length;
+      if (!n) return;
+      var w = board.clientWidth;
+      var h = board.clientHeight;
+      var aspect = w / Math.max(h, 1);
+      var cols, rows;
+      if (n === 4) { cols = 2; rows = 2; }
+      else if (n === 6) {
+        if (aspect >= 1.15) { cols = 3; rows = 2; } else { cols = 2; rows = 3; }
+      } else {
+        if (aspect >= 1.15) { cols = 4; rows = 2; }
+        else { cols = 2; rows = 4; }
+      }
+      if (cols * rows < n) { cols = Math.ceil(Math.sqrt(n)); rows = Math.ceil(n / cols); }
+      gridCols = cols;
+      var gap = Math.max(8, Math.min(22, Math.round(Math.min(w, h) * 0.025)));
+      var card = Math.floor(Math.min((w - gap * (cols + 1)) / cols, (h - gap * (rows + 1)) / rows));
+      card = Math.max(72, card);
+      grid.style.gridTemplateColumns = "repeat(" + cols + ", " + card + "px)";
+      grid.style.gap = gap + "px";
+      grid.style.setProperty("--card", card + "px");
+      var list = cards();
+      for (var i = 0; i < list.length; i++) list[i].style.setProperty("--card", card + "px");
+    }
+
+    function onCardActivate(index) {
+      if (locked) return;
+      if (document.getElementById("win-overlay").hidden === false) return;
+      if (!document.getElementById("settings-screen").hidden) return;
+      var item = deck[index];
+      var el = cards()[index];
+      if (!el || el.classList.contains("is-flipped") || el.classList.contains("is-matched")) return;
+
+      el.classList.add("is-flipped");
+      el.setAttribute("aria-label", displayFullName(item.car));
+      playFlipTick();
+      speakCar(item.car);
+      flipped.push(index);
+
+      if (flipped.length < 2) return;
+
+      var a = deck[flipped[0]];
+      var b = deck[flipped[1]];
+      if (a.id === b.id) {
+        locked = true;
+        var i0 = flipped[0], i1 = flipped[1];
+        flipped = [];
+        setTimeout(function () {
+          markMatched(i0);
+          markMatched(i1);
+          playMatchSound();
+          matchedCount += 1;
+          locked = false;
+          var won = matchedCount >= PAIRS[level];
+          setTimeout(function () {
+            speakCar(a.car);
+            if (won) setTimeout(onLevelWin, 2000);
+          }, 900);
+        }, 450);
+      } else {
+        locked = true;
+        var x0 = flipped[0], x1 = flipped[1];
+        flipped = [];
+        setTimeout(function () {
+          var list = cards();
+          if (list[x0]) {
+            list[x0].classList.remove("is-flipped");
+            list[x0].setAttribute("aria-label", "Hidden car card");
+          }
+          if (list[x1]) {
+            list[x1].classList.remove("is-flipped");
+            list[x1].setAttribute("aria-label", "Hidden car card");
+          }
+          locked = false;
+        }, 900);
+      }
+    }
+
+    function markMatched(index) {
+      var el = cards()[index];
+      if (!el) return;
+      el.classList.add("is-matched", "vroom");
+      el.setAttribute("aria-label", "Matched " + displayFullName(deck[index].car));
+      setTimeout(function () { el.classList.remove("vroom"); }, 800);
+    }
+
+    function onLevelWin() {
+      playWinSound();
+      playPhrase("greatJob", "Great job!");
+      startConfetti();
+      var top = level >= PAIRS.length - 1;
+      document.getElementById("win-sub").textContent = top
+        ? "Here come more cars!"
+        : "On to level " + (level + 2) + "!";
+      document.getElementById("next-btn").textContent = top ? "More cars" : "Next";
+      document.getElementById("win-overlay").hidden = false;
+      document.getElementById("next-btn").focus();
+      if (top) {
+        if (advanceTimer) clearTimeout(advanceTimer);
+        advanceTimer = setTimeout(function () {
+          advanceTimer = null;
+          if (!document.getElementById("win-overlay").hidden && !settingsOpen()) onNext();
+        }, 3500);
+      }
+    }
+
+    function hideWin() {
+      document.getElementById("win-overlay").hidden = true;
+    }
+
+    function focusCard(index) {
+      var list = cards();
+      if (!list.length) return;
+      focusIndex = (index + list.length) % list.length;
+      list[focusIndex].focus();
+    }
+
+    function settingsOpen() {
+      return !document.getElementById("settings-screen").hidden;
+    }
+
+    function moveFocus(dx, dy) {
+      if (settingsOpen()) return;
+      if (!document.getElementById("win-overlay").hidden) {
+        document.getElementById("next-btn").focus();
+        return;
+      }
+      if (!document.getElementById("start-screen").hidden) {
+        document.getElementById("play-btn").focus();
+        return;
+      }
+      var list = cards();
+      if (!list.length) return;
+      var cols = gridCols || 2;
+      var rows = Math.ceil(list.length / cols);
+      var x = focusIndex % cols;
+      var y = Math.floor(focusIndex / cols);
+      x = (x + dx + cols) % cols;
+      y = (y + dy + rows) % rows;
+      var next = y * cols + x;
+      if (next >= list.length) next = list.length - 1;
+      focusCard(next);
+    }
+
+    function activateFocused() {
+      if (settingsOpen()) return;
+      if (!document.getElementById("win-overlay").hidden) {
+        document.getElementById("next-btn").click();
+        return;
+      }
+      if (!document.getElementById("start-screen").hidden) {
+        document.getElementById("play-btn").click();
+        return;
+      }
+      onCardActivate(focusIndex);
+    }
+
+    function onNext() {
+      hideWin();
+      stopConfetti();
+      if (advanceTimer) { clearTimeout(advanceTimer); advanceTimer = null; }
+      if (level >= PAIRS.length - 1) {
+        roundCount += 1;
+        startGame(PAIRS.length - 1, true);
+      } else {
+        startGame(level + 1);
+      }
+    }
+
+    function mediaStatus(car) {
+      var entry = customMedia[car.id] || {};
+      var hasImg = !!entry.imageUrl;
+      var hasAud = !!entry.audioUrl;
+      if (hasImg && hasAud) return "Custom picture and sound";
+      if (hasImg) return "Custom picture, default voice";
+      if (hasAud) return (car.custom ? "Letter card, custom sound" : "Default picture, custom sound");
+      if (car.custom) return "Letter card, built-in voice";
+      return "Default picture and voice";
+    }
+
+    function isIosDevice() {
+      var ua = navigator.userAgent || "";
+      return /iPad|iPhone|iPod/.test(ua) || /CriOS|FxiOS|EdgiOS/.test(ua) ||
+        (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    }
+
+    function pickRecorderMime() {
+      if (typeof MediaRecorder === "undefined") return "";
+      var types = isIosDevice()
+        ? ["audio/mp4", "audio/mp4;codecs=mp4a.40.2", "audio/aac", "audio/webm"]
+        : ["audio/webm;codecs=opus", "audio/webm", "audio/mp4"];
+      for (var i = 0; i < types.length; i++) {
+        try {
+          if (MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(types[i])) return types[i];
+        } catch (e) {}
+      }
+      return "";
+    }
+
+    function recordingSupported() {
+      return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder);
+    }
+
+    function recMessage(text, carId) {
+      var row = document.querySelector('.settings-row[data-car-id="' + carId + '"] .rec-msg');
+      if (row) row.textContent = text || "";
+    }
+
+    function updateRecButtons() {
+      var active = recState.carId;
+      var recBtns = document.querySelectorAll("[data-role=record]");
+      var stopBtns = document.querySelectorAll("[data-role=stop]");
+      var i, el, id;
+      for (i = 0; i < recBtns.length; i++) {
+        el = recBtns[i];
+        id = el.getAttribute("data-car");
+        el.disabled = !!active;
+      }
+      for (i = 0; i < stopBtns.length; i++) {
+        el = stopBtns[i];
+        id = el.getAttribute("data-car");
+        el.disabled = !active || id !== active;
+      }
+      var indicators = document.querySelectorAll(".rec-indicator");
+      for (i = 0; i < indicators.length; i++) {
+        var ind = indicators[i];
+        var on = active && ind.getAttribute("data-car") === active;
+        ind.classList.toggle("on", !!on);
+      }
+    }
+
+    function stopRecTracks() {
+      if (recState.stream) {
+        try {
+          recState.stream.getTracks().forEach(function (tr) { tr.stop(); });
+        } catch (e) {}
+      }
+      recState.stream = null;
+    }
+
+    function finishRecording(blob) {
+      var carId = recState.carId;
+      recState.carId = null;
+      recState.recorder = null;
+      recState.chunks = [];
+      if (recState.timer) { clearTimeout(recState.timer); recState.timer = null; }
+      if (recState.tick) { clearInterval(recState.tick); recState.tick = null; }
+      stopRecTracks();
+      updateRecButtons();
+      if (!carId || !blob || !blob.size) {
+        if (carId) recMessage("I couldn't save that clip. You can try again, or I'll use the built-in voice.", carId);
+        return Promise.resolve();
+      }
+      return saveCustom(carId, { audio: blob }).then(function () {
+        renderSettings();
+        refreshVisibleArt();
+      }).catch(function () {
+        recMessage("I couldn't save that clip. You can try again, or I'll use the built-in voice.", carId);
+      });
+    }
+
+    function stopRecording() {
+      return new Promise(function (resolve) {
+        if (!recState.recorder) {
+          recState.carId = null;
+          stopRecTracks();
+          if (recState.timer) { clearTimeout(recState.timer); recState.timer = null; }
+          if (recState.tick) { clearInterval(recState.tick); recState.tick = null; }
+          updateRecButtons();
+          resolve();
+          return;
+        }
+        var rec = recState.recorder;
+        rec.onstop = function () {
+          var type = rec.mimeType || recState.mime || "audio/webm";
+          var blob = new Blob(recState.chunks, { type: type });
+          finishRecording(blob).then(resolve, resolve);
+        };
+        try { rec.stop(); } catch (e) { finishRecording(null).then(resolve, resolve); }
+      });
+    }
+
+    function startRecording(carId) {
+      if (recState.carId) {
+        recMessage("Stop the current recording first.", recState.carId);
+        return;
+      }
+      recMessage("", carId);
+      if (!recordingSupported()) {
+        recMessage("This browser can't record audio here. You can choose a sound file instead, or I'll use the built-in voice.", carId);
+        return;
+      }
+      stopSpeechAndAudio();
+      var mime = pickRecorderMime();
+      navigator.mediaDevices.getUserMedia({ audio: true, video: false }).then(function (stream) {
+        recState.stream = stream;
+        recState.chunks = [];
+        recState.mime = mime;
+        recState.carId = carId;
+        var opts = mime ? { mimeType: mime } : undefined;
+        var rec;
+        try { rec = opts ? new MediaRecorder(stream, opts) : new MediaRecorder(stream); }
+        catch (err) { rec = new MediaRecorder(stream); }
+        recState.recorder = rec;
+        rec.ondataavailable = function (e) {
+          if (e.data && e.data.size) recState.chunks.push(e.data);
+        };
+        rec.onerror = function () {
+          recMessage("Something went wrong while recording. You can try again, or I'll use the built-in voice.", carId);
+          stopRecording();
+        };
+        rec.start(200);
+        var started = Date.now();
+        recState.timer = setTimeout(function () { stopRecording(); }, 10000);
+        recState.tick = setInterval(function () {
+          var sec = Math.min(10, Math.ceil((Date.now() - started) / 1000));
+          var label = document.querySelector('.settings-row[data-car-id="' + carId + '"] .rec-label');
+          if (label) label.textContent = "Recording… " + sec + "s";
+        }, 200);
+        updateRecButtons();
+        var label = document.querySelector('.settings-row[data-car-id="' + carId + '"] .rec-label');
+        if (label) label.textContent = "Recording… 1s";
+      }).catch(function (err) {
+        recState.carId = null;
+        stopRecTracks();
+        updateRecButtons();
+        var name = (err && err.name) || "";
+        var msg;
+        if (name === "NotAllowedError" || name === "PermissionDeniedError" || name === "SecurityError") {
+          msg = "I couldn't use the microphone. Check the browser permission, or use Choose sound instead. The built-in voice will play until a clip is saved.";
+        } else if (name === "NotFoundError" || name === "DevicesNotFoundError") {
+          msg = "I couldn't find a microphone. You can choose a sound file instead, or I'll use the built-in voice.";
+        } else {
+          msg = "Recording isn't available right now. You can choose a sound file instead, or I'll use the built-in voice.";
+        }
+        recMessage(msg, carId);
+        if (!document.querySelector('.settings-row[data-car-id="' + carId + '"] .rec-msg')) {
+          renderSettings();
+          recMessage(msg, carId);
+        }
+      });
+    }
+
+    function bindNameField(input, car) {
+      var timer = null;
+      function commit() {
+        var value = input.value.trim().slice(0, 40);
+        if (car.custom) {
+          if (!value) {
+            value = "New friend";
+            input.value = value;
+          }
+        }
+        return saveCustom(car.id, { name: value }).then(function () {
+          var live = carById(car.id) || car;
+          var row = input.closest(".settings-row");
+          if (row) {
+            var h3 = row.querySelector("h3");
+            var lineEl = row.querySelector(".settings-line");
+            if (h3) h3.textContent = displayFullName(live);
+            if (lineEl) {
+              var like = customSayLike(live);
+              lineEl.textContent = like ? ("Sounds like: " + like) : "";
+              lineEl.hidden = !like;
+            }
+            var preview = row.querySelector(".settings-preview");
+            var entry = customMedia[car.id] || {};
+            if (preview && !entry.imageUrl) fillArt(preview, live);
+          }
+          refreshCardLabels();
+          refreshAutoClip(live);
+        });
+      }
+      input.addEventListener("input", function () {
+        if (timer) clearTimeout(timer);
+        timer = setTimeout(commit, 300);
+      });
+      input.addEventListener("change", commit);
+      input.addEventListener("blur", commit);
+    }
+
+    function bindSayLikeField(input, car) {
+      var timer = null;
+      function commit() {
+        var value = input.value.trim().slice(0, 80);
+        return saveCustom(car.id, { sayLike: value }).then(function () {
+          var live = carById(car.id) || car;
+          var row = input.closest(".settings-row");
+          var lineEl = row && row.querySelector(".settings-line");
+          if (lineEl) {
+            var like = customSayLike(live);
+            lineEl.textContent = like ? ("Sounds like: " + like) : "";
+            lineEl.hidden = !like;
+          }
+          refreshAutoClip(live);
+        });
+      }
+      input.addEventListener("input", function () {
+        if (timer) clearTimeout(timer);
+        timer = setTimeout(commit, 300);
+      });
+      input.addEventListener("change", commit);
+      input.addEventListener("blur", commit);
+    }
+
+    function bindLineField(input, car) {
+      var timer = null;
+      function commit() {
+        var value = input.value.trim().slice(0, 80);
+        return saveCustom(car.id, { line: value }).then(function () {
+          var row = input.closest(".settings-row");
+          var lineEl = row && row.querySelector(".settings-line");
+          if (lineEl) lineEl.textContent = spokenLine(carById(car.id) || car);
+          refreshAutoClip(carById(car.id) || car);
+        });
+      }
+      input.addEventListener("input", function () {
+        if (timer) clearTimeout(timer);
+        timer = setTimeout(commit, 300);
+      });
+      input.addEventListener("change", commit);
+      input.addEventListener("blur", commit);
+    }
+
+    function addCustomCard() {
+      var id = newCustomId();
+      var pal = paletteFor(id);
+      return saveCustom(id, {
+        custom: true,
+        name: "New friend",
+        line: "",
+        color: pal.color,
+        dark: pal.dark,
+        light: pal.light,
+        window: pal.window
+      }).then(function () {
+        renderSettings();
+        refreshAutoClip(carById(id));
+        var input = document.querySelector('.settings-row[data-car-id="' + id + '"] .name-input');
+        if (input) {
+          input.focus();
+          input.select();
+          var row = input.closest(".settings-row");
+          if (row && row.scrollIntoView) row.scrollIntoView({ block: "nearest" });
+        }
+        return id;
+      });
+    }
+
+    function renderCarSettings(car, list) {
+      var row = document.createElement("div");
+      row.className = "settings-row" + (car.custom ? " custom-row" : "");
+      row.dataset.carId = car.id;
+
+      var previewWrap = document.createElement("div");
+      previewWrap.className = "settings-preview-wrap";
+      var preview = document.createElement("div");
+      preview.className = "settings-preview";
+      preview.setAttribute("role", "button");
+      preview.setAttribute("tabindex", "0");
+      preview.setAttribute("aria-label", "Change photo for " + displayFullName(car));
+      preview.setAttribute("data-role", "preview");
+      preview.setAttribute("data-car", car.id);
+      fillArt(preview, car);
+      var badge = document.createElement("span");
+      badge.className = "preview-badge";
+      badge.setAttribute("aria-hidden", "true");
+      badge.innerHTML = '<svg viewBox="0 0 24 24" width="15" height="15" focusable="false"><path fill="currentColor" d="M9 4l-.9 1.4H6.5A2.5 2.5 0 004 7.9v8.6A2.5 2.5 0 006.5 19h11a2.5 2.5 0 002.5-2.5V7.9a2.5 2.5 0 00-2.5-2.5h-1.6L15 4H9zm3 5.2a4.3 4.3 0 110 8.6 4.3 4.3 0 010-8.6zm0 1.8a2.5 2.5 0 100 5 2.5 2.5 0 000-5z"/></svg>';
+      var hint = document.createElement("span");
+      hint.className = "preview-hint";
+      hint.textContent = "Tap to change";
+      previewWrap.appendChild(preview);
+      previewWrap.appendChild(badge);
+      previewWrap.appendChild(hint);
+
+      var meta = document.createElement("div");
+      meta.className = "settings-meta";
+
+      var h3 = document.createElement("h3");
+      h3.textContent = displayFullName(car);
+      var lineP = document.createElement("p");
+      lineP.className = "settings-line";
+      var likeNow = customSayLike(car);
+      lineP.textContent = likeNow ? ("Sounds like: " + likeNow) : "";
+      lineP.hidden = !likeNow;
+      var status = document.createElement("p");
+      status.className = "settings-status";
+      status.textContent = mediaStatus(car);
+      meta.appendChild(h3);
+      meta.appendChild(lineP);
+      meta.appendChild(status);
+
+      var nameField = document.createElement("div");
+      nameField.className = "name-field";
+      var nameLab = document.createElement("label");
+      nameLab.setAttribute("for", "name-" + car.id);
+      nameLab.textContent = "Name";
+      var nameInput = document.createElement("input");
+      nameInput.type = "text";
+      nameInput.className = "name-input";
+      nameInput.id = "name-" + car.id;
+      nameInput.maxLength = 40;
+      nameInput.autocomplete = "off";
+      nameInput.spellcheck = false;
+      nameInput.setAttribute("data-role", "name");
+      nameInput.setAttribute("data-car", car.id);
+      var existingName = customName(car);
+      nameInput.placeholder = car.custom ? "New friend" : car.name;
+      nameInput.value = existingName;
+      nameField.appendChild(nameLab);
+      nameField.appendChild(nameInput);
+      meta.appendChild(nameField);
+      bindNameField(nameInput, car);
+
+      var sayField = document.createElement("div");
+      sayField.className = "say-field";
+      var sayLab = document.createElement("label");
+      sayLab.setAttribute("for", "say-" + car.id);
+      sayLab.textContent = "Say it like";
+      var sayRow = document.createElement("div");
+      sayRow.className = "say-row";
+      var sayInput = document.createElement("input");
+      sayInput.type = "text";
+      sayInput.className = "say-input";
+      sayInput.id = "say-" + car.id;
+      sayInput.maxLength = 80;
+      sayInput.autocomplete = "off";
+      sayInput.spellcheck = false;
+      sayInput.setAttribute("data-role", "saylike");
+      sayInput.setAttribute("data-car", car.id);
+      sayInput.placeholder = "how it should sound, e.g. Tug-er";
+      sayInput.value = customSayLike(car);
+      var sayTest = document.createElement("button");
+      sayTest.type = "button";
+      sayTest.className = "btn-mini primary";
+      sayTest.setAttribute("data-role", "say-test");
+      sayTest.setAttribute("data-car", car.id);
+      sayTest.setAttribute("aria-label", "Play how the name sounds");
+      sayTest.textContent = "Test";
+      sayTest.addEventListener("click", function () {
+        unlockMedia();
+        var live = carById(car.id) || car;
+        if (needsAutoClip(live)) refreshAutoClip(live, true);
+        playPronunciation(live);
+      });
+      sayRow.appendChild(sayInput);
+      sayRow.appendChild(sayTest);
+      sayField.appendChild(sayLab);
+      sayField.appendChild(sayRow);
+      meta.appendChild(sayField);
+      bindSayLikeField(sayInput, car);
+
+      if (customMedia[car.id] && (customMedia[car.id].imageBlob || customMedia[car.id].imageOriginalBlob)) {
+        var cutLab = document.createElement("label");
+        cutLab.className = "cutout-toggle";
+        var cutBox = document.createElement("input");
+        cutBox.type = "checkbox";
+        cutBox.setAttribute("data-role", "cutout");
+        cutBox.setAttribute("data-car", car.id);
+        cutBox.checked = customMedia[car.id].removeWhite !== false;
+        var cutTxt = document.createElement("span");
+        cutTxt.textContent = "Remove white background";
+        cutLab.appendChild(cutBox);
+        cutLab.appendChild(cutTxt);
+        cutBox.addEventListener("change", function () {
+          saveCustom(car.id, { removeWhite: cutBox.checked }).then(function () {
+            return reprocessCardImage(car.id);
+          }).then(function () {
+            renderSettings();
+            refreshVisibleArt();
+          });
+        });
+        meta.appendChild(cutLab);
+      }
+
+      var btns = document.createElement("div");
+      btns.className = "settings-btns";
+
+      var imgInput = document.createElement("input");
+      imgInput.type = "file";
+      imgInput.accept = "image/*";
+      imgInput.className = "sr-file";
+      imgInput.setAttribute("data-role", "image");
+      imgInput.setAttribute("data-car", car.id);
+      imgInput.id = "file-image-" + car.id;
+
+      var camInput = document.createElement("input");
+      camInput.type = "file";
+      camInput.accept = "image/*";
+      camInput.setAttribute("capture", "environment");
+      camInput.className = "sr-file";
+      camInput.setAttribute("data-role", "camera");
+      camInput.setAttribute("data-car", car.id);
+      camInput.id = "file-camera-" + car.id;
+
+      var audInput = document.createElement("input");
+      audInput.type = "file";
+      audInput.removeAttribute("accept"); // iOS greys out MP3s with an accept filter; allow any file
+      audInput.className = "sr-file";
+      audInput.setAttribute("data-role", "audio");
+      audInput.setAttribute("data-car", car.id);
+      audInput.id = "file-audio-" + car.id;
+
+      function mini(label, cls, onClick, role) {
+        var b = document.createElement("button");
+        b.type = "button";
+        b.className = "btn-mini" + (cls ? " " + cls : "");
+        b.textContent = label;
+        if (role) {
+          b.setAttribute("data-role", role);
+          b.setAttribute("data-car", car.id);
+        }
+        b.addEventListener("click", onClick);
+        return b;
+      }
+
+      function openPhotoPicker() { imgInput.click(); }
+      preview.addEventListener("click", openPhotoPicker);
+      previewWrap.addEventListener("click", function (e) {
+        if (e.target === preview || preview.contains(e.target)) return;
+        openPhotoPicker();
+      });
+      preview.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); imgInput.click(); }
+      });
+      btns.appendChild(mini("Take photo", "primary", function () { camInput.click(); }));
+      btns.appendChild(mini("Choose sound", "primary", function () { audInput.click(); }));
+      btns.appendChild(mini("Record", "record", function () { startRecording(car.id); }, "record"));
+      var stopBtn = mini("Stop", "stop", function () { stopRecording(); }, "stop");
+      stopBtn.disabled = recState.carId !== car.id;
+      btns.appendChild(stopBtn);
+
+      var entry = customMedia[car.id] || {};
+      var playBtn = mini("Play sound", "", function () { speakCar(carById(car.id) || car); });
+      playBtn.setAttribute("data-role", "play");
+      btns.appendChild(playBtn);
+
+      if (car.custom) {
+        btns.appendChild(mini("Delete", "warn", function () {
+          var box = row.querySelector(".delete-confirm");
+          if (box) box.hidden = false;
+        }, "delete"));
+      } else {
+        btns.appendChild(mini("Clear", "warn", function () {
+          saveCustom(car.id, { image: null, imageOriginal: null, audio: null }).then(function () {
+            renderSettings();
+            refreshVisibleArt();
+          });
+        }));
+      }
+
+      var recInd = document.createElement("div");
+      recInd.className = "rec-indicator" + (recState.carId === car.id ? " on" : "");
+      recInd.setAttribute("data-car", car.id);
+      recInd.innerHTML = '<span class="rec-dot" aria-hidden="true"></span><span class="rec-label">Recording…</span>';
+
+      var recMsg = document.createElement("p");
+      recMsg.className = "rec-msg";
+
+      function onImage(file) {
+        if (!file) return;
+        var cutBox = row.querySelector('input[data-role=cutout]');
+        var cut = cutBox ? cutBox.checked : true;
+        applyPickedImage(car, file, cut).then(function () {
+          renderSettings();
+          refreshVisibleArt();
+        }).catch(function () { renderSettings(); });
+      }
+      imgInput.addEventListener("change", function () {
+        var file = imgInput.files && imgInput.files[0];
+        imgInput.value = "";
+        onImage(file);
+      });
+      camInput.addEventListener("change", function () {
+        var file = camInput.files && camInput.files[0];
+        camInput.value = "";
+        onImage(file);
+      });
+      audInput.addEventListener("change", function () {
+        var file = audInput.files && audInput.files[0];
+        audInput.value = "";
+        if (!file) return;
+        saveCustom(car.id, { audio: file }).then(function () {
+          renderSettings();
+          refreshVisibleArt();
+        }).catch(function () { renderSettings(); });
+      });
+
+      meta.appendChild(btns);
+      meta.appendChild(recInd);
+      meta.appendChild(recMsg);
+      meta.appendChild(imgInput);
+      meta.appendChild(camInput);
+      meta.appendChild(audInput);
+
+      if (car.custom) {
+        var delBox = document.createElement("div");
+        delBox.className = "delete-confirm";
+        delBox.hidden = true;
+        delBox.innerHTML = "<p>Delete this card?</p>";
+        var delBtns = document.createElement("div");
+        delBtns.className = "settings-btns";
+        var yes = document.createElement("button");
+        yes.type = "button";
+        yes.className = "btn-mini warn";
+        yes.textContent = "Yes, delete";
+        yes.setAttribute("data-role", "delete-yes");
+        yes.setAttribute("data-car", car.id);
+        yes.addEventListener("click", function () {
+          if (recState.carId === car.id) stopRecording();
+          deleteCustomCard(car.id).then(function () {
+            renderSettings();
+            refreshVisibleArt();
+          });
+        });
+        var no = document.createElement("button");
+        no.type = "button";
+        no.className = "btn-mini";
+        no.textContent = "Cancel";
+        no.addEventListener("click", function () { delBox.hidden = true; });
+        delBtns.appendChild(yes);
+        delBtns.appendChild(no);
+        delBox.appendChild(delBtns);
+        meta.appendChild(delBox);
+      }
+
+      row.appendChild(previewWrap);
+      row.appendChild(meta);
+      list.appendChild(row);
+    }
+
+    function renderSettings() {
+      var list = document.getElementById("settings-list");
+      var customList = document.getElementById("settings-custom-list");
+      list.innerHTML = "";
+      if (customList) customList.innerHTML = "";
+      CARS.forEach(function (car) { renderCarSettings(car, list); });
+      extraCars.forEach(function (car) { renderCarSettings(car, customList || list); });
+      updateRecButtons();
+    }
+
+
+    function openSettings() {
+      document.getElementById("reset-confirm").hidden = true;
+      refreshVoices();
+      renderSettings();
+      updateSyncUi();
+      var screen = document.getElementById("settings-screen");
+      screen.hidden = false;
+      screen.scrollTop = 0;
+      var heading = screen.querySelector("h2");
+      if (heading) {
+        heading.setAttribute("tabindex", "-1");
+        heading.focus({ preventScroll: true });
+      }
+      screen.scrollTop = 0;
+    }
+
+    function closeSettings() {
+      stopRecording().then(function () {
+        document.getElementById("settings-screen").hidden = true;
+        document.getElementById("reset-confirm").hidden = true;
+        refreshVisibleArt();
+        if (!document.getElementById("start-screen").hidden) {
+          document.getElementById("play-btn").focus();
+        } else if (!document.getElementById("win-overlay").hidden) {
+          document.getElementById("next-btn").focus();
+        } else {
+          focusCard(focusIndex);
+        }
+      });
+    }
+
+    var holdTimer = null;
+    var gear = document.getElementById("settings-btn");
+
+    function startHold(e) {
+      if (e && e.button != null && e.button !== 0) return;
+      if (holdTimer) clearTimeout(holdTimer);
+      gear.classList.remove("holding");
+      void gear.offsetWidth;
+      gear.classList.add("holding");
+      holdTimer = setTimeout(function () {
+        holdTimer = null;
+        gear.classList.remove("holding");
+        if (settingsOpen()) closeSettings();
+        else openSettings();
+      }, 2000);
+    }
+
+    function endHold() {
+      if (holdTimer) {
+        clearTimeout(holdTimer);
+        holdTimer = null;
+      }
+      gear.classList.remove("holding");
+    }
+
+    gear.addEventListener("pointerdown", function (e) {
+      e.preventDefault();
+      try { gear.setPointerCapture(e.pointerId); } catch (err) {}
+      startHold(e);
+    });
+    gear.addEventListener("pointerup", endHold);
+    gear.addEventListener("pointercancel", endHold);
+    gear.addEventListener("lostpointercapture", endHold);
+    gear.addEventListener("contextmenu", function (e) { e.preventDefault(); });
+
+    document.getElementById("settings-done-btn").addEventListener("click", closeSettings);
+    document.getElementById("add-card-btn").addEventListener("click", function () { addCustomCard(); });
+    document.getElementById("voice-select").addEventListener("change", function (e) {
+      voicePref = e.target.value || "";
+      try {
+        if (voicePref) localStorage.setItem(VOICE_KEY, voicePref);
+        else localStorage.removeItem(VOICE_KEY);
+      } catch (err) {}
+    });
+    document.getElementById("voice-test-btn").addEventListener("click", function () {
+      unlockMedia();
+      speak("Hello Theo! Let's match the cars!");
+    });
+    bindSyncUi();
+    document.getElementById("reset-all-btn").addEventListener("click", function () {
+      document.getElementById("reset-confirm").hidden = false;
+    });
+    document.getElementById("reset-no").addEventListener("click", function () {
+      document.getElementById("reset-confirm").hidden = true;
+    });
+    document.getElementById("reset-yes").addEventListener("click", function () {
+      resetAllCustom().then(function () {
+        document.getElementById("reset-confirm").hidden = true;
+        renderSettings();
+        refreshVisibleArt();
+      });
+    });
+
+    function resizeFx() {
+      fx.width = window.innerWidth * (window.devicePixelRatio || 1);
+      fx.height = window.innerHeight * (window.devicePixelRatio || 1);
+      fx.style.width = window.innerWidth + "px";
+      fx.style.height = window.innerHeight + "px";
+      fxCtx.setTransform(window.devicePixelRatio || 1, 0, 0, window.devicePixelRatio || 1, 0, 0);
+    }
+
+    function startConfetti() {
+      resizeFx();
+      confettiBits = [];
+      var colors = ["#E53935", "#4FC3F7", "#F6C800", "#43A047", "#E07A3A", "#2E7D32", "#37474F", "#FFD54F", "#fff"];
+      var count = reduced ? 40 : 90;
+      for (var i = 0; i < count; i++) {
+        confettiBits.push({
+          x: Math.random() * window.innerWidth,
+          y: -20 - Math.random() * window.innerHeight * 0.4,
+          r: 5 + Math.random() * 8,
+          c: colors[i % colors.length],
+          vy: 1.6 + Math.random() * 3.2,
+          vx: -1.2 + Math.random() * 2.4,
+          rot: Math.random() * Math.PI,
+          vr: -0.12 + Math.random() * 0.24,
+          star: i % 3 === 0
+        });
+      }
+      confettiOn = true;
+      requestAnimationFrame(tickConfetti);
+    }
+
+    function stopConfetti() {
+      confettiOn = false;
+      confettiBits = [];
+      fxCtx.clearRect(0, 0, fx.width, fx.height);
+    }
+
+    function starPath(ctx, x, y, r, rot) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(rot);
+      ctx.beginPath();
+      for (var i = 0; i < 5; i++) {
+        var a = (i * 2 * Math.PI) / 5 - Math.PI / 2;
+        var b = a + Math.PI / 5;
+        ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+        ctx.lineTo(Math.cos(b) * r * 0.45, Math.sin(b) * r * 0.45);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function tickConfetti() {
+      if (!confettiOn) return;
+      var w = window.innerWidth, h = window.innerHeight;
+      fxCtx.clearRect(0, 0, w, h);
+      var alive = false;
+      for (var i = 0; i < confettiBits.length; i++) {
+        var p = confettiBits[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.rot += p.vr;
+        if (p.y < h + 30) alive = true;
+        fxCtx.fillStyle = p.c;
+        if (p.star) starPath(fxCtx, p.x, p.y, p.r, p.rot);
+        else {
+          fxCtx.beginPath();
+          fxCtx.arc(p.x, p.y, p.r * 0.7, 0, Math.PI * 2);
+          fxCtx.fill();
+        }
+      }
+      if (alive) requestAnimationFrame(tickConfetti);
+      else confettiOn = false;
+    }
+
+    document.addEventListener("keydown", function (e) {
+      var key = e.key;
+      if (settingsOpen()) {
+        if (key === "Escape") { e.preventDefault(); closeSettings(); }
+        return;
+      }
+      if (key === "ArrowLeft" || key === "ArrowRight" || key === "ArrowUp" || key === "ArrowDown" || key === " " || key === "Spacebar") {
+        e.preventDefault();
+      }
+      if (key === "ArrowLeft" || key === "a" || key === "A") moveFocus(-1, 0);
+      else if (key === "ArrowRight" || key === "d" || key === "D") moveFocus(1, 0);
+      else if (key === "ArrowUp" || key === "w" || key === "W") moveFocus(0, -1);
+      else if (key === "ArrowDown" || key === "s" || key === "S") moveFocus(0, 1);
+      else if (key === "Enter" || key === " " || key === "Spacebar") activateFocused();
+    });
+
+    var prevBtn = {};
+    var prevAxis = { x: 0, y: 0 };
+    var axisRepeat = 0;
+
+    function pressed(b) { return b && (b.pressed || b.value > 0.5); }
+
+    function pollPads() {
+      var pads = navigator.getGamepads ? navigator.getGamepads() : [];
+      for (var p = 0; p < pads.length; p++) {
+        var pad = pads[p];
+        if (!pad) continue;
+        var btns = pad.buttons || [];
+        var a = pressed(btns[0]) || pressed(btns[1]);
+        if (a && !prevBtn[p + "-a"]) activateFocused();
+        prevBtn[p + "-a"] = a;
+
+        var left = pressed(btns[14]) || (pad.axes[0] < -0.55);
+        var right = pressed(btns[15]) || (pad.axes[0] > 0.55);
+        var up = pressed(btns[12]) || (pad.axes[1] < -0.55);
+        var down = pressed(btns[13]) || (pad.axes[1] > 0.55);
+
+        var ax = left ? -1 : right ? 1 : 0;
+        var ay = up ? -1 : down ? 1 : 0;
+        if (ax !== prevAxis.x || ay !== prevAxis.y) {
+          if (ax || ay) moveFocus(ax, ay);
+          prevAxis.x = ax; prevAxis.y = ay;
+          axisRepeat = 0;
+        } else if (ax || ay) {
+          axisRepeat++;
+          if (axisRepeat === 18) { moveFocus(ax, ay); axisRepeat = 10; }
+        }
+      }
+      requestAnimationFrame(pollPads);
+    }
+
+    document.getElementById("play-btn").addEventListener("click", function () {
+      unlockMedia();
+      startGame(0);
+      playPhrase("letsMatch", "Let's match the cars!");
+    });
+    document.getElementById("next-btn").addEventListener("click", onNext);
+
+    window.addEventListener("resize", function () { setVH(); layoutGrid(); resizeFx(); });
+    window.addEventListener("orientationchange", function () { setTimeout(function () { setVH(); layoutGrid(); resizeFx(); }, 200); });
+    if (window.speechSynthesis) {
+      refreshVoices();
+      speechSynthesis.addEventListener("voiceschanged", refreshVoices);
+    }
+    window.addEventListener("gamepadconnected", function () {});
+
+    setVH();
+    resizeFx();
+    requestAnimationFrame(pollPads);
+
+    function paintHero() {
+      var hold = document.getElementById("hero-cars");
+      hold.innerHTML = "";
+      [carById("rosie"), carById("skye"), carById("sunny")].forEach(function (car) {
+        var d = document.createElement("div");
+        d.className = "car-wrap";
+        fillArt(d, car);
+        hold.appendChild(d);
+      });
+    }
+
+
+    function readSyncSettings() {
+      try {
+        syncBaseOverride = (localStorage.getItem(SYNC_URL_KEY) || "").trim().replace(/\/+$/, "");
+        syncFamilyKey = (localStorage.getItem(SYNC_KEY_KEY) || "").trim();
+      } catch (e) {
+        syncBaseOverride = "";
+        syncFamilyKey = "";
+      }
+    }
+
+    function persistSyncSettings() {
+      try {
+        if (syncBaseOverride) localStorage.setItem(SYNC_URL_KEY, syncBaseOverride);
+        else localStorage.removeItem(SYNC_URL_KEY);
+        if (syncFamilyKey) localStorage.setItem(SYNC_KEY_KEY, syncFamilyKey);
+        else localStorage.removeItem(SYNC_KEY_KEY);
+      } catch (e) {}
+    }
+
+    function syncConfigured() {
+      return (sameOriginSync || !!syncBaseOverride) && !!syncFamilyKey;
+    }
+
+    function syncRoot() {
+      return sameOriginSync ? "" : syncBaseOverride;
+    }
+
+    function updateSyncUi() {
+      var lead = document.getElementById("sync-lead");
+      var urlField = document.getElementById("sync-url-field");
+      var urlInput = document.getElementById("sync-url");
+      var keyInput = document.getElementById("sync-key");
+      var status = document.getElementById("sync-status");
+      if (!lead) return;
+      if (urlInput && document.activeElement !== urlInput) urlInput.value = syncBaseOverride;
+      if (keyInput && document.activeElement !== keyInput) keyInput.value = syncFamilyKey;
+      if (urlField) urlField.hidden = !!sameOriginSync;
+      if (sameOriginSync) {
+        lead.textContent = "This copy can share cards with other phones on your Wi-Fi. Type the family key shown in the server window on the computer, then tap Sync now.";
+      } else {
+        lead.textContent = "Optional. Leave this blank to keep everything on this device. To sync later (for example over Tailscale), enter the server URL and family key.";
+      }
+      if (status) {
+        status.classList.toggle("is-error", !!lastSyncError);
+        if (lastSyncError) status.textContent = lastSyncError;
+        else if (!syncConfigured()) {
+          status.textContent = sameOriginSync ? "Enter the family key to start syncing." : "Sync is off until you enter a server URL and family key.";
+        } else if (lastSyncAt) {
+          status.textContent = "Last synced " + new Date(lastSyncAt).toLocaleTimeString() + ".";
+        } else {
+          status.textContent = "Ready to sync.";
+        }
+      }
+    }
+
+    function detectSync() {
+      return fetch("/api/health", { headers: { Accept: "application/json" } })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (j) { sameOriginSync = !!(j && j.ok && j.service === "theo-sync"); })
+        .catch(function () { sameOriginSync = false; })
+        .then(function () { updateSyncUi(); });
+    }
+
+    function syncHeaders(isJson) {
+      var h = { Authorization: "Bearer " + syncFamilyKey };
+      if (isJson) h["Content-Type"] = "application/json";
+      return h;
+    }
+
+    function syncFetch(path, opts) {
+      return fetch(syncRoot() + path, opts || {}).then(function (r) {
+        if (r.status === 401) throw new Error("The family key was not accepted.");
+        return r;
+      });
+    }
+
+    function localUpdatedAt(id) {
+      var e = customMedia[id] || {};
+      return Number(e.updatedAt) || 0;
+    }
+
+    function recMetaPayload(id) {
+      var rec = customMedia[id] || {};
+      var car = carById(id);
+      return {
+        id: id,
+        updatedAt: rec.updatedAt || 0,
+        name: rec.name || "",
+        sayLike: rec.sayLike || "",
+        line: rec.line || "",
+        custom: !!(rec.custom || (car && car.custom)),
+        deleted: false,
+        color: (car && car.color) || rec.color || "",
+        dark: (car && car.dark) || rec.dark || "",
+        light: (car && car.light) || rec.light || "",
+        window: (car && car.window) || rec.window || "",
+        clearImage: !rec.imageBlob,
+        clearOriginal: !rec.imageOriginalBlob,
+        clearAudio: !rec.audioBlob,
+        removeWhite: rec.removeWhite !== false,
+        imageUpdatedAt: rec.imageUpdatedAt || 0,
+        originalUpdatedAt: rec.originalUpdatedAt || 0,
+        audioUpdatedAt: rec.audioUpdatedAt || 0
+      };
+    }
+
+    function scheduleSyncPush(id) {
+      if (!syncConfigured() || syncApplying || !id) return;
+      syncPushIds[id] = true;
+      if (syncPushTimer) clearTimeout(syncPushTimer);
+      syncPushTimer = setTimeout(function () {
+        syncPushTimer = null;
+        var ids = Object.keys(syncPushIds);
+        syncPushIds = {};
+        pushCards(ids).catch(function (e) {
+          lastSyncError = e.message || "Could not sync.";
+          updateSyncUi();
+        });
+      }, 800);
+    }
+
+    function pushCards(ids) {
+      if (!syncConfigured() || !ids || !ids.length) {
+        if (syncConfigured()) {
+          lastSyncAt = Date.now();
+          lastSyncError = "";
+          lastSyncOk = true;
+          updateSyncUi();
+        }
+        return Promise.resolve();
+      }
+      var chain = Promise.resolve();
+      ids.forEach(function (id) {
+        chain = chain.then(function () { return pushOneCard(id); });
+      });
+      return chain.then(function () {
+        lastSyncAt = Date.now();
+        lastSyncError = "";
+        lastSyncOk = true;
+        updateSyncUi();
+      });
+    }
+
+    function pushOneCard(id) {
+      var rec = customMedia[id];
+      if (!rec) return pushTombstone(id);
+      return syncFetch("/api/cards/" + encodeURIComponent(id), {
+        method: "PUT",
+        headers: syncHeaders(true),
+        body: JSON.stringify(recMetaPayload(id))
+      }).then(function (r) {
+        if (!r.ok) throw new Error("Could not save a card to the computer.");
+        return pushBlob(id, "image", rec.imageBlob).then(function () {
+          return pushBlob(id, "original", rec.imageOriginalBlob).then(function () {
+            return pushBlob(id, "audio", rec.audioBlob);
+          });
+        });
+      });
+    }
+
+    function pushBlob(id, kind, blob) {
+      if (!blob) return Promise.resolve();
+      var rec = customMedia[id] || {};
+      var ts = (kind === "image" ? rec.imageUpdatedAt : rec.audioUpdatedAt) || rec.updatedAt || Date.now();
+      return syncFetch("/api/cards/" + encodeURIComponent(id) + "/" + kind, {
+        method: "PUT",
+        headers: {
+          Authorization: "Bearer " + syncFamilyKey,
+          "Content-Type": blob.type || "application/octet-stream",
+          "X-Updated-At": String(ts)
+        },
+        body: blob
+      }).then(function (r) {
+        if (!r.ok) throw new Error("Could not save a " + kind + " to the computer.");
+      });
+    }
+
+    function pushTombstone(id) {
+      if (!syncConfigured()) return Promise.resolve();
+      return syncFetch("/api/cards/" + encodeURIComponent(id), {
+        method: "PUT",
+        headers: syncHeaders(true),
+        body: JSON.stringify({ id: id, updatedAt: Date.now(), deleted: true, custom: true })
+      }).then(function (r) {
+        if (!r.ok) throw new Error("Could not remove a card on the computer.");
+      });
+    }
+
+    function deleteCustomCardLocal(id) {
+      return idbDel(id).catch(function () {}).then(function () {
+        revokeMedia(customMedia[id]);
+        delete customMedia[id];
+        extraCars = extraCars.filter(function (c) { return c.id !== id; });
+      });
+    }
+
+    function applyRemoteCard(id, remote) {
+      if (remote.deleted) {
+        var isCustom = !!(remote.custom || (customMedia[id] && customMedia[id].custom) || (carById(id) && carById(id).custom) || String(id).indexOf("custom-") === 0);
+        if (isCustom) return deleteCustomCardLocal(id);
+        return saveCustom(id, { image: null, imageOriginal: null, audio: null, name: "", sayLike: "", line: "", updatedAt: remote.updatedAt, imageUpdatedAt: remote.updatedAt, audioUpdatedAt: remote.updatedAt });
+      }
+      var patch = {
+        name: remote.name || "",
+        sayLike: remote.sayLike || "",
+        line: remote.line || "",
+        custom: !!remote.custom,
+        removeWhite: remote.removeWhite !== false,
+        updatedAt: remote.updatedAt,
+        imageUpdatedAt: remote.imageUpdatedAt,
+        originalUpdatedAt: remote.originalUpdatedAt,
+        audioUpdatedAt: remote.audioUpdatedAt
+      };
+      if (remote.color) patch.color = remote.color;
+      if (remote.dark) patch.dark = remote.dark;
+      if (remote.light) patch.light = remote.light;
+      if (remote.window) patch.window = remote.window;
+      var fetches = [];
+      if (remote.hasImage) {
+        fetches.push(syncFetch("/api/cards/" + encodeURIComponent(id) + "/image", { headers: syncHeaders() }).then(function (r) {
+          return r.ok ? r.blob() : null;
+        }));
+      } else fetches.push(Promise.resolve(null));
+      if (remote.hasAudio) {
+        fetches.push(syncFetch("/api/cards/" + encodeURIComponent(id) + "/audio", { headers: syncHeaders() }).then(function (r) {
+          return r.ok ? r.blob() : null;
+        }));
+      } else fetches.push(Promise.resolve(null));
+      if (remote.hasOriginal) {
+        fetches.push(syncFetch("/api/cards/" + encodeURIComponent(id) + "/original", { headers: syncHeaders() }).then(function (r) {
+          return r.ok ? r.blob() : null;
+        }));
+      } else fetches.push(Promise.resolve(null));
+      return Promise.all(fetches).then(function (files) {
+        patch.image = files[0] || null;
+        patch.audio = files[1] || null;
+        patch.imageOriginal = files[2] || null;
+        return saveCustom(id, patch);
+      });
+    }
+
+    function syncNow() {
+      if (!syncConfigured()) {
+        lastSyncError = sameOriginSync ? "Enter the family key first." : "Enter a server URL and family key first.";
+        updateSyncUi();
+        return Promise.resolve(false);
+      }
+      lastSyncError = "";
+      return syncFetch("/api/sync", { headers: syncHeaders() }).then(function (r) {
+        if (!r.ok) throw new Error("Could not reach the family computer.");
+        return r.json();
+      }).then(function (data) {
+        var remote = (data && data.cards) || {};
+        var chain = Promise.resolve();
+        syncApplying = true;
+        Object.keys(remote).forEach(function (id) {
+          var rem = remote[id];
+          var loc = localUpdatedAt(id);
+          if ((rem.updatedAt || 0) > loc) {
+            chain = chain.then(function () { return applyRemoteCard(id, rem); });
+          }
+        });
+        return chain.then(function () {
+          syncApplying = false;
+          var toPush = [];
+          var ids = {};
+          Object.keys(customMedia).forEach(function (id) { ids[id] = true; });
+          Object.keys(remote).forEach(function (id) { ids[id] = true; });
+          Object.keys(ids).forEach(function (id) {
+            var rem = remote[id];
+            var loc = localUpdatedAt(id);
+            if (!customMedia[id]) return;
+            if (!rem || loc > (rem.updatedAt || 0)) toPush.push(id);
+          });
+          return pushCards(toPush);
+        }).then(function () {
+          refreshVisibleArt();
+          paintHero();
+          refreshAllAutoClips();
+          if (!document.getElementById("settings-screen").hidden) renderSettings();
+          lastSyncAt = Date.now();
+          lastSyncOk = true;
+          lastSyncError = "";
+          updateSyncUi();
+          return true;
+        });
+      }).catch(function (e) {
+        syncApplying = false;
+        lastSyncError = e.message || "Could not sync.";
+        lastSyncOk = false;
+        updateSyncUi();
+        return false;
+      });
+    }
+
+    function pushResetState(customIds) {
+      if (!syncConfigured()) return Promise.resolve();
+      var now = Date.now();
+      var chain = Promise.resolve();
+      (customIds || []).forEach(function (id) {
+        chain = chain.then(function () {
+          return syncFetch("/api/cards/" + encodeURIComponent(id), {
+            method: "PUT",
+            headers: syncHeaders(true),
+            body: JSON.stringify({ id: id, updatedAt: now, deleted: true, custom: true })
+          });
+        });
+      });
+      CARS.forEach(function (car) {
+        chain = chain.then(function () {
+          return syncFetch("/api/cards/" + encodeURIComponent(car.id), {
+            method: "PUT",
+            headers: syncHeaders(true),
+            body: JSON.stringify({
+              id: car.id, updatedAt: now, name: "", sayLike: "", line: "",
+              custom: false, deleted: false, clearImage: true, clearAudio: true
+            })
+          });
+        });
+      });
+      return chain.then(function () {
+        lastSyncAt = Date.now();
+        lastSyncError = "";
+        updateSyncUi();
+      }).catch(function (e) {
+        lastSyncError = e.message || "Could not sync the reset.";
+        updateSyncUi();
+      });
+    }
+
+    function bindSyncUi() {
+      var urlInput = document.getElementById("sync-url");
+      var keyInput = document.getElementById("sync-key");
+      var nowBtn = document.getElementById("sync-now-btn");
+      function commit() {
+        if (urlInput) syncBaseOverride = (urlInput.value || "").trim().replace(/\/+$/, "");
+        if (keyInput) syncFamilyKey = (keyInput.value || "").trim();
+        persistSyncSettings();
+        updateSyncUi();
+      }
+      if (urlInput) {
+        urlInput.addEventListener("change", commit);
+        urlInput.addEventListener("blur", commit);
+      }
+      if (keyInput) {
+        keyInput.addEventListener("change", commit);
+        keyInput.addEventListener("blur", commit);
+      }
+      if (nowBtn) nowBtn.addEventListener("click", function () { commit(); syncNow(); });
+      readSyncSettings();
+      updateSyncUi();
+    }
+
+    function getSyncStatus() {
+      return {
+        sameOrigin: sameOriginSync,
+        base: syncRoot(),
+        hasKey: !!syncFamilyKey,
+        configured: syncConfigured(),
+        lastSyncAt: lastSyncAt,
+        lastError: lastSyncError,
+        lastOk: lastSyncOk
+      };
+    }
+
+    paintHero();
+    loadAllCustom().then(function () {
+      return detectSync().then(function () {
+        if (syncConfigured()) return syncNow();
+      });
+    }).then(function () { paintHero(); refreshAllAutoClips(); });
+
+    document.getElementById("play-btn").focus();
+
+    window.TheoCarMatch = {
+      cars: CARS,
+      carSVG: carSVG,
+      placeholderSVG: placeholderSVG,
+      openSettings: openSettings,
+      closeSettings: closeSettings,
+      loadAllCustom: loadAllCustom,
+      saveCustom: saveCustom,
+      clearCustom: clearCustom,
+      resetAllCustom: resetAllCustom,
+      getCustomMedia: function () { return customMedia; },
+      voiceFor: voiceFor,
+      speakCar: speakCar,
+      spokenLine: spokenLine,
+      displayName: displayName,
+      displayFullName: displayFullName,
+      refreshVoices: refreshVoices,
+      allCars: allCars,
+      addCustomCard: addCustomCard,
+      deleteCustomCard: deleteCustomCard,
+      startRecording: startRecording,
+      stopRecording: stopRecording,
+      pickRecorderMime: pickRecorderMime,
+      startGame: startGame,
+      playWith: function (ids) { forcedPick = ids.slice(); startGame(0); },
+      soundSourcesFor: soundSourcesFor,
+      chosenVoice: chosenVoice,
+      rankedEnglishVoices: rankedEnglishVoices,
+      refreshAutoClip: refreshAutoClip,
+      customSayLike: customSayLike,
+      playPronunciation: playPronunciation,
+      pronunciationSources: pronunciationSources,
+      processCutout: processCutout,
+      applyPickedImage: applyPickedImage,
+      reprocessCardImage: reprocessCardImage,
+      syncNow: syncNow,
+      detectSync: detectSync,
+      getSyncStatus: getSyncStatus,
+      getState: function () { return { level: level, roundCount: roundCount, levelCars: levelCars.map(function (c) { return c.id; }) }; }
+    };
+
+  })();
+  </script>
+</body>
+</html>

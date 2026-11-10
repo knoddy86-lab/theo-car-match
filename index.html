@@ -335,6 +335,12 @@
       transform: rotateY(180deg);
       padding: 3% 2% 0;
     }
+    .front.has-photo, .settings-preview.has-photo, .hero-cars .car-wrap.has-photo {
+      background: linear-gradient(180deg, var(--photo-bg-light, #fff) 0%, var(--photo-bg, #e3f2fd) 100%);
+    }
+    .card.is-matched .front.has-photo {
+      background: linear-gradient(180deg, var(--photo-bg-light, #FFFDE7) 0%, var(--photo-bg, #FFE082) 100%);
+    }
     .card.is-matched .front {
       background: linear-gradient(180deg, #FFFDE7, #FFF8E1);
       box-shadow: inset 0 0 0 5px #FFD54F;
@@ -520,9 +526,16 @@
       display: grid;
       grid-template-columns: 92px 1fr;
       gap: 12px;
-      align-items: center;
+      align-items: start;
       padding: 12px 0;
       border-top: 2px solid #E8EAF6;
+    }
+    .settings-preview-wrap {
+      position: relative;
+      width: 92px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
     .settings-preview {
       width: 92px;
@@ -536,6 +549,30 @@
       overflow: hidden;
       padding: 2px;
       cursor: pointer;
+    }
+    .preview-badge {
+      position: absolute;
+      right: -4px;
+      top: 58px;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: #3949AB;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      box-shadow: 0 2px 0 #1A237E;
+      z-index: 1;
+    }
+    .preview-hint {
+      margin: 10px 0 0;
+      font-size: 11px;
+      font-weight: 800;
+      color: #3949AB;
+      text-align: center;
+      line-height: 1.15;
     }
     .settings-preview:focus {
       outline: 4px solid var(--focus);
@@ -605,6 +642,43 @@
       background: #fff;
     }
     .name-input:focus { outline: 4px solid var(--focus); outline-offset: 2px; }
+    .say-field { margin: 0 0 8px; }
+    .say-field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 800;
+      color: #3949AB;
+      margin: 0 0 4px;
+    }
+    .say-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .say-input {
+      flex: 1 1 160px;
+      max-width: 320px;
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 15px;
+      padding: 7px 10px;
+      border: 3px solid #C5CAE9;
+      border-radius: 12px;
+      color: #1A237E;
+      background: #fff;
+    }
+    .say-input:focus { outline: 4px solid var(--focus); outline-offset: 2px; }
+    .cutout-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 0 8px;
+      font-size: 13px;
+      font-weight: 800;
+      color: #3949AB;
+      cursor: pointer;
+    }
+    .cutout-toggle input {
+      width: 20px;
+      height: 20px;
+      accent-color: #3949AB;
+    }
     .rec-indicator {
       display: none;
       align-items: center;
@@ -633,6 +707,47 @@
       font-weight: 700;
       color: #6A1B9A;
     }
+    .sync-box {
+      margin: 18px 0 8px;
+      padding: 14px 14px 12px;
+      border-radius: 18px;
+      background: #E8F5E9;
+      border: 3px solid #A5D6A7;
+    }
+    .sync-box h3 {
+      margin: 0 0 6px;
+      font-size: clamp(16px, 2.6vmin, 20px);
+      color: #1B5E20;
+    }
+    .sync-lead, .sync-status {
+      margin: 0 0 8px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #2E7D32;
+    }
+    .sync-status { margin: 8px 0 0; color: #33691E; }
+    .sync-status.is-error { color: #C62828; }
+    .sync-field { margin: 0 0 8px; }
+    .sync-field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 800;
+      color: #1B5E20;
+      margin: 0 0 4px;
+    }
+    .sync-field input {
+      width: 100%;
+      max-width: 420px;
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 15px;
+      padding: 7px 10px;
+      border: 3px solid #A5D6A7;
+      border-radius: 12px;
+      color: #1B5E20;
+      background: #fff;
+    }
+    .sync-field input:focus { outline: 4px solid var(--focus); outline-offset: 2px; }
     .settings-actions {
       display: flex;
       flex-wrap: wrap;
@@ -794,7 +909,7 @@
     <section id="settings-screen" class="screen" hidden aria-label="Parent Settings">
       <div class="settings-panel">
         <h2>Parent Settings</h2>
-        <p class="settings-lead">Add your own names, pictures and sounds for each car, or add a new card. Everything stays on this device.</p>
+        <p class="settings-lead">Add your own names, pictures and sounds for each car, or add a new card. If a name is said wrong, type how it should sound under Say it like.</p>
         <div class="voice-picker">
           <label for="voice-select">Voice</label>
           <div class="voice-row">
@@ -809,6 +924,22 @@
           <p class="friends-lead">Add a photo of a family member, a pet, or a favourite toy.</p>
           <div id="settings-custom-list"></div>
           <button type="button" class="btn btn-add" id="add-card-btn">Add a card</button>
+        </div>
+        <div class="sync-box" id="sync-box">
+          <h3>Family sync</h3>
+          <p class="sync-lead" id="sync-lead"></p>
+          <div class="sync-field" id="sync-url-field">
+            <label for="sync-url">Server URL</label>
+            <input id="sync-url" type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://your-pc.ts.net" aria-label="Sync server URL">
+          </div>
+          <div class="sync-field">
+            <label for="sync-key">Family key</label>
+            <input id="sync-key" type="text" autocomplete="off" spellcheck="false" autocapitalize="off" placeholder="The key shown on the family computer" aria-label="Family key">
+          </div>
+          <div class="settings-btns">
+            <button type="button" class="btn-mini primary" id="sync-now-btn">Sync now</button>
+          </div>
+          <p class="sync-status" id="sync-status"></p>
         </div>
         <div class="settings-actions">
           <button type="button" class="btn btn-reset" id="reset-all-btn">Reset all</button>
@@ -870,6 +1001,17 @@
     var extraCars = [];
     var recState = { carId: null, recorder: null, stream: null, chunks: [], timer: null, tick: null, mime: "" };
     var forcedPick = null;
+    var syncApplying = false;
+    var SYNC_URL_KEY = "theo-car-match-sync-url";
+    var SYNC_KEY_KEY = "theo-car-match-sync-key";
+    var sameOriginSync = false;
+    var syncBaseOverride = "";
+    var syncFamilyKey = "";
+    var syncPushTimer = null;
+    var syncPushIds = {};
+    var lastSyncAt = 0;
+    var lastSyncError = "";
+    var lastSyncOk = false;
     var customAudioEl = null;
     var dbPromise = null;
     var confettiBits = [];
@@ -1180,19 +1322,27 @@
     }
 
     function recordToEntry(rec) {
-      if (!rec) return { imageUrl: "", audioUrl: "", imageBlob: null, audioBlob: null, name: "", line: "", autoText: "", autoSrc: "", custom: false };
+      if (!rec) return { imageUrl: "", audioUrl: "", imageBlob: null, audioBlob: null, imageOriginalBlob: null, name: "", line: "", sayLike: "", autoText: "", autoSrc: "", custom: false, updatedAt: 0, removeWhite: true };
       var imageBlob = rec.image || null;
       var audioBlob = rec.audio || null;
+      var imageOriginalBlob = rec.imageOriginal || null;
       var name = rec.name ? String(rec.name) : "";
       var line = rec.line ? String(rec.line) : "";
       return {
         imageBlob: imageBlob,
         audioBlob: audioBlob,
+        imageOriginalBlob: imageOriginalBlob,
         name: name,
         line: line,
+        sayLike: rec.sayLike ? String(rec.sayLike) : "",
         autoText: rec.autoText ? String(rec.autoText) : "",
         autoSrc: rec.autoSrc ? String(rec.autoSrc) : "",
         custom: !!rec.custom,
+        removeWhite: rec.removeWhite !== false,
+        updatedAt: rec.updatedAt || 0,
+        imageUpdatedAt: rec.imageUpdatedAt || 0,
+        audioUpdatedAt: rec.audioUpdatedAt || 0,
+        originalUpdatedAt: rec.originalUpdatedAt || 0,
         imageUrl: imageBlob ? URL.createObjectURL(imageBlob) : "",
         audioUrl: audioBlob ? URL.createObjectURL(audioBlob) : ""
       };
@@ -1255,11 +1405,16 @@
         return idbGet(id).catch(function () { return null; }).then(function (rec) {
           rec = rec && typeof rec === "object" ? rec : {};
           if (patch.image !== undefined) rec.image = patch.image || undefined;
+          if (patch.imageOriginal !== undefined) rec.imageOriginal = patch.imageOriginal || undefined;
+          if (patch.image !== undefined && !patch.image && patch.imageOriginal === undefined) rec.imageOriginal = undefined;
+          if (patch.removeWhite !== undefined) rec.removeWhite = patch.removeWhite !== false;
           if (patch.audio !== undefined) rec.audio = patch.audio || undefined;
           if (patch.name !== undefined) rec.name = (patch.name && String(patch.name).trim()) || undefined;
           if (patch.line !== undefined) rec.line = (patch.line && String(patch.line).trim()) || undefined;
+          if (patch.sayLike !== undefined) rec.sayLike = (patch.sayLike && String(patch.sayLike).trim()) || undefined;
           if (patch.autoText !== undefined) rec.autoText = patch.autoText || undefined;
           if (patch.autoSrc !== undefined) rec.autoSrc = patch.autoSrc || undefined;
+          if (patch.deleted !== undefined) rec.deleted = patch.deleted ? true : undefined;
           if (patch.custom !== undefined) rec.custom = patch.custom ? true : undefined;
           if (patch.color !== undefined) rec.color = patch.color;
           if (patch.dark !== undefined) rec.dark = patch.dark;
@@ -1268,13 +1423,24 @@
           if (patch.voiceIndex !== undefined) rec.voiceIndex = patch.voiceIndex;
           if (patch.rate !== undefined) rec.rate = patch.rate;
           if (patch.pitch !== undefined) rec.pitch = patch.pitch;
+          var userTouch = ["image","imageOriginal","audio","name","line","sayLike","custom","color","dark","light","window","deleted","removeWhite"];
+          var touched = false;
+          for (var ui = 0; ui < userTouch.length; ui++) if (patch[userTouch[ui]] !== undefined) touched = true;
+          if (patch.updatedAt !== undefined) rec.updatedAt = patch.updatedAt;
+          else if (touched) rec.updatedAt = Date.now();
+          if (patch.image !== undefined) rec.imageUpdatedAt = rec.updatedAt || Date.now();
+          if (patch.imageOriginal !== undefined) rec.originalUpdatedAt = rec.updatedAt || Date.now();
+          if (patch.audio !== undefined) rec.audioUpdatedAt = rec.updatedAt || Date.now();
+          if (patch.imageUpdatedAt !== undefined) rec.imageUpdatedAt = patch.imageUpdatedAt;
+          if (patch.originalUpdatedAt !== undefined) rec.originalUpdatedAt = patch.originalUpdatedAt;
+          if (patch.audioUpdatedAt !== undefined) rec.audioUpdatedAt = patch.audioUpdatedAt;
           if (rec.custom) {
             rec.custom = true;
             if (!rec.name) rec.name = "New friend";
             return idbSet(id, rec);
           }
-          if (!rec.name) { rec.autoText = undefined; rec.autoSrc = undefined; }
-          if (!rec.image && !rec.audio && !rec.name) return idbDel(id);
+          if (!rec.name && !rec.sayLike) { rec.autoText = undefined; rec.autoSrc = undefined; }
+          if (!rec.image && !rec.imageOriginal && !rec.audio && !rec.name && !rec.sayLike && !rec.deleted) return idbDel(id);
           return idbSet(id, rec);
         }).then(function () {
           return idbGet(id).catch(function () { return null; });
@@ -1288,6 +1454,7 @@
             if (idx >= 0) extraCars[idx] = car;
             else extraCars.push(car);
           }
+          if (!syncApplying) scheduleSyncPush(id);
         });
       });
       saveQueues[id] = next;
@@ -1302,6 +1469,7 @@
     }
 
     function resetAllCustom() {
+      var gone = extraCars.map(function (c) { return c.id; });
       return idbClear().catch(function () {}).then(function () {
         CARS.forEach(function (car) {
           revokeMedia(customMedia[car.id]);
@@ -1309,6 +1477,7 @@
         });
         extraCars.forEach(function (car) { revokeMedia(customMedia[car.id]); });
         extraCars = [];
+        return pushResetState(gone);
       });
     }
 
@@ -1317,6 +1486,7 @@
         revokeMedia(customMedia[id]);
         delete customMedia[id];
         extraCars = extraCars.filter(function (c) { return c.id !== id; });
+        if (!syncApplying) pushTombstone(id).catch(function () {});
       });
     }
 
@@ -1334,8 +1504,14 @@
       return customName(car) || car.fullName;
     }
 
+    function customSayLike(car) {
+      var entry = customMedia[car.id] || {};
+      var s = entry.sayLike ? String(entry.sayLike).trim() : "";
+      return s;
+    }
+
     function spokenLine(car) {
-      return displayFullName(car);
+      return customSayLike(car) || displayFullName(car);
     }
 
     function refreshCardLabels() {
@@ -1373,10 +1549,206 @@
       return car.custom ? placeholderSVG(car) : carSVG(car);
     }
 
+
+    var CUTOUT_MAX = 512;
+    var CUTOUT_TOLERANCE = 30;
+    var CUTOUT_FEATHER = 2;
+    var CUTOUT_PAD = 8;
+
+    function isNearWhitePixel(r, g, b, a, tol) {
+      if (a < 8) return true;
+      return (255 - r) <= tol && (255 - g) <= tol && (255 - b) <= tol;
+    }
+
+    function loadImageSource(blob) {
+      if (window.createImageBitmap) {
+        return createImageBitmap(blob, { imageOrientation: "from-image" }).catch(function () {
+          return createImageBitmap(blob).catch(function () { return loadImageTag(blob); });
+        });
+      }
+      return loadImageTag(blob);
+    }
+
+    function loadImageTag(blob) {
+      return new Promise(function (resolve, reject) {
+        var url = URL.createObjectURL(blob);
+        var img = new Image();
+        img.onload = function () { URL.revokeObjectURL(url); resolve(img); };
+        img.onerror = function () { URL.revokeObjectURL(url); reject(new Error("Could not read the photo")); };
+        img.src = url;
+      });
+    }
+
+    function canvasToPng(canvas) {
+      return new Promise(function (resolve, reject) {
+        if (canvas.toBlob) {
+          canvas.toBlob(function (blob) {
+            if (blob) resolve(blob);
+            else reject(new Error("Could not save the photo"));
+          }, "image/png");
+        } else {
+          try {
+            var data = canvas.toDataURL("image/png");
+            fetch(data).then(function (r) { return r.blob(); }).then(resolve, reject);
+          } catch (e) { reject(e); }
+        }
+      });
+    }
+
+    function fitCanvas(canvas, maxSize) {
+      var w = canvas.width, h = canvas.height;
+      var scale = Math.min(1, maxSize / Math.max(w, h));
+      if (scale >= 1) return canvas;
+      var out = document.createElement("canvas");
+      out.width = Math.max(1, Math.round(w * scale));
+      out.height = Math.max(1, Math.round(h * scale));
+      var ctx = out.getContext("2d");
+      ctx.imageSmoothingEnabled = true;
+      if (ctx.imageSmoothingQuality) ctx.imageSmoothingQuality = "high";
+      ctx.drawImage(canvas, 0, 0, out.width, out.height);
+      return out;
+    }
+
+    function processCutout(sourceBlob, opts) {
+      opts = opts || {};
+      var enabled = opts.enabled !== false;
+      var tol = opts.tolerance != null ? opts.tolerance : CUTOUT_TOLERANCE;
+      var feather = opts.feather != null ? opts.feather : CUTOUT_FEATHER;
+      var pad = opts.pad != null ? opts.pad : CUTOUT_PAD;
+      var maxSize = opts.maxSize || CUTOUT_MAX;
+      return loadImageSource(sourceBlob).then(function (img) {
+        var w = img.width || img.naturalWidth;
+        var h = img.height || img.naturalHeight;
+        if (!w || !h) throw new Error("Empty photo");
+        var workScale = Math.min(1, 1024 / Math.max(w, h));
+        var cw = Math.max(1, Math.round(w * workScale));
+        var ch = Math.max(1, Math.round(h * workScale));
+        var canvas = document.createElement("canvas");
+        canvas.width = cw;
+        canvas.height = ch;
+        var ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, cw, ch);
+        if (img.close) try { img.close(); } catch (e) {}
+        if (!enabled) return canvasToPng(fitCanvas(canvas, maxSize));
+
+        var imageData = ctx.getImageData(0, 0, cw, ch);
+        var data = imageData.data;
+        var visited = new Uint8Array(cw * ch);
+        var mask = new Uint8Array(cw * ch);
+        var queue = [];
+        function at(x, y) { return y * cw + x; }
+        function enqueue(x, y) {
+          if (x < 0 || y < 0 || x >= cw || y >= ch) return;
+          var i = at(x, y);
+          if (visited[i]) return;
+          visited[i] = 1;
+          var o = i * 4;
+          if (isNearWhitePixel(data[o], data[o + 1], data[o + 2], data[o + 3], tol)) {
+            mask[i] = 1;
+            queue.push(x, y);
+          }
+        }
+        var x, y, i, o;
+        for (x = 0; x < cw; x++) { enqueue(x, 0); enqueue(x, ch - 1); }
+        for (y = 0; y < ch; y++) { enqueue(0, y); enqueue(cw - 1, y); }
+        for (var q = 0; q < queue.length; q += 2) {
+          x = queue[q]; y = queue[q + 1];
+          enqueue(x - 1, y); enqueue(x + 1, y); enqueue(x, y - 1); enqueue(x, y + 1);
+        }
+
+        var dist = null;
+        if (feather > 0) {
+          dist = new Float32Array(cw * ch);
+          for (i = 0; i < cw * ch; i++) dist[i] = mask[i] ? 0 : 1e9;
+          for (var pass = 0; pass < feather + 1; pass++) {
+            for (y = 0; y < ch; y++) {
+              for (x = 0; x < cw; x++) {
+                i = at(x, y);
+                if (mask[i]) continue;
+                var d = dist[i];
+                if (x > 0) d = Math.min(d, dist[i - 1] + 1);
+                if (y > 0) d = Math.min(d, dist[i - cw] + 1);
+                if (x < cw - 1) d = Math.min(d, dist[i + 1] + 1);
+                if (y < ch - 1) d = Math.min(d, dist[i + cw] + 1);
+                dist[i] = d;
+              }
+            }
+            for (y = ch - 1; y >= 0; y--) {
+              for (x = cw - 1; x >= 0; x--) {
+                i = at(x, y);
+                if (mask[i]) continue;
+                var d2 = dist[i];
+                if (x > 0) d2 = Math.min(d2, dist[i - 1] + 1);
+                if (y > 0) d2 = Math.min(d2, dist[i - cw] + 1);
+                if (x < cw - 1) d2 = Math.min(d2, dist[i + 1] + 1);
+                if (y < ch - 1) d2 = Math.min(d2, dist[i + cw] + 1);
+                dist[i] = d2;
+              }
+            }
+          }
+        }
+
+        var minX = cw, minY = ch, maxX = -1, maxY = -1;
+        for (y = 0; y < ch; y++) {
+          for (x = 0; x < cw; x++) {
+            i = at(x, y);
+            o = i * 4;
+            if (mask[i]) data[o + 3] = 0;
+            else if (dist && dist[i] <= feather) {
+              data[o + 3] = Math.max(0, Math.round(data[o + 3] * (dist[i] / (feather + 0.25))));
+            }
+            if (data[o + 3] > 8) {
+              if (x < minX) minX = x;
+              if (y < minY) minY = y;
+              if (x > maxX) maxX = x;
+              if (y > maxY) maxY = y;
+            }
+          }
+        }
+        ctx.putImageData(imageData, 0, 0);
+        if (maxX < minX) return canvasToPng(fitCanvas(canvas, maxSize));
+        minX = Math.max(0, minX - pad);
+        minY = Math.max(0, minY - pad);
+        maxX = Math.min(cw - 1, maxX + pad);
+        maxY = Math.min(ch - 1, maxY + pad);
+        var rw = maxX - minX + 1, rh = maxY - minY + 1;
+        var cropped = document.createElement("canvas");
+        cropped.width = rw;
+        cropped.height = rh;
+        cropped.getContext("2d").drawImage(canvas, minX, minY, rw, rh, 0, 0, rw, rh);
+        return canvasToPng(fitCanvas(cropped, maxSize));
+      });
+    }
+
+    function applyPickedImage(carOrId, file, removeWhite) {
+      var id = typeof carOrId === "string" ? carOrId : carOrId.id;
+      var entry = customMedia[id] || {};
+      var cut = removeWhite != null ? !!removeWhite : entry.removeWhite !== false;
+      if (!file) return Promise.resolve();
+      return processCutout(file, { enabled: cut }).catch(function () { return file; }).then(function (display) {
+        return saveCustom(id, { imageOriginal: file, image: display, removeWhite: cut });
+      });
+    }
+
+    function reprocessCardImage(id) {
+      var entry = customMedia[id] || {};
+      var src = entry.imageOriginalBlob || entry.imageBlob;
+      if (!src) return Promise.resolve();
+      var cut = entry.removeWhite !== false;
+      return processCutout(src, { enabled: cut }).catch(function () { return src; }).then(function (display) {
+        var patch = { image: display, removeWhite: cut };
+        if (!entry.imageOriginalBlob) patch.imageOriginal = src;
+        return saveCustom(id, patch);
+      });
+    }
+
     function fillArt(holder, car) {
       holder.innerHTML = "";
       var entry = customMedia[car.id] || {};
       if (entry.imageUrl) {
+        holder.classList.add("has-photo");
+        holder.style.setProperty("--photo-bg", car.color || "#90CAF9");
+        holder.style.setProperty("--photo-bg-light", car.light || "#E3F2FD");
         var img = document.createElement("img");
         img.className = "custom-art";
         img.alt = "";
@@ -1387,11 +1759,15 @@
         img.addEventListener("error", function () {
           img.hidden = true;
           fallback.hidden = false;
+          holder.classList.remove("has-photo");
         });
         img.src = entry.imageUrl;
         holder.appendChild(img);
         holder.appendChild(fallback);
       } else {
+        holder.classList.remove("has-photo");
+        holder.style.removeProperty("--photo-bg");
+        holder.style.removeProperty("--photo-bg-light");
         holder.innerHTML = defaultArt(car);
       }
     }
@@ -1582,9 +1958,22 @@
       var text = spokenLine(car);
       var out = [];
       if (entry.audioUrl) out.push(entry.audioUrl);
-      if (!car.custom && !customName(car)) out.push(SOUND_DIR + car.id + ".mp3");
+      if (!car.custom && !customName(car) && !customSayLike(car)) out.push(SOUND_DIR + car.id + ".mp3");
       if (entry.autoSrc && entry.autoText === text) out.push(entry.autoSrc);
       return out;
+    }
+
+    function pronunciationSources(car) {
+      var entry = customMedia[car.id] || {};
+      var text = spokenLine(car);
+      var out = [];
+      if (!car.custom && !customName(car) && !customSayLike(car)) out.push(SOUND_DIR + car.id + ".mp3");
+      if (entry.autoSrc && entry.autoText === text) out.push(entry.autoSrc);
+      return out;
+    }
+
+    function playPronunciation(car) {
+      playSources(pronunciationSources(car), spokenLine(car));
     }
 
     function speakCar(car) {
@@ -1620,7 +2009,7 @@
     }
 
     function needsAutoClip(car) {
-      return car.custom || !!customName(car);
+      return car.custom || !!customName(car) || !!customSayLike(car);
     }
 
     function refreshAutoClip(car, immediate) {
@@ -2149,12 +2538,40 @@
             var h3 = row.querySelector("h3");
             var lineEl = row.querySelector(".settings-line");
             if (h3) h3.textContent = displayFullName(live);
-            if (lineEl) lineEl.textContent = spokenLine(live);
+            if (lineEl) {
+              var like = customSayLike(live);
+              lineEl.textContent = like ? ("Sounds like: " + like) : "";
+              lineEl.hidden = !like;
+            }
             var preview = row.querySelector(".settings-preview");
             var entry = customMedia[car.id] || {};
             if (preview && !entry.imageUrl) fillArt(preview, live);
           }
           refreshCardLabels();
+          refreshAutoClip(live);
+        });
+      }
+      input.addEventListener("input", function () {
+        if (timer) clearTimeout(timer);
+        timer = setTimeout(commit, 300);
+      });
+      input.addEventListener("change", commit);
+      input.addEventListener("blur", commit);
+    }
+
+    function bindSayLikeField(input, car) {
+      var timer = null;
+      function commit() {
+        var value = input.value.trim().slice(0, 80);
+        return saveCustom(car.id, { sayLike: value }).then(function () {
+          var live = carById(car.id) || car;
+          var row = input.closest(".settings-row");
+          var lineEl = row && row.querySelector(".settings-line");
+          if (lineEl) {
+            var like = customSayLike(live);
+            lineEl.textContent = like ? ("Sounds like: " + like) : "";
+            lineEl.hidden = !like;
+          }
           refreshAutoClip(live);
         });
       }
@@ -2215,6 +2632,8 @@
       row.className = "settings-row" + (car.custom ? " custom-row" : "");
       row.dataset.carId = car.id;
 
+      var previewWrap = document.createElement("div");
+      previewWrap.className = "settings-preview-wrap";
       var preview = document.createElement("div");
       preview.className = "settings-preview";
       preview.setAttribute("role", "button");
@@ -2223,6 +2642,16 @@
       preview.setAttribute("data-role", "preview");
       preview.setAttribute("data-car", car.id);
       fillArt(preview, car);
+      var badge = document.createElement("span");
+      badge.className = "preview-badge";
+      badge.setAttribute("aria-hidden", "true");
+      badge.innerHTML = '<svg viewBox="0 0 24 24" width="15" height="15" focusable="false"><path fill="currentColor" d="M9 4l-.9 1.4H6.5A2.5 2.5 0 004 7.9v8.6A2.5 2.5 0 006.5 19h11a2.5 2.5 0 002.5-2.5V7.9a2.5 2.5 0 00-2.5-2.5h-1.6L15 4H9zm3 5.2a4.3 4.3 0 110 8.6 4.3 4.3 0 010-8.6zm0 1.8a2.5 2.5 0 100 5 2.5 2.5 0 000-5z"/></svg>';
+      var hint = document.createElement("span");
+      hint.className = "preview-hint";
+      hint.textContent = "Tap to change";
+      previewWrap.appendChild(preview);
+      previewWrap.appendChild(badge);
+      previewWrap.appendChild(hint);
 
       var meta = document.createElement("div");
       meta.className = "settings-meta";
@@ -2231,7 +2660,9 @@
       h3.textContent = displayFullName(car);
       var lineP = document.createElement("p");
       lineP.className = "settings-line";
-      lineP.textContent = spokenLine(car);
+      var likeNow = customSayLike(car);
+      lineP.textContent = likeNow ? ("Sounds like: " + likeNow) : "";
+      lineP.hidden = !likeNow;
       var status = document.createElement("p");
       status.className = "settings-status";
       status.textContent = mediaStatus(car);
@@ -2261,26 +2692,65 @@
       meta.appendChild(nameField);
       bindNameField(nameInput, car);
 
-      if (car.custom) {
-        var lineField = document.createElement("div");
-        lineField.className = "line-field";
-        var lineLab = document.createElement("label");
-        lineLab.setAttribute("for", "line-" + car.id);
-        lineLab.textContent = "Spoken line (optional)";
-        var lineInput = document.createElement("input");
-        lineInput.type = "text";
-        lineInput.className = "line-input";
-        lineInput.id = "line-" + car.id;
-        lineInput.maxLength = 80;
-        lineInput.autocomplete = "off";
-        lineInput.setAttribute("data-role", "line");
-        lineInput.setAttribute("data-car", car.id);
-        lineInput.placeholder = "Hello! It's " + displayName(car) + "!";
-        lineInput.value = (customMedia[car.id] && customMedia[car.id].line) || car.line || "";
-        lineField.appendChild(lineLab);
-        lineField.appendChild(lineInput);
-        meta.appendChild(lineField);
-        bindLineField(lineInput, car);
+      var sayField = document.createElement("div");
+      sayField.className = "say-field";
+      var sayLab = document.createElement("label");
+      sayLab.setAttribute("for", "say-" + car.id);
+      sayLab.textContent = "Say it like";
+      var sayRow = document.createElement("div");
+      sayRow.className = "say-row";
+      var sayInput = document.createElement("input");
+      sayInput.type = "text";
+      sayInput.className = "say-input";
+      sayInput.id = "say-" + car.id;
+      sayInput.maxLength = 80;
+      sayInput.autocomplete = "off";
+      sayInput.spellcheck = false;
+      sayInput.setAttribute("data-role", "saylike");
+      sayInput.setAttribute("data-car", car.id);
+      sayInput.placeholder = "how it should sound, e.g. Tug-er";
+      sayInput.value = customSayLike(car);
+      var sayTest = document.createElement("button");
+      sayTest.type = "button";
+      sayTest.className = "btn-mini primary";
+      sayTest.setAttribute("data-role", "say-test");
+      sayTest.setAttribute("data-car", car.id);
+      sayTest.setAttribute("aria-label", "Play how the name sounds");
+      sayTest.textContent = "Test";
+      sayTest.addEventListener("click", function () {
+        unlockMedia();
+        var live = carById(car.id) || car;
+        if (needsAutoClip(live)) refreshAutoClip(live, true);
+        playPronunciation(live);
+      });
+      sayRow.appendChild(sayInput);
+      sayRow.appendChild(sayTest);
+      sayField.appendChild(sayLab);
+      sayField.appendChild(sayRow);
+      meta.appendChild(sayField);
+      bindSayLikeField(sayInput, car);
+
+      if (customMedia[car.id] && (customMedia[car.id].imageBlob || customMedia[car.id].imageOriginalBlob)) {
+        var cutLab = document.createElement("label");
+        cutLab.className = "cutout-toggle";
+        var cutBox = document.createElement("input");
+        cutBox.type = "checkbox";
+        cutBox.setAttribute("data-role", "cutout");
+        cutBox.setAttribute("data-car", car.id);
+        cutBox.checked = customMedia[car.id].removeWhite !== false;
+        var cutTxt = document.createElement("span");
+        cutTxt.textContent = "Remove white background";
+        cutLab.appendChild(cutBox);
+        cutLab.appendChild(cutTxt);
+        cutBox.addEventListener("change", function () {
+          saveCustom(car.id, { removeWhite: cutBox.checked }).then(function () {
+            return reprocessCardImage(car.id);
+          }).then(function () {
+            renderSettings();
+            refreshVisibleArt();
+          });
+        });
+        meta.appendChild(cutLab);
       }
 
       var btns = document.createElement("div");
@@ -2324,11 +2794,15 @@
         return b;
       }
 
-      preview.addEventListener("click", function () { imgInput.click(); });
+      function openPhotoPicker() { imgInput.click(); }
+      preview.addEventListener("click", openPhotoPicker);
+      previewWrap.addEventListener("click", function (e) {
+        if (e.target === preview || preview.contains(e.target)) return;
+        openPhotoPicker();
+      });
       preview.addEventListener("keydown", function (e) {
         if (e.key === "Enter" || e.key === " ") { e.preventDefault(); imgInput.click(); }
       });
-      btns.appendChild(mini("Choose photo", "primary", function () { imgInput.click(); }));
       btns.appendChild(mini("Take photo", "primary", function () { camInput.click(); }));
       btns.appendChild(mini("Choose sound", "primary", function () { audInput.click(); }));
       btns.appendChild(mini("Record", "record", function () { startRecording(car.id); }, "record"));
@@ -2348,7 +2822,7 @@
         }, "delete"));
       } else {
         btns.appendChild(mini("Clear", "warn", function () {
-          saveCustom(car.id, { image: null, audio: null }).then(function () {
+          saveCustom(car.id, { image: null, imageOriginal: null, audio: null }).then(function () {
             renderSettings();
             refreshVisibleArt();
           });
@@ -2365,7 +2839,9 @@
 
       function onImage(file) {
         if (!file) return;
-        saveCustom(car.id, { image: file }).then(function () {
+        var cutBox = row.querySelector('input[data-role=cutout]');
+        var cut = cutBox ? cutBox.checked : true;
+        applyPickedImage(car, file, cut).then(function () {
           renderSettings();
           refreshVisibleArt();
         }).catch(function () { renderSettings(); });
@@ -2428,7 +2904,7 @@
         meta.appendChild(delBox);
       }
 
-      row.appendChild(preview);
+      row.appendChild(previewWrap);
       row.appendChild(meta);
       list.appendChild(row);
     }
@@ -2448,6 +2924,7 @@
       document.getElementById("reset-confirm").hidden = true;
       refreshVoices();
       renderSettings();
+      updateSyncUi();
       var screen = document.getElementById("settings-screen");
       screen.hidden = false;
       screen.scrollTop = 0;
@@ -2522,6 +2999,7 @@
       unlockMedia();
       speak("Hello Theo! Let's match the cars!");
     });
+    bindSyncUi();
     document.getElementById("reset-all-btn").addEventListener("click", function () {
       document.getElementById("reset-confirm").hidden = false;
     });
@@ -2692,8 +3170,378 @@
       });
     }
 
+
+    function readSyncSettings() {
+      try {
+        syncBaseOverride = (localStorage.getItem(SYNC_URL_KEY) || "").trim().replace(/\/+$/, "");
+        syncFamilyKey = (localStorage.getItem(SYNC_KEY_KEY) || "").trim();
+      } catch (e) {
+        syncBaseOverride = "";
+        syncFamilyKey = "";
+      }
+    }
+
+    function persistSyncSettings() {
+      try {
+        if (syncBaseOverride) localStorage.setItem(SYNC_URL_KEY, syncBaseOverride);
+        else localStorage.removeItem(SYNC_URL_KEY);
+        if (syncFamilyKey) localStorage.setItem(SYNC_KEY_KEY, syncFamilyKey);
+        else localStorage.removeItem(SYNC_KEY_KEY);
+      } catch (e) {}
+    }
+
+    function syncConfigured() {
+      return (sameOriginSync || !!syncBaseOverride) && !!syncFamilyKey;
+    }
+
+    function syncRoot() {
+      return sameOriginSync ? "" : syncBaseOverride;
+    }
+
+    function updateSyncUi() {
+      var lead = document.getElementById("sync-lead");
+      var urlField = document.getElementById("sync-url-field");
+      var urlInput = document.getElementById("sync-url");
+      var keyInput = document.getElementById("sync-key");
+      var status = document.getElementById("sync-status");
+      if (!lead) return;
+      if (urlInput && document.activeElement !== urlInput) urlInput.value = syncBaseOverride;
+      if (keyInput && document.activeElement !== keyInput) keyInput.value = syncFamilyKey;
+      if (urlField) urlField.hidden = !!sameOriginSync;
+      if (sameOriginSync) {
+        lead.textContent = "This copy can share cards with other phones on your Wi-Fi. Type the family key shown in the server window on the computer, then tap Sync now.";
+      } else {
+        lead.textContent = "Optional. Leave this blank to keep everything on this device. To sync later (for example over Tailscale), enter the server URL and family key.";
+      }
+      if (status) {
+        status.classList.toggle("is-error", !!lastSyncError);
+        if (lastSyncError) status.textContent = lastSyncError;
+        else if (!syncConfigured()) {
+          status.textContent = sameOriginSync ? "Enter the family key to start syncing." : "Sync is off until you enter a server URL and family key.";
+        } else if (lastSyncAt) {
+          status.textContent = "Last synced " + new Date(lastSyncAt).toLocaleTimeString() + ".";
+        } else {
+          status.textContent = "Ready to sync.";
+        }
+      }
+    }
+
+    function detectSync() {
+      return fetch("/api/health", { headers: { Accept: "application/json" } })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (j) { sameOriginSync = !!(j && j.ok && j.service === "theo-sync"); })
+        .catch(function () { sameOriginSync = false; })
+        .then(function () { updateSyncUi(); });
+    }
+
+    function syncHeaders(isJson) {
+      var h = { Authorization: "Bearer " + syncFamilyKey };
+      if (isJson) h["Content-Type"] = "application/json";
+      return h;
+    }
+
+    function syncFetch(path, opts) {
+      return fetch(syncRoot() + path, opts || {}).then(function (r) {
+        if (r.status === 401) throw new Error("The family key was not accepted.");
+        return r;
+      });
+    }
+
+    function localUpdatedAt(id) {
+      var e = customMedia[id] || {};
+      return Number(e.updatedAt) || 0;
+    }
+
+    function recMetaPayload(id) {
+      var rec = customMedia[id] || {};
+      var car = carById(id);
+      return {
+        id: id,
+        updatedAt: rec.updatedAt || 0,
+        name: rec.name || "",
+        sayLike: rec.sayLike || "",
+        line: rec.line || "",
+        custom: !!(rec.custom || (car && car.custom)),
+        deleted: false,
+        color: (car && car.color) || rec.color || "",
+        dark: (car && car.dark) || rec.dark || "",
+        light: (car && car.light) || rec.light || "",
+        window: (car && car.window) || rec.window || "",
+        clearImage: !rec.imageBlob,
+        clearOriginal: !rec.imageOriginalBlob,
+        clearAudio: !rec.audioBlob,
+        removeWhite: rec.removeWhite !== false,
+        imageUpdatedAt: rec.imageUpdatedAt || 0,
+        originalUpdatedAt: rec.originalUpdatedAt || 0,
+        audioUpdatedAt: rec.audioUpdatedAt || 0
+      };
+    }
+
+    function scheduleSyncPush(id) {
+      if (!syncConfigured() || syncApplying || !id) return;
+      syncPushIds[id] = true;
+      if (syncPushTimer) clearTimeout(syncPushTimer);
+      syncPushTimer = setTimeout(function () {
+        syncPushTimer = null;
+        var ids = Object.keys(syncPushIds);
+        syncPushIds = {};
+        pushCards(ids).catch(function (e) {
+          lastSyncError = e.message || "Could not sync.";
+          updateSyncUi();
+        });
+      }, 800);
+    }
+
+    function pushCards(ids) {
+      if (!syncConfigured() || !ids || !ids.length) {
+        if (syncConfigured()) {
+          lastSyncAt = Date.now();
+          lastSyncError = "";
+          lastSyncOk = true;
+          updateSyncUi();
+        }
+        return Promise.resolve();
+      }
+      var chain = Promise.resolve();
+      ids.forEach(function (id) {
+        chain = chain.then(function () { return pushOneCard(id); });
+      });
+      return chain.then(function () {
+        lastSyncAt = Date.now();
+        lastSyncError = "";
+        lastSyncOk = true;
+        updateSyncUi();
+      });
+    }
+
+    function pushOneCard(id) {
+      var rec = customMedia[id];
+      if (!rec) return pushTombstone(id);
+      return syncFetch("/api/cards/" + encodeURIComponent(id), {
+        method: "PUT",
+        headers: syncHeaders(true),
+        body: JSON.stringify(recMetaPayload(id))
+      }).then(function (r) {
+        if (!r.ok) throw new Error("Could not save a card to the computer.");
+        return pushBlob(id, "image", rec.imageBlob).then(function () {
+          return pushBlob(id, "original", rec.imageOriginalBlob).then(function () {
+            return pushBlob(id, "audio", rec.audioBlob);
+          });
+        });
+      });
+    }
+
+    function pushBlob(id, kind, blob) {
+      if (!blob) return Promise.resolve();
+      var rec = customMedia[id] || {};
+      var ts = (kind === "image" ? rec.imageUpdatedAt : rec.audioUpdatedAt) || rec.updatedAt || Date.now();
+      return syncFetch("/api/cards/" + encodeURIComponent(id) + "/" + kind, {
+        method: "PUT",
+        headers: {
+          Authorization: "Bearer " + syncFamilyKey,
+          "Content-Type": blob.type || "application/octet-stream",
+          "X-Updated-At": String(ts)
+        },
+        body: blob
+      }).then(function (r) {
+        if (!r.ok) throw new Error("Could not save a " + kind + " to the computer.");
+      });
+    }
+
+    function pushTombstone(id) {
+      if (!syncConfigured()) return Promise.resolve();
+      return syncFetch("/api/cards/" + encodeURIComponent(id), {
+        method: "PUT",
+        headers: syncHeaders(true),
+        body: JSON.stringify({ id: id, updatedAt: Date.now(), deleted: true, custom: true })
+      }).then(function (r) {
+        if (!r.ok) throw new Error("Could not remove a card on the computer.");
+      });
+    }
+
+    function deleteCustomCardLocal(id) {
+      return idbDel(id).catch(function () {}).then(function () {
+        revokeMedia(customMedia[id]);
+        delete customMedia[id];
+        extraCars = extraCars.filter(function (c) { return c.id !== id; });
+      });
+    }
+
+    function applyRemoteCard(id, remote) {
+      if (remote.deleted) {
+        var isCustom = !!(remote.custom || (customMedia[id] && customMedia[id].custom) || (carById(id) && carById(id).custom) || String(id).indexOf("custom-") === 0);
+        if (isCustom) return deleteCustomCardLocal(id);
+        return saveCustom(id, { image: null, imageOriginal: null, audio: null, name: "", sayLike: "", line: "", updatedAt: remote.updatedAt, imageUpdatedAt: remote.updatedAt, audioUpdatedAt: remote.updatedAt });
+      }
+      var patch = {
+        name: remote.name || "",
+        sayLike: remote.sayLike || "",
+        line: remote.line || "",
+        custom: !!remote.custom,
+        removeWhite: remote.removeWhite !== false,
+        updatedAt: remote.updatedAt,
+        imageUpdatedAt: remote.imageUpdatedAt,
+        originalUpdatedAt: remote.originalUpdatedAt,
+        audioUpdatedAt: remote.audioUpdatedAt
+      };
+      if (remote.color) patch.color = remote.color;
+      if (remote.dark) patch.dark = remote.dark;
+      if (remote.light) patch.light = remote.light;
+      if (remote.window) patch.window = remote.window;
+      var fetches = [];
+      if (remote.hasImage) {
+        fetches.push(syncFetch("/api/cards/" + encodeURIComponent(id) + "/image", { headers: syncHeaders() }).then(function (r) {
+          return r.ok ? r.blob() : null;
+        }));
+      } else fetches.push(Promise.resolve(null));
+      if (remote.hasAudio) {
+        fetches.push(syncFetch("/api/cards/" + encodeURIComponent(id) + "/audio", { headers: syncHeaders() }).then(function (r) {
+          return r.ok ? r.blob() : null;
+        }));
+      } else fetches.push(Promise.resolve(null));
+      if (remote.hasOriginal) {
+        fetches.push(syncFetch("/api/cards/" + encodeURIComponent(id) + "/original", { headers: syncHeaders() }).then(function (r) {
+          return r.ok ? r.blob() : null;
+        }));
+      } else fetches.push(Promise.resolve(null));
+      return Promise.all(fetches).then(function (files) {
+        patch.image = files[0] || null;
+        patch.audio = files[1] || null;
+        patch.imageOriginal = files[2] || null;
+        return saveCustom(id, patch);
+      });
+    }
+
+    function syncNow() {
+      if (!syncConfigured()) {
+        lastSyncError = sameOriginSync ? "Enter the family key first." : "Enter a server URL and family key first.";
+        updateSyncUi();
+        return Promise.resolve(false);
+      }
+      lastSyncError = "";
+      return syncFetch("/api/sync", { headers: syncHeaders() }).then(function (r) {
+        if (!r.ok) throw new Error("Could not reach the family computer.");
+        return r.json();
+      }).then(function (data) {
+        var remote = (data && data.cards) || {};
+        var chain = Promise.resolve();
+        syncApplying = true;
+        Object.keys(remote).forEach(function (id) {
+          var rem = remote[id];
+          var loc = localUpdatedAt(id);
+          if ((rem.updatedAt || 0) > loc) {
+            chain = chain.then(function () { return applyRemoteCard(id, rem); });
+          }
+        });
+        return chain.then(function () {
+          syncApplying = false;
+          var toPush = [];
+          var ids = {};
+          Object.keys(customMedia).forEach(function (id) { ids[id] = true; });
+          Object.keys(remote).forEach(function (id) { ids[id] = true; });
+          Object.keys(ids).forEach(function (id) {
+            var rem = remote[id];
+            var loc = localUpdatedAt(id);
+            if (!customMedia[id]) return;
+            if (!rem || loc > (rem.updatedAt || 0)) toPush.push(id);
+          });
+          return pushCards(toPush);
+        }).then(function () {
+          refreshVisibleArt();
+          paintHero();
+          refreshAllAutoClips();
+          if (!document.getElementById("settings-screen").hidden) renderSettings();
+          lastSyncAt = Date.now();
+          lastSyncOk = true;
+          lastSyncError = "";
+          updateSyncUi();
+          return true;
+        });
+      }).catch(function (e) {
+        syncApplying = false;
+        lastSyncError = e.message || "Could not sync.";
+        lastSyncOk = false;
+        updateSyncUi();
+        return false;
+      });
+    }
+
+    function pushResetState(customIds) {
+      if (!syncConfigured()) return Promise.resolve();
+      var now = Date.now();
+      var chain = Promise.resolve();
+      (customIds || []).forEach(function (id) {
+        chain = chain.then(function () {
+          return syncFetch("/api/cards/" + encodeURIComponent(id), {
+            method: "PUT",
+            headers: syncHeaders(true),
+            body: JSON.stringify({ id: id, updatedAt: now, deleted: true, custom: true })
+          });
+        });
+      });
+      CARS.forEach(function (car) {
+        chain = chain.then(function () {
+          return syncFetch("/api/cards/" + encodeURIComponent(car.id), {
+            method: "PUT",
+            headers: syncHeaders(true),
+            body: JSON.stringify({
+              id: car.id, updatedAt: now, name: "", sayLike: "", line: "",
+              custom: false, deleted: false, clearImage: true, clearAudio: true
+            })
+          });
+        });
+      });
+      return chain.then(function () {
+        lastSyncAt = Date.now();
+        lastSyncError = "";
+        updateSyncUi();
+      }).catch(function (e) {
+        lastSyncError = e.message || "Could not sync the reset.";
+        updateSyncUi();
+      });
+    }
+
+    function bindSyncUi() {
+      var urlInput = document.getElementById("sync-url");
+      var keyInput = document.getElementById("sync-key");
+      var nowBtn = document.getElementById("sync-now-btn");
+      function commit() {
+        if (urlInput) syncBaseOverride = (urlInput.value || "").trim().replace(/\/+$/, "");
+        if (keyInput) syncFamilyKey = (keyInput.value || "").trim();
+        persistSyncSettings();
+        updateSyncUi();
+      }
+      if (urlInput) {
+        urlInput.addEventListener("change", commit);
+        urlInput.addEventListener("blur", commit);
+      }
+      if (keyInput) {
+        keyInput.addEventListener("change", commit);
+        keyInput.addEventListener("blur", commit);
+      }
+      if (nowBtn) nowBtn.addEventListener("click", function () { commit(); syncNow(); });
+      readSyncSettings();
+      updateSyncUi();
+    }
+
+    function getSyncStatus() {
+      return {
+        sameOrigin: sameOriginSync,
+        base: syncRoot(),
+        hasKey: !!syncFamilyKey,
+        configured: syncConfigured(),
+        lastSyncAt: lastSyncAt,
+        lastError: lastSyncError,
+        lastOk: lastSyncOk
+      };
+    }
+
     paintHero();
-    loadAllCustom().then(function () { paintHero(); refreshAllAutoClips(); });
+    loadAllCustom().then(function () {
+      return detectSync().then(function () {
+        if (syncConfigured()) return syncNow();
+      });
+    }).then(function () { paintHero(); refreshAllAutoClips(); });
 
     document.getElementById("play-btn").focus();
 
@@ -2726,6 +3574,15 @@
       chosenVoice: chosenVoice,
       rankedEnglishVoices: rankedEnglishVoices,
       refreshAutoClip: refreshAutoClip,
+      customSayLike: customSayLike,
+      playPronunciation: playPronunciation,
+      pronunciationSources: pronunciationSources,
+      processCutout: processCutout,
+      applyPickedImage: applyPickedImage,
+      reprocessCardImage: reprocessCardImage,
+      syncNow: syncNow,
+      detectSync: detectSync,
+      getSyncStatus: getSyncStatus,
       getState: function () { return { level: level, roundCount: roundCount, levelCars: levelCars.map(function (c) { return c.id; }) }; }
     };
 
