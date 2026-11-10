@@ -1135,6 +1135,13 @@
     .family-sync-copy strong { display: block; font-size: 18px; font-weight: 800; line-height: 1.2; }
     .family-sync-copy span { display: block; font-size: 13px; font-weight: 700; margin-top: 2px; }
     .sync-notice { margin: 8px 0 0; font-size: 13px; font-weight: 700; color: #E65100; }
+    .app-version {
+      margin: 16px 0 0;
+      font-size: 13px;
+      font-weight: 700;
+      color: #546E7A;
+      letter-spacing: 0.02em;
+    }
     #sync-pin-row { margin: 8px 0 0; }
     #sync-pin-row[hidden] { display: none; }
     .sync-field { margin: 0 0 8px; }
@@ -1664,6 +1671,7 @@
           </div>
           <p class="sync-status" id="sync-status"></p>
           <p class="sync-notice" id="sync-notice" hidden></p>
+          <p class="app-version" id="app-version-label"></p>
         </div>
         </div>
         <div class="settings-actions">
@@ -1796,7 +1804,7 @@
     var BLOB_FETCH_MS = 20000;
     var bootStartedAt = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
     var keyChangeOpen = false;
-    var APP_VERSION = "21";
+    var APP_VERSION = "22";
     var MATCH_PAIR_CAP = 6;
     var NAME_ROUNDS = 6;
     var THUMB_MAX = 256;
@@ -3058,7 +3066,20 @@
       } catch (e) { finish(); }
     }
 
+    function nameGameIsOpen() {
+      var n = document.getElementById("name-screen");
+      var w = document.getElementById("name-win-overlay");
+      return !!(nameState && nameState.active) || (n && !n.hidden) || (w && !w.hidden);
+    }
+
+    function matchGameIsOpen() {
+      var g = document.getElementById("game-screen");
+      var w = document.getElementById("win-overlay");
+      return (g && !g.hidden) || (w && !w.hidden);
+    }
+
     function playRoundRev() {
+      if (nameGameIsOpen() || !matchGameIsOpen()) return;
       var src = nextRevSrc();
       var el = findPreload(revPreloads, src);
       if (el) {
@@ -5295,53 +5316,69 @@
     }
 
     var HERO_SLOTS = [
-      { keys: ["lightning mcqueen", "lightning", "mcqueen"], favourite: false },
-      { keys: ["mater"], favourite: true },
-      { keys: ["guido"], favourite: false }
+      { keys: ["lightning mcqueen", "lightning", "mcqueen"], fallbackId: "rosie", favourite: false },
+      { keys: ["mater"], fallbackId: "tugger", favourite: true },
+      { keys: ["guido"], fallbackId: "pip", favourite: false }
     ];
 
-    function heroNameList(car) {
-      return [
+    function builtinCar(id) {
+      for (var i = 0; i < CARS.length; i++) if (CARS[i].id === id) return CARS[i];
+      return null;
+    }
+
+    function heroNorm(s) {
+      return String(s || "").toLowerCase()
+        .replace(/["\u201C\u201D\u2018\u2019]/g, " ")
+        .replace(/[^a-z0-9]+/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function heroHaystacks(car) {
+      var raw = [
         car && car.id,
         car && car.name,
         car && car.fullName,
         customName(car),
         displayName(car),
-        displayFullName(car)
-      ].map(function (v) { return String(v || "").trim().toLowerCase(); }).filter(Boolean);
+        displayFullName(car),
+        nameWithoutQuotes(customName(car) || displayFullName(car) || displayName(car) || "")
+      ];
+      return raw.map(heroNorm).filter(Boolean);
     }
 
-    function findHeroCar(keys, used) {
-      var needles = (keys || []).map(function (k) { return String(k || "").trim().toLowerCase(); }).filter(Boolean);
-      if (!needles.length) return null;
-      var pool = allCars();
+    function heroNameHits(car, needle) {
+      var n = heroNorm(needle);
+      if (!n) return false;
+      var stacks = heroHaystacks(car);
+      var i, words, w;
+      for (i = 0; i < stacks.length; i++) {
+        if (stacks[i] === n || stacks[i].indexOf(n) !== -1) return true;
+        words = stacks[i].split(" ");
+        for (w = 0; w < words.length; w++) if (words[w] === n) return true;
+      }
+      return false;
+    }
+
+    function findHeroCar(slotOrKeys, used) {
+      var slot = slotOrKeys && slotOrKeys.keys ? slotOrKeys : { keys: slotOrKeys || [] };
+      var keys = slot.keys || [];
+      var fallbackId = slot.fallbackId || "";
       var taken = used || {};
       function unused(car) { return car && car.id && !taken[car.id]; }
-      var i, p, names, n, car;
-      for (i = 0; i < needles.length; i++) {
-        car = carById(needles[i]);
+      var pool = allCars();
+      var i, p, car, ids;
+      for (i = 0; i < keys.length; i++) {
+        for (p = 0; p < pool.length; p++) {
+          car = pool[p];
+          if (!unused(car)) continue;
+          if (heroNameHits(car, keys[i])) return car;
+        }
+      }
+      ids = keys.concat(fallbackId ? [fallbackId] : []);
+      for (i = 0; i < ids.length; i++) {
+        car = carById(ids[i]) || builtinCar(ids[i]);
         if (unused(car)) return car;
-      }
-      for (i = 0; i < needles.length; i++) {
-        for (p = 0; p < pool.length; p++) {
-          car = pool[p];
-          if (!unused(car)) continue;
-          names = heroNameList(car);
-          for (n = 0; n < names.length; n++) {
-            if (names[n] === needles[i]) return car;
-          }
-        }
-      }
-      for (i = 0; i < needles.length; i++) {
-        if (needles[i].length < 4) continue;
-        for (p = 0; p < pool.length; p++) {
-          car = pool[p];
-          if (!unused(car)) continue;
-          names = heroNameList(car);
-          for (n = 0; n < names.length; n++) {
-            if (names[n].indexOf(needles[i]) !== -1) return car;
-          }
-        }
       }
       return null;
     }
@@ -5352,7 +5389,8 @@
       hold.innerHTML = "";
       var used = {};
       HERO_SLOTS.forEach(function (slot) {
-        var car = findHeroCar(slot.keys, used);
+        var car = findHeroCar(slot, used);
+        if (!car && slot.fallbackId) car = builtinCar(slot.fallbackId) || carById(slot.fallbackId);
         if (!car) return;
         used[car.id] = true;
         var d = document.createElement("div");
@@ -5361,6 +5399,11 @@
         fillArt(d, car);
         hold.appendChild(d);
       });
+    }
+
+    function updateAppVersionLabel() {
+      var el = document.getElementById("app-version-label");
+      if (el) el.textContent = "Version " + APP_VERSION;
     }
 
 
@@ -6757,6 +6800,7 @@
     preloadHoorays();
     preloadFarts();
     paintHero();
+    updateAppVersionLabel();
     var healthP = detectSync();
     var dataP = loadAllCustom().then(function () {
       return Promise.all([
@@ -6845,6 +6889,9 @@
       allCars: allCars,
       nextRevSrc: nextRevSrc,
       playRoundRev: playRoundRev,
+      nameGameIsOpen: nameGameIsOpen,
+      matchGameIsOpen: matchGameIsOpen,
+      onCardActivate: onCardActivate,
       getRevState: function () { return { clips: REV_CLIPS.slice(), queue: revQueue.slice(), last: lastRev }; },
       getState: function () { return { level: level, roundCount: roundCount, levelCars: levelCars.map(function (c) { return c.id; }), pairs: pairsForLevel(level), steps: pairSteps(), deckLen: deck.length }; },
       getDifficulty: function () { return JSON.parse(JSON.stringify(difficulty)); },

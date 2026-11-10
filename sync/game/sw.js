@@ -1,6 +1,6 @@
 /* Theo's Car Match service worker — cache-first so the game opens offline
    even when the home computer is unreachable (mobile data). Never caches /api. */
-var CACHE = "theo-car-match-v21";
+var CACHE = "theo-car-match-v22";
 var CORE = [
   "./",
   "./index.html",
