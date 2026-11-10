@@ -1714,7 +1714,7 @@
     </button>
 
     <div class="sync-hud" id="sync-hud" hidden>
-      <div class="sync-hud-bar" id="sync-hud-bar" hidden role="progressbar" aria-label="Sync progress" aria-valuemin="0" aria-valuenow="0" aria-valuemax="1">
+      <div class="sync-hud-bar" id="sync-hud-bar" hidden role="progressbar" aria-label="Card sync progress" aria-valuemin="0" aria-valuenow="0" aria-valuemax="1">
         <div class="sync-hud-bar-fill" id="sync-hud-bar-fill"></div>
       </div>
       <div class="sync-hud-row">
@@ -1722,7 +1722,7 @@
         <span class="sync-hud-icon" id="sync-hud-icon" aria-hidden="true"></span>
         <span class="sync-hud-text" id="sync-hud-text"></span>
       </div>
-      <button type="button" class="sync-hud-refresh" id="sync-hud-refresh" aria-label="Sync now">
+      <button type="button" class="sync-hud-refresh" id="sync-hud-refresh" aria-label="Card sync now">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M17.65 6.35A7.95 7.95 0 0 0 12 4a8 8 0 1 0 8 8h-2a6 6 0 1 1-6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
       </button>
       </div>
@@ -1937,12 +1937,13 @@
         </div>
         <div id="pane-family" class="settings-pane" role="tabpanel" aria-labelledby="tab-family" hidden>
         <div class="sync-box" id="sync-box">
-          <h3>Family sync</h3>
+          <h3>Card sync</h3>
+          <p class="device-only-note">Family photos come only from the home computer on the home Wi-Fi and are never uploaded.</p>
           <p class="sync-lead" id="sync-lead"></p>
           <div class="sync-field" id="sync-url-field">
             <label for="sync-url">Server</label>
             <div class="say-row">
-              <input id="sync-url" type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://192.168.68.91:8788/" aria-label="Sync server">
+              <input id="sync-url" type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://192.168.68.91:8788/" aria-label="Card sync server">
               <button type="button" class="btn-mini" id="sync-url-copy">Copy</button>
               <button type="button" class="btn-mini primary" id="sync-url-test">Connect</button>
             </div>
@@ -1954,7 +1955,7 @@
           </div>
           <p class="sync-key-saved" id="sync-key-saved" hidden>Family key saved on this device. <button type="button" class="btn-mini" id="sync-key-change">Change</button></p>
           <div class="settings-btns">
-            <button type="button" class="btn-mini primary" id="sync-now-btn">Sync now</button>
+            <button type="button" class="btn-mini primary" id="sync-now-btn">Card sync now</button>
             <button type="button" class="btn-mini primary" id="sync-save-btn">Save my changes to home computer</button>
             <button type="button" class="btn-mini warn" id="sync-discard-btn">Discard my changes</button>
           </div>
@@ -2110,7 +2111,7 @@
     var BLOB_FETCH_MS = 20000;
     var bootStartedAt = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
     var keyChangeOpen = false;
-    var APP_VERSION = "28";
+    var APP_VERSION = "29";
     var MATCH_PAIR_CAP = 6;
     var NAME_ROUNDS = 6;
     var THUMB_MAX = 256;
@@ -6288,7 +6289,7 @@
       familyPeople = [];
       ((manifest && manifest.people) || []).forEach(function (p) {
         if (!p || !p.id) return;
-        var person = { id: String(p.id), name: String(p.name || p.id), say: String(p.say || p.name || p.id), face: "", realFace: "", photos: [] };
+        var person = { id: String(p.id), name: String(p.name || p.id), say: String(p.say || p.name || p.id), face: "", realFace: "", photos: [], looks: (p.looks && typeof p.looks === "object") ? p.looks : {} };
         if (p.face && have[p.face]) { person.face = p.face; person.realFace = p.face; }
         (p.photos || []).forEach(function (f) { if (have[f]) person.photos.push(f); });
         if (!person.face && person.photos.length) person.face = person.photos[0];
@@ -6365,13 +6366,25 @@
 
     var recentPhotoFiles = [];
 
-    function pickPersonPhoto(p) {
+    var recentLooks = [];
+    function lookOf(p, f) { return (p.looks && p.looks[f]) || ("f:" + f); }
+    // A photo for this person whose "look" (same shot, same day, or near-identical picture)
+    // isn't already on the board; prefers looks not shown recently. Null if every photo clashes.
+    function pickPersonPhoto(p, boardLooks) {
       var list = p.photos.length ? p.photos : [p.face];
-      var fresh = list.filter(function (f) { return recentPhotoFiles.indexOf(f) === -1; });
-      var pick = shuffle((fresh.length ? fresh : list).slice())[0];
+      var ok = list.filter(function (f) { return !boardLooks || !boardLooks[lookOf(p, f)]; });
+      if (!ok.length) return null;
+      var fresh = ok.filter(function (f) { return recentPhotoFiles.indexOf(f) === -1 && recentLooks.indexOf(lookOf(p, f)) === -1; });
+      if (!fresh.length) fresh = ok.filter(function (f) { return recentPhotoFiles.indexOf(f) === -1; });
+      var pick = shuffle((fresh.length ? fresh : ok).slice())[0];
       recentPhotoFiles.push(pick);
       if (recentPhotoFiles.length > 40) recentPhotoFiles.shift();
+      recentLooks.push(lookOf(p, pick));
+      if (recentLooks.length > Math.max(4, Math.floor(familyPhotoCount() / 2))) recentLooks.shift();
       return pick;
+    }
+    function familyPhotoCount() {
+      return activeFamily().reduce(function (n, p) { return n + p.photos.length; }, 0);
     }
 
     function dealFamilyDeck() {
@@ -6379,9 +6392,20 @@
       var n = Math.min(pairsForLevel(0), MATCH_PAIR_CAP, people.length);
       var style = photoSettings.style || "photos";
       var items = [];
-      people.slice(0, n).forEach(function (p) {
+      var boardLooks = {};
+      var used = 0;
+      people.forEach(function (p) {
+        if (used >= n) return;
+        // Never two near-identical photos on one board unless they're the pair itself
+        // (e.g. a group shot cropped for two people, or two shots from the same day).
+        var file = pickPersonPhoto(p, boardLooks);
+        if (!file) return;
+        if (style === "faces" && p.face && boardLooks[lookOf(p, p.face)]) return;
+        used += 1;
+        boardLooks[lookOf(p, file)] = true;
+        if (p.face) boardLooks[lookOf(p, p.face)] = true;
         var face = familyItem(p, p.face, "face");
-        var photo = familyItem(p, pickPersonPhoto(p), "photo");
+        var photo = familyItem(p, file, "photo");
         var a = style === "faces" ? face : photo;
         var b = style === "faces" ? face : (style === "mix" ? (face.file === photo.file ? photo : face) : photo);
         items.push({ id: p.id, car: a });
@@ -6548,8 +6572,11 @@
               if (photoSync.done % 5 === 0 || photoSync.done === photoSync.total) setPhotoStatus(photoStatusText());
             });
           }).then(function () {
+            var onBoard = {};
+            deck.forEach(function (d) { if (d.car && d.car.family && d.car.file) onBoard[d.car.file] = true; });
             return Promise.all(stale.map(function (k) {
-              if (photoUrls[k]) { try { URL.revokeObjectURL(photoUrls[k]); } catch (e) {} delete photoUrls[k]; }
+              // removed on another device: gone from storage now, and from boards from the next deal
+              if (photoUrls[k] && !onBoard[k]) { try { URL.revokeObjectURL(photoUrls[k]); } catch (e) {} delete photoUrls[k]; }
               return pdbDel("img", k).catch(function () {});
             }));
           }).then(function () {
@@ -6998,7 +7025,7 @@
       status.classList.remove("is-error-dot", "is-offline", "is-syncing");
       if (icon) icon.outerHTML = svgTick();
       if (text) {
-        var label = lastSyncChanges > 0 ? ("Synced " + lastSyncChanges + " change" + (lastSyncChanges === 1 ? "" : "s")) : "Up to date";
+        var label = lastSyncChanges > 0 ? ("Card sync: " + lastSyncChanges + " change" + (lastSyncChanges === 1 ? "" : "s")) : "Up to date";
         text.textContent = label;
       }
       status.classList.add("is-flash");
@@ -7030,7 +7057,7 @@
       status.hidden = false;
       status.classList.remove("is-flash", "is-offline", "is-syncing");
       status.classList.add("is-error-dot");
-      if (text) text.textContent = lastSyncError || "Sync failed";
+      if (text) text.textContent = lastSyncError || "Card sync failed";
     }
 
     function updateSyncHud() {
@@ -7084,7 +7111,7 @@
       var total = syncProgress.total;
       var base = syncProgress.unit || "car";
       var unit = total === 1 ? base : base + "s";
-      return "Syncing " + syncProgress.done + " of " + total + " " + unit + "…";
+      return "Card sync " + syncProgress.done + " of " + total + " " + unit + "…";
     }
 
     function hideSyncProgressBars() {
@@ -7180,7 +7207,7 @@
       if (!syncConfigured()) {
         box.classList.add("is-idle");
         if (icon) icon.innerHTML = familyCloudSvg();
-        if (title) title.textContent = "Not syncing yet";
+        if (title) title.textContent = "Card sync not set up yet";
         if (detail) detail.textContent = "Enter the family key to start.";
         return;
       }
@@ -7188,22 +7215,22 @@
         box.classList.add("is-offline");
         if (icon) icon.innerHTML = familyCloudSvg();
         if (title) title.textContent = "Offline";
-        if (detail) detail.textContent = "Not on the home Wi-Fi" + (when ? " · last sync " + when : "");
+        if (detail) detail.textContent = "Not on the home Wi-Fi" + (when ? " · last card sync " + when : "");
       } else if (lastSyncError && !lastSyncOk) {
         box.classList.add("is-error");
         if (icon) icon.innerHTML = familyErrorSvg();
-        if (title) title.textContent = "Sync failed";
+        if (title) title.textContent = "Card sync failed";
         if (detail) detail.textContent = lastSyncError + (when ? " · " + when : "");
       } else if (lastSyncOk || lastSyncAt) {
-        var extra = lastSyncChanges > 0 ? ("Synced " + lastSyncChanges + " change" + (lastSyncChanges === 1 ? "" : "s")) : "Up to date";
-        if (title) title.textContent = "Synced ✓";
+        var extra = lastSyncChanges > 0 ? ("Card sync: " + lastSyncChanges + " change" + (lastSyncChanges === 1 ? "" : "s")) : "Up to date";
+        if (title) title.textContent = "Card sync ✓";
         if (detail) detail.textContent = extra + (when ? " · " + when : "");
         if (icon) icon.innerHTML = familyTickSvg();
       } else {
         box.classList.add("is-idle");
         if (icon) icon.innerHTML = familyTickSvg();
-        if (title) title.textContent = "Ready to sync";
-        if (detail) detail.textContent = "Tap Sync now when you are on the home Wi-Fi.";
+        if (title) title.textContent = "Ready for card sync";
+        if (detail) detail.textContent = "Tap Card sync now when you are on the home Wi-Fi.";
       }
     }
 
@@ -7237,7 +7264,7 @@
         var unreachable = isUnreachableError(lastSyncError);
         status.classList.toggle("is-error", !!lastSyncError && outboxCount === 0);
         if (!syncConfigured()) {
-          status.textContent = "Enter the family key to start syncing.";
+          status.textContent = "Enter the family key to start card sync.";
         } else if (outboxCount > 0 && unreachable) {
           status.textContent = outboxCount + " local changes not saved to home computer. Can't reach home computer.";
         } else if (outboxCount > 0) {
@@ -7247,9 +7274,9 @@
           status.textContent = unreachable ? "Can't reach home computer." : lastSyncError;
         } else if (lastSyncOk || lastSyncAt) {
           var when = formatSyncTime(lastSyncAt);
-          status.textContent = (lastSyncChanges > 0 ? ("Synced " + lastSyncChanges + " change" + (lastSyncChanges === 1 ? "" : "s")) : "Up to date") + (when ? " · " + when : "");
+          status.textContent = (lastSyncChanges > 0 ? ("Card sync: " + lastSyncChanges + " change" + (lastSyncChanges === 1 ? "" : "s")) : "Up to date") + (when ? " · " + when : "");
         } else {
-          status.textContent = "Ready to sync.";
+          status.textContent = "Ready for card sync.";
         }
       }
       if (notice) {
@@ -8322,6 +8349,7 @@
       loadFamilyLocal: loadFamilyLocal,
       startPhotoMatch: startPhotoMatch,
       getFamily: function () { return familyPeople.map(function (p) { return { id: p.id, name: p.name, say: p.say, face: !!p.face, photos: p.photos.length }; }); },
+      getFamilyFiles: function () { return familyPeople.map(function (p) { return { id: p.id, photos: p.photos.slice() }; }); },
       getPhotoSettings: function () { return JSON.parse(JSON.stringify(photoSettings)); },
       setPhotoSettings: savePhotoSettings,
       photosAvailable: photosAvailable,

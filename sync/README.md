@@ -130,3 +130,11 @@ The PHOTOS game and Family in the Name Game use pictures from Immich on this PC.
 - Up to 12 photos per person, plus a face card, are resized to 512 px JPEGs in `data\photos` by `photo-resize.ps1`. They refresh every 24 hours, or from Parent Settings > Photos > Refresh photos (needs the parent PIN).
 - `/api/photos` needs the family key, only answers on the home network, and refuses the GitHub Pages copy. Photos are never in git or on GitHub Pages.
 - v26: Parent Settings > Photos > Photos in the game shows each person's photos. The bin deletes a photo from the game on every device (its asset id goes on `skipAssets`, the cached file is removed); the face card's bin lets you pick another photo for the face or have none (`faceAssets` in `photo-people.json`). Both need the parent PIN. Nothing is ever deleted in Immich.
+
+
+## Photo safety review and variety (v29)
+
+- `data\photo-approved.json` lists the safety-reviewed Immich asset ids per person (first = default face card). When it exists, the PHOTOS game uses **only** these; the daily refresh never adds unreviewed pictures. Review rules: never naked or underwear, no nappy-only, bath, shirtless or swimwear photos.
+- Near-duplicates are kept out: at most one photo per person per day/event, none within 6 hours of another, and no two whose perceptual hash (64-bit dHash, `photo-hash.ps1`) differs by 12 bits or fewer.
+- Every cached photo gets a "look" id in the manifest (same Immich asset, same person+day, or near-identical hash share a look). The game never deals two cards with the same look on one board unless they're the matching pair, and avoids repeating a look in back-to-back games.
+- Deleting a photo in Settings (parent PIN) adds the asset to `skipAssets`, removes it from `photo-approved.json` and deletes the cached file; every device drops it on its next sync. Immich is never changed.

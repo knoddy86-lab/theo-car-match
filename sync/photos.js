@@ -35,6 +35,7 @@ function PhotoStore(opts) {
   this.rootDir = opts.rootDir;
   this.dir = path.join(this.dataDir, "photos");
   this.configFile = path.join(this.dataDir, "photo-people.json");
+  this.approvedFile = path.join(this.dataDir, "photo-approved.json");
   this.indexFile = path.join(this.dir, "index.json");
   this.immichUrl = process.env.IMMICH_URL || "http://127.0.0.1:2283";
   this.keyFile = process.env.IMMICH_KEY_FILE || path.join(os.homedir(), ".immich", "immich_api_key.txt");
@@ -81,6 +82,41 @@ PhotoStore.prototype.patchConfig = function (fn) {
   fs.renameSync(this.configFile + ".tmp", this.configFile);
 };
 
+// Safety-reviewed photos per person (asset ids). When this file exists, ONLY these
+// assets are used in the game; anything new has to be reviewed and added first.
+PhotoStore.prototype.readApproved = function () {
+  try {
+    var j = JSON.parse(fs.readFileSync(this.approvedFile, "utf8"));
+    if (j && j.people && typeof j.people === "object") return j;
+  } catch (e) {}
+  return null;
+};
+
+PhotoStore.prototype.patchApproved = function (fn) {
+  var raw = this.readApproved();
+  if (!raw) return;
+  fn(raw);
+  fs.writeFileSync(this.approvedFile + ".tmp", JSON.stringify(raw, null, 2));
+  fs.renameSync(this.approvedFile + ".tmp", this.approvedFile);
+};
+
+// 64-bit dHash per file (hex), via photo-hash.ps1. Read-only.
+PhotoStore.prototype.hashFiles = function (files) {
+  var self = this;
+  if (!files.length) return Promise.resolve({});
+  var listFile = path.join(this.dir, "_hash.json");
+  fs.writeFileSync(listFile, JSON.stringify(files));
+  var script = path.join(this.rootDir, "photo-hash.ps1");
+  return new Promise(function (resolve) {
+    childProcess.execFile("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", script, listFile], { windowsHide: true, timeout: 10 * 60 * 1000, maxBuffer: 8 * 1024 * 1024 }, function (err, stdout) {
+      try { fs.unlinkSync(listFile); } catch (e) {}
+      var out = {};
+      if (!err) { try { out = JSON.parse(String(stdout || "{}")); } catch (e) { out = {}; } }
+      resolve(out);
+    });
+  });
+};
+
 PhotoStore.prototype.readIndex = function () {
   try {
     var j = JSON.parse(fs.readFileSync(this.indexFile, "utf8"));
@@ -96,7 +132,7 @@ PhotoStore.prototype.manifest = function () {
     etag: idx.etag || "",
     refreshedAt: idx.refreshedAt || 0,
     people: (idx.people || []).map(function (p) {
-      return { id: p.id, name: p.name, say: p.say || p.name, face: p.face || "", photos: (p.photos || []).slice() };
+      return { id: p.id, name: p.name, say: p.say || p.name, face: p.face || "", photos: (p.photos || []).slice(), looks: p.looks || {} };
     })
   };
 };
@@ -249,7 +285,8 @@ PhotoStore.prototype.refresh = function (reason) {
   var skip = {};
   cfg.skipAssets.forEach(function (id) { skip[id] = true; });
   var tmp = path.join(this.dir, "_tmp");
-  var report = { at: Date.now(), reason: reason || "", people: [], problems: [] };
+  var approved = this.readApproved();
+  var report = { at: Date.now(), reason: reason || "", people: [], problems: [], approvedOnly: !!approved };
   this.refreshing = this.immich("GET", "/api/people?size=1000&withHidden=false").then(function (j) {
     var list = (j && (j.people || j)) || [];
     var m = matchPeople(cfg.people, list);
@@ -265,7 +302,9 @@ PhotoStore.prototype.refresh = function (reason) {
         var slug = slugify(hit.cfg.name);
         while (usedSlugs[slug]) slug += "x";
         usedSlugs[slug] = true;
-        return self.pickPhotos(hit.person.id, cfg.perPerson, skip).then(function (picked) {
+        var approvedIds = approved ? (approved.people[hit.cfg.name] || []) : null;
+        var getItems = approvedIds ? self.approvedItems(hit.person.id, approvedIds, cfg.perPerson, skip) : self.pickPhotos(hit.person.id, cfg.perPerson, skip);
+        return getItems.then(function (picked) {
           var entry = { id: slug, name: hit.cfg.name, say: hit.cfg.say || hit.cfg.name, immichName: String(hit.person.name).trim(), totalAssets: picked.total, chosen: picked.items };
           people.push(entry);
           var faceCfg = cfg.faceAssets[hit.cfg.name];
@@ -328,12 +367,15 @@ PhotoStore.prototype.refresh = function (reason) {
         p.chosen.forEach(function (it) {
           if (it.skip) return;
           var n = place(it.out, p.id);
-          if (n) { photos.push(n); items.push({ file: n, asset: it.id, box: it.box, mime: it.mime || "" }); }
+          if (n) { photos.push(n); items.push({ file: n, asset: it.id, box: it.box, mime: it.mime || "", when: it.when || 0, day: dayKey(it.localDate || it.when) }); }
         });
         var face = place(p.faceOut, p.id);
         outPeople.push({ id: p.id, name: p.name, say: p.say, face: face, faceAsset: face ? (p.faceAsset || "") : "", photos: photos, items: items });
         report.people.push({ name: p.name, immichName: p.immichName, immichPhotos: p.totalAssets, cached: photos.length, face: !!face });
       });
+      return self.hashFiles(Object.keys(keep).map(function (f) { return path.join(self.dir, f); })).then(function (hashes) {
+      outPeople.forEach(function (p) { p.items.forEach(function (it) { it.hash = hashes[path.join(self.dir, it.file)] || ""; }); });
+      computeLooks(outPeople);
       var etag = crypto.createHash("sha1").update(JSON.stringify(outPeople)).digest("hex").slice(0, 16);
       var idx = { refreshedAt: Date.now(), etag: etag, people: outPeople, report: report };
       fs.writeFileSync(self.indexFile + ".tmp", JSON.stringify(idx, null, 2));
@@ -345,6 +387,7 @@ PhotoStore.prototype.refresh = function (reason) {
       fs.rmSync(tmp, { recursive: true, force: true });
       self.lastError = "";
       return self.status();
+      });
     });
   }).catch(function (e) {
     self.lastError = String(e && e.message || e).slice(0, 300);
@@ -399,27 +442,20 @@ PhotoStore.prototype.pickPhotos = function (personId, n, skip) {
           var st = faceStats(faces, personId);
           if (!st.mine || st.mine.area < 0.0005) return;
           var score = Math.sqrt(st.mine.area) / Math.pow(st.count, 1.3);
-          scored.push({ id: a.id, mime: a.originalMimeType || "", when: Date.parse(a.localDateTime || a.fileCreatedAt || 0) || 0, box: st.mine.box, score: score, faces: st.count });
+          scored.push({ id: a.id, mime: a.originalMimeType || "", when: Date.parse(a.localDateTime || a.fileCreatedAt || 0) || 0, localDate: a.localDateTime || a.fileCreatedAt || "", box: st.mine.box, score: score, faces: st.count });
         }).catch(function () {});
       });
     });
     return chain.then(function () {
-      scored.sort(function (x, y) { return y.score - x.score; });
-      var chosen = [];
-      scored.forEach(function (s) {
-        if (chosen.length >= n) return;
-        var near = chosen.some(function (c) { return Math.abs(c.when - s.when) < 20 * 60 * 1000; });
-        if (!near) chosen.push(s);
-      });
-      scored.forEach(function (s) { if (chosen.length < n && chosen.indexOf(s) === -1) chosen.push(s); });
-      return { total: total, items: chosen };
+      return { total: total, items: diversePick(scored, n, []) };
     });
   });
 };
 
 PhotoStore.prototype.saveIndex = function () {
   var idx = this.index;
-  idx.etag = crypto.createHash("sha1").update(JSON.stringify((idx.people || []).map(function (p) { return [p.id, p.name, p.say, p.face, p.photos]; }))).digest("hex").slice(0, 16);
+  computeLooks(idx.people || []);
+  idx.etag = crypto.createHash("sha1").update(JSON.stringify((idx.people || []).map(function (p) { return [p.id, p.name, p.say, p.face, p.photos, p.looks]; }))).digest("hex").slice(0, 16);
   fs.writeFileSync(this.indexFile + ".tmp", JSON.stringify(idx, null, 2));
   fs.renameSync(this.indexFile + ".tmp", this.indexFile);
 };
@@ -449,6 +485,10 @@ PhotoStore.prototype.deletePhoto = function (file) {
     this.patchConfig(function (raw) {
       raw.skipAssets = Array.isArray(raw.skipAssets) ? raw.skipAssets : [];
       if (raw.skipAssets.indexOf(item.asset) === -1) raw.skipAssets.push(item.asset);
+    });
+    var personName = person.name;
+    this.patchApproved(function (raw) {
+      if (Array.isArray(raw.people[personName])) raw.people[personName] = raw.people[personName].filter(function (id) { return id !== item.asset; });
     });
   }
   person.photos = person.photos.filter(function (f) { return f !== file; });
@@ -525,4 +565,101 @@ PhotoStore.prototype.startSchedule = function () {
   setInterval(tick, 60 * 60 * 1000).unref();
 };
 
-module.exports = { PhotoStore: PhotoStore };
+// Build game items from the reviewed asset list (in order). Read-only Immich calls.
+PhotoStore.prototype.approvedItems = function (personId, ids, n, skip) {
+  var self = this;
+  var items = [];
+  var chain = Promise.resolve();
+  ids.filter(function (id) { return !skip[id]; }).slice(0, n).forEach(function (id) {
+    chain = chain.then(function () {
+      return self.immich("GET", "/api/assets/" + id).then(function (a) {
+        if (!a || a.type !== "IMAGE" || a.isTrashed || a.isArchived || a.isOffline) return;
+        if (a.visibility && a.visibility !== "timeline") return;
+        return self.immich("GET", "/api/faces?id=" + id).then(function (faces) {
+          var st = faceStats(faces, personId);
+          if (!st.mine) return;
+          items.push({ id: id, mime: a.originalMimeType || "", when: Date.parse(a.localDateTime || a.fileCreatedAt || 0) || 0, localDate: a.localDateTime || a.fileCreatedAt || "", box: st.mine.box, faces: st.count });
+        });
+      }).catch(function () {});
+    });
+  });
+  return chain.then(function () {
+    return self.immich("GET", "/api/people/" + personId + "/statistics").then(function (st) { return st && st.assets || 0; }).catch(function () { return 0; });
+  }).then(function (total) { return { total: total, items: items }; });
+};
+
+function dayKey(v) {
+  if (!v) return "";
+  if (typeof v === "number") return new Date(v).toISOString().slice(0, 10);
+  return String(v).slice(0, 10);
+}
+
+function hamming(a, b) {
+  if (!a || !b || a.length !== b.length) return 64;
+  var d = 0;
+  for (var i = 0; i < a.length; i++) {
+    var x = parseInt(a[i], 16) ^ parseInt(b[i], 16);
+    while (x) { d += x & 1; x >>= 1; }
+  }
+  return d;
+}
+
+var NEAR_HASH = 12;      // dHash bits: at or under this = near-identical picture
+var MIN_GAP_MS = 6 * 3600 * 1000;
+
+// Best-scoring first, but at most one per calendar day and never within 6 hours of another pick.
+function diversePick(scored, n, taken) {
+  var list = scored.slice().sort(function (x, y) { return y.score - x.score; });
+  var days = {};
+  var chosen = [];
+  (taken || []).forEach(function (t) { if (t.day) days[t.day] = true; });
+  list.forEach(function (s) {
+    if (chosen.length >= n) return;
+    var d = dayKey(s.localDate || s.when);
+    if (d && days[d]) return;
+    var near = chosen.concat(taken || []).some(function (c) { return c.when && s.when && Math.abs(c.when - s.when) < MIN_GAP_MS; });
+    if (near) return;
+    if (d) days[d] = true;
+    chosen.push(s);
+  });
+  return chosen;
+}
+
+// Group photos that look alike: the same Immich asset (even for two people), the same
+// person on the same day, or near-identical pictures by perceptual hash. Each file gets a
+// "look" id; the game never deals two cards with the same look unless they're the pair.
+function computeLooks(people) {
+  var nodes = [];
+  people.forEach(function (p) {
+    (p.items || []).forEach(function (it) { nodes.push({ person: p.id, file: it.file, asset: it.asset, day: it.day || "", hash: it.hash || "" }); });
+  });
+  var parent = nodes.map(function (_, i) { return i; });
+  function find(i) { while (parent[i] !== i) { parent[i] = parent[parent[i]]; i = parent[i]; } return i; }
+  function join(a, b) { a = find(a); b = find(b); if (a !== b) parent[b] = a; }
+  for (var i = 0; i < nodes.length; i++) {
+    for (var j = i + 1; j < nodes.length; j++) {
+      var a = nodes[i], b = nodes[j];
+      if ((a.asset && a.asset === b.asset) ||
+          (a.person === b.person && a.day && a.day === b.day) ||
+          hamming(a.hash, b.hash) <= NEAR_HASH) join(i, j);
+    }
+  }
+  var ids = {};
+  var n = 0;
+  people.forEach(function (p) { p.looks = {}; });
+  var byPerson = {};
+  people.forEach(function (p) { byPerson[p.id] = p; });
+  nodes.forEach(function (nd, i) {
+    var r = find(i);
+    if (!ids[r]) ids[r] = "l" + (++n);
+    byPerson[nd.person].looks[nd.file] = ids[r];
+  });
+  people.forEach(function (p) {
+    if (p.face && p.faceAsset) {
+      var src = (p.items || []).filter(function (it) { return it.asset === p.faceAsset; })[0];
+      if (src && p.looks[src.file]) p.looks[p.face] = p.looks[src.file];
+    }
+  });
+}
+
+module.exports = { PhotoStore: PhotoStore, squareCrop: squareCrop, smallFace: smallFace, faceStats: faceStats, dayKey: dayKey, hamming: hamming, diversePick: diversePick, computeLooks: computeLooks, NEAR_HASH: NEAR_HASH };
