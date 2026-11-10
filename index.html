@@ -155,6 +155,7 @@
       align-items: center;
       gap: clamp(10px, 2.4vh, 28px);
     }
+    .splash[hidden] { display: none; }
     .banner {
       background: rgba(255,255,255,0.92);
       border: 6px solid #FFF;
@@ -486,6 +487,156 @@
       justify-content: center;
       padding: 4px 8px 8px;
       overflow: hidden;
+    }
+    #grid .card.is-driving,
+    #name-grid .name-choice.is-driving {
+      animation-name: drive-in;
+      animation-timing-function: cubic-bezier(0.22, 0.8, 0.28, 1.1);
+      animation-fill-mode: both;
+      pointer-events: none;
+    }
+    @keyframes drive-in {
+      0% { transform: translateX(var(--drive-from, -130%)) rotate(-8deg); opacity: 0; }
+      62% { transform: translateX(calc(var(--drive-from, -130%) * -0.06)) rotate(4deg); opacity: 1; }
+      82% { transform: translateX(calc(var(--drive-from, -130%) * 0.02)) rotate(-2deg); }
+      100% { transform: translateX(0) rotate(0); opacity: 1; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      #grid .card.is-driving,
+      #name-grid .name-choice.is-driving {
+        animation: none;
+        pointer-events: auto;
+        transform: none;
+        opacity: 1;
+      }
+    }
+    .player-chip {
+      position: absolute;
+      top: var(--safe-t);
+      left: calc(var(--safe-l) + 52px);
+      z-index: 8;
+      display: flex;
+      align-items: center;
+      max-width: calc(100vw - 80px);
+    }
+    .player-chip[hidden] { display: none; }
+    .player-chip-btn {
+      appearance: none;
+      border: 0;
+      border-radius: 999px;
+      padding: 4px 12px 4px 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font: inherit;
+      font-weight: 800;
+      font-size: 14px;
+      color: #1A237E;
+      background: rgba(255,255,255,0.92);
+      box-shadow: 0 3px 0 rgba(0,0,0,0.1), 0 6px 14px rgba(0,0,0,0.12);
+      max-width: 100%;
+    }
+    .player-chip-face {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .player-chip-btn:focus {
+      outline: 4px solid var(--focus);
+      outline-offset: 2px;
+    }
+    .player-picker {
+      width: min(920px, 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      padding: 8px 8px 24px;
+    }
+    .player-picker[hidden] { display: none; }
+    .player-picker h2 {
+      margin: 0;
+      font-size: clamp(26px, 6vmin, 48px);
+      color: #1A237E;
+      text-align: center;
+    }
+    .player-picker-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 14px;
+      width: 100%;
+    }
+    .player-tile {
+      appearance: none;
+      border: 0;
+      width: min(42vw, 180px);
+      min-height: 160px;
+      border-radius: 28px;
+      padding: 16px 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font: inherit;
+      font-weight: 800;
+      font-size: 20px;
+      color: #1A237E;
+      background: rgba(255,255,255,0.95);
+      box-shadow: 0 8px 0 rgba(0,0,0,0.1), 0 14px 24px rgba(0,0,0,0.12);
+    }
+    .player-tile-face {
+      width: 88px;
+      height: 88px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 52px;
+      line-height: 1;
+    }
+    .player-tile:focus {
+      outline: 4px solid var(--focus);
+      outline-offset: 3px;
+    }
+    .players-list { display: flex; flex-direction: column; gap: 12px; margin: 12px 0; }
+    .player-edit {
+      background: #fff;
+      border-radius: 18px;
+      padding: 12px;
+      box-shadow: 0 2px 0 rgba(0,0,0,0.06);
+    }
+    .player-edit-top { display: flex; gap: 8px; align-items: center; }
+    .player-edit-top input { flex: 1 1 auto; }
+    .emoji-picks, .colour-picks {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .emoji-pick, .colour-pick {
+      appearance: none;
+      border: 3px solid transparent;
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      padding: 0;
+      font-size: 22px;
+      background: #F5F7FF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .colour-pick { width: 32px; height: 32px; border-radius: 50%; }
+    .emoji-pick[aria-pressed="true"], .colour-pick[aria-pressed="true"] {
+      border-color: #1A237E;
     }
     .grid {
       display: grid;
@@ -1401,10 +1552,14 @@
           <p class="for-theo">For Theo</p>
         </div>
         <div class="hero-cars" id="hero-cars"></div>
-        <div class="start-actions">
+        <div class="start-actions" id="start-actions">
           <button type="button" class="btn btn-play" id="play-btn" aria-label="Match Game">MATCH</button>
           <button type="button" class="btn btn-names" id="names-btn" aria-label="Name Game">NAME</button>
         </div>
+      </div>
+      <div class="player-picker" id="player-picker" hidden>
+        <h2>Who's playing?</h2>
+        <div class="player-picker-grid" id="player-picker-grid"></div>
       </div>
     </section>
 
@@ -1460,6 +1615,12 @@
       </div>
     </div>
 
+    <div class="player-chip" id="player-chip" hidden>
+      <button type="button" class="player-chip-btn" id="player-chip-btn" aria-label="Switch player">
+        <span class="player-chip-face" id="player-chip-face" aria-hidden="true"></span>
+        <span class="player-chip-name" id="player-chip-name"></span>
+      </button>
+    </div>
     <button type="button" class="gear-btn" id="settings-btn" aria-label="Parent settings. Press and hold for two seconds.">
       <svg class="hold-ring" viewBox="0 0 44 44" aria-hidden="true">
         <circle cx="22" cy="22" r="18" fill="none" stroke="rgba(255,152,0,0.28)" stroke-width="3"></circle>
@@ -1500,6 +1661,7 @@
           <button type="button" role="tab" id="tab-cars" aria-controls="pane-cars" aria-selected="true">Cars</button>
           <button type="button" role="tab" id="tab-difficulty" aria-controls="pane-difficulty" aria-selected="false">Match</button>
           <button type="button" role="tab" id="tab-names" aria-controls="pane-names" aria-selected="false">Names</button>
+          <button type="button" role="tab" id="tab-players" aria-controls="pane-players" aria-selected="false">Players</button>
           <button type="button" role="tab" id="tab-family" aria-controls="pane-family" aria-selected="false">Family</button>
         </div>
         <div id="pane-cars" class="settings-pane" role="tabpanel" aria-labelledby="tab-cars">
@@ -1626,6 +1788,19 @@
             <div class="diff-row">
               <label for="name-set-cele">End celebration screen</label>
               <input id="name-set-cele" type="checkbox" checked>
+            </div>
+          </div>
+        </div>
+        <div id="pane-players" class="settings-pane" role="tabpanel" aria-labelledby="tab-players" hidden>
+          <p class="settings-lead">Players on this device. Each player keeps their own Match and Names settings. Cards are shared.</p>
+          <p class="device-only-note">This device only — not synced.</p>
+          <div class="players-list" id="players-list"></div>
+          <button type="button" class="btn btn-add" id="add-player-btn">Add a player</button>
+          <div id="player-delete-confirm" class="reset-confirm" hidden>
+            <p id="player-delete-text">Delete this player?</p>
+            <div class="settings-btns">
+              <button type="button" class="btn-mini warn" id="player-delete-yes">Yes, delete</button>
+              <button type="button" class="btn-mini" id="player-delete-no">Cancel</button>
             </div>
           </div>
         </div>
@@ -1804,7 +1979,7 @@
     var BLOB_FETCH_MS = 20000;
     var bootStartedAt = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
     var keyChangeOpen = false;
-    var APP_VERSION = "22";
+    var APP_VERSION = "23";
     var MATCH_PAIR_CAP = 6;
     var NAME_ROUNDS = 6;
     var THUMB_MAX = 256;
@@ -2385,7 +2560,12 @@
           if (patch.image !== undefined && !patch.image && patch.imageOriginal === undefined) rec.imageOriginal = undefined;
           if (patch.removeWhite !== undefined) rec.removeWhite = patch.removeWhite !== false;
           if (patch.audio !== undefined) rec.audio = patch.audio || undefined;
-          if (patch.name !== undefined) rec.name = (patch.name && String(patch.name).trim()) || undefined;
+          if (patch.name !== undefined) {
+            var nextName = (patch.name && String(patch.name).trim()) || "";
+            // Blank means unchanged — never wipe a name that is already set.
+            if (nextName) rec.name = nextName;
+            else if (!rec.name) rec.name = undefined;
+          }
           if (patch.line !== undefined) rec.line = (patch.line && String(patch.line).trim()) || undefined;
           if (patch.sayLike !== undefined) rec.sayLike = (patch.sayLike && String(patch.sayLike).trim()) || undefined;
           if (patch.nickname !== undefined) rec.nickname = (patch.nickname && String(patch.nickname).trim()) || undefined;
@@ -3356,6 +3536,7 @@
       applyDifficultyDom();
       try { localStorage.setItem("theo-car-match-difficulty", JSON.stringify(difficulty)); } catch (e) {}
       return metaSet("difficulty", difficulty).then(function () {
+        persistActiveProfileSettings();
         updateDifficultyUi();
         return difficulty;
       });
@@ -3464,6 +3645,7 @@
         { tab: "tab-cars", pane: "pane-cars" },
         { tab: "tab-difficulty", pane: "pane-difficulty" },
         { tab: "tab-names", pane: "pane-names" },
+        { tab: "tab-players", pane: "pane-players" },
         { tab: "tab-family", pane: "pane-family" }
       ];
       tabs.forEach(function (t) {
@@ -3476,7 +3658,7 @@
     }
 
     function bindSettingsTabs() {
-      ["cars", "difficulty", "names", "family"].forEach(function (name) {
+      ["cars", "difficulty", "names", "players", "family"].forEach(function (name) {
         var tb = document.getElementById("tab-" + name);
         if (tb) tb.addEventListener("click", function () { showSettingsTab(name); });
       });
@@ -3626,6 +3808,36 @@
       return levelCars;
     }
 
+    function prefersReducedMotion() {
+      return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    }
+
+    function playDriveIn(items, then) {
+      var list = Array.prototype.slice.call(items || []);
+      var finish = function () {
+        list.forEach(function (el) {
+          el.classList.remove("is-driving");
+          el.style.removeProperty("--drive-from");
+          el.style.animationDuration = "";
+          el.style.animationDelay = "";
+        });
+        if (then) then();
+      };
+      if (!list.length || prefersReducedMotion()) { finish(); return; }
+      var anim = 620;
+      var total = 820;
+      var gap = list.length > 1 ? Math.min(70, Math.max(24, (total - anim) / (list.length - 1))) : 0;
+      list.forEach(function (el, i) {
+        el.classList.remove("is-driving");
+        void el.offsetWidth;
+        el.style.setProperty("--drive-from", (i % 2 === 0 ? "-130%" : "130%"));
+        el.style.animationDuration = anim + "ms";
+        el.style.animationDelay = (Math.round(i * gap)) + "ms";
+        el.classList.add("is-driving");
+      });
+      setTimeout(finish, total);
+    }
+
     function startGame(lvl, fresh) {
       stopNameGame(true);
       artRefreshQueued = false;
@@ -3645,14 +3857,19 @@
       document.getElementById("start-screen").hidden = true;
       document.getElementById("name-screen").hidden = true;
       document.getElementById("game-screen").hidden = false;
+      updatePlayerUi();
       renderHUD();
       renderGrid();
       layoutGrid();
+      locked = true;
       requestAnimationFrame(function () {
         layoutGrid();
-        focusIndex = 0;
-        focusCard(0);
-        startPeek();
+        playDriveIn(cards(), function () {
+          locked = false;
+          focusIndex = 0;
+          focusCard(0);
+          startPeek();
+        });
       });
     }
 
@@ -3996,8 +4213,13 @@
       document.getElementById("start-screen").hidden = false;
       artRefreshQueued = false;
       paintHero();
+      updatePlayerUi();
+      var picker = document.getElementById("player-picker");
       var play = document.getElementById("play-btn");
-      if (play) play.focus();
+      if (picker && !picker.hidden) {
+        var first = document.querySelector("#player-picker-grid .player-tile");
+        if (first) first.focus();
+      } else if (play) play.focus();
     }
 
     function normalizeNameSettings(raw) {
@@ -4028,6 +4250,7 @@
     function saveNameSettings(patch) {
       nameSettings = normalizeNameSettings(Object.assign({}, nameSettings, patch || {}));
       try { localStorage.setItem(NAME_SETTINGS_KEY, JSON.stringify(nameSettings)); } catch (e) {}
+      persistActiveProfileSettings();
       updateNameGameUi();
     }
 
@@ -4052,6 +4275,306 @@
         var el = document.getElementById(id);
         if (el) el.addEventListener("change", read);
       });
+    }
+
+    var PROFILES_KEY = "theo-car-match-profiles";
+    var PROFILE_PICKED_KEY = "theo-car-match-picked-profile";
+    var PROFILE_EMOJIS = ["😊","😄","😎","🤩","🦁","🐯","🐶","🐱","🐸","🐼","⭐","🚗","🏎️","🚀","🌈","🎈"];
+    var PROFILE_COLOURS = ["#E53935","#FB8C00","#F9A825","#43A047","#1E88E5","#8E24AA","#D81B60","#00897B","#6D4C41","#3949AB"];
+    var profilesState = { activeId: "", profiles: [] };
+    var pendingDeleteId = "";
+
+    function newProfileId() {
+      return "player-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 7);
+    }
+
+    function sanitizeProfile(raw, fallbackName) {
+      raw = raw && typeof raw === "object" ? raw : {};
+      var id = String(raw.id || newProfileId());
+      var name = String(raw.name || fallbackName || "Player").trim().slice(0, 20) || "Player";
+      var emoji = String(raw.emoji || "😊");
+      if (PROFILE_EMOJIS.indexOf(emoji) === -1 && !/^\S$/u.test(emoji) && emoji.length > 8) emoji = "😊";
+      var color = String(raw.color || "#E53935");
+      if (!/^#[0-9A-Fa-f]{6}$/.test(color)) color = "#E53935";
+      return {
+        id: id,
+        name: name,
+        emoji: emoji,
+        color: color,
+        difficulty: normalizeDifficulty(raw.difficulty || difficulty),
+        nameSettings: normalizeNameSettings(raw.nameSettings || nameSettings)
+      };
+    }
+
+    function saveProfilesStore() {
+      try { localStorage.setItem(PROFILES_KEY, JSON.stringify(profilesState)); } catch (e) {}
+    }
+
+    function activeProfile() {
+      var id = profilesState.activeId;
+      var list = profilesState.profiles || [];
+      for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i];
+      return list[0] || null;
+    }
+
+    function persistActiveProfileSettings() {
+      var p = activeProfile();
+      if (!p) return;
+      p.difficulty = JSON.parse(JSON.stringify(difficulty));
+      p.nameSettings = JSON.parse(JSON.stringify(nameSettings));
+      saveProfilesStore();
+    }
+
+    function applyProfileSettings(p, persist) {
+      if (!p) return;
+      difficulty = normalizeDifficulty(p.difficulty);
+      nameSettings = normalizeNameSettings(p.nameSettings);
+      applyDifficultyDom();
+      try { localStorage.setItem("theo-car-match-difficulty", JSON.stringify(difficulty)); } catch (e) {}
+      try { localStorage.setItem(NAME_SETTINGS_KEY, JSON.stringify(nameSettings)); } catch (e) {}
+      if (persist) {
+        try { metaSet("difficulty", difficulty); } catch (e2) {}
+      }
+      updateDifficultyUi();
+      updateNameGameUi();
+    }
+
+    function loadProfiles() {
+      var parsed = null;
+      try {
+        var raw = localStorage.getItem(PROFILES_KEY);
+        if (raw) parsed = JSON.parse(raw);
+      } catch (e) { parsed = null; }
+      if (parsed && parsed.profiles && parsed.profiles.length) {
+        profilesState.profiles = parsed.profiles.map(function (p) { return sanitizeProfile(p); });
+        profilesState.activeId = parsed.activeId || profilesState.profiles[0].id;
+        if (!activeProfile()) profilesState.activeId = profilesState.profiles[0].id;
+      } else {
+        var theo = sanitizeProfile({ id: "theo", name: "Theo", emoji: "😊", color: "#E53935" });
+        theo.difficulty = normalizeDifficulty(difficulty);
+        theo.nameSettings = normalizeNameSettings(nameSettings);
+        profilesState = { activeId: "theo", profiles: [theo] };
+      }
+      applyProfileSettings(activeProfile(), false);
+      saveProfilesStore();
+    }
+
+    function sessionPickedId() {
+      try { return sessionStorage.getItem(PROFILE_PICKED_KEY) || ""; } catch (e) { return ""; }
+    }
+
+    function setSessionPicked(id) {
+      try {
+        if (id) sessionStorage.setItem(PROFILE_PICKED_KEY, id);
+        else sessionStorage.removeItem(PROFILE_PICKED_KEY);
+      } catch (e) {}
+    }
+
+    function setActiveProfile(id, fromPicker) {
+      var list = profilesState.profiles || [];
+      var found = null;
+      for (var i = 0; i < list.length; i++) if (list[i].id === id) found = list[i];
+      if (!found) return false;
+      if (activeProfile() && activeProfile().id !== id) persistActiveProfileSettings();
+      profilesState.activeId = id;
+      applyProfileSettings(found, true);
+      if (fromPicker) setSessionPicked(id);
+      saveProfilesStore();
+      updatePlayerUi();
+      return true;
+    }
+
+    function addProfile(patch) {
+      persistActiveProfileSettings();
+      var prof = sanitizeProfile(Object.assign({ id: newProfileId(), name: "Player", emoji: "😊", color: PROFILE_COLOURS[profilesState.profiles.length % PROFILE_COLOURS.length] }, patch || {}));
+      if (!patch || !patch.difficulty) prof.difficulty = normalizeDifficulty(DIFF_PRESETS.age2);
+      if (!patch || !patch.nameSettings) prof.nameSettings = normalizeNameSettings({ choices: "auto", say: "full", celebration: true });
+      profilesState.profiles.push(prof);
+      saveProfilesStore();
+      renderPlayersSettings();
+      updatePlayerUi();
+      return prof;
+    }
+
+    function renameProfile(id, name) {
+      var list = profilesState.profiles || [];
+      for (var i = 0; i < list.length; i++) {
+        if (list[i].id === id) {
+          list[i].name = String(name || "").trim().slice(0, 20) || list[i].name;
+          saveProfilesStore();
+          renderPlayersSettings();
+          updatePlayerUi();
+          return list[i];
+        }
+      }
+      return null;
+    }
+
+    function setProfileStyle(id, patch) {
+      var list = profilesState.profiles || [];
+      for (var i = 0; i < list.length; i++) {
+        if (list[i].id === id) {
+          if (patch.emoji) list[i].emoji = patch.emoji;
+          if (patch.color) list[i].color = patch.color;
+          saveProfilesStore();
+          renderPlayersSettings();
+          updatePlayerUi();
+          return list[i];
+        }
+      }
+      return null;
+    }
+
+    function deleteProfile(id) {
+      if ((profilesState.profiles || []).length <= 1) return false;
+      profilesState.profiles = profilesState.profiles.filter(function (p) { return p.id !== id; });
+      if (profilesState.activeId === id) {
+        profilesState.activeId = profilesState.profiles[0].id;
+        applyProfileSettings(activeProfile(), true);
+      }
+      saveProfilesStore();
+      pendingDeleteId = "";
+      renderPlayersSettings();
+      updatePlayerUi();
+      return true;
+    }
+
+    function shouldShowPicker() {
+      return (profilesState.profiles || []).length > 1 && sessionPickedId() !== profilesState.activeId;
+    }
+
+    function renderPlayerPicker() {
+      var grid = document.getElementById("player-picker-grid");
+      if (!grid) return;
+      grid.innerHTML = "";
+      (profilesState.profiles || []).forEach(function (p) {
+        var btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "player-tile";
+        btn.setAttribute("data-profile-id", p.id);
+        var face = document.createElement("span");
+        face.className = "player-tile-face";
+        face.style.background = p.color;
+        face.textContent = p.emoji;
+        var lab = document.createElement("span");
+        lab.textContent = p.name;
+        btn.appendChild(face);
+        btn.appendChild(lab);
+        btn.addEventListener("click", function () { setActiveProfile(p.id, true); });
+        grid.appendChild(btn);
+      });
+    }
+
+    function renderPlayersSettings() {
+      var listEl = document.getElementById("players-list");
+      if (!listEl) return;
+      listEl.innerHTML = "";
+      var confirm = document.getElementById("player-delete-confirm");
+      if (confirm && !pendingDeleteId) confirm.hidden = true;
+      (profilesState.profiles || []).forEach(function (p) {
+        var row = document.createElement("div");
+        row.className = "player-edit";
+        row.setAttribute("data-profile-id", p.id);
+        var top = document.createElement("div");
+        top.className = "player-edit-top";
+        var face = document.createElement("span");
+        face.className = "player-chip-face";
+        face.style.background = p.color;
+        face.textContent = p.emoji;
+        var input = document.createElement("input");
+        input.type = "text";
+        input.className = "name-input";
+        input.maxLength = 20;
+        input.value = p.name;
+        input.setAttribute("aria-label", "Player name");
+        input.addEventListener("change", function () { renameProfile(p.id, input.value); });
+        input.addEventListener("blur", function () { renameProfile(p.id, input.value); });
+        top.appendChild(face);
+        top.appendChild(input);
+        if ((profilesState.profiles || []).length > 1) {
+          var del = document.createElement("button");
+          del.type = "button";
+          del.className = "btn-mini warn";
+          del.textContent = "Delete";
+          del.addEventListener("click", function () {
+            pendingDeleteId = p.id;
+            var box = document.getElementById("player-delete-confirm");
+            var txt = document.getElementById("player-delete-text");
+            if (txt) txt.textContent = "Delete " + p.name + "? Their Match and Names settings will be removed from this device.";
+            if (box) box.hidden = false;
+          });
+          top.appendChild(del);
+        }
+        row.appendChild(top);
+        var emojis = document.createElement("div");
+        emojis.className = "emoji-picks";
+        PROFILE_EMOJIS.forEach(function (em) {
+          var b = document.createElement("button");
+          b.type = "button";
+          b.className = "emoji-pick";
+          b.textContent = em;
+          b.setAttribute("aria-pressed", em === p.emoji ? "true" : "false");
+          b.addEventListener("click", function () { setProfileStyle(p.id, { emoji: em }); });
+          emojis.appendChild(b);
+        });
+        row.appendChild(emojis);
+        var colours = document.createElement("div");
+        colours.className = "colour-picks";
+        PROFILE_COLOURS.forEach(function (c) {
+          var b = document.createElement("button");
+          b.type = "button";
+          b.className = "colour-pick";
+          b.style.background = c;
+          b.setAttribute("aria-label", "Colour " + c);
+          b.setAttribute("aria-pressed", c.toLowerCase() === p.color.toLowerCase() ? "true" : "false");
+          b.addEventListener("click", function () { setProfileStyle(p.id, { color: c }); });
+          colours.appendChild(b);
+        });
+        row.appendChild(colours);
+        listEl.appendChild(row);
+      });
+    }
+
+    function bindPlayersUi() {
+      var add = document.getElementById("add-player-btn");
+      if (add) add.addEventListener("click", function () { addProfile({ name: "Player" }); });
+      var yes = document.getElementById("player-delete-yes");
+      var no = document.getElementById("player-delete-no");
+      if (yes) yes.addEventListener("click", function () {
+        if (pendingDeleteId) deleteProfile(pendingDeleteId);
+        var box = document.getElementById("player-delete-confirm");
+        if (box) box.hidden = true;
+      });
+      if (no) no.addEventListener("click", function () {
+        pendingDeleteId = "";
+        var box = document.getElementById("player-delete-confirm");
+        if (box) box.hidden = true;
+      });
+      var chip = document.getElementById("player-chip-btn");
+      if (chip) chip.addEventListener("click", function () {
+        setSessionPicked("");
+        updatePlayerUi();
+      });
+    }
+
+    function updatePlayerUi() {
+      var picker = document.getElementById("player-picker");
+      var splash = document.getElementById("start-splash") || document.querySelector("#start-screen .splash");
+      var chip = document.getElementById("player-chip");
+      var face = document.getElementById("player-chip-face");
+      var name = document.getElementById("player-chip-name");
+      var p = activeProfile();
+      var onStart = document.getElementById("start-screen") && !document.getElementById("start-screen").hidden;
+      if (face && p) {
+        face.textContent = p.emoji;
+        face.style.background = p.color;
+      }
+      if (name && p) name.textContent = p.name;
+      var showPicker = onStart && shouldShowPicker();
+      if (picker) picker.hidden = !showPicker;
+      if (splash) splash.hidden = !!showPicker;
+      if (chip) chip.hidden = !p || showPicker || !onStart;
+      if (showPicker) renderPlayerPicker();
     }
 
     function nameChoiceCount() {
@@ -4322,11 +4845,15 @@
         grid.appendChild(btn);
       });
       updateNameRoundLabel();
+      nameState.locked = true;
       requestAnimationFrame(function () {
         layoutNameGrid();
-        var first = nameCards()[0];
-        if (first) first.focus();
-        playNameGamePrompt(round.target);
+        playDriveIn(nameCards(), function () {
+          nameState.locked = false;
+          var first = nameCards()[0];
+          if (first) first.focus();
+          playNameGamePrompt(round.target);
+        });
       });
     }
 
@@ -4344,6 +4871,7 @@
       document.getElementById("start-screen").hidden = true;
       document.getElementById("game-screen").hidden = true;
       document.getElementById("name-screen").hidden = false;
+      updatePlayerUi();
       var picked = pickNameRound();
       if (!picked) { goHome(); return; }
       renderNameRound(picked);
@@ -4617,6 +5145,11 @@
             value = "New friend";
             input.value = value;
           }
+        } else if (!value) {
+          // Treat a cleared built-in name as unchanged.
+          value = customName(car) || "";
+          input.value = value;
+          if (!value) return Promise.resolve();
         }
         return saveCustom(car.id, { name: value }).then(function () {
           var live = carById(car.id) || car;
@@ -5031,6 +5564,7 @@
       renderSettings();
       updateDifficultyUi();
       updateNameGameUi();
+      renderPlayersSettings();
       updateSyncUi();
       var screen = document.getElementById("settings-screen");
       screen.hidden = false;
@@ -5056,7 +5590,15 @@
           var say = document.getElementById("name-say-btn");
           if (say) say.focus();
         } else if (!document.getElementById("start-screen").hidden) {
-          document.getElementById("play-btn").focus();
+          updatePlayerUi();
+          var picker = document.getElementById("player-picker");
+          if (picker && !picker.hidden) {
+            var tile = document.querySelector("#player-picker-grid .player-tile");
+            if (tile) tile.focus();
+          } else {
+            var play = document.getElementById("play-btn");
+            if (play) play.focus();
+          }
         } else if (!document.getElementById("win-overlay").hidden) {
           document.getElementById("next-btn").focus();
         } else if (!document.getElementById("name-win-overlay").hidden) {
@@ -5120,6 +5662,7 @@
     bindSettingsTabs();
     bindDifficultyUi();
     bindNameGameUi();
+    bindPlayersUi();
     document.getElementById("reset-all-btn").addEventListener("click", function () {
       document.getElementById("reset-confirm").hidden = false;
     });
@@ -5960,7 +6503,7 @@
       return {
         id: id,
         updatedAt: rec.updatedAt || 0,
-        name: rec.name || "",
+        name: rec.name ? String(rec.name) : undefined,
         sayLike: rec.sayLike || "",
         nickname: rec.nickname || "",
         line: rec.line || "",
@@ -6084,7 +6627,6 @@
         return saveCustom(id, { image: null, imageOriginal: null, audio: null, name: "", sayLike: "", nickname: "", line: "", updatedAt: remote.updatedAt, imageUpdatedAt: remote.updatedAt, audioUpdatedAt: remote.updatedAt });
       }
       var patch = {
-        name: remote.name || "",
         sayLike: remote.sayLike || "",
         nickname: remote.nickname || "",
         line: remote.line || "",
@@ -6095,6 +6637,7 @@
         originalUpdatedAt: remote.originalUpdatedAt,
         audioUpdatedAt: remote.audioUpdatedAt
       };
+      if (remote.name && String(remote.name).trim()) patch.name = String(remote.name).trim();
       if (remote.color) patch.color = remote.color;
       if (remote.dark) patch.dark = remote.dark;
       if (remote.light) patch.light = remote.light;
@@ -6810,7 +7353,11 @@
           return dropOutboxFor(SETTINGS_ID);
         }).then(function () { return refreshOutboxCount(); }),
         loadSyncSettings()
-      ]).then(function () { paintHero(); });
+      ]).then(function () {
+        loadProfiles();
+        paintHero();
+        updatePlayerUi();
+      });
     });
     requestWorkerUpdate();
     Promise.all([healthP, dataP]).then(function () {
@@ -6818,6 +7365,7 @@
       return p.then(function () {
         checkGameUpdate();
         paintHero();
+        updatePlayerUi();
         refreshAllAutoClips();
       });
     }).catch(function () {
@@ -6915,7 +7463,17 @@
       getLastNamePrompt: function () { return lastNamePrompt ? { id: lastNamePrompt.id, mode: lastNamePrompt.mode, text: lastNamePrompt.text, usedClip: lastNamePrompt.usedClip } : null; },
       nameChoiceCount: nameChoiceCount,
       onNameChoice: onNameChoice,
-      playFart: playFart
+      playFart: playFart,
+      playDriveIn: playDriveIn,
+      prefersReducedMotion: prefersReducedMotion,
+      getProfiles: function () { return JSON.parse(JSON.stringify(profilesState)); },
+      setActiveProfile: setActiveProfile,
+      addProfile: addProfile,
+      renameProfile: renameProfile,
+      deleteProfile: deleteProfile,
+      loadProfiles: loadProfiles,
+      updatePlayerUi: updatePlayerUi,
+      recMetaPayload: recMetaPayload
     };
 
   })();

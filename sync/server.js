@@ -348,10 +348,14 @@ function mergeMeta(id, incoming) {
   if (cur && (Number(cur.updatedAt) || 0) > nextUpdated) {
     return { kept: "server", card: publicCard(id) };
   }
+  var incomingName = incoming.name != null ? String(incoming.name).trim() : "";
+  var currentName = cur && cur.name ? String(cur.name).trim() : "";
+  // Never let a push erase a non-empty name with a blank one.
+  var keptName = incomingName ? incomingName.slice(0, 80) : currentName;
   var next = {
     id: id,
     updatedAt: nextUpdated || Date.now(),
-    name: incoming.name ? String(incoming.name).slice(0, 80) : "",
+    name: keptName,
     sayLike: incoming.sayLike ? String(incoming.sayLike).slice(0, 80) : "",
     nickname: incoming.nickname ? String(incoming.nickname).slice(0, 80) : "",
     line: incoming.line ? String(incoming.line).slice(0, 120) : "",
