@@ -1979,7 +1979,7 @@
     var BLOB_FETCH_MS = 20000;
     var bootStartedAt = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
     var keyChangeOpen = false;
-    var APP_VERSION = "23";
+    var APP_VERSION = "24";
     var MATCH_PAIR_CAP = 6;
     var NAME_ROUNDS = 6;
     var THUMB_MAX = 256;
@@ -4279,7 +4279,8 @@
 
     var PROFILES_KEY = "theo-car-match-profiles";
     var PROFILE_PICKED_KEY = "theo-car-match-picked-profile";
-    var PROFILE_EMOJIS = ["😊","😄","😎","🤩","🦁","🐯","🐶","🐱","🐸","🐼","⭐","🚗","🏎️","🚀","🌈","🎈"];
+    var HARPER_SEED_KEY = "theo-car-match-harper-seeded";
+    var PROFILE_EMOJIS = ["😊","😄","😎","🤩","🦁","🐯","🐶","🐱","🐸","🐼","🦄","🌸","⭐","🚗","🏎️","🚀","🌈","🎈"];
     var PROFILE_COLOURS = ["#E53935","#FB8C00","#F9A825","#43A047","#1E88E5","#8E24AA","#D81B60","#00897B","#6D4C41","#3949AB"];
     var profilesState = { activeId: "", profiles: [] };
     var pendingDeleteId = "";
@@ -4339,6 +4340,43 @@
       updateNameGameUi();
     }
 
+    function harperSeeded() {
+      try { return localStorage.getItem(HARPER_SEED_KEY) === "1"; } catch (e) { return false; }
+    }
+
+    function markHarperSeeded() {
+      try { localStorage.setItem(HARPER_SEED_KEY, "1"); } catch (e) {}
+    }
+
+    function defaultHarperProfile() {
+      var prof = sanitizeProfile({ id: "harper", name: "Harper", emoji: "🦄", color: "#8E24AA" });
+      prof.difficulty = normalizeDifficulty(DIFF_PRESETS.age2);
+      prof.nameSettings = normalizeNameSettings({ choices: "auto", say: "full", celebration: true });
+      return prof;
+    }
+
+    function hasProfileNamed(name) {
+      var want = String(name || "").trim().toLowerCase();
+      var list = profilesState.profiles || [];
+      for (var i = 0; i < list.length; i++) {
+        if (String(list[i].name || "").trim().toLowerCase() === want) return true;
+      }
+      return false;
+    }
+
+    function seedHarperIfNeeded() {
+      if (harperSeeded()) return;
+      if (!hasProfileNamed("Harper")) {
+        var prof = defaultHarperProfile();
+        var list = profilesState.profiles || [];
+        for (var i = 0; i < list.length; i++) {
+          if (list[i].id === prof.id) { prof.id = newProfileId(); break; }
+        }
+        profilesState.profiles.push(prof);
+      }
+      markHarperSeeded();
+    }
+
     function loadProfiles() {
       var parsed = null;
       try {
@@ -4355,6 +4393,7 @@
         theo.nameSettings = normalizeNameSettings(nameSettings);
         profilesState = { activeId: "theo", profiles: [theo] };
       }
+      seedHarperIfNeeded();
       applyProfileSettings(activeProfile(), false);
       saveProfilesStore();
     }
@@ -7472,6 +7511,8 @@
       renameProfile: renameProfile,
       deleteProfile: deleteProfile,
       loadProfiles: loadProfiles,
+      seedHarperIfNeeded: seedHarperIfNeeded,
+      harperSeeded: harperSeeded,
       updatePlayerUi: updatePlayerUi,
       recMetaPayload: recMetaPayload
     };
