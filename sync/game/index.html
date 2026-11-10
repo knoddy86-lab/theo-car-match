@@ -4042,10 +4042,61 @@
       return Math.max(1, Math.min(n, cap));
     }
 
-    function cardNickname(car) {
-      var entry = customMedia[car.id] || {};
+    var NAME_QUOTE_CLOSERS = { '"': '"', "“": "”", "‘": "’" };
+
+    function findQuotedNameSpan(name) {
+      var s = String(name || "");
+      var i, closer, j, inner;
+      for (i = 0; i < s.length; i++) {
+        closer = NAME_QUOTE_CLOSERS[s.charAt(i)];
+        if (!closer) continue;
+        j = s.indexOf(closer, i + 1);
+        if (j < 0) continue;
+        inner = s.slice(i + 1, j).trim();
+        if (!inner) continue;
+        return { start: i, end: j + 1, text: inner };
+      }
+      return null;
+    }
+
+    function quotedNicknameFromName(name) {
+      var span = findQuotedNameSpan(name);
+      return span ? span.text : "";
+    }
+
+    function nameWithoutQuotes(name) {
+      var out = String(name || "");
+      var span, next;
+      while (true) {
+        span = findQuotedNameSpan(out);
+        if (!span) break;
+        next = (out.slice(0, span.start) + " " + out.slice(span.end)).replace(/\s+/g, " ").trim();
+        if (next === out) break;
+        out = next;
+      }
+      return out;
+    }
+
+    function explicitNickname(car) {
+      var entry = (car && customMedia[car.id]) || {};
       var n = entry.nickname ? String(entry.nickname).trim() : "";
       return n;
+    }
+
+    function coreFullName(car) {
+      var typed = displayFullName(car) || displayName(car) || "";
+      var core = nameWithoutQuotes(typed);
+      if (core) return core;
+      var stripped = typed.replace(/["“”‘’]/g, "").replace(/\s+/g, " ").trim();
+      return stripped || typed;
+    }
+
+    function spokenNameGameFull(car) {
+      return customSayLike(car) || coreFullName(car);
+    }
+
+    function cardNickname(car) {
+      return explicitNickname(car) || quotedNicknameFromName(displayFullName(car) || displayName(car) || "");
     }
 
     function firstWord(name) {
@@ -4063,8 +4114,8 @@
     }
 
     function uniqueNameSayOptions(car) {
-      var fullText = spokenLine(car) || displayFullName(car) || displayName(car) || "";
-      var fullDisplay = displayFullName(car) || displayName(car) || "";
+      var fullText = spokenNameGameFull(car);
+      var core = coreFullName(car);
       var seen = {};
       var opts = [];
       function add(mode, text) {
@@ -4076,23 +4127,23 @@
         opts.push({ mode: mode, text: t });
       }
       add("full", fullText);
-      add("first", firstWord(fullDisplay));
-      add("last", lastWord(fullDisplay));
+      add("first", firstWord(core));
+      add("last", lastWord(core));
       add("nick", cardNickname(car));
       return opts;
     }
 
     function chooseNameSayOption(car, mode) {
       mode = mode || (nameSettings.say || "full");
-      var fullText = spokenLine(car) || displayFullName(car) || displayName(car) || "";
-      var fullDisplay = displayFullName(car) || displayName(car) || "";
+      var fullText = spokenNameGameFull(car);
+      var core = coreFullName(car);
       if (mode === "mix") {
         var opts = uniqueNameSayOptions(car);
         if (!opts.length) return { mode: "full", text: fullText };
         return opts[Math.floor(Math.random() * opts.length)];
       }
-      if (mode === "first") return { mode: "first", text: firstWord(fullDisplay) || fullText };
-      if (mode === "last") return { mode: "last", text: lastWord(fullDisplay) || fullText };
+      if (mode === "first") return { mode: "first", text: firstWord(core) || fullText };
+      if (mode === "last") return { mode: "last", text: lastWord(core) || fullText };
       if (mode === "nick") return { mode: "nick", text: cardNickname(car) || fullText };
       return { mode: "full", text: fullText };
     }
@@ -4721,8 +4772,8 @@
       nickInput.spellcheck = false;
       nickInput.setAttribute("data-role", "nickname");
       nickInput.setAttribute("data-car", car.id);
-      nickInput.placeholder = "Optional";
-      nickInput.value = cardNickname(car);
+      nickInput.placeholder = quotedNicknameFromName(displayFullName(car) || displayName(car) || "") || "Optional";
+      nickInput.value = explicitNickname(car);
       nickField.appendChild(nickLab);
       nickField.appendChild(nickInput);
       meta.appendChild(nickField);
@@ -6807,6 +6858,11 @@
       setNameSettings: saveNameSettings,
       uniqueNameSayOptions: uniqueNameSayOptions,
       chooseNameSayOption: chooseNameSayOption,
+      quotedNicknameFromName: quotedNicknameFromName,
+      nameWithoutQuotes: nameWithoutQuotes,
+      coreFullName: coreFullName,
+      explicitNickname: explicitNickname,
+      cardNickname: cardNickname,
       spokenNameGameText: spokenNameGameText,
       playNameGamePrompt: playNameGamePrompt,
       getLastNamePrompt: function () { return lastNamePrompt ? { id: lastNamePrompt.id, mode: lastNamePrompt.mode, text: lastNamePrompt.text, usedClip: lastNamePrompt.usedClip } : null; },
