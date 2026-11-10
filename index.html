@@ -189,22 +189,39 @@
       gap: clamp(8px, 2vw, 24px);
       width: min(720px, 92%);
       height: clamp(90px, 22vh, 200px);
+      overflow: visible;
     }
     .hero-cars .car-wrap {
       flex: 1 1 0;
       max-width: 220px;
+      height: 100%;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
       animation: idle 2.4s ease-in-out infinite;
     }
-    .hero-cars .car-wrap:nth-child(2) { animation-delay: -0.7s; transform: scale(1.08); }
+    .hero-cars .car-wrap.has-photo { background: none; }
+    .hero-cars .art, .hero-cars .custom-art {
+      object-position: bottom center;
+      max-height: 100%;
+      filter: drop-shadow(0 8px 12px rgba(0,0,0,0.18));
+    }
     .hero-cars .car-wrap:nth-child(3) { animation-delay: -1.4s; }
+    .hero-cars .car-wrap.is-favourite {
+      flex: 1.25 1 0;
+      max-width: 260px;
+      z-index: 1;
+      animation-name: idle-mid;
+      animation-delay: -0.7s;
+      transform: scale(1.22);
+    }
     @keyframes idle {
       0%, 100% { transform: translateY(0); }
       50% { transform: translateY(-8px); }
     }
-    .hero-cars .car-wrap:nth-child(2) { animation-name: idle-mid; }
     @keyframes idle-mid {
-      0%, 100% { transform: scale(1.08) translateY(0); }
-      50% { transform: scale(1.08) translateY(-8px); }
+      0%, 100% { transform: scale(1.22) translateY(0); }
+      50% { transform: scale(1.22) translateY(-8px); }
     }
 
     .btn {
@@ -1778,7 +1795,7 @@
     var BLOB_FETCH_MS = 20000;
     var bootStartedAt = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
     var keyChangeOpen = false;
-    var APP_VERSION = "19";
+    var APP_VERSION = "20";
     var MATCH_PAIR_CAP = 6;
     var NAME_ROUNDS = 6;
     var THUMB_MAX = 256;
@@ -5188,12 +5205,70 @@
       }
     }
 
+    var HERO_SLOTS = [
+      { keys: ["lightning mcqueen", "lightning", "mcqueen"], favourite: false },
+      { keys: ["mater"], favourite: true },
+      { keys: ["guido"], favourite: false }
+    ];
+
+    function heroNameList(car) {
+      return [
+        car && car.id,
+        car && car.name,
+        car && car.fullName,
+        customName(car),
+        displayName(car),
+        displayFullName(car)
+      ].map(function (v) { return String(v || "").trim().toLowerCase(); }).filter(Boolean);
+    }
+
+    function findHeroCar(keys, used) {
+      var needles = (keys || []).map(function (k) { return String(k || "").trim().toLowerCase(); }).filter(Boolean);
+      if (!needles.length) return null;
+      var pool = allCars();
+      var taken = used || {};
+      function unused(car) { return car && car.id && !taken[car.id]; }
+      var i, p, names, n, car;
+      for (i = 0; i < needles.length; i++) {
+        car = carById(needles[i]);
+        if (unused(car)) return car;
+      }
+      for (i = 0; i < needles.length; i++) {
+        for (p = 0; p < pool.length; p++) {
+          car = pool[p];
+          if (!unused(car)) continue;
+          names = heroNameList(car);
+          for (n = 0; n < names.length; n++) {
+            if (names[n] === needles[i]) return car;
+          }
+        }
+      }
+      for (i = 0; i < needles.length; i++) {
+        if (needles[i].length < 4) continue;
+        for (p = 0; p < pool.length; p++) {
+          car = pool[p];
+          if (!unused(car)) continue;
+          names = heroNameList(car);
+          for (n = 0; n < names.length; n++) {
+            if (names[n].indexOf(needles[i]) !== -1) return car;
+          }
+        }
+      }
+      return null;
+    }
+
     function paintHero() {
       var hold = document.getElementById("hero-cars");
+      if (!hold) return;
       hold.innerHTML = "";
-      [carById("rosie"), carById("skye"), carById("sunny")].forEach(function (car) {
+      var used = {};
+      HERO_SLOTS.forEach(function (slot) {
+        var car = findHeroCar(slot.keys, used);
+        if (!car) return;
+        used[car.id] = true;
         var d = document.createElement("div");
-        d.className = "car-wrap";
+        d.className = "car-wrap" + (slot.favourite ? " is-favourite" : "");
+        d.setAttribute("data-car-id", car.id);
         fillArt(d, car);
         hold.appendChild(d);
       });
@@ -6638,6 +6713,10 @@
       displayFullName: displayFullName,
       refreshVoices: refreshVoices,
       allCars: allCars,
+      version: APP_VERSION,
+      findHeroCar: findHeroCar,
+      paintHero: paintHero,
+      heroSlots: HERO_SLOTS,
       addCustomCard: addCustomCard,
       deleteCustomCard: deleteCustomCard,
       startRecording: startRecording,
