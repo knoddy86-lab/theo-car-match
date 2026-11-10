@@ -333,6 +333,12 @@
       pointer-events: none;
       z-index: 4;
     }
+    .name-choice.is-gone {
+      visibility: hidden;
+      opacity: 0;
+      pointer-events: none;
+      animation: none;
+    }
     .name-choice.is-correct {
       animation: name-correct 0.7s ease-in-out;
       z-index: 4;
@@ -350,7 +356,8 @@
     }
     @media (prefers-reduced-motion: reduce) {
       .name-choice.is-poof, .name-choice.is-correct { animation: none; }
-      .name-choice.is-poof { opacity: 0; transform: scale(0.2); }
+      .name-choice.is-poof, .name-choice.is-gone { opacity: 0; }
+      .name-choice.is-poof { transform: scale(0.2); }
       .name-choice.is-correct { box-shadow: 0 0 0 7px #FFD54F, 0 10px 24px rgba(0,0,0,0.2); }
     }
     #name-win-overlay {
@@ -1316,10 +1323,10 @@
         </div>
         <div class="hero-cars" id="hero-cars"></div>
         <div class="start-actions">
-          <button type="button" class="btn btn-play" id="play-btn">PLAY</button>
+          <button type="button" class="btn btn-play" id="play-btn" aria-label="Match Game">MATCH</button>
           <button type="button" class="btn btn-names" id="names-btn" aria-label="Name Game">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1-3.29-2.5-4.03v8.05c1.5-.74 2.5-2.26 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
-            NAMES
+            NAME
           </button>
         </div>
       </div>
@@ -1709,7 +1716,7 @@
     var BLOB_FETCH_MS = 20000;
     var bootStartedAt = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
     var keyChangeOpen = false;
-    var APP_VERSION = "14";
+    var APP_VERSION = "15";
     var MATCH_PAIR_CAP = 6;
     var NAME_ROUNDS = 6;
     var THUMB_MAX = 256;
@@ -3798,7 +3805,7 @@
         return;
       }
       if (!document.getElementById("name-screen").hidden) {
-        var nlist = nameCards().filter(function (el) { return !el.hidden; });
+        var nlist = nameCards().filter(function (el) { return nameChoicePresent(el); });
         if (!nlist.length) return;
         var ni = 0;
         for (var n = 0; n < nlist.length; n++) if (nlist[n] === document.activeElement) ni = n;
@@ -4044,6 +4051,10 @@
       if (el) el.textContent = Math.min(nameState.round, NAME_ROUNDS) + " / " + NAME_ROUNDS;
     }
 
+    function nameChoicePresent(el) {
+      return !!(el && !el.classList.contains("is-gone") && !el.classList.contains("is-poof"));
+    }
+
     function nameCards() {
       return Array.prototype.slice.call(document.querySelectorAll("#name-grid .name-choice"));
     }
@@ -4061,8 +4072,8 @@
       var board = document.getElementById("name-board");
       var grid = document.getElementById("name-grid");
       if (!board || !grid || document.getElementById("name-screen").hidden) return;
-      var n = nameCards().filter(function (el) { return !el.hidden && !el.classList.contains("is-poof"); }).length;
-      if (!n) n = (nameState.remaining && nameState.remaining.length) || (nameState.choices && nameState.choices.length) || 1;
+      var n = nameCards().length;
+      if (!n) n = (nameState.choices && nameState.choices.length) || 1;
       var w = board.clientWidth;
       var h = board.clientHeight;
       var maxCols = n <= 3 ? n : (n <= 4 ? 2 : 3);
@@ -4212,16 +4223,17 @@
       var poofMs = (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) ? 80 : 450;
       setTimeout(function () {
         if (btn) {
-          btn.hidden = true;
+          btn.classList.remove("is-poof");
+          btn.classList.add("is-gone");
           btn.setAttribute("aria-hidden", "true");
+          btn.tabIndex = -1;
         }
         nameState.remaining = (nameState.remaining || []).filter(function (c) { return c.id !== id; });
-        layoutNameGrid();
         var left = nameState.remaining || [];
         var onlyTarget = left.length === 1 && nameState.target && left[0].id === nameState.target.id;
         function afterFunny() {
           if (onlyTarget) {
-            var targetBtn = nameCards().filter(function (el) { return el.dataset.carId === nameState.target.id && !el.hidden; })[0];
+            var targetBtn = nameCards().filter(function (el) { return el.dataset.carId === nameState.target.id && nameChoicePresent(el); })[0];
             celebrateNameCorrect(targetBtn);
             return;
           }
