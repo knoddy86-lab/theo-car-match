@@ -21,6 +21,7 @@ What this update adds
 - Finishing a round plays a V8 engine rev (12 real CC0 recordings from Freesound, shuffled)
 - Settings is organised into tabs: Cars, Difficulty, Family
 - Difficulty age presets (Age 2 is the default) and custom options
+- A short Hooray cheer plays after each match (rotating clips, optional in Difficulty)
 - Difficulty and other play settings stay on each device and are not synced
 - Family key is remembered on the device (and in the Home Screen app) after being entered once
 - A sync status cue sits under the settings gear, with a tap-to-sync button

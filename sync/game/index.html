@@ -855,6 +855,26 @@
     }
     .sync-status { margin: 8px 0 0; color: #33691E; }
     .sync-status.is-error { color: #C62828; }
+    .family-sync-status {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 10px 0 8px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: #E8F5E9;
+      color: #1B5E20;
+    }
+    .family-sync-status[hidden] { display: none; }
+    .family-sync-status.is-syncing { background: #E3F2FD; color: #1565C0; }
+    .family-sync-status.is-offline { background: #ECEFF1; color: #546E7A; }
+    .family-sync-status.is-error { background: #FFEBEE; color: #C62828; }
+    .family-sync-status.is-idle { background: #F1F8E9; color: #33691E; }
+    .family-sync-icon { width: 36px; height: 36px; flex: 0 0 36px; display: flex; align-items: center; justify-content: center; }
+    .family-sync-icon svg { width: 36px; height: 36px; display: block; }
+    .family-sync-copy { min-width: 0; }
+    .family-sync-copy strong { display: block; font-size: 18px; font-weight: 800; line-height: 1.2; }
+    .family-sync-copy span { display: block; font-size: 13px; font-weight: 700; margin-top: 2px; }
     .sync-notice { margin: 8px 0 0; font-size: 13px; font-weight: 700; color: #E65100; }
     #sync-pin-row { margin: 8px 0 0; }
     #sync-pin-row[hidden] { display: none; }
@@ -1256,6 +1276,10 @@
               <label for="diff-revs">Rev the engine when a round is finished</label>
               <input id="diff-revs" type="checkbox" checked>
             </div>
+            <div class="diff-row">
+              <label for="diff-hooray">Hooray on match</label>
+              <input id="diff-hooray" type="checkbox" checked>
+            </div>
           </div>
         </div>
         <div id="pane-family" class="settings-pane" role="tabpanel" aria-labelledby="tab-family" hidden>
@@ -1281,6 +1305,13 @@
             <div class="say-row">
               <input id="sync-pin" type="password" inputmode="numeric" autocomplete="off" minlength="4" placeholder="PIN from the home computer" aria-label="Parent PIN">
               <button type="button" class="btn-mini primary" id="sync-pin-go">Save</button>
+            </div>
+          </div>
+          <div class="family-sync-status" id="family-sync-status" hidden>
+            <span class="family-sync-icon" id="family-sync-icon" aria-hidden="true"></span>
+            <div class="family-sync-copy">
+              <strong id="family-sync-title"></strong>
+              <span id="family-sync-detail"></span>
             </div>
           </div>
           <p class="sync-status" id="sync-status"></p>
@@ -1376,6 +1407,17 @@
     var revQueue = [];
     var lastRev = "";
     var revPreloads = [];
+    var HOORAY_CLIPS = [
+      "01-girl-woohoo.mp3",
+      "02-yay.mp3",
+      "03-joyful-yay.mp3",
+      "04-celebration-yay.mp3"
+    ];
+    var hoorayQueue = [];
+    var lastHooray = "";
+    var hoorayPreloads = [];
+    var hoorayAudio = null;
+    var hoorayWait = Promise.resolve();
     var extraCars = [];
     var recState = { carId: null, recorder: null, stream: null, chunks: [], timer: null, tick: null, mime: "" };
     var forcedPick = null;
@@ -1392,7 +1434,7 @@
     var lastSyncOk = false;
     var lastSyncChanges = 0;
     var keyChangeOpen = false;
-    var APP_VERSION = "9";
+    var APP_VERSION = "10";
     var updateBannerShown = false;
     var outboxCount = 0;
     var syncNotice = "";
@@ -2480,6 +2522,59 @@
       playSources([nextRevSrc()], "");
     }
 
+    function preloadHoorays() {
+      if (hoorayPreloads.length) return;
+      HOORAY_CLIPS.forEach(function (name) {
+        var a = new Audio();
+        a.preload = "auto";
+        a.src = SOUND_DIR + "hooray/" + name;
+        hoorayPreloads.push(a);
+      });
+    }
+
+    function nextHooraySrc() {
+      if (!hoorayQueue.length) {
+        hoorayQueue = shuffle(HOORAY_CLIPS.slice());
+        if (hoorayQueue.length > 1 && lastHooray && hoorayQueue[0] === lastHooray) {
+          hoorayQueue.push(hoorayQueue.shift());
+        }
+      }
+      lastHooray = hoorayQueue.shift();
+      return SOUND_DIR + "hooray/" + lastHooray;
+    }
+
+    function playHooray() {
+      if (difficulty.hooray === false) {
+        hoorayWait = Promise.resolve();
+        return hoorayWait;
+      }
+      var src = nextHooraySrc();
+      hoorayWait = new Promise(function (resolve) {
+        if (!hoorayAudio) {
+          hoorayAudio = new Audio();
+          hoorayAudio.preload = "auto";
+          hoorayAudio.setAttribute("playsinline", "");
+        }
+        var done = false;
+        function finish() {
+          if (done) return;
+          done = true;
+          try { hoorayAudio.removeEventListener("ended", finish); hoorayAudio.removeEventListener("error", finish); } catch (e) {}
+          resolve();
+        }
+        hoorayAudio.addEventListener("ended", finish);
+        hoorayAudio.addEventListener("error", finish);
+        try {
+          hoorayAudio.muted = false;
+          hoorayAudio.src = src;
+          var p = hoorayAudio.play();
+          if (p && p.catch) p.catch(function () { finish(); });
+        } catch (e) { finish(); }
+        setTimeout(finish, 2000);
+      });
+      return hoorayWait;
+    }
+
     /* Natural voice for renamed / custom names: Sound of Text (soundoftext.com, Google en-AU voice).
        Only the spoken text is sent. Files can't be fetched as blobs (no CORS), so the URL is
        cached in IndexedDB and played via <audio src>. Offline, the device voice is used. */
@@ -2592,6 +2687,7 @@
       var hint = raw.hint === 20 || raw.hint === "20" ? 20 : (raw.hint === 10 || raw.hint === "10" ? 10 : 0);
       var speakFlip = raw.speakFlip !== false;
       var revs = raw.revs !== false;
+      var hooray = raw.hooray !== false;
       var updatedAt = Number(raw.updatedAt) || 0;
       if (preset !== "custom" && preset !== "age2" && preset !== "age3" && preset !== "age45" && preset !== "age6") {
         preset = "custom";
@@ -2608,6 +2704,7 @@
         hint: hint,
         speakFlip: speakFlip,
         revs: revs,
+        hooray: hooray,
         updatedAt: updatedAt
       };
     }
@@ -2625,7 +2722,8 @@
         shuffle: d.shuffle || "reshuffle",
         hint: Number(d.hint) || 0,
         speakFlip: d.speakFlip !== false,
-        revs: d.revs !== false
+        revs: d.revs !== false,
+        hooray: d.hooray !== false
       };
     }
 
@@ -2710,10 +2808,11 @@
     }
 
     function applyDifficultyPreset(name) {
+      var keepHooray = difficulty.hooray !== false;
       if (name !== "custom" && DIFF_PRESETS[name]) {
-        return saveDifficulty(Object.assign({}, DIFF_PRESETS[name], { preset: name }));
+        return saveDifficulty(Object.assign({}, DIFF_PRESETS[name], { preset: name, hooray: keepHooray }));
       }
-      return saveDifficulty({ preset: "custom" });
+      return saveDifficulty({ preset: "custom", hooray: keepHooray });
     }
 
     function fillPairSelect(sel, value) {
@@ -2760,6 +2859,8 @@
       if (speak) speak.checked = d.speakFlip !== false;
       var revs = document.getElementById("diff-revs");
       if (revs) revs.checked = d.revs !== false;
+      var hooray = document.getElementById("diff-hooray");
+      if (hooray) hooray.checked = d.hooray !== false;
     }
 
     function readDifficultyForm() {
@@ -2780,7 +2881,8 @@
         shuffle: (document.getElementById("diff-shuffle") || {}).value || "reshuffle",
         hint: clampInt((document.getElementById("diff-hint") || {}).value, 0, 20, 0),
         speakFlip: !!(document.getElementById("diff-speak") && document.getElementById("diff-speak").checked),
-        revs: !!(document.getElementById("diff-revs") && document.getElementById("diff-revs").checked)
+        revs: !!(document.getElementById("diff-revs") && document.getElementById("diff-revs").checked),
+        hooray: !!(document.getElementById("diff-hooray") && document.getElementById("diff-hooray").checked)
       };
     }
 
@@ -2793,7 +2895,7 @@
           applyDifficultyPreset(btn.getAttribute("data-preset"));
         });
       }
-      ["diff-grow", "diff-start", "diff-max", "diff-pairs", "diff-size", "diff-peek", "diff-flip", "diff-shuffle", "diff-hint", "diff-speak", "diff-revs"].forEach(function (id) {
+      ["diff-grow", "diff-start", "diff-max", "diff-pairs", "diff-size", "diff-peek", "diff-flip", "diff-shuffle", "diff-hint", "diff-speak", "diff-revs", "diff-hooray"].forEach(function (id) {
         var el = document.getElementById(id);
         if (!el) return;
         el.addEventListener("change", function () {
@@ -3158,6 +3260,7 @@
         }
       });
       if (!reduced) startMatchBurst(els);
+      playHooray();
     }
 
     function startMatchBurst(els) {
@@ -3195,7 +3298,10 @@
 
     function onLevelWin() {
       clearPeekAndHint();
-      if (difficulty.revs !== false) playRoundRev();
+      var cheer = hoorayWait || Promise.resolve();
+      cheer.then(function () {
+        if (difficulty.revs !== false) playRoundRev();
+      });
       startConfetti();
       var top = level >= pairSteps().length - 1;
       document.getElementById("win-sub").textContent = top
@@ -4271,6 +4377,65 @@
         if (icon) icon.outerHTML = svgCloudOff();
         if (text) text.innerHTML = "Waiting to sync";
       }
+      updateFamilySyncStatus();
+    }
+
+    function familyTickSvg() {
+      return '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#2E7D32" d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>';
+    }
+    function familySpinSvg() {
+      return '<svg class="sync-spin" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0 0 20 12c0-4.42-3.58-8-8-8zm-5.3 2.2L5.24 4.74A7.93 7.93 0 0 0 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8z"/></svg>';
+    }
+    function familyCloudSvg() {
+      return '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19.35 10.04A7.49 7.49 0 0 0 12 4c-1.48 0-2.85.43-4.01 1.17L9.9 7.07A5.48 5.48 0 0 1 12 6.5c2.5 0 4.54 1.86 4.92 4.26l.09.74h.59c1.66 0 3 1.34 3 3 0 .83-.34 1.58-.88 2.12l1.45 1.45C22.32 17 23 15.82 23 14.5c0-2.25-1.68-4.12-3.85-4.46zM3 5.27 5.75 8C2.56 8.15 0 10.77 0 14c0 3.31 2.69 6 6 6h11.73l2 2L21.15 20.6 4.41 3.86 3 5.27zM7.73 10l8 8H6c-2.21 0-4-1.79-4-4s1.79-4 4-4h1.73z"/></svg>';
+    }
+    function familyErrorSvg() {
+      return '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>';
+    }
+
+    function updateFamilySyncStatus() {
+      var box = document.getElementById("family-sync-status");
+      var icon = document.getElementById("family-sync-icon");
+      var title = document.getElementById("family-sync-title");
+      var detail = document.getElementById("family-sync-detail");
+      if (!box) return;
+      box.hidden = false;
+      box.classList.remove("is-syncing", "is-offline", "is-error", "is-idle");
+      var when = formatSyncTime(lastSyncAt);
+      var unreachable = isUnreachableError(lastSyncError) || !navigator.onLine || (lastSyncError && !lastSyncOk && !pulling && isUnreachableError(lastSyncError));
+      if (!syncConfigured()) {
+        box.classList.add("is-idle");
+        if (icon) icon.innerHTML = familyCloudSvg();
+        if (title) title.textContent = "Not syncing yet";
+        if (detail) detail.textContent = sameOriginSync ? "Enter the family key to start." : "Enter a server URL and family key to start.";
+        return;
+      }
+      if (pulling) {
+        box.classList.add("is-syncing");
+        if (icon) icon.innerHTML = familySpinSvg();
+        if (title) title.textContent = "Syncing…";
+        if (detail) detail.textContent = "Talking to the home computer.";
+      } else if (!navigator.onLine || isUnreachableError(lastSyncError) || (lastSyncError && !lastSyncOk && isUnreachableError(lastSyncError))) {
+        box.classList.add("is-offline");
+        if (icon) icon.innerHTML = familyCloudSvg();
+        if (title) title.textContent = "Offline";
+        if (detail) detail.textContent = "Not on the home Wi-Fi" + (when ? " · last sync " + when : "");
+      } else if (lastSyncError && !lastSyncOk) {
+        box.classList.add("is-error");
+        if (icon) icon.innerHTML = familyErrorSvg();
+        if (title) title.textContent = "Sync failed";
+        if (detail) detail.textContent = lastSyncError + (when ? " · " + when : "");
+      } else if (lastSyncOk || lastSyncAt) {
+        var extra = lastSyncChanges > 0 ? ("Synced " + lastSyncChanges + " change" + (lastSyncChanges === 1 ? "" : "s")) : "Up to date";
+        if (title) title.textContent = "Synced ✓";
+        if (detail) detail.textContent = extra + (when ? " · " + when : "");
+        if (icon) icon.innerHTML = familyTickSvg();
+      } else {
+        box.classList.add("is-idle");
+        if (icon) icon.innerHTML = familyTickSvg();
+        if (title) title.textContent = "Ready to sync";
+        if (detail) detail.textContent = "Tap Sync now when you are on the home Wi-Fi.";
+      }
     }
 
     function updateSyncUi() {
@@ -4553,7 +4718,7 @@
       if (pulling) return Promise.resolve(false);
       pulling = true;
       lastSyncError = "";
-      updateSyncHud();
+      updateSyncUi();
       return syncFetch("/api/sync", { headers: syncHeaders() }).then(function (r) {
         if (!r.ok) throw new Error("Could not reach the family computer.");
         return r.json();
@@ -4646,7 +4811,7 @@
       }
       parentPinOnce = pin;
       pulling = true;
-      updateSyncHud();
+      updateSyncUi();
       return outboxAll().then(function (items) {
         var settingsQids = items.filter(function (it) { return it.cardId === SETTINGS_ID || it.type === "settings"; }).map(function (it) { return it.qid; });
         var jobs = compactOutbox(items).filter(function (job) { return job.cardId !== SETTINGS_ID && job.type !== "settings"; });
@@ -4706,6 +4871,8 @@
 
     function discardLocalChanges() {
       if (!syncConfigured()) return Promise.resolve(false);
+      lastSyncError = "";
+      updateSyncUi();
       return outboxClearAll().then(function () {
         lastServerSeen = {};
         return saveServerSeen();
@@ -4861,8 +5028,8 @@
     }
 
     function bindSyncHooks() {
-      window.addEventListener("online", function () { if (syncConfigured()) pullFromServer(); else updateSyncHud(); });
-      window.addEventListener("offline", function () { updateSyncHud(); });
+      window.addEventListener("online", function () { if (syncConfigured()) pullFromServer(); else updateSyncUi(); });
+      window.addEventListener("offline", function () { updateSyncUi(); });
       document.addEventListener("visibilitychange", function () {
         if (!document.hidden && syncConfigured()) pullFromServer();
       });
@@ -4984,6 +5151,7 @@
     registerAppWorker();
     bindSyncHooks();
     preloadRevs();
+    preloadHoorays();
     paintHero();
     loadAllCustom().then(function () {
       return loadDifficulty().then(function () {

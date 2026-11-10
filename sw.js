@@ -1,5 +1,5 @@
 /* Theo's Car Match service worker — caches the game for offline play. Never caches /api. */
-var CACHE = "theo-car-match-v9";
+var CACHE = "theo-car-match-v10";
 var PRECACHE = [
   "./",
   "./index.html",
@@ -27,7 +27,11 @@ var PRECACHE = [
   "./sounds/revs/09-slow-rumble-blip.mp3",
   "./sounds/revs/10-long-crackle-down.mp3",
   "./sounds/revs/11-two-step.mp3",
-  "./sounds/revs/12-gentle-blip.mp3"
+  "./sounds/revs/12-gentle-blip.mp3",
+  "./sounds/hooray/01-girl-woohoo.mp3",
+  "./sounds/hooray/02-yay.mp3",
+  "./sounds/hooray/03-joyful-yay.mp3",
+  "./sounds/hooray/04-celebration-yay.mp3"
 ];
 
 self.addEventListener("install", function (event) {
