@@ -547,6 +547,58 @@
     .btn-mini:focus { outline: 4px solid var(--focus); outline-offset: 2px; }
     .btn-mini.primary { background: #BBDEFB; box-shadow: 0 3px 0 #64B5F6; }
     .btn-mini.warn { background: #FFE0B2; box-shadow: 0 3px 0 #FFB74D; }
+    .btn-mini.record { background: #FFCDD2; box-shadow: 0 3px 0 #E57373; color: #B71C1C; }
+    .btn-mini.stop { background: #FF8A80; box-shadow: 0 3px 0 #E53935; color: #fff; }
+    .btn-mini.stop:disabled, .btn-mini.record:disabled { opacity: 0.45; box-shadow: 0 3px 0 #C5CAE9; }
+    .name-field { margin: 4px 0 8px; }
+    .name-field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 800;
+      color: #3949AB;
+      margin: 0 0 4px;
+    }
+    .name-input {
+      width: 100%;
+      max-width: 320px;
+      font-family: inherit;
+      font-weight: 800;
+      font-size: 16px;
+      padding: 7px 10px;
+      border: 3px solid #C5CAE9;
+      border-radius: 12px;
+      color: #1A237E;
+      background: #fff;
+    }
+    .name-input:focus { outline: 4px solid var(--focus); outline-offset: 2px; }
+    .rec-indicator {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      margin: 8px 0 0;
+      font-weight: 800;
+      font-size: 13px;
+      color: #C62828;
+    }
+    .rec-indicator.on { display: flex; }
+    .rec-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #E53935;
+      box-shadow: 0 0 0 0 rgba(229, 57, 53, 0.6);
+      animation: recpulse 1s ease-out infinite;
+    }
+    @keyframes recpulse {
+      0% { box-shadow: 0 0 0 0 rgba(229, 57, 53, 0.55); }
+      100% { box-shadow: 0 0 0 10px rgba(229, 57, 53, 0); }
+    }
+    .rec-msg {
+      margin: 6px 0 0;
+      font-size: 12px;
+      font-weight: 700;
+      color: #6A1B9A;
+    }
     .settings-actions {
       display: flex;
       flex-wrap: wrap;
@@ -569,6 +621,63 @@
       padding: 0.35em 1.2em;
       margin-left: auto;
     }
+    .settings-friends {
+      margin-top: 8px;
+      padding-top: 8px;
+    }
+    .friends-title {
+      margin: 12px 0 4px;
+      font-size: clamp(18px, 3.6vmin, 26px);
+      color: #1A237E;
+    }
+    .friends-lead {
+      margin: 0 0 10px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #5C6BC0;
+    }
+    .btn-add {
+      font-size: 18px;
+      min-height: 52px;
+      padding: 0.35em 1.2em;
+      margin: 12px 0 4px;
+      background: #5C6BC0;
+      box-shadow: 0 6px 0 #283593, 0 10px 18px rgba(0,0,0,0.16);
+    }
+    .btn-add:active { box-shadow: 0 2px 0 #283593, 0 6px 12px rgba(0,0,0,0.16); }
+    .btn-add:focus { box-shadow: 0 6px 0 #283593, 0 0 0 8px rgba(255, 213, 79, 0.45); }
+    .line-field { margin: 0 0 8px; }
+    .line-field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 800;
+      color: #3949AB;
+      margin: 0 0 4px;
+    }
+    .line-input {
+      width: 100%;
+      max-width: 420px;
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 15px;
+      padding: 7px 10px;
+      border: 3px solid #C5CAE9;
+      border-radius: 12px;
+      color: #1A237E;
+      background: #fff;
+    }
+    .line-input:focus { outline: 4px solid var(--focus); outline-offset: 2px; }
+    .delete-confirm {
+      margin-top: 8px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: #FFEBEE;
+      font-weight: 700;
+      font-size: 13px;
+      color: #B71C1C;
+    }
+    .delete-confirm p { margin: 0 0 8px; }
+    .settings-row.custom-row { background: linear-gradient(90deg, rgba(126,87,194,0.06), transparent 70%); border-radius: 16px; padding-left: 8px; padding-right: 8px; }
     .reset-confirm {
       margin-top: 14px;
       padding: 12px 14px;
@@ -651,14 +760,20 @@
     <section id="settings-screen" class="screen" hidden aria-label="Parent Settings">
       <div class="settings-panel">
         <h2>Parent Settings</h2>
-        <p class="settings-lead">Add your own pictures and sounds for each car. Everything stays on this device.</p>
+        <p class="settings-lead">Add your own names, pictures and sounds for each car, or add a new card. Everything stays on this device.</p>
         <div id="settings-list"></div>
+        <div class="settings-friends">
+          <h3 class="friends-title">Your cards</h3>
+          <p class="friends-lead">Add a photo of a family member, a pet, or a favourite toy.</p>
+          <div id="settings-custom-list"></div>
+          <button type="button" class="btn btn-add" id="add-card-btn">Add a card</button>
+        </div>
         <div class="settings-actions">
           <button type="button" class="btn btn-reset" id="reset-all-btn">Reset all</button>
           <button type="button" class="btn btn-done" id="settings-done-btn">Done</button>
         </div>
         <div id="reset-confirm" class="reset-confirm" hidden>
-          <p>Reset all custom pictures and sounds?</p>
+          <p>Reset all custom names, pictures, sounds and added cards?</p>
           <div class="settings-btns">
             <button type="button" class="btn-mini warn" id="reset-yes">Yes, reset</button>
             <button type="button" class="btn-mini" id="reset-no">Cancel</button>
@@ -700,6 +815,9 @@
     var voicesCache = [];
     var defaultVoice = null;
     var customMedia = {};
+    var extraCars = [];
+    var recState = { carId: null, recorder: null, stream: null, chunks: [], timer: null, tick: null, mime: "" };
+    var forcedPick = null;
     var customAudioEl = null;
     var dbPromise = null;
     var confettiBits = [];
@@ -709,9 +827,34 @@
     var reduced = false;
     try { reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) {}
 
+    function allCars() {
+      return CARS.concat(extraCars);
+    }
+
     function carById(id) {
-      for (var i = 0; i < CARS.length; i++) if (CARS[i].id === id) return CARS[i];
+      var pool = allCars();
+      for (var i = 0; i < pool.length; i++) if (pool[i].id === id) return pool[i];
       return null;
+    }
+
+    var FRIEND_PALETTE = [
+      { color: "#7E57C2", dark: "#4527A0", light: "#D1C4E9", window: "#EDE7F6" },
+      { color: "#00897B", dark: "#004D40", light: "#B2DFDB", window: "#E0F2F1" },
+      { color: "#E91E63", dark: "#880E4F", light: "#F8BBD0", window: "#FCE4EC" },
+      { color: "#039BE5", dark: "#01579B", light: "#B3E5FC", window: "#E1F5FE" },
+      { color: "#F9A825", dark: "#F57F17", light: "#FFE082", window: "#FFF8E1" },
+      { color: "#6D4C41", dark: "#3E2723", light: "#D7CCC8", window: "#EFEBE9" },
+      { color: "#43A047", dark: "#1B5E20", light: "#C8E6C9", window: "#E8F5E9" }
+    ];
+
+    function paletteFor(id) {
+      var h = 0, s = String(id);
+      for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+      return FRIEND_PALETTE[h % FRIEND_PALETTE.length];
+    }
+
+    function newCustomId() {
+      return "custom-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8);
     }
 
     function shadow() {
@@ -965,29 +1108,91 @@
       });
     }
 
+    function idbEntries() {
+      return openDB().then(function (db) {
+        return new Promise(function (resolve, reject) {
+          var tx = db.transaction(STORE, "readonly");
+          var store = tx.objectStore(STORE);
+          var keysReq = store.getAllKeys();
+          var valsReq = store.getAll();
+          tx.oncomplete = function () {
+            var keys = keysReq.result || [];
+            var vals = valsReq.result || [];
+            var out = [];
+            for (var i = 0; i < keys.length; i++) out.push({ id: keys[i], rec: vals[i] });
+            resolve(out);
+          };
+          tx.onerror = function () { reject(tx.error); };
+        });
+      });
+    }
+
     function recordToEntry(rec) {
-      if (!rec) return { imageUrl: "", audioUrl: "", imageBlob: null, audioBlob: null };
+      if (!rec) return { imageUrl: "", audioUrl: "", imageBlob: null, audioBlob: null, name: "", line: "", custom: false };
       var imageBlob = rec.image || null;
       var audioBlob = rec.audio || null;
+      var name = rec.name ? String(rec.name) : "";
+      var line = rec.line ? String(rec.line) : "";
       return {
         imageBlob: imageBlob,
         audioBlob: audioBlob,
+        name: name,
+        line: line,
+        custom: !!rec.custom,
         imageUrl: imageBlob ? URL.createObjectURL(imageBlob) : "",
         audioUrl: audioBlob ? URL.createObjectURL(audioBlob) : ""
       };
     }
 
+    function recToCustomCar(id, rec) {
+      rec = rec || {};
+      var pal = paletteFor(id);
+      var name = (rec.name && String(rec.name).trim()) || "New friend";
+      var line = rec.line ? String(rec.line).trim() : "";
+      var hash = 0, s = String(id);
+      for (var i = 0; i < s.length; i++) hash = (hash * 31 + s.charCodeAt(i)) >>> 0;
+      return {
+        id: id,
+        custom: true,
+        name: name,
+        fullName: name,
+        kind: "custom",
+        colorName: "Friend",
+        typeName: "card",
+        phrase: "",
+        line: line,
+        color: rec.color || pal.color,
+        dark: rec.dark || pal.dark,
+        light: rec.light || pal.light,
+        window: rec.window || pal.window,
+        voiceIndex: rec.voiceIndex != null ? rec.voiceIndex : (hash % 7),
+        rate: rec.rate != null ? rec.rate : 1.05,
+        pitch: rec.pitch != null ? rec.pitch : 1.2
+      };
+    }
+
     function loadAllCustom() {
-      var tasks = CARS.map(function (car) {
-        return idbGet(car.id).then(function (rec) {
-          revokeMedia(customMedia[car.id]);
-          customMedia[car.id] = recordToEntry(rec);
-        }).catch(function () {
-          revokeMedia(customMedia[car.id]);
-          customMedia[car.id] = recordToEntry(null);
+      extraCars.forEach(function (car) { revokeMedia(customMedia[car.id]); });
+      extraCars = [];
+      return idbEntries().then(function (entries) {
+        var seen = {};
+        entries.forEach(function (e) {
+          seen[e.id] = true;
+          revokeMedia(customMedia[e.id]);
+          customMedia[e.id] = recordToEntry(e.rec);
+          if (e.rec && e.rec.custom) extraCars.push(recToCustomCar(e.id, e.rec));
+        });
+        CARS.forEach(function (car) {
+          if (!seen[car.id]) {
+            revokeMedia(customMedia[car.id]);
+            customMedia[car.id] = recordToEntry(null);
+          }
+        });
+      }).catch(function () {
+        CARS.forEach(function (car) {
+          if (!customMedia[car.id]) customMedia[car.id] = recordToEntry(null);
         });
       });
-      return Promise.all(tasks).catch(function () {});
     }
 
     var saveQueues = {};
@@ -997,13 +1202,35 @@
           rec = rec && typeof rec === "object" ? rec : {};
           if (patch.image !== undefined) rec.image = patch.image || undefined;
           if (patch.audio !== undefined) rec.audio = patch.audio || undefined;
-          if (!rec.image && !rec.audio) return idbDel(id);
+          if (patch.name !== undefined) rec.name = (patch.name && String(patch.name).trim()) || undefined;
+          if (patch.line !== undefined) rec.line = (patch.line && String(patch.line).trim()) || undefined;
+          if (patch.custom !== undefined) rec.custom = patch.custom ? true : undefined;
+          if (patch.color !== undefined) rec.color = patch.color;
+          if (patch.dark !== undefined) rec.dark = patch.dark;
+          if (patch.light !== undefined) rec.light = patch.light;
+          if (patch.window !== undefined) rec.window = patch.window;
+          if (patch.voiceIndex !== undefined) rec.voiceIndex = patch.voiceIndex;
+          if (patch.rate !== undefined) rec.rate = patch.rate;
+          if (patch.pitch !== undefined) rec.pitch = patch.pitch;
+          if (rec.custom) {
+            rec.custom = true;
+            if (!rec.name) rec.name = "New friend";
+            return idbSet(id, rec);
+          }
+          if (!rec.image && !rec.audio && !rec.name) return idbDel(id);
           return idbSet(id, rec);
         }).then(function () {
           return idbGet(id).catch(function () { return null; });
         }).then(function (rec) {
           revokeMedia(customMedia[id]);
           customMedia[id] = recordToEntry(rec);
+          if (rec && rec.custom) {
+            var car = recToCustomCar(id, rec);
+            var idx = -1;
+            for (var i = 0; i < extraCars.length; i++) if (extraCars[i].id === id) idx = i;
+            if (idx >= 0) extraCars[idx] = car;
+            else extraCars.push(car);
+          }
         });
       });
       saveQueues[id] = next;
@@ -1023,7 +1250,76 @@
           revokeMedia(customMedia[car.id]);
           customMedia[car.id] = recordToEntry(null);
         });
+        extraCars.forEach(function (car) { revokeMedia(customMedia[car.id]); });
+        extraCars = [];
       });
+    }
+
+    function deleteCustomCard(id) {
+      return idbDel(id).catch(function () {}).then(function () {
+        revokeMedia(customMedia[id]);
+        delete customMedia[id];
+        extraCars = extraCars.filter(function (c) { return c.id !== id; });
+      });
+    }
+
+    function customName(car) {
+      var entry = customMedia[car.id] || {};
+      var n = entry.name ? String(entry.name).trim() : "";
+      return n;
+    }
+
+    function displayName(car) {
+      return customName(car) || car.name;
+    }
+
+    function displayFullName(car) {
+      return customName(car) || car.fullName;
+    }
+
+    function spokenLine(car) {
+      if (car.custom) {
+        var entry = customMedia[car.id] || {};
+        var typed = (entry.line || car.line || "").trim();
+        if (typed) return typed;
+        return "Hello! It's " + displayName(car) + "!";
+      }
+      return car.phrase + " " + car.colorName + " " + car.typeName + ", " + displayName(car) + "!";
+    }
+
+    function refreshCardLabels() {
+      var list = cards();
+      for (var i = 0; i < list.length; i++) {
+        if (!deck[i]) continue;
+        if (list[i].classList.contains("is-matched")) {
+          list[i].setAttribute("aria-label", "Matched " + displayFullName(deck[i].car));
+        } else if (list[i].classList.contains("is-flipped")) {
+          list[i].setAttribute("aria-label", displayFullName(deck[i].car));
+        }
+      }
+    }
+
+    function placeholderSVG(car) {
+      var name = displayName(car) || "N";
+      var letter = name.charAt(0).toUpperCase();
+      var c = car.color || "#7E57C2";
+      var d = car.dark || "#4527A0";
+      var l = car.light || "#D1C4E9";
+      return svgWrap(shadow() +
+        '<rect x="56" y="36" width="168" height="116" rx="30" fill="' + d + '"/>' +
+        '<rect x="60" y="40" width="160" height="108" rx="26" fill="' + c + '"/>' +
+        '<circle cx="106" cy="84" r="11" fill="#fff"/>' +
+        '<circle cx="150" cy="84" r="11" fill="#fff"/>' +
+        '<circle cx="108" cy="86" r="5.5" fill="#2E2A28"/>' +
+        '<circle cx="152" cy="86" r="5.5" fill="#2E2A28"/>' +
+        '<path d="M114 104 Q128 116 142 104" fill="none" stroke="' + d + '" stroke-width="3" stroke-linecap="round"/>' +
+        '<circle cx="188" cy="62" r="26" fill="#fff" stroke="' + d + '" stroke-width="3"/>' +
+        '<text x="188" y="72" text-anchor="middle" font-size="28" font-weight="800" font-family="Trebuchet MS, Arial Black, sans-serif" fill="' + d + '">' + letter + "</text>" +
+        '<path d="M78 128 H202" stroke="' + l + '" stroke-width="8" stroke-linecap="round" opacity="0.7"/>');
+    }
+
+    function defaultArt(car) {
+      return car.custom ? placeholderSVG(car) : carSVG(car);
     }
 
     function fillArt(holder, car) {
@@ -1036,7 +1332,7 @@
         img.draggable = false;
         var fallback = document.createElement("div");
         fallback.hidden = true;
-        fallback.innerHTML = carSVG(car);
+        fallback.innerHTML = defaultArt(car);
         img.addEventListener("error", function () {
           img.hidden = true;
           fallback.hidden = false;
@@ -1045,7 +1341,7 @@
         holder.appendChild(img);
         holder.appendChild(fallback);
       } else {
-        holder.innerHTML = carSVG(car);
+        holder.innerHTML = defaultArt(car);
       }
     }
 
@@ -1152,18 +1448,18 @@
           var goFallback = function () {
             if (fell) return;
             fell = true;
-            speak(car.line, car);
+            speak(spokenLine(car), car);
           };
           a.addEventListener("error", goFallback);
           var p = a.play();
           if (p && p.catch) p.catch(goFallback);
           return;
         } catch (e) {
-          speak(car.line, car);
+          speak(spokenLine(car), car);
           return;
         }
       }
-      speak(car.line, car);
+      speak(spokenLine(car), car);
     }
 
     function tone(freq, start, dur, type, gain) {
@@ -1203,14 +1499,27 @@
 
     function pickCarsForLevel(lvl) {
       var n = PAIRS[lvl];
+      var pool = allCars();
+      if (forcedPick && forcedPick.length) {
+        var forced = [];
+        for (var f = 0; f < forcedPick.length; f++) {
+          var found = carById(forcedPick[f]);
+          if (found) forced.push(found);
+        }
+        forcedPick = null;
+        if (forced.length) {
+          levelCars = forced.slice(0, n);
+          return levelCars;
+        }
+      }
       if (lvl === 0) {
-        levelCars = shuffle(CARS.slice()).slice(0, n);
+        levelCars = shuffle(pool.slice()).slice(0, n);
       } else {
         var have = {};
         var i;
         for (i = 0; i < levelCars.length; i++) have[levelCars[i].id] = true;
         var remaining = [];
-        for (i = 0; i < CARS.length; i++) if (!have[CARS[i].id]) remaining.push(CARS[i]);
+        for (i = 0; i < pool.length; i++) if (!have[pool[i].id]) remaining.push(pool[i]);
         shuffle(remaining);
         while (levelCars.length < n && remaining.length) levelCars.push(remaining.shift());
         if (levelCars.length > n) levelCars = levelCars.slice(0, n);
@@ -1320,7 +1629,7 @@
       if (!el || el.classList.contains("is-flipped") || el.classList.contains("is-matched")) return;
 
       el.classList.add("is-flipped");
-      el.setAttribute("aria-label", item.car.fullName);
+      el.setAttribute("aria-label", displayFullName(item.car));
       playFlipTick();
       speakCar(item.car);
       flipped.push(index);
@@ -1368,7 +1677,7 @@
       var el = cards()[index];
       if (!el) return;
       el.classList.add("is-matched", "vroom");
-      el.setAttribute("aria-label", "Matched " + deck[index].car.fullName);
+      el.setAttribute("aria-label", "Matched " + displayFullName(deck[index].car));
       setTimeout(function () { el.classList.remove("vroom"); }, 800);
     }
 
@@ -1449,96 +1758,477 @@
       var hasAud = !!entry.audioUrl;
       if (hasImg && hasAud) return "Custom picture and sound";
       if (hasImg) return "Custom picture, default voice";
-      if (hasAud) return "Default picture, custom sound";
+      if (hasAud) return (car.custom ? "Letter card, custom sound" : "Default picture, custom sound");
+      if (car.custom) return "Letter card, built-in voice";
       return "Default picture and voice";
+    }
+
+    function isIosDevice() {
+      var ua = navigator.userAgent || "";
+      return /iPad|iPhone|iPod/.test(ua) || /CriOS|FxiOS|EdgiOS/.test(ua) ||
+        (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    }
+
+    function pickRecorderMime() {
+      if (typeof MediaRecorder === "undefined") return "";
+      var types = isIosDevice()
+        ? ["audio/mp4", "audio/mp4;codecs=mp4a.40.2", "audio/aac", "audio/webm"]
+        : ["audio/webm;codecs=opus", "audio/webm", "audio/mp4"];
+      for (var i = 0; i < types.length; i++) {
+        try {
+          if (MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(types[i])) return types[i];
+        } catch (e) {}
+      }
+      return "";
+    }
+
+    function recordingSupported() {
+      return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder);
+    }
+
+    function recMessage(text, carId) {
+      var row = document.querySelector('.settings-row[data-car-id="' + carId + '"] .rec-msg');
+      if (row) row.textContent = text || "";
+    }
+
+    function updateRecButtons() {
+      var active = recState.carId;
+      var recBtns = document.querySelectorAll("[data-role=record]");
+      var stopBtns = document.querySelectorAll("[data-role=stop]");
+      var i, el, id;
+      for (i = 0; i < recBtns.length; i++) {
+        el = recBtns[i];
+        id = el.getAttribute("data-car");
+        el.disabled = !!active;
+      }
+      for (i = 0; i < stopBtns.length; i++) {
+        el = stopBtns[i];
+        id = el.getAttribute("data-car");
+        el.disabled = !active || id !== active;
+      }
+      var indicators = document.querySelectorAll(".rec-indicator");
+      for (i = 0; i < indicators.length; i++) {
+        var ind = indicators[i];
+        var on = active && ind.getAttribute("data-car") === active;
+        ind.classList.toggle("on", !!on);
+      }
+    }
+
+    function stopRecTracks() {
+      if (recState.stream) {
+        try {
+          recState.stream.getTracks().forEach(function (tr) { tr.stop(); });
+        } catch (e) {}
+      }
+      recState.stream = null;
+    }
+
+    function finishRecording(blob) {
+      var carId = recState.carId;
+      recState.carId = null;
+      recState.recorder = null;
+      recState.chunks = [];
+      if (recState.timer) { clearTimeout(recState.timer); recState.timer = null; }
+      if (recState.tick) { clearInterval(recState.tick); recState.tick = null; }
+      stopRecTracks();
+      updateRecButtons();
+      if (!carId || !blob || !blob.size) {
+        if (carId) recMessage("I couldn't save that clip. You can try again, or I'll use the built-in voice.", carId);
+        return Promise.resolve();
+      }
+      return saveCustom(carId, { audio: blob }).then(function () {
+        renderSettings();
+        refreshVisibleArt();
+      }).catch(function () {
+        recMessage("I couldn't save that clip. You can try again, or I'll use the built-in voice.", carId);
+      });
+    }
+
+    function stopRecording() {
+      return new Promise(function (resolve) {
+        if (!recState.recorder) {
+          recState.carId = null;
+          stopRecTracks();
+          if (recState.timer) { clearTimeout(recState.timer); recState.timer = null; }
+          if (recState.tick) { clearInterval(recState.tick); recState.tick = null; }
+          updateRecButtons();
+          resolve();
+          return;
+        }
+        var rec = recState.recorder;
+        rec.onstop = function () {
+          var type = rec.mimeType || recState.mime || "audio/webm";
+          var blob = new Blob(recState.chunks, { type: type });
+          finishRecording(blob).then(resolve, resolve);
+        };
+        try { rec.stop(); } catch (e) { finishRecording(null).then(resolve, resolve); }
+      });
+    }
+
+    function startRecording(carId) {
+      if (recState.carId) {
+        recMessage("Stop the current recording first.", recState.carId);
+        return;
+      }
+      recMessage("", carId);
+      if (!recordingSupported()) {
+        recMessage("This browser can't record audio here. You can choose a sound file instead, or I'll use the built-in voice.", carId);
+        return;
+      }
+      stopSpeechAndAudio();
+      var mime = pickRecorderMime();
+      navigator.mediaDevices.getUserMedia({ audio: true, video: false }).then(function (stream) {
+        recState.stream = stream;
+        recState.chunks = [];
+        recState.mime = mime;
+        recState.carId = carId;
+        var opts = mime ? { mimeType: mime } : undefined;
+        var rec;
+        try { rec = opts ? new MediaRecorder(stream, opts) : new MediaRecorder(stream); }
+        catch (err) { rec = new MediaRecorder(stream); }
+        recState.recorder = rec;
+        rec.ondataavailable = function (e) {
+          if (e.data && e.data.size) recState.chunks.push(e.data);
+        };
+        rec.onerror = function () {
+          recMessage("Something went wrong while recording. You can try again, or I'll use the built-in voice.", carId);
+          stopRecording();
+        };
+        rec.start(200);
+        var started = Date.now();
+        recState.timer = setTimeout(function () { stopRecording(); }, 10000);
+        recState.tick = setInterval(function () {
+          var sec = Math.min(10, Math.ceil((Date.now() - started) / 1000));
+          var label = document.querySelector('.settings-row[data-car-id="' + carId + '"] .rec-label');
+          if (label) label.textContent = "Recording… " + sec + "s";
+        }, 200);
+        updateRecButtons();
+        var label = document.querySelector('.settings-row[data-car-id="' + carId + '"] .rec-label');
+        if (label) label.textContent = "Recording… 1s";
+      }).catch(function (err) {
+        recState.carId = null;
+        stopRecTracks();
+        updateRecButtons();
+        var name = (err && err.name) || "";
+        var msg;
+        if (name === "NotAllowedError" || name === "PermissionDeniedError" || name === "SecurityError") {
+          msg = "I couldn't use the microphone. Check the browser permission, or use Choose sound instead. The built-in voice will play until a clip is saved.";
+        } else if (name === "NotFoundError" || name === "DevicesNotFoundError") {
+          msg = "I couldn't find a microphone. You can choose a sound file instead, or I'll use the built-in voice.";
+        } else {
+          msg = "Recording isn't available right now. You can choose a sound file instead, or I'll use the built-in voice.";
+        }
+        recMessage(msg, carId);
+        if (!document.querySelector('.settings-row[data-car-id="' + carId + '"] .rec-msg')) {
+          renderSettings();
+          recMessage(msg, carId);
+        }
+      });
+    }
+
+    function bindNameField(input, car) {
+      var timer = null;
+      function commit() {
+        var value = input.value.trim().slice(0, 40);
+        if (car.custom) {
+          if (!value) {
+            value = "New friend";
+            input.value = value;
+          }
+        }
+        return saveCustom(car.id, { name: value }).then(function () {
+          var live = carById(car.id) || car;
+          var row = input.closest(".settings-row");
+          if (row) {
+            var h3 = row.querySelector("h3");
+            var lineEl = row.querySelector(".settings-line");
+            if (h3) h3.textContent = displayFullName(live);
+            if (lineEl) lineEl.textContent = spokenLine(live);
+            var preview = row.querySelector(".settings-preview");
+            var entry = customMedia[car.id] || {};
+            if (preview && !entry.imageUrl) fillArt(preview, live);
+          }
+          refreshCardLabels();
+        });
+      }
+      input.addEventListener("input", function () {
+        if (timer) clearTimeout(timer);
+        timer = setTimeout(commit, 300);
+      });
+      input.addEventListener("change", commit);
+      input.addEventListener("blur", commit);
+    }
+
+    function bindLineField(input, car) {
+      var timer = null;
+      function commit() {
+        var value = input.value.trim().slice(0, 80);
+        return saveCustom(car.id, { line: value }).then(function () {
+          var row = input.closest(".settings-row");
+          var lineEl = row && row.querySelector(".settings-line");
+          if (lineEl) lineEl.textContent = spokenLine(carById(car.id) || car);
+        });
+      }
+      input.addEventListener("input", function () {
+        if (timer) clearTimeout(timer);
+        timer = setTimeout(commit, 300);
+      });
+      input.addEventListener("change", commit);
+      input.addEventListener("blur", commit);
+    }
+
+    function addCustomCard() {
+      var id = newCustomId();
+      var pal = paletteFor(id);
+      return saveCustom(id, {
+        custom: true,
+        name: "New friend",
+        line: "",
+        color: pal.color,
+        dark: pal.dark,
+        light: pal.light,
+        window: pal.window
+      }).then(function () {
+        renderSettings();
+        var input = document.querySelector('.settings-row[data-car-id="' + id + '"] .name-input');
+        if (input) {
+          input.focus();
+          input.select();
+          var row = input.closest(".settings-row");
+          if (row && row.scrollIntoView) row.scrollIntoView({ block: "nearest" });
+        }
+        return id;
+      });
+    }
+
+    function renderCarSettings(car, list) {
+      var row = document.createElement("div");
+      row.className = "settings-row" + (car.custom ? " custom-row" : "");
+      row.dataset.carId = car.id;
+
+      var preview = document.createElement("div");
+      preview.className = "settings-preview";
+      fillArt(preview, car);
+
+      var meta = document.createElement("div");
+      meta.className = "settings-meta";
+
+      var h3 = document.createElement("h3");
+      h3.textContent = displayFullName(car);
+      var lineP = document.createElement("p");
+      lineP.className = "settings-line";
+      lineP.textContent = spokenLine(car);
+      var status = document.createElement("p");
+      status.className = "settings-status";
+      status.textContent = mediaStatus(car);
+      meta.appendChild(h3);
+      meta.appendChild(lineP);
+      meta.appendChild(status);
+
+      var nameField = document.createElement("div");
+      nameField.className = "name-field";
+      var nameLab = document.createElement("label");
+      nameLab.setAttribute("for", "name-" + car.id);
+      nameLab.textContent = "Name";
+      var nameInput = document.createElement("input");
+      nameInput.type = "text";
+      nameInput.className = "name-input";
+      nameInput.id = "name-" + car.id;
+      nameInput.maxLength = 40;
+      nameInput.autocomplete = "off";
+      nameInput.spellcheck = false;
+      nameInput.setAttribute("data-role", "name");
+      nameInput.setAttribute("data-car", car.id);
+      var existingName = customName(car);
+      nameInput.placeholder = car.custom ? "New friend" : car.name;
+      nameInput.value = existingName;
+      nameField.appendChild(nameLab);
+      nameField.appendChild(nameInput);
+      meta.appendChild(nameField);
+      bindNameField(nameInput, car);
+
+      if (car.custom) {
+        var lineField = document.createElement("div");
+        lineField.className = "line-field";
+        var lineLab = document.createElement("label");
+        lineLab.setAttribute("for", "line-" + car.id);
+        lineLab.textContent = "Spoken line (optional)";
+        var lineInput = document.createElement("input");
+        lineInput.type = "text";
+        lineInput.className = "line-input";
+        lineInput.id = "line-" + car.id;
+        lineInput.maxLength = 80;
+        lineInput.autocomplete = "off";
+        lineInput.setAttribute("data-role", "line");
+        lineInput.setAttribute("data-car", car.id);
+        lineInput.placeholder = "Hello! It's " + displayName(car) + "!";
+        lineInput.value = (customMedia[car.id] && customMedia[car.id].line) || car.line || "";
+        lineField.appendChild(lineLab);
+        lineField.appendChild(lineInput);
+        meta.appendChild(lineField);
+        bindLineField(lineInput, car);
+      }
+
+      var btns = document.createElement("div");
+      btns.className = "settings-btns";
+
+      var imgInput = document.createElement("input");
+      imgInput.type = "file";
+      imgInput.accept = "image/*";
+      imgInput.className = "sr-file";
+      imgInput.setAttribute("data-role", "image");
+      imgInput.setAttribute("data-car", car.id);
+      imgInput.id = "file-image-" + car.id;
+
+      var camInput = document.createElement("input");
+      camInput.type = "file";
+      camInput.accept = "image/*";
+      camInput.setAttribute("capture", "environment");
+      camInput.className = "sr-file";
+      camInput.setAttribute("data-role", "camera");
+      camInput.setAttribute("data-car", car.id);
+      camInput.id = "file-camera-" + car.id;
+
+      var audInput = document.createElement("input");
+      audInput.type = "file";
+      audInput.accept = "audio/*";
+      audInput.className = "sr-file";
+      audInput.setAttribute("data-role", "audio");
+      audInput.setAttribute("data-car", car.id);
+      audInput.id = "file-audio-" + car.id;
+
+      function mini(label, cls, onClick, role) {
+        var b = document.createElement("button");
+        b.type = "button";
+        b.className = "btn-mini" + (cls ? " " + cls : "");
+        b.textContent = label;
+        if (role) {
+          b.setAttribute("data-role", role);
+          b.setAttribute("data-car", car.id);
+        }
+        b.addEventListener("click", onClick);
+        return b;
+      }
+
+      btns.appendChild(mini("Choose photo", "primary", function () { imgInput.click(); }));
+      btns.appendChild(mini("Take photo", "primary", function () { camInput.click(); }));
+      btns.appendChild(mini("Choose sound", "primary", function () { audInput.click(); }));
+      btns.appendChild(mini("Record", "record", function () { startRecording(car.id); }, "record"));
+      var stopBtn = mini("Stop", "stop", function () { stopRecording(); }, "stop");
+      stopBtn.disabled = recState.carId !== car.id;
+      btns.appendChild(stopBtn);
+
+      var entry = customMedia[car.id] || {};
+      var playBtn = mini("Play sound", "", function () {
+        if (entry.audioUrl) speakCar(car);
+        else speak(spokenLine(car), car);
+      });
+      playBtn.setAttribute("data-role", "play");
+      if (!entry.audioUrl) playBtn.disabled = true;
+      btns.appendChild(playBtn);
+
+      if (car.custom) {
+        btns.appendChild(mini("Delete", "warn", function () {
+          var box = row.querySelector(".delete-confirm");
+          if (box) box.hidden = false;
+        }, "delete"));
+      } else {
+        btns.appendChild(mini("Clear", "warn", function () {
+          saveCustom(car.id, { image: null, audio: null }).then(function () {
+            renderSettings();
+            refreshVisibleArt();
+          });
+        }));
+      }
+
+      var recInd = document.createElement("div");
+      recInd.className = "rec-indicator" + (recState.carId === car.id ? " on" : "");
+      recInd.setAttribute("data-car", car.id);
+      recInd.innerHTML = '<span class="rec-dot" aria-hidden="true"></span><span class="rec-label">Recording…</span>';
+
+      var recMsg = document.createElement("p");
+      recMsg.className = "rec-msg";
+
+      function onImage(file) {
+        if (!file) return;
+        saveCustom(car.id, { image: file }).then(function () {
+          renderSettings();
+          refreshVisibleArt();
+        }).catch(function () { renderSettings(); });
+      }
+      imgInput.addEventListener("change", function () {
+        var file = imgInput.files && imgInput.files[0];
+        imgInput.value = "";
+        onImage(file);
+      });
+      camInput.addEventListener("change", function () {
+        var file = camInput.files && camInput.files[0];
+        camInput.value = "";
+        onImage(file);
+      });
+      audInput.addEventListener("change", function () {
+        var file = audInput.files && audInput.files[0];
+        audInput.value = "";
+        if (!file) return;
+        saveCustom(car.id, { audio: file }).then(function () {
+          renderSettings();
+          refreshVisibleArt();
+        }).catch(function () { renderSettings(); });
+      });
+
+      meta.appendChild(btns);
+      meta.appendChild(recInd);
+      meta.appendChild(recMsg);
+      meta.appendChild(imgInput);
+      meta.appendChild(camInput);
+      meta.appendChild(audInput);
+
+      if (car.custom) {
+        var delBox = document.createElement("div");
+        delBox.className = "delete-confirm";
+        delBox.hidden = true;
+        delBox.innerHTML = "<p>Delete this card?</p>";
+        var delBtns = document.createElement("div");
+        delBtns.className = "settings-btns";
+        var yes = document.createElement("button");
+        yes.type = "button";
+        yes.className = "btn-mini warn";
+        yes.textContent = "Yes, delete";
+        yes.setAttribute("data-role", "delete-yes");
+        yes.setAttribute("data-car", car.id);
+        yes.addEventListener("click", function () {
+          if (recState.carId === car.id) stopRecording();
+          deleteCustomCard(car.id).then(function () {
+            renderSettings();
+            refreshVisibleArt();
+          });
+        });
+        var no = document.createElement("button");
+        no.type = "button";
+        no.className = "btn-mini";
+        no.textContent = "Cancel";
+        no.addEventListener("click", function () { delBox.hidden = true; });
+        delBtns.appendChild(yes);
+        delBtns.appendChild(no);
+        delBox.appendChild(delBtns);
+        meta.appendChild(delBox);
+      }
+
+      row.appendChild(preview);
+      row.appendChild(meta);
+      list.appendChild(row);
     }
 
     function renderSettings() {
       var list = document.getElementById("settings-list");
+      var customList = document.getElementById("settings-custom-list");
       list.innerHTML = "";
-      CARS.forEach(function (car) {
-        var row = document.createElement("div");
-        row.className = "settings-row";
-        row.dataset.carId = car.id;
-
-        var preview = document.createElement("div");
-        preview.className = "settings-preview";
-        fillArt(preview, car);
-
-        var meta = document.createElement("div");
-        meta.className = "settings-meta";
-        meta.innerHTML = "<h3>" + car.fullName + "</h3>" +
-          '<p class="settings-line">' + car.line + "</p>" +
-          '<p class="settings-status">' + mediaStatus(car) + "</p>";
-
-        var btns = document.createElement("div");
-        btns.className = "settings-btns";
-
-        var imgInput = document.createElement("input");
-        imgInput.type = "file";
-        imgInput.accept = "image/*";
-        imgInput.className = "sr-file";
-        imgInput.setAttribute("data-role", "image");
-        imgInput.setAttribute("data-car", car.id);
-        imgInput.id = "file-image-" + car.id;
-
-        var audInput = document.createElement("input");
-        audInput.type = "file";
-        audInput.accept = "audio/*";
-        audInput.className = "sr-file";
-        audInput.setAttribute("data-role", "audio");
-        audInput.setAttribute("data-car", car.id);
-        audInput.id = "file-audio-" + car.id;
-
-        function mini(label, cls, onClick) {
-          var b = document.createElement("button");
-          b.type = "button";
-          b.className = "btn-mini" + (cls ? " " + cls : "");
-          b.textContent = label;
-          b.addEventListener("click", onClick);
-          return b;
-        }
-
-        btns.appendChild(mini("Choose photo", "primary", function () { imgInput.click(); }));
-        btns.appendChild(mini("Choose sound", "primary", function () { audInput.click(); }));
-
-        var entry = customMedia[car.id] || {};
-        var playBtn = mini("Play sound", "", function () {
-          if (entry.audioUrl) speakCar(car);
-        });
-        if (!entry.audioUrl) playBtn.disabled = true;
-        btns.appendChild(playBtn);
-        btns.appendChild(mini("Clear", "warn", function () {
-          clearCustom(car.id).then(function () { renderSettings(); refreshVisibleArt(); });
-        }));
-
-        imgInput.addEventListener("change", function () {
-          var file = imgInput.files && imgInput.files[0];
-          imgInput.value = "";
-          if (!file) return;
-          saveCustom(car.id, { image: file }).then(function () {
-            renderSettings();
-            refreshVisibleArt();
-          }).catch(function () { renderSettings(); });
-        });
-        audInput.addEventListener("change", function () {
-          var file = audInput.files && audInput.files[0];
-          audInput.value = "";
-          if (!file) return;
-          saveCustom(car.id, { audio: file }).then(function () {
-            renderSettings();
-            refreshVisibleArt();
-          }).catch(function () { renderSettings(); });
-        });
-
-        meta.appendChild(btns);
-        meta.appendChild(imgInput);
-        meta.appendChild(audInput);
-        row.appendChild(preview);
-        row.appendChild(meta);
-        list.appendChild(row);
-      });
+      if (customList) customList.innerHTML = "";
+      CARS.forEach(function (car) { renderCarSettings(car, list); });
+      extraCars.forEach(function (car) { renderCarSettings(car, customList || list); });
+      updateRecButtons();
     }
+
 
     function openSettings() {
       document.getElementById("reset-confirm").hidden = true;
@@ -1555,16 +2245,18 @@
     }
 
     function closeSettings() {
-      document.getElementById("settings-screen").hidden = true;
-      document.getElementById("reset-confirm").hidden = true;
-      refreshVisibleArt();
-      if (!document.getElementById("start-screen").hidden) {
-        document.getElementById("play-btn").focus();
-      } else if (!document.getElementById("win-overlay").hidden) {
-        document.getElementById("next-btn").focus();
-      } else {
-        focusCard(focusIndex);
-      }
+      stopRecording().then(function () {
+        document.getElementById("settings-screen").hidden = true;
+        document.getElementById("reset-confirm").hidden = true;
+        refreshVisibleArt();
+        if (!document.getElementById("start-screen").hidden) {
+          document.getElementById("play-btn").focus();
+        } else if (!document.getElementById("win-overlay").hidden) {
+          document.getElementById("next-btn").focus();
+        } else {
+          focusCard(focusIndex);
+        }
+      });
     }
 
     var holdTimer = null;
@@ -1603,6 +2295,7 @@
     gear.addEventListener("contextmenu", function (e) { e.preventDefault(); });
 
     document.getElementById("settings-done-btn").addEventListener("click", closeSettings);
+    document.getElementById("add-card-btn").addEventListener("click", function () { addCustomCard(); });
     document.getElementById("reset-all-btn").addEventListener("click", function () {
       document.getElementById("reset-confirm").hidden = false;
     });
@@ -1781,6 +2474,7 @@
     window.TheoCarMatch = {
       cars: CARS,
       carSVG: carSVG,
+      placeholderSVG: placeholderSVG,
       openSettings: openSettings,
       closeSettings: closeSettings,
       loadAllCustom: loadAllCustom,
@@ -1790,7 +2484,18 @@
       getCustomMedia: function () { return customMedia; },
       voiceFor: voiceFor,
       speakCar: speakCar,
-      refreshVoices: refreshVoices
+      spokenLine: spokenLine,
+      displayName: displayName,
+      displayFullName: displayFullName,
+      refreshVoices: refreshVoices,
+      allCars: allCars,
+      addCustomCard: addCustomCard,
+      deleteCustomCard: deleteCustomCard,
+      startRecording: startRecording,
+      stopRecording: stopRecording,
+      pickRecorderMime: pickRecorderMime,
+      startGame: startGame,
+      playWith: function (ids) { forcedPick = ids.slice(); startGame(0); }
     };
 
   })();
