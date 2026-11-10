@@ -715,11 +715,33 @@
       left: calc(var(--safe-l) + 8px);
       z-index: 8;
       display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+    }
+    .sync-hud[hidden] { display: none; }
+    .sync-hud-row {
+      display: flex;
       flex-direction: row;
       align-items: center;
       gap: 4px;
     }
-    .sync-hud[hidden] { display: none; }
+    .sync-hud-bar {
+      width: 44px;
+      height: 4px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.72);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.14);
+      overflow: hidden;
+    }
+    .sync-hud-bar[hidden] { display: none; }
+    .sync-hud-bar-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: inherit;
+      background: #1565C0;
+      transition: width 0.2s ease-out;
+    }
     .sync-hud-status {
       width: 22px;
       height: 22px;
@@ -765,6 +787,9 @@
     }
     @keyframes sync-spin { to { transform: rotate(360deg); } }
     .sync-spin { animation: sync-spin 0.8s linear infinite; transform-origin: 50% 50%; }
+    @media (prefers-reduced-motion: reduce) {
+      .sync-hud-bar-fill, .family-sync-bar-fill { transition: none; }
+    }
 
     .update-banner {
       position: absolute;
@@ -1059,12 +1084,33 @@
     .family-sync-status {
       display: flex;
       align-items: center;
+      flex-wrap: wrap;
       gap: 12px;
       margin: 10px 0 8px;
       padding: 12px 14px;
       border-radius: 16px;
       background: #E8F5E9;
       color: #1B5E20;
+    }
+    .family-sync-progress {
+      flex: 1 0 100%;
+      width: 100%;
+      margin-top: 2px;
+    }
+    .family-sync-progress[hidden] { display: none; }
+    .family-sync-bar {
+      width: 100%;
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(21, 101, 192, 0.16);
+      overflow: hidden;
+    }
+    .family-sync-bar-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: inherit;
+      background: #1565C0;
+      transition: width 0.2s ease-out;
     }
     .family-sync-status[hidden] { display: none; }
     .family-sync-status.is-syncing { background: #E3F2FD; color: #1565C0; }
@@ -1221,7 +1267,7 @@
       padding: 0.35em 1.2em;
       margin-left: auto;
     }
-    .settings-friends {
+    .settings-friends, .settings-cards {
       margin-top: 8px;
       padding-top: 8px;
     }
@@ -1395,6 +1441,10 @@
     </button>
 
     <div class="sync-hud" id="sync-hud" hidden>
+      <div class="sync-hud-bar" id="sync-hud-bar" hidden role="progressbar" aria-label="Sync progress" aria-valuemin="0" aria-valuenow="0" aria-valuemax="1">
+        <div class="sync-hud-bar-fill" id="sync-hud-bar-fill"></div>
+      </div>
+      <div class="sync-hud-row">
       <div class="sync-hud-status" id="sync-hud-status" hidden aria-live="polite">
         <span class="sync-hud-icon" id="sync-hud-icon" aria-hidden="true"></span>
         <span class="sync-hud-text" id="sync-hud-text"></span>
@@ -1402,6 +1452,7 @@
       <button type="button" class="sync-hud-refresh" id="sync-hud-refresh" aria-label="Sync now">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M17.65 6.35A7.95 7.95 0 0 0 12 4a8 8 0 1 0 8 8h-2a6 6 0 1 1-6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
       </button>
+      </div>
     </div>
 
     <div id="update-banner" class="update-banner" hidden role="status">
@@ -1431,11 +1482,9 @@
           </div>
           <p class="voice-help">For a nicer voice on iPhone: Settings &gt; Accessibility &gt; Spoken Content &gt; Voices &gt; English, and download an Enhanced or Premium voice.</p>
         </div>
-        <div id="settings-list"></div>
-        <div class="settings-friends">
-          <h3 class="friends-title">Your cards</h3>
-          <p class="friends-lead">Add a photo of a family member, a pet, or a favourite toy.</p>
-          <div id="settings-custom-list"></div>
+        <div class="settings-cards">
+          <h3 class="friends-title">Cards</h3>
+          <div id="settings-list"></div>
           <button type="button" class="btn btn-add" id="add-card-btn">Add a card</button>
         </div>
         </div>
@@ -1586,6 +1635,9 @@
               <strong id="family-sync-title"></strong>
               <span id="family-sync-detail"></span>
             </div>
+            <div class="family-sync-progress" id="family-sync-progress" hidden>
+              <div class="family-sync-bar"><div class="family-sync-bar-fill" id="family-sync-bar-fill"></div></div>
+            </div>
           </div>
           <p class="sync-status" id="sync-status"></p>
           <p class="sync-notice" id="sync-notice" hidden></p>
@@ -1712,11 +1764,13 @@
     var lastSyncOk = false;
     var lastSyncChanges = 0;
     var hudTickTimer = null;
+    var syncProgressTimer = null;
+    var syncProgress = { active: false, total: 0, done: 0 };
     var lastManifestEtag = "";
     var BLOB_FETCH_MS = 20000;
     var bootStartedAt = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
     var keyChangeOpen = false;
-    var APP_VERSION = "15";
+    var APP_VERSION = "16";
     var MATCH_PAIR_CAP = 6;
     var NAME_ROUNDS = 6;
     var THUMB_MAX = 256;
@@ -4844,11 +4898,8 @@
 
     function renderSettings() {
       var list = document.getElementById("settings-list");
-      var customList = document.getElementById("settings-custom-list");
       list.innerHTML = "";
-      if (customList) customList.innerHTML = "";
-      CARS.forEach(function (car) { renderCarSettings(car, list); });
-      extraCars.forEach(function (car) { renderCarSettings(car, customList || list); });
+      allCars().forEach(function (car) { renderCarSettings(car, list); });
       updateRecButtons();
     }
 
@@ -5354,7 +5405,7 @@
     function updateSyncHud() {
       var hud = document.getElementById("sync-hud");
       if (!hud) return;
-      if (!syncConfigured()) {
+      if (!syncConfigured() && !syncProgress.active) {
         hud.hidden = true;
         hideHudStatus();
         updateFamilySyncStatus();
@@ -5362,7 +5413,7 @@
       }
       hud.hidden = false;
       var unreachable = isUnreachableError(lastSyncError) || (lastSyncError && !lastSyncOk && !pulling) || !navigator.onLine;
-      if (pulling) {
+      if (pulling || syncProgress.active) {
         hideHudStatus();
       } else if (unreachable) {
         hideHudStatus();
@@ -5391,16 +5442,109 @@
       return '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>';
     }
 
+    function clearSyncProgressTimer() {
+      if (syncProgressTimer) {
+        clearTimeout(syncProgressTimer);
+        syncProgressTimer = null;
+      }
+    }
+
+    function syncProgressLabel() {
+      var total = syncProgress.total;
+      var unit = total === 1 ? "car" : "cars";
+      return "Syncing " + syncProgress.done + " of " + total + " " + unit + "…";
+    }
+
+    function hideSyncProgressBars() {
+      var hudBar = document.getElementById("sync-hud-bar");
+      var hudFill = document.getElementById("sync-hud-bar-fill");
+      var famProg = document.getElementById("family-sync-progress");
+      var famFill = document.getElementById("family-sync-bar-fill");
+      if (hudBar) hudBar.hidden = true;
+      if (hudFill) hudFill.style.width = "0%";
+      if (famProg) famProg.hidden = true;
+      if (famFill) famFill.style.width = "0%";
+    }
+
+    function renderSyncProgress() {
+      var hud = document.getElementById("sync-hud");
+      var hudBar = document.getElementById("sync-hud-bar");
+      var hudFill = document.getElementById("sync-hud-bar-fill");
+      if (!syncProgress.active || !syncProgress.total) {
+        hideSyncProgressBars();
+        return;
+      }
+      if (hud) hud.hidden = false;
+      var pct = Math.round((syncProgress.done / syncProgress.total) * 100);
+      if (hudBar) {
+        hudBar.hidden = false;
+        hudBar.setAttribute("aria-valuenow", String(syncProgress.done));
+        hudBar.setAttribute("aria-valuemax", String(syncProgress.total));
+        hudBar.setAttribute("aria-valuemin", "0");
+      }
+      if (hudFill) hudFill.style.width = pct + "%";
+      updateFamilySyncStatus();
+    }
+
+    function beginSyncProgress(total) {
+      total = Number(total) || 0;
+      if (total <= 0) return;
+      if (syncProgress.active && syncProgress.total === total) return;
+      clearSyncProgressTimer();
+      syncProgress = { active: true, total: total, done: 0 };
+      renderSyncProgress();
+    }
+
+    function bumpSyncProgress() {
+      if (!syncProgress.active) return;
+      syncProgress.done = Math.min(syncProgress.total, syncProgress.done + 1);
+      renderSyncProgress();
+    }
+
+    function endSyncProgress() {
+      clearSyncProgressTimer();
+      syncProgress = { active: false, total: 0, done: 0 };
+      hideSyncProgressBars();
+    }
+
+    function settleSyncProgress(done) {
+      clearSyncProgressTimer();
+      if (syncProgress.active && syncProgress.total) {
+        syncProgress.done = syncProgress.total;
+        renderSyncProgress();
+        syncProgressTimer = setTimeout(function () {
+          syncProgressTimer = null;
+          endSyncProgress();
+          if (done) done();
+        }, 200);
+        return;
+      }
+      endSyncProgress();
+      if (done) done();
+    }
+
     function updateFamilySyncStatus() {
       var box = document.getElementById("family-sync-status");
       var icon = document.getElementById("family-sync-icon");
       var title = document.getElementById("family-sync-title");
       var detail = document.getElementById("family-sync-detail");
+      var famProg = document.getElementById("family-sync-progress");
       if (!box) return;
       box.hidden = false;
       box.classList.remove("is-syncing", "is-offline", "is-error", "is-idle");
       var when = formatSyncTime(lastSyncAt);
       var unreachable = isUnreachableError(lastSyncError) || !navigator.onLine || (lastSyncError && !lastSyncOk && !pulling && isUnreachableError(lastSyncError));
+      if (syncProgress.active && syncProgress.total > 0) {
+        box.classList.add("is-syncing");
+        if (icon) icon.innerHTML = familySpinSvg();
+        if (title) title.textContent = syncProgressLabel();
+        if (detail) detail.textContent = "";
+        if (famProg) famProg.hidden = false;
+        var famFill = document.getElementById("family-sync-bar-fill");
+        if (famFill) famFill.style.width = Math.round((syncProgress.done / syncProgress.total) * 100) + "%";
+        return;
+      }
+      if (famProg) famProg.hidden = true;
       if (!syncConfigured()) {
         box.classList.add("is-idle");
         if (icon) icon.innerHTML = familyCloudSvg();
@@ -5408,12 +5552,7 @@
         if (detail) detail.textContent = sameOriginSync ? "Enter the family key to start." : "Enter a server URL and family key to start.";
         return;
       }
-      if (pulling) {
-        box.classList.add("is-syncing");
-        if (icon) icon.innerHTML = familySpinSvg();
-        if (title) title.textContent = "Syncing…";
-        if (detail) detail.textContent = "Talking to the home computer.";
-      } else if (!navigator.onLine || isUnreachableError(lastSyncError) || (lastSyncError && !lastSyncOk && isUnreachableError(lastSyncError))) {
+      if (!navigator.onLine || isUnreachableError(lastSyncError) || (lastSyncError && !lastSyncOk && isUnreachableError(lastSyncError))) {
         box.classList.add("is-offline");
         if (icon) icon.innerHTML = familyCloudSvg();
         if (title) title.textContent = "Offline";
@@ -5613,15 +5752,19 @@
         }
         return Promise.resolve();
       }
+      beginSyncProgress(ids.length);
       var chain = Promise.resolve();
       ids.forEach(function (id) {
-        chain = chain.then(function () { return pushOneCard(id); });
+        chain = chain.then(function () { return pushOneCard(id).then(function () { bumpSyncProgress(); }); });
       });
       return chain.then(function () {
         lastSyncAt = Date.now();
         lastSyncError = "";
         lastSyncOk = true;
-        updateSyncUi();
+        settleSyncProgress(function () { updateSyncUi(); flashHudTick(); });
+      }).catch(function (e) {
+        endSyncProgress();
+        throw e;
       });
     }
 
@@ -5801,9 +5944,11 @@
         try { console.log("theo-sync", timing); } catch (e) {}
       }
       saveServerSeen();
-      updateSyncUi();
-      flashHudTick();
-      checkGameUpdate();
+      settleSyncProgress(function () {
+        updateSyncUi();
+        flashHudTick();
+        checkGameUpdate();
+      });
     }
 
     function applyChangedCards(remote, timing) {
@@ -5822,12 +5967,13 @@
         });
         if (timing) timing.changeIds = changeIds.length;
         if (!changeIds.length) return 0;
+        beginSyncProgress(changeIds.length);
         var tBlobs = nowMs();
         syncApplying = true;
         return mapPool(changeIds, 4, function (id) {
           return applyRemoteCard(id, remote[id]).then(function () {
             rememberServerCard(id, remote[id]);
-            return dropOutboxFor(id);
+            return dropOutboxFor(id).then(function () { bumpSyncProgress(); });
           });
         }).then(function () {
           if (timing) timing.blobsMs = Math.round(nowMs() - tBlobs);
@@ -5899,6 +6045,7 @@
               return true;
             });
           }
+          beginSyncProgress(changed.length);
         }
         var tSync = nowMs();
         return syncFetch("/api/sync", headersFor("")).then(function (r) {
@@ -5920,6 +6067,7 @@
         timing.totalMs = Math.round(nowMs() - timing.t0);
         timing.error = lastSyncError;
         window.__theoSyncTiming = timing;
+        endSyncProgress();
         updateSyncUi();
         return false;
       }).then(function (ok) {
@@ -5969,6 +6117,7 @@
             return true;
           });
         }
+        beginSyncProgress(jobs.length);
         var chain = Promise.resolve();
         var doneQids = settingsQids.slice();
         jobs.forEach(function (job) {
@@ -5979,6 +6128,7 @@
               var rec = customMedia[job.cardId];
               if (rec) rememberServerCard(job.cardId, recMetaPayload(job.cardId));
               else rememberServerCard(job.cardId, { updatedAt: Date.now(), deleted: true });
+              bumpSyncProgress();
             });
           });
         });
@@ -5996,9 +6146,11 @@
           lastSyncError = "";
           lastSyncChanges = jobs.length;
           syncNotice = "";
-          updateSyncUi();
-          flashHudTick();
-          checkGameUpdate();
+          settleSyncProgress(function () {
+            updateSyncUi();
+            flashHudTick();
+            checkGameUpdate();
+          });
           return true;
         });
       }).catch(function (e) {
@@ -6007,6 +6159,7 @@
         var msg = e.message || "Could not save to the home computer.";
         lastSyncError = msg;
         lastSyncOk = false;
+        endSyncProgress();
         updateSyncUi();
         return false;
       });
@@ -6361,6 +6514,12 @@
       enqueueOutbox: enqueueOutbox,
       detectSync: detectSync,
       getSyncStatus: getSyncStatus,
+      getSyncProgress: function () { return { active: syncProgress.active, total: syncProgress.total, done: syncProgress.done }; },
+      beginSyncProgress: beginSyncProgress,
+      bumpSyncProgress: bumpSyncProgress,
+      endSyncProgress: endSyncProgress,
+      finishPullOk: finishPullOk,
+      allCars: allCars,
       nextRevSrc: nextRevSrc,
       playRoundRev: playRoundRev,
       getRevState: function () { return { clips: REV_CLIPS.slice(), queue: revQueue.slice(), last: lastRev }; },
