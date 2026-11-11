@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TV browser probe</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #0B1730; color: #fff; font-family: Arial, Helvetica, sans-serif; overflow: hidden; }
+  #wrap { display: flex; height: 100%; }
+  #info { width: 52%; padding: 1.2vw 1.6vw; box-sizing: border-box; font-size: 1.55vw; line-height: 1.35; overflow: hidden; }
+  #side { width: 48%; display: flex; flex-direction: column; padding: 1.2vw; box-sizing: border-box; }
+  h1 { font-size: 2.6vw; margin: 0 0 0.6vw; color: #FFD54F; }
+  .row { margin: 0.25vw 0; word-break: break-all; }
+  .k { color: #90CAF9; font-weight: bold; }
+  .ok { color: #69F0AE; font-weight: bold; }
+  .bad { color: #FF8A80; font-weight: bold; }
+  #stage { position: relative; width: 100%; height: 25.3vw; background: #000; border: 0.3vw solid #3949AB; border-radius: 1vw; overflow: hidden; }
+  #stage canvas { width: 100%; height: 100%; display: block; }
+  #fps { position: absolute; left: 0.8vw; top: 0.6vw; font-size: 2.4vw; font-weight: bold; color: #FFEB3B; text-shadow: 0 0.2vw 0.3vw #000; }
+  #phase { position: absolute; left: 0.8vw; bottom: 0.6vw; font-size: 1.5vw; color: #fff; text-shadow: 0 0.2vw 0.3vw #000; }
+  #pad { margin-top: 1vw; font-size: 1.6vw; line-height: 1.35; background: #13254D; border-radius: 1vw; padding: 0.8vw 1vw; flex: 1; overflow: hidden; }
+  #sent { position: fixed; left: 1.6vw; bottom: 1.2vw; font-size: 2.6vw; font-weight: bold; padding: 0.4vw 1.2vw; border-radius: 1vw; background: #1B5E20; }
+  #sent.fail { background: #B71C1C; }
+  .btn { display: inline-block; min-width: 2.2vw; text-align: center; margin: 0.15vw; padding: 0.1vw 0.4vw; border-radius: 0.5vw; background: #283593; }
+  .btn.on { background: #FFD54F; color: #000; font-weight: bold; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div id="info">
+    <h1>TV browser probe</h1>
+    <div id="rows"></div>
+  </div>
+  <div id="side">
+    <div id="stage"><canvas id="c"></canvas><div id="fps">fps …</div><div id="phase"></div></div>
+    <div id="pad"><b>Press any button on the controller</b><div id="padlist">No controller seen yet.</div><div id="keys"></div></div>
+  </div>
+</div>
+<div id="sent">Sending…</div>
+<script>
+(function () {
+  "use strict";
+  var R = { probe: "tv-probe-1", seq: 0, errors: [] };
+  window.onerror = function (m, s, l, c) { R.errors.push(String(m) + " @" + l + ":" + c); if (R.errors.length > 20) R.errors.shift(); };
+  function esc(t) { return String(t).replace(/[&<>]/g, function (c) { return c === "&" ? "&amp;" : c === "<" ? "&lt;" : "&gt;"; }); }
+  function yes(v) { return v ? '<span class="ok">YES</span>' : '<span class="bad">NO</span>'; }
+
+  // ---- basics ----
+  R.ua = navigator.userAgent;
+  R.secure = typeof window.isSecureContext === "boolean" ? window.isSecureContext : "unknown";
+  R.protocol = location.protocol;
+  R.href = location.href;
+  function sizes() {
+    R.screen = { w: screen.width, h: screen.height, availW: screen.availWidth, availH: screen.availHeight };
+    R.inner = { w: window.innerWidth, h: window.innerHeight };
+    R.dpr = window.devicePixelRatio || 1;
+  }
+  sizes();
+  R.gamepadApi = typeof navigator.getGamepads === "function" || typeof navigator.webkitGetGamepads === "function";
+  R.raf = typeof window.requestAnimationFrame === "function";
+  R.hw = { cores: navigator.hardwareConcurrency || null, memGB: navigator.deviceMemory || null, lang: navigator.language || "" };
+
+  // ---- WebGL capability on throwaway canvases ----
+  function glInfo(kind) {
+    var out = { ok: false };
+    try {
+      var cv = document.createElement("canvas");
+      var g = kind === 2 ? cv.getContext("webgl2") : (cv.getContext("webgl") || cv.getContext("experimental-webgl"));
+      if (!g) return out;
+      out.ok = true;
+      out.version = g.getParameter(g.VERSION);
+      out.glsl = g.getParameter(g.SHADING_LANGUAGE_VERSION);
+      out.vendor = g.getParameter(g.VENDOR);
+      out.renderer = g.getParameter(g.RENDERER);
+      out.maxTex = g.getParameter(g.MAX_TEXTURE_SIZE);
+      out.maxViewport = Array.prototype.slice.call(g.getParameter(g.MAX_VIEWPORT_DIMS) || []);
+      var dbg = g.getExtension("WEBGL_debug_renderer_info");
+      if (dbg) { out.unmaskedVendor = g.getParameter(dbg.UNMASKED_VENDOR_WEBGL); out.unmaskedRenderer = g.getParameter(dbg.UNMASKED_RENDERER_WEBGL); }
+      out.extCount = (g.getSupportedExtensions() || []).length;
+      var lose = g.getExtension("WEBGL_lose_context"); if (lose) lose.loseContext();
+    } catch (e) { out.error = String(e && e.message || e); }
+    return out;
+  }
+  R.webgl1 = glInfo(1);
+  R.webgl2 = glInfo(2);
+
+  // ---- spinning low-poly test (raw WebGL1) ----
+  var canvas = document.getElementById("c");
+  var gl = null;
+  try { gl = canvas.getContext("webgl", { antialias: false }) || canvas.getContext("experimental-webgl"); } catch (e) {}
+  R.fps = { p720: null, native: null, nativeSize: null, live: 0 };
+  var phases = [{ name: "720p", w: 1280, h: 720, key: "p720" }, { name: "native", w: 0, h: 0, key: "native" }];
+  var phaseIdx = 0, phaseStart = 0, phaseFrames = 0, lastT = 0, liveFrames = 0, liveStart = 0;
+  function nativeSize() {
+    var d = window.devicePixelRatio || 1;
+    var w = Math.round(Math.max(screen.width * d, window.innerWidth * d)), h = Math.round(Math.max(screen.height * d, window.innerHeight * d));
+    if (w < 1280) { w = 1920; h = 1080; }
+    return { w: w, h: Math.round(w * 9 / 16) };
+  }
+  function setPhase(i) {
+    phaseIdx = i % phases.length;
+    var p = phases[phaseIdx];
+    var sz = p.key === "native" ? nativeSize() : { w: p.w, h: p.h };
+    if (p.key === "native") R.fps.nativeSize = sz.w + "x" + sz.h;
+    canvas.width = sz.w; canvas.height = sz.h;
+    phaseStart = 0; phaseFrames = 0;
+    document.getElementById("phase").textContent = "Measuring " + p.name + " (" + sz.w + "x" + sz.h + ") for 10 s";
+  }
+  // Icosahedron (flat shaded), drawn as a grid of 48 spinning copies.
+  var prog = null, vbuf = null, nverts = 0, uM = null, uP = null, uC = null;
+  function buildMesh() {
+    var t = (1 + Math.sqrt(5)) / 2;
+    var v = [[-1,t,0],[1,t,0],[-1,-t,0],[1,-t,0],[0,-1,t],[0,1,t],[0,-1,-t],[0,1,-t],[t,0,-1],[t,0,1],[-t,0,-1],[-t,0,1]];
+    var f = [[0,11,5],[0,5,1],[0,1,7],[0,7,10],[0,10,11],[1,5,9],[5,11,4],[11,10,2],[10,7,6],[7,1,8],[3,9,4],[3,4,2],[3,2,6],[3,6,8],[3,8,9],[4,9,5],[2,4,11],[6,2,10],[8,6,7],[9,8,1]];
+    var data = [];
+    for (var i = 0; i < f.length; i++) {
+      var a = v[f[i][0]], b = v[f[i][1]], c = v[f[i][2]];
+      var ux = b[0]-a[0], uy = b[1]-a[1], uz = b[2]-a[2], wx = c[0]-a[0], wy = c[1]-a[1], wz = c[2]-a[2];
+      var nx = uy*wz-uz*wy, ny = uz*wx-ux*wz, nz = ux*wy-uy*wx, l = Math.sqrt(nx*nx+ny*ny+nz*nz);
+      [a, b, c].forEach(function (p) { data.push(p[0]*0.5, p[1]*0.5, p[2]*0.5, nx/l, ny/l, nz/l); });
+    }
+    nverts = data.length / 6;
+    vbuf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, vbuf); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data), gl.STATIC_DRAW);
+  }
+  function sh(type, src) { var s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; }
+  function initGl() {
+    if (!gl) return false;
+    prog = gl.createProgram();
+    gl.attachShader(prog, sh(gl.VERTEX_SHADER, "attribute vec3 p;attribute vec3 n;uniform mat4 M;uniform mat4 P;varying float L;void main(){vec3 nn=normalize(mat3(M[0].xyz,M[1].xyz,M[2].xyz)*n);L=0.25+0.75*max(dot(nn,normalize(vec3(0.4,0.8,0.6))),0.0);gl_Position=P*M*vec4(p,1.0);}"));
+    gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, "precision mediump float;uniform vec3 C;varying float L;void main(){gl_FragColor=vec4(C*L,1.0);}"));
+    gl.linkProgram(prog); gl.useProgram(prog);
+    buildMesh();
+    var ap = gl.getAttribLocation(prog, "p"), an = gl.getAttribLocation(prog, "n");
+    gl.enableVertexAttribArray(ap); gl.enableVertexAttribArray(an);
+    gl.vertexAttribPointer(ap, 3, gl.FLOAT, false, 24, 0); gl.vertexAttribPointer(an, 3, gl.FLOAT, false, 24, 12);
+    uM = gl.getUniformLocation(prog, "M"); uP = gl.getUniformLocation(prog, "P"); uC = gl.getUniformLocation(prog, "C");
+    gl.enable(gl.DEPTH_TEST);
+    return true;
+  }
+  function persp(aspect) { var f = 1 / Math.tan(0.5), n = 0.1, fa = 100; return [f/aspect,0,0,0, 0,f,0,0, 0,0,(fa+n)/(n-fa),-1, 0,0,2*fa*n/(n-fa),0]; }
+  function model(ax, ay, tx, ty, tz) {
+    var cx = Math.cos(ax), sx = Math.sin(ax), cy = Math.cos(ay), sy = Math.sin(ay);
+    return [cy,0,-sy,0, sx*sy,cx,sx*cy,0, cx*sy,-sx,cx*cy,0, tx,ty,tz,1];
+  }
+  var COLS = [[1,0.3,0.25],[1,0.75,0.2],[0.3,0.85,0.4],[0.3,0.6,1],[0.8,0.4,1]];
+  function frame(t) {
+    window.requestAnimationFrame(frame);
+    if (!phaseStart) { phaseStart = t; phaseFrames = 0; }
+    if (!liveStart) liveStart = t;
+    phaseFrames++; liveFrames++;
+    if (t - liveStart >= 1000) { R.fps.live = Math.round(liveFrames * 10000 / (t - liveStart)) / 10; liveFrames = 0; liveStart = t; }
+    if (t - phaseStart >= 10000) {
+      var p = phases[phaseIdx];
+      R.fps[p.key] = Math.round(phaseFrames * 10000 / (t - phaseStart)) / 10;
+      setPhase(phaseIdx + 1);
+    }
+    document.getElementById("fps").innerHTML = "fps " + R.fps.live + '<br><span style="font-size:1.4vw">10 s avg: 720p ' + (R.fps.p720 == null ? "…" : R.fps.p720) + " · native " + (R.fps.native == null ? "…" : R.fps.native) + "</span>";
+    if (!prog) return;
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    gl.clearColor(0.05, 0.08, 0.16, 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    gl.uniformMatrix4fv(uP, false, new Float32Array(persp(canvas.width / canvas.height)));
+    var s = t / 1000, k = 0;
+    for (var y = 0; y < 6; y++) for (var x = 0; x < 8; x++) {
+      gl.uniformMatrix4fv(uM, false, new Float32Array(model(s * (0.7 + 0.05 * x), s * (1.1 + 0.07 * y), (x - 3.5) * 1.3, (y - 2.5) * 1.3, -9)));
+      var c = COLS[k++ % COLS.length]; gl.uniform3f(uC, c[0], c[1], c[2]);
+      gl.drawArrays(gl.TRIANGLES, 0, nverts);
+    }
+  }
+  var glOk = false;
+  try { glOk = initGl(); } catch (e) { R.errors.push("gl init: " + (e.message || e)); }
+  R.drawTest = glOk;
+  setPhase(0);
+  if (R.raf) window.requestAnimationFrame(frame);
+  if (!glOk) document.getElementById("phase").textContent = "WebGL test could not start";
+
+  // ---- gamepads + remote keys ----
+  R.pads = []; R.padEverSeen = false; R.padEvents = []; R.keys = [];
+  window.addEventListener("gamepadconnected", function (e) { R.padEvents.push("connected: " + (e.gamepad && e.gamepad.id)); });
+  window.addEventListener("gamepaddisconnected", function (e) { R.padEvents.push("disconnected: " + (e.gamepad && e.gamepad.id)); });
+  document.addEventListener("keydown", function (e) {
+    R.keys.push({ key: e.key || "", code: e.code || "", keyCode: e.keyCode, t: Date.now() });
+    if (R.keys.length > 15) R.keys.shift();
+    if (e.keyCode >= 37 && e.keyCode <= 40) e.preventDefault();
+  });
+  function readPads() {
+    var list = [];
+    var gp = null;
+    try { gp = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads() : null); } catch (e) {}
+    if (gp) for (var i = 0; i < gp.length; i++) {
+      var g = gp[i]; if (!g) continue;
+      R.padEverSeen = true;
+      var pressed = [];
+      for (var b = 0; b < g.buttons.length; b++) { var bt = g.buttons[b]; var v = typeof bt === "object" ? bt.value : bt; var on = typeof bt === "object" ? bt.pressed : bt > 0.5; if (on || v > 0.05) pressed.push(b + (v < 0.99 ? "=" + v.toFixed(2) : "")); }
+      list.push({ index: g.index, id: g.id, mapping: g.mapping, connected: g.connected, buttons: g.buttons.length, axesCount: g.axes.length, pressed: pressed, axes: Array.prototype.map.call(g.axes, function (a) { return Math.round(a * 100) / 100; }) });
+    }
+    R.pads = list;
+    var h = "";
+    if (!R.gamepadApi) h = '<span class="bad">navigator.getGamepads is missing</span>';
+    else if (!list.length) h = R.padEverSeen ? "Controller went away." : "No controller seen yet (connect it, then press a button).";
+    list.forEach(function (p) {
+      h += '<div class="row"><span class="k">#' + p.index + '</span> ' + esc(p.id) + '<br><span class="k">mapping:</span> ' + esc(p.mapping || "(none)") + ' · ' + p.buttons + ' buttons · ' + p.axesCount + ' axes</div>';
+      h += '<div class="row"><span class="k">pressed:</span> ' + (p.pressed.length ? p.pressed.map(function (x) { return '<span class="btn on">' + esc(x) + '</span>'; }).join("") : "none") + '</div>';
+      h += '<div class="row"><span class="k">axes:</span> ' + p.axes.join(", ") + '</div>';
+    });
+    document.getElementById("padlist").innerHTML = h;
+    var k = R.keys.slice(-6).map(function (x) { return esc((x.key || "?") + "/" + x.keyCode); }).join("  ");
+    document.getElementById("keys").innerHTML = '<div class="row"><span class="k">Remote keys:</span> ' + (k || "press arrows/OK on the TV remote") + '</div>';
+  }
+  setInterval(readPads, 100);
+
+  // ---- info panel ----
+  function glRow(name, g) {
+    if (!g.ok) return '<div class="row"><span class="k">' + name + ':</span> ' + yes(false) + (g.error ? " " + esc(g.error) : "") + '</div>';
+    return '<div class="row"><span class="k">' + name + ':</span> ' + yes(true) + ' ' + esc(g.version) + '<br>&nbsp;&nbsp;renderer: ' + esc(g.unmaskedRenderer || g.renderer) + '<br>&nbsp;&nbsp;vendor: ' + esc(g.unmaskedVendor || g.vendor) + ' · max texture ' + g.maxTex + '</div>';
+  }
+  function paintInfo() {
+    sizes();
+    document.getElementById("rows").innerHTML =
+      '<div class="row"><span class="k">User agent:</span> ' + esc(R.ua) + '</div>' +
+      '<div class="row"><span class="k">Page:</span> ' + esc(R.protocol) + ' · secure context ' + yes(R.secure === true) + '</div>' +
+      '<div class="row"><span class="k">Screen:</span> ' + R.screen.w + 'x' + R.screen.h + ' · window ' + R.inner.w + 'x' + R.inner.h + ' · devicePixelRatio ' + R.dpr + '</div>' +
+      glRow("WebGL 1", R.webgl1) + glRow("WebGL 2", R.webgl2) +
+      '<div class="row"><span class="k">Gamepad API:</span> ' + yes(R.gamepadApi) + ' · cores ' + (R.hw.cores || "?") + ' · memory ' + (R.hw.memGB || "?") + ' GB</div>' +
+      (R.errors.length ? '<div class="row bad">Errors: ' + esc(R.errors.slice(-3).join(" | ")) + '</div>' : "");
+  }
+  paintInfo();
+  setInterval(paintInfo, 2000);
+
+  // ---- report to the home computer every 5 s ----
+  var sentEl = document.getElementById("sent");
+  function report() {
+    R.seq++; R.t = new Date().toISOString();
+    var body = JSON.stringify(R);
+    var x = new XMLHttpRequest();
+    x.open("POST", "/tv/report", true);
+    x.setRequestHeader("Content-Type", "application/json");
+    x.timeout = 4000;
+    x.onload = function () {
+      if (x.status === 200) { sentEl.className = ""; sentEl.textContent = "Results sent \u2713 #" + R.seq; }
+      else { sentEl.className = "fail"; sentEl.textContent = "Send failed (" + x.status + ")"; }
+    };
+    x.onerror = x.ontimeout = function () { sentEl.className = "fail"; sentEl.textContent = "Send failed \u2717"; };
+    try { x.send(body); } catch (e) { sentEl.className = "fail"; sentEl.textContent = "Send failed \u2717"; }
+  }
+  setTimeout(report, 1500);
+  setInterval(report, 5000);
+})();
+</script>
+</body>
+</html>

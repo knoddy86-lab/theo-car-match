@@ -1079,6 +1079,32 @@ function safeAccessLog(req, res) {
   res.on("close", write);
 }
 
+// TV browser probe (11 Nov 2026): a static test page plus a small results log. Works over
+// plain HTTP too (no redirect) so http and https can be compared on the TV.
+var TV_PAGE = path.join(ROOT, "tv-probe.html");
+var TV_LOG = path.join(DATA_DIR, "tv-probe.log");
+function handleTv(req, res, p) {
+  if ((p === "/tv" || p === "/tv/index.html") && (req.method === "GET" || req.method === "HEAD")) {
+    var html;
+    try { html = fs.readFileSync(TV_PAGE); } catch (e) { return send(res, 404, "text/plain; charset=utf-8", "No probe page"); }
+    return send(res, 200, "text/html; charset=utf-8", html);
+  }
+  if (p === "/tv/report" && req.method === "POST") {
+    return readRequest(req, 64 * 1024).then(function (buf) {
+      var body;
+      try { body = JSON.parse(buf.toString("utf8")); } catch (e) { return sendJson(res, 400, { ok: false, error: "bad json" }); }
+      var line = JSON.stringify({ at: new Date().toISOString(), ip: (req.socket && req.socket.remoteAddress) || "", https: isHttpsReq(req), report: body }) + "\n";
+      try {
+        var st = null; try { st = fs.statSync(TV_LOG); } catch (e) {}
+        if (st && st.size > 10 * 1024 * 1024) fs.renameSync(TV_LOG, TV_LOG + ".old");
+        fs.appendFileSync(TV_LOG, line);
+      } catch (e) { return sendJson(res, 500, { ok: false, error: "log failed" }); }
+      return sendJson(res, 200, { ok: true });
+    }).catch(function () { if (!res.headersSent) sendJson(res, 413, { ok: false, error: "too large" }); });
+  }
+  return send(res, 404, "text/plain; charset=utf-8", "Not found");
+}
+
 function onRequest(req, res) {
   safeAccessLog(req, res);
   setCors(req, res);
@@ -1090,6 +1116,8 @@ function onRequest(req, res) {
   try { url = new URL(req.url, "http://127.0.0.1"); } catch (e) {
     return send(res, 400, "text/plain; charset=utf-8", "Bad request");
   }
+  var tvPath = url.pathname.replace(/\/+$/, "") || "/";
+  if (tvPath === "/tv" || tvPath.indexOf("/tv/") === 0) return handleTv(req, res, tvPath);
   if (!isHttpsReq(req)) {
     var pathName = url.pathname.replace(/\/+$/, "") || "/";
     var allowHttp = httpAllowedPath(pathName) || (pathName === "/admin" && isLocalRequest(req));
