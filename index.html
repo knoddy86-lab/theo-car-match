@@ -23,11 +23,17 @@
       return String(n).indexOf("Abort") !== -1;
     }
     window.onerror = function (m, s, l) {
+      if (/load failed|failed to fetch|networkerror|sw\.js/i.test(String(m || ""))) return;
       show((m || "error") + (l ? " (line " + l + ")" : ""));
     };
+    // v38: network and service-worker update failures (offline, away from home) are expected; the cached game keeps working.
+    function isQuietNetwork(r) {
+      var t = String((r && (r.message || r)) || "") + " " + String((r && r.name) || "");
+      return /load failed|failed to fetch|networkerror|network error|fetch is aborted|aborted|sw\.js|service ?worker|script resource|offline|timed? ?out/i.test(t);
+    }
     window.onunhandledrejection = function (ev) {
       var r = ev && ev.reason;
-      if (isAbort(r)) return;
+      if (isAbort(r) || isQuietNetwork(r)) { try { ev.preventDefault(); } catch (e) {} return; }
       show((r && (r.message || r)) || "Something went wrong");
     };
   })();
@@ -1571,6 +1577,8 @@
     }
     .sync-url-result.is-ok { color: #2E7D32; }
     .sync-url-result.is-error { color: #C62828; }
+    .sync-route { margin: 6px 0 0; font-size: 13px; font-weight: 700; color: #455A64; overflow-wrap: anywhere; }
+    .sync-route.is-ok { color: #2E7D32; }
 
     .settings-tabs {
       display: flex;
@@ -2444,6 +2452,7 @@
               <button type="button" class="btn-mini primary" id="sync-url-test">Connect</button>
             </div>
             <p class="sync-url-result" id="sync-url-result" hidden></p>
+            <p class="sync-route" id="sync-route" hidden></p>
           </div>
           <div class="sync-field" id="sync-key-field">
             <label for="sync-key">Family key</label>
@@ -2603,7 +2612,7 @@
     var BLOB_FETCH_MS = 20000;
     var bootStartedAt = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
     var keyChangeOpen = false;
-    var APP_VERSION = "37";
+    var APP_VERSION = "38";
     var MATCH_PAIR_CAP = 6;
     var NAME_ROUNDS = 6;
     var THUMB_MAX = 256;
@@ -9808,9 +9817,83 @@
       return (sameOriginSync || !!syncBaseOverride) && !!syncFamilyKey;
     }
 
+    // v38: automatic fallback. The saved (home Wi-Fi) address is tried first with a short timeout, then Tailscale.
+    // Whichever answered last is remembered and used until it stops answering.
+    var TAILSCALE_SYNC_URL = "https://100.124.194.126:8788";
+    var SYNC_ACTIVE_KEY = "theo-car-match-sync-active";
+    var SYNC_PROBE_LAN_MS = 2500;
+    var SYNC_PROBE_FAR_MS = 6000;
+    var activeSyncBase = "";
+    var syncProbeP = null;
+    var lastProbeAt = 0;
+    try { activeSyncBase = normalizeSyncUrl(localStorage.getItem(SYNC_ACTIVE_KEY) || ""); } catch (e) {}
+
+    function homeSyncBase() {
+      if (sameOriginSync && /^https?:$/.test(location.protocol)) return normalizeSyncUrl(location.origin);
+      return normalizeSyncUrl(syncBaseOverride) || DEFAULT_SYNC_URL;
+    }
+
+    function syncCandidates() {
+      var out = [];
+      [homeSyncBase(), normalizeSyncUrl(syncBaseOverride) || DEFAULT_SYNC_URL, DEFAULT_SYNC_URL, TAILSCALE_SYNC_URL].forEach(function (b) {
+        if (b && out.indexOf(b) === -1) out.push(b);
+      });
+      return out;
+    }
+
+    function currentSyncBase() {
+      var list = syncCandidates();
+      return (activeSyncBase && list.indexOf(activeSyncBase) !== -1) ? activeSyncBase : list[0];
+    }
+
+    function rootForBase(b) {
+      if (!b) return "";
+      return savedUrlIsThisOrigin(b) ? "" : b;
+    }
+
+    function syncPlaceLabel(b) {
+      var h = "";
+      try { h = new URL(b).hostname.toLowerCase(); } catch (e) { return "Home computer"; }
+      if (/\.ts\.net$/.test(h) || /^100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\./.test(h)) return "Tailscale";
+      if (/^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(h) || /\.local$/.test(h) || h === "win11a" || h === "localhost" || h === "127.0.0.1") return "Home Wi-Fi";
+      return h;
+    }
+
+    function setActiveSyncBase(b) {
+      b = normalizeSyncUrl(b);
+      if (!b || b === activeSyncBase) return;
+      activeSyncBase = b;
+      try { localStorage.setItem(SYNC_ACTIVE_KEY, b); } catch (e) {}
+      try { updateSyncUi(); } catch (e2) {}
+    }
+
+    function isNetworkFailure(e) {
+      var n = (e && e.name) || "";
+      return n === "AbortError" || n === "TypeError" || /abort|load failed|failed to fetch|networkerror|network/i.test(String((e && e.message) || e || ""));
+    }
+
+    // Try each address in order (home Wi-Fi first). Resolves the one that answered, or "" if none did.
+    function probeSyncBases(skip) {
+      if (syncProbeP) return syncProbeP;
+      var list = syncCandidates().filter(function (b) { return b !== skip; });
+      var i = 0;
+      function next() {
+        if (i >= list.length) return Promise.resolve("");
+        var b = list[i++];
+        var far = syncPlaceLabel(b) !== "Home Wi-Fi";
+        return lanFetch(joinSyncUrl(rootForBase(b), "/api/health"), { headers: { Accept: "application/json" }, cache: "no-store" }, far ? SYNC_PROBE_FAR_MS : SYNC_PROBE_LAN_MS)
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (j) {
+            if (j && j.ok && j.service === "theo-sync") { setActiveSyncBase(b); return b; }
+            return next();
+          }, function () { return next(); });
+      }
+      syncProbeP = next().then(function (b) { syncProbeP = null; lastProbeAt = Date.now(); return b; }, function () { syncProbeP = null; return ""; });
+      return syncProbeP;
+    }
+
     function syncRoot() {
-      if (sameOriginSync || savedUrlIsThisOrigin(syncBaseOverride)) return "";
-      return normalizeSyncUrl(syncBaseOverride);
+      return rootForBase(currentSyncBase());
     }
 
     function syncTargetKnown() {
@@ -9835,7 +9918,7 @@
     }
 
     function isUnreachableError(msg) {
-      return !!(msg && /reach|network|Failed to fetch|Load failed|offline|NetworkError/i.test(msg));
+      return !!(msg && /reach|network|Failed to fetch|Load failed|offline|NetworkError|abort/i.test(msg));
     }
 
     function hideHudStatus() {
@@ -10086,6 +10169,15 @@
       var saveBtn = document.getElementById("sync-save-btn");
       var discardBtn = document.getElementById("sync-discard-btn");
       if (urlInput && document.activeElement !== urlInput) urlInput.value = displaySyncUrl(syncBaseOverride);
+      var route = document.getElementById("sync-route");
+      if (route) {
+        var cur = currentSyncBase();
+        var reach = isUnreachableError(lastSyncError) || (typeof navigator !== "undefined" && navigator.onLine === false);
+        route.hidden = !syncConfigured();
+        route.classList.toggle("is-ok", !reach && !!lastSyncOk);
+        if (reach) route.textContent = "Can't reach the home computer on home Wi-Fi or Tailscale. Away from home, turn Tailscale on.";
+        else route.textContent = "Using: " + syncPlaceLabel(cur) + " · " + cur + "/";
+      }
       if (keyInput && document.activeElement !== keyInput) keyInput.value = syncFamilyKey;
       if (urlField) urlField.hidden = false;
       var showKeyEntry = !syncFamilyKey || keyChangeOpen;
@@ -10095,7 +10187,7 @@
         if (sameOriginSync) {
           lead.textContent = "This phone updates from the home computer automatically. Edits stay on this phone until a parent saves them with the PIN.";
         } else {
-          lead.textContent = "This device can update from the home computer. The server address is saved here. Enter the family key to start.";
+          lead.textContent = "This device can update from the home computer. The server address is saved here. Enter the family key to start. Away from home it connects through Tailscale automatically.";
         }
       }
       if (saveBtn) saveBtn.hidden = !syncConfigured();
@@ -10164,7 +10256,15 @@
     }
 
     function syncFetch(path, opts, ms) {
-      return lanFetch(joinSyncUrl(syncRoot(), path), opts || {}, ms || LAN_FETCH_MS).then(function (r) {
+      var tried = currentSyncBase();
+      function once() { return lanFetch(joinSyncUrl(syncRoot(), path), opts || {}, ms || LAN_FETCH_MS); }
+      return once().catch(function (e) {
+        if (!isNetworkFailure(e) || (opts && opts.body && typeof ReadableStream !== "undefined" && opts.body instanceof ReadableStream)) throw e;
+        return probeSyncBases(tried).then(function (b) {
+          if (!b) throw new Error("Can't reach home computer (home Wi-Fi or Tailscale).");
+          return once();
+        });
+      }).then(function (r) {
         if (r.status === 401) {
           clearRejectedKey();
           throw new Error("The family key was not accepted.");
@@ -10849,8 +10949,15 @@
           return false;
         });
       }).catch(function () {
-        showUrlTest(false, "Unreachable");
-        return false;
+        return probeSyncBases(base).then(function (b) {
+          if (b) {
+            showUrlTest(true, "Home Wi-Fi address unreachable here. Connected through " + syncPlaceLabel(b) + ".");
+            if (syncConfigured()) pullFromServer();
+            return true;
+          }
+          showUrlTest(false, "Unreachable (also tried Tailscale)");
+          return false;
+        });
       });
     }
 
@@ -10907,10 +11014,13 @@
     }
 
     function bindSyncHooks() {
-      window.addEventListener("online", function () { if (syncConfigured()) pullFromServer(); else updateSyncUi(); });
+      window.addEventListener("online", function () { if (syncConfigured()) probeSyncBases().then(function () { return pullFromServer(); }); else updateSyncUi(); });
       window.addEventListener("offline", function () { updateSyncUi(); });
       document.addEventListener("visibilitychange", function () {
-        if (!document.hidden && syncConfigured()) pullFromServer();
+        if (!document.hidden && syncConfigured()) {
+          if (Date.now() - lastProbeAt > 60000) probeSyncBases().then(function () { return pullFromServer(); });
+          else pullFromServer();
+        }
       });
       setInterval(function () {
         if (!document.hidden && syncConfigured()) pullFromServer();
@@ -10934,6 +11044,13 @@
     }
 
     function applyGameUpdate() {
+      ownOriginHasWorker("").then(function (ok) {
+        if (!ok) { hideUpdateBanner(); return; }
+        applyGameUpdateNow();
+      });
+    }
+
+    function applyGameUpdateNow() {
       window.__theoReloading = true;
       if (navigator.serviceWorker && navigator.serviceWorker.getRegistration) {
         navigator.serviceWorker.getRegistration("./").then(function (reg) {
@@ -10956,23 +11073,30 @@
       try {
         if (!navigator.serviceWorker || !navigator.serviceWorker.getRegistration) return;
         navigator.serviceWorker.getRegistration("./").then(function (reg) {
-          if (reg && reg.update) reg.update();
+          if (reg && reg.update) { var up = reg.update(); if (up && up.catch) up.catch(function () {}); }
         }).catch(function () {});
       } catch (e) {}
     }
 
+    function ownOriginHasWorker(ver) {
+      if (!/^https?:$/.test(location.protocol)) return Promise.resolve(false);
+      return lanFetch("./sw.js?check=" + Date.now(), { cache: "no-store" }, 4000).then(function (r) {
+        if (!r.ok) return false;
+        return r.text().then(function (t) { return !ver || t.indexOf("theo-car-match-v" + ver) !== -1; });
+      }).catch(function () { return false; });
+    }
+
     function checkGameUpdate() {
-      var root;
-      if (sameOriginSync || savedUrlIsThisOrigin(syncBaseOverride)) root = "";
-      else if (syncBaseOverride) root = normalizeSyncUrl(syncBaseOverride);
-      else root = "";
+      var root = syncRoot();
       requestWorkerUpdate();
       function consider(j) {
         if (!j) return;
         var ver = String(j.version || j.gameVersion || "");
         if (!ver) return;
         window.__theoServerVersion = ver;
-        if (versionNewer(ver, APP_VERSION)) showUpdateBanner();
+        if (!versionNewer(ver, APP_VERSION)) return;
+        // v38: only offer the update when this app's own address can serve the new sw.js (not when away from home).
+        ownOriginHasWorker(ver).then(function (ok) { if (ok) showUpdateBanner(); });
       }
       lanFetch(joinSyncUrl(root, "/version.json"), { cache: "no-store" }).then(function (r) {
         return r.ok ? r.json() : null;
@@ -11019,6 +11143,9 @@
       return {
         sameOrigin: sameOriginSync,
         base: syncRoot(),
+        activeBase: currentSyncBase(),
+        route: syncPlaceLabel(currentSyncBase()),
+        candidates: syncCandidates(),
         url: syncBaseOverride,
         displayUrl: displaySyncUrl(syncBaseOverride),
         defaultUrl: DEFAULT_SYNC_URL + "/",
@@ -11059,7 +11186,7 @@
     });
     requestWorkerUpdate();
     Promise.all([healthP, dataP]).then(function () {
-      var p = syncConfigured() ? pullFromServer() : Promise.resolve();
+      var p = syncConfigured() ? probeSyncBases().then(function () { return pullFromServer(); }) : Promise.resolve();
       return p.then(function () {
         checkGameUpdate();
         paintHero();
