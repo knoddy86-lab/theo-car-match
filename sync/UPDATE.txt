@@ -19,7 +19,7 @@ What this update adds
 - Phone edits stay on the phone until a parent saves them with a PIN
 - Matches are a silent wiggle and confetti (the name is still said when a card is turned)
 - Finishing a round plays a V8 engine rev (12 real CC0 recordings from Freesound, shuffled)
-- Settings is organised into tabs: Cars, Difficulty, Family
+- Settings is organised into tabs: Cars, Match, Names, Photos, Players, Connection
 - Difficulty age presets (Age 2 is the default) and custom options
 - A short Hooray cheer plays after each match (rotating clips, optional in Difficulty)
 - Difficulty and other play settings stay on each device and are not synced
@@ -102,7 +102,7 @@ Follow the page:
    after step 3.
 5. Tap the Share button, then Add to Home Screen. The app name is
    "Theo's Car Match".
-6. Open the Home Screen icon, hold the gear, open the Family tab, and type
+6. Open the Home Screen icon, hold the gear, open the Connection tab, and type
    the family key from data\family-key.txt (or the text the server printed).
 
 GitHub Pages (https://knoddy86-lab.github.io/theo-car-match/) stays a

@@ -335,7 +335,7 @@
     }
     @media (max-width: 600px) and (orientation: portrait) {
       #settings-screen .settings-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); overflow: visible; }
-      #settings-screen .settings-tabs button { min-width: 0; padding: 6px 4px; white-space: nowrap; }
+      #settings-screen .settings-tabs button { min-width: 0; padding: 6px 2px; white-space: nowrap; font-size: 13px; }
     }
     .face.front.is-family, .name-choice.is-family { padding: 0; background: #FFF8E1; }
     /* v30: parent PIN keypad */
@@ -1939,7 +1939,7 @@
           <button type="button" role="tab" id="tab-names" aria-controls="pane-names" aria-selected="false">Names</button>
           <button type="button" role="tab" id="tab-photos" aria-controls="pane-photos" aria-selected="false" hidden>Photos<span class="count-badge" id="tab-photos-badge" hidden>0</span></button>
           <button type="button" role="tab" id="tab-players" aria-controls="pane-players" aria-selected="false">Players</button>
-          <button type="button" role="tab" id="tab-family" aria-controls="pane-family" aria-selected="false">Family</button>
+          <button type="button" role="tab" id="tab-family" aria-controls="pane-family" aria-selected="false">Connection</button>
         </div>
         <div id="pane-cars" class="settings-pane" role="tabpanel" aria-labelledby="tab-cars">
         <p class="settings-lead">Add your own names, pictures and sounds for each car, or add a new card. If a name is said wrong, type how it should sound under Say it like.</p>
@@ -2325,7 +2325,7 @@
     var BLOB_FETCH_MS = 20000;
     var bootStartedAt = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
     var keyChangeOpen = false;
-    var APP_VERSION = "33";
+    var APP_VERSION = "34";
     var MATCH_PAIR_CAP = 6;
     var NAME_ROUNDS = 6;
     var THUMB_MAX = 256;
@@ -4803,7 +4803,7 @@
     // Resolves with a parent token. Only works while Settings is open (never from game screens).
     function requireParent() {
       if (document.getElementById("settings-screen").hidden) return Promise.reject(new Error("Open Settings first."));
-      if (!syncConfigured()) return Promise.reject(new Error("Connect to the home computer on the Family tab first."));
+      if (!syncConfigured()) return Promise.reject(new Error("Connect to the home computer in Settings > Connection first."));
       if (parentSession.token) { touchParent(); return Promise.resolve(parentSession.token); }
       return new Promise(function (resolve, reject) {
         parentSession.waiters.push({ resolve: resolve, reject: reject });
@@ -7436,7 +7436,7 @@
     }
 
     function refreshPhotosOnServer() {
-      if (!syncConfigured()) { setPhotoStatus("Connect to the home computer on the Family tab first."); return; }
+      if (!syncConfigured()) { setPhotoStatus("Connect to the home computer in Settings > Connection first."); return; }
       setPhotoStatus("Asking the home computer for new photos…");
       parentFetch("/api/photos/refresh", { method: "POST", headers: syncHeaders() }).then(function (r) {
         return r.json().catch(function () { return {}; }).then(function (j) {
@@ -7676,7 +7676,7 @@
     }
 
     function photoEdit(kind, body, doneText) {
-      if (!syncConfigured()) { setPhotoStatus("Connect to the home computer on the Family tab first."); return Promise.resolve(false); }
+      if (!syncConfigured()) { setPhotoStatus("Connect to the home computer in Settings > Connection first."); return Promise.resolve(false); }
       if (photoManage.busy) return Promise.resolve(false);
       photoManage.busy = true;
       setPhotoStatus("Saving on the home computer…");
