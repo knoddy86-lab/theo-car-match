@@ -1,6 +1,6 @@
 /* Theo's Car Match service worker — cache-first so the game opens offline
    even when the home computer is unreachable (mobile data). Never caches /api. */
-var CACHE = "theo-car-match-v35";
+var CACHE = "theo-car-match-v36";
 var CORE = [
   "./",
   "./index.html",
@@ -40,6 +40,65 @@ var OPTIONAL = [
   "./sounds/fart/02-fluffy.mp3",
   "./sounds/fart/03-squeaky.mp3"
 ];
+// v36: Build a car voice clips (natural voice, see sounds/build/NOTES.md), cached for offline play.
+var BUILD_VOICE = [
+  "what-build", "road", "construction", "pick-colour", "add-wheels", "add-tracks", "add-roller",
+  "pick-extras", "pick-extra", "ready-go", "vroom", "beep-beep", "great-building", "n-1", "n-2", "n-3",
+  "n-4", "n-5", "n-6", "c-red", "c-blue", "c-yellow", "c-green", "c-orange", "c-purple", "v-car", "v-ute",
+  "v-truck", "v-bus", "v-fire", "v-excavator", "v-dump", "v-roller", "v-backhoe", "v-forklift", "v-loader",
+  "x-spoiler", "x-lights", "x-worklights", "x-siren", "x-beacon", "x-ladder", "x-roofbox", "x-surfboard",
+  "x-stripes", "x-stripes-plain", "x-flames", "x-stars", "x-plate", "x-sign", "x-dog", "x-flag",
+  "x-bikerack", "x-towbar", "x-bullbar", "x-spotlights", "x-snorkel", "x-mudflaps", "x-hosereel", "x-cannon",
+  "x-cones", "x-dirt", "x-bigbucket", "x-claw", "x-breaker", "x-pallet", "name-theo", "g-theo",
+  "name-harper", "g-harper", "name-jayden", "g-jayden", "built-red-car", "s-theo-red-car",
+  "s-harper-red-car", "built-red-ute", "s-theo-red-ute", "s-harper-red-ute", "built-red-truck",
+  "s-theo-red-truck", "s-harper-red-truck", "built-red-bus", "s-theo-red-bus", "s-harper-red-bus",
+  "built-red-fire", "s-theo-red-fire", "s-harper-red-fire", "built-red-excavator", "s-theo-red-excavator",
+  "s-harper-red-excavator", "built-red-dump", "s-theo-red-dump", "s-harper-red-dump", "built-red-roller",
+  "s-theo-red-roller", "s-harper-red-roller", "built-red-backhoe", "s-theo-red-backhoe",
+  "s-harper-red-backhoe", "built-red-forklift", "s-theo-red-forklift", "s-harper-red-forklift",
+  "built-red-loader", "s-theo-red-loader", "s-harper-red-loader", "built-blue-car", "s-theo-blue-car",
+  "s-harper-blue-car", "built-blue-ute", "s-theo-blue-ute", "s-harper-blue-ute", "built-blue-truck",
+  "s-theo-blue-truck", "s-harper-blue-truck", "built-blue-bus", "s-theo-blue-bus", "s-harper-blue-bus",
+  "built-blue-fire", "s-theo-blue-fire", "s-harper-blue-fire", "built-blue-excavator",
+  "s-theo-blue-excavator", "s-harper-blue-excavator", "built-blue-dump", "s-theo-blue-dump",
+  "s-harper-blue-dump", "built-blue-roller", "s-theo-blue-roller", "s-harper-blue-roller",
+  "built-blue-backhoe", "s-theo-blue-backhoe", "s-harper-blue-backhoe", "built-blue-forklift",
+  "s-theo-blue-forklift", "s-harper-blue-forklift", "built-blue-loader", "s-theo-blue-loader",
+  "s-harper-blue-loader", "built-yellow-car", "s-theo-yellow-car", "s-harper-yellow-car", "built-yellow-ute",
+  "s-theo-yellow-ute", "s-harper-yellow-ute", "built-yellow-truck", "s-theo-yellow-truck",
+  "s-harper-yellow-truck", "built-yellow-bus", "s-theo-yellow-bus", "s-harper-yellow-bus",
+  "built-yellow-fire", "s-theo-yellow-fire", "s-harper-yellow-fire", "built-yellow-excavator",
+  "s-theo-yellow-excavator", "s-harper-yellow-excavator", "built-yellow-dump", "s-theo-yellow-dump",
+  "s-harper-yellow-dump", "built-yellow-roller", "s-theo-yellow-roller", "s-harper-yellow-roller",
+  "built-yellow-backhoe", "s-theo-yellow-backhoe", "s-harper-yellow-backhoe", "built-yellow-forklift",
+  "s-theo-yellow-forklift", "s-harper-yellow-forklift", "built-yellow-loader", "s-theo-yellow-loader",
+  "s-harper-yellow-loader", "built-green-car", "s-theo-green-car", "s-harper-green-car", "built-green-ute",
+  "s-theo-green-ute", "s-harper-green-ute", "built-green-truck", "s-theo-green-truck",
+  "s-harper-green-truck", "built-green-bus", "s-theo-green-bus", "s-harper-green-bus", "built-green-fire",
+  "s-theo-green-fire", "s-harper-green-fire", "built-green-excavator", "s-theo-green-excavator",
+  "s-harper-green-excavator", "built-green-dump", "s-theo-green-dump", "s-harper-green-dump",
+  "built-green-roller", "s-theo-green-roller", "s-harper-green-roller", "built-green-backhoe",
+  "s-theo-green-backhoe", "s-harper-green-backhoe", "built-green-forklift", "s-theo-green-forklift",
+  "s-harper-green-forklift", "built-green-loader", "s-theo-green-loader", "s-harper-green-loader",
+  "built-orange-car", "s-theo-orange-car", "s-harper-orange-car", "built-orange-ute", "s-theo-orange-ute",
+  "s-harper-orange-ute", "built-orange-truck", "s-theo-orange-truck", "s-harper-orange-truck",
+  "built-orange-bus", "s-theo-orange-bus", "s-harper-orange-bus", "built-orange-fire", "s-theo-orange-fire",
+  "s-harper-orange-fire", "built-orange-excavator", "s-theo-orange-excavator", "s-harper-orange-excavator",
+  "built-orange-dump", "s-theo-orange-dump", "s-harper-orange-dump", "built-orange-roller",
+  "s-theo-orange-roller", "s-harper-orange-roller", "built-orange-backhoe", "s-theo-orange-backhoe",
+  "s-harper-orange-backhoe", "built-orange-forklift", "s-theo-orange-forklift", "s-harper-orange-forklift",
+  "built-orange-loader", "s-theo-orange-loader", "s-harper-orange-loader", "built-purple-car",
+  "s-theo-purple-car", "s-harper-purple-car", "built-purple-ute", "s-theo-purple-ute", "s-harper-purple-ute",
+  "built-purple-truck", "s-theo-purple-truck", "s-harper-purple-truck", "built-purple-bus",
+  "s-theo-purple-bus", "s-harper-purple-bus", "built-purple-fire", "s-theo-purple-fire",
+  "s-harper-purple-fire", "built-purple-excavator", "s-theo-purple-excavator", "s-harper-purple-excavator",
+  "built-purple-dump", "s-theo-purple-dump", "s-harper-purple-dump", "built-purple-roller",
+  "s-theo-purple-roller", "s-harper-purple-roller", "built-purple-backhoe", "s-theo-purple-backhoe",
+  "s-harper-purple-backhoe", "built-purple-forklift", "s-theo-purple-forklift", "s-harper-purple-forklift",
+  "built-purple-loader", "s-theo-purple-loader", "s-harper-purple-loader"
+];
+OPTIONAL = OPTIONAL.concat(BUILD_VOICE.map(function (k) { return "./sounds/build/" + k + ".mp3"; }));
 
 function addBestEffort(cache, urls) {
   return Promise.all(urls.map(function (u) {

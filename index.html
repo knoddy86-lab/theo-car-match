@@ -334,8 +334,9 @@
       .gc-bubble { font-size: clamp(18px, 6vh, 40px); }
     }
     @media (max-width: 600px) and (orientation: portrait) {
-      #settings-screen .settings-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); overflow: visible; }
-      #settings-screen .settings-tabs button { min-width: 0; padding: 6px 2px; white-space: nowrap; font-size: 13px; }
+      #settings-screen .settings-tabs { display: flex; flex-wrap: wrap; overflow: visible; }
+      #settings-screen .settings-tabs button { flex: 1 1 calc(25% - 6px); min-width: 0; padding: 6px 2px; white-space: nowrap; font-size: 14px; }
+      #settings-screen .settings-tabs button#tab-photos, #settings-screen .settings-tabs button#tab-players, #settings-screen .settings-tabs button#tab-family { flex: 1 1 calc(33.3% - 6px); }
     }
     .face.front.is-family, .name-choice.is-family { padding: 0; background: #FFF8E1; }
     /* v30: parent PIN keypad */
@@ -1595,6 +1596,19 @@
       border-color: #1A237E;
     }
     .settings-tabs button:focus { outline: 4px solid var(--focus); outline-offset: 2px; }
+    .settings-tabs button[hidden] { display: none; }
+    .settings-tabs button { white-space: nowrap; }
+    @media (min-width: 601px) and (max-width: 900px) { .settings-tabs button { font-size: 14px; padding: 6px 4px; } }
+    .garage-count { margin: 0 0 10px; font-weight: 700; color: #37474F; }
+    .garage-done { margin: 10px 0 0; font-weight: 800; color: #2E7D32; }
+    .garage-done[hidden] { display: none; }
+    .garage-btns button, #garage-clear-confirm button { min-height: 44px; padding: 6px 16px; font-size: 15px; }
+    #garage-clear-confirm .settings-btns { gap: 12px; }
+    #garage-clear-confirm button { min-width: 96px; }
+    #pane-build .diff-row { flex-wrap: wrap; }
+    #pane-build .diff-row label { flex: 1 1 100%; }
+    #pane-build .diff-row select { flex: 1 1 100%; max-width: none; }
+    @media (min-width: 601px) { #pane-build .diff-row { flex-wrap: nowrap; } #pane-build .diff-row label { flex: 1 1 auto; } #pane-build .diff-row select { flex: 0 0 auto; min-width: 220px; } }
     .settings-pane { min-width: 0; }
     .settings-pane[hidden] { display: none !important; }
     .diff-presets {
@@ -1851,10 +1865,20 @@
     .b-spare svg { width: 100%; height: 100%; pointer-events: none; }
     .b-spare.dragging { opacity: 0.25; }
     .b-ghost { position: fixed !important; z-index: 50; pointer-events: none; transform: scale(1.1); }
-    .b-extras { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(10px, 2vmin, 20px); width: min(100%, 640px); }
-    .b-extras.n2 { grid-template-columns: repeat(2, 1fr); width: min(100%, 440px); }
-    .b-extra { min-height: clamp(120px, 20vh, 190px); }
-    .b-extra .b-art { width: 100%; height: clamp(60px, 11vh, 110px); display: flex; align-items: center; justify-content: center; }
+    .b4-hero { height: clamp(120px, 27vh, 340px); }
+    .b-extras { display: grid; grid-template-columns: repeat(auto-fill, minmax(clamp(98px, 27vw, 150px), 1fr)); grid-auto-rows: clamp(104px, 15vh, 156px); align-content: start; gap: clamp(10px, 2vmin, 18px); width: min(100%, 940px); flex: 1 1 auto; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; touch-action: pan-y; padding: 8px 8px 14px; border-radius: 24px; }
+    .b-extra { position: relative; min-height: 0; transition: background 0.15s; }
+    .b-extra .b-art { width: 100%; flex: 1 1 auto; min-height: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+    .b-extra .b-lbl { font-size: clamp(14px, 2.4vmin, 22px); pointer-events: none; }
+    .b-extra .b-tick { position: absolute; top: 5px; right: 5px; width: 34px; height: 34px; border-radius: 50%; background: #34C759; color: #fff; border: 3px solid #fff; font-size: 20px; font-weight: 900; line-height: 1; display: none; align-items: center; justify-content: center; box-shadow: 0 3px 0 #1E8E3E; }
+    .b-extra.on { background: #E8F8EC; box-shadow: 0 6px 0 #34C759, 0 10px 18px rgba(0,0,0,0.14); }
+    .b-extra.on .b-tick { display: flex; animation: b-pop 0.35s ease-out; }
+    .b-done { flex: 0 0 auto; font-size: clamp(30px, 5.4vmin, 50px); min-width: 220px; min-height: 76px; margin-bottom: calc(var(--safe-b) + 6px); background: #34C759; box-shadow: 0 6px 0 #1E8E3E; }
+    .b-done:focus { outline: 5px solid var(--focus); outline-offset: 3px; }
+    .b-done-arrow { font-size: 0.8em; }
+    .b-go-hero .bv-spray circle { animation: b-flash 0.5s steps(2, jump-none) infinite; }
+    .b-go-hero.act .bv-wave { animation: b-wave 0.4s ease-in-out infinite; transform-box: fill-box; transform-origin: 0 50%; }
+    @keyframes b-wave { 0%, 100% { transform: scaleX(1); } 50% { transform: scaleX(0.85) skewY(4deg); } }
     .b-cap { background: rgba(255,255,255,0.94); border: 5px solid #FFF; border-radius: 22px; padding: 8px 18px 10px; box-shadow: 0 6px 0 rgba(25,40,90,0.10), 0 12px 24px rgba(0,0,0,0.10); font-size: clamp(22px, 4vmin, 38px); font-weight: 800; color: #1A237E; text-align: center; line-height: 1.2; }
     .b-cap[hidden] { display: none; }
     .b-go-hero { height: clamp(170px, 36vh, 420px); cursor: pointer; }
@@ -1892,7 +1916,8 @@
     .b-shelf { position: relative; display: grid; grid-template-columns: repeat(var(--per, 3), minmax(0, 1fr)); gap: 10px; padding: 8px 8px 20px; }
     .b-shelf::after { content: ""; position: absolute; left: -4px; right: -4px; bottom: 0; height: 14px; border-radius: 4px 4px 6px 6px; background: linear-gradient(180deg, #A97845, #7A5230); box-shadow: 0 6px 0 #5D3A1E, 0 10px 14px rgba(0,0,0,0.18); }
     .b-card { background: rgba(255,255,255,0.92); border-radius: 16px; padding: 6px 4px 8px; box-shadow: 0 3px 0 rgba(0,0,0,0.12); display: flex; flex-direction: column; align-items: center; position: relative; }
-    .b-card .b-art { width: 100%; aspect-ratio: 500 / 230; display: block; }
+    .b-card .b-art { width: 100%; aspect-ratio: 560 / 246; display: block; }
+    .b-card .b-art svg { overflow: hidden; }
     .b-card .b-lbl { font-size: clamp(12px, 2vmin, 18px); }
     .b-card.latest { outline: 4px solid var(--focus); outline-offset: 2px; animation: b-pop 0.6s ease-out; }
     .b-card .new-badge { position: absolute; top: -10px; right: -6px; background: #E53935; color: #fff; font-weight: 800; font-size: 13px; letter-spacing: 0.04em; padding: 3px 8px; border-radius: 999px; box-shadow: 0 2px 0 #9B1B1B; z-index: 1; }
@@ -1919,7 +1944,10 @@
       .b-paints { gap: 12px; }
       .b-blob { width: clamp(64px, 20vh, 100px); }
       .b-spares { min-height: 0; }
-      .b-extra { min-height: 0; height: 40vh; }
+      .build-screen .bstep[data-step="4"] { grid-template-columns: 40% 1fr; grid-template-rows: auto 1fr auto; }
+      .bstep[data-step="4"] .b4-hero { grid-column: 1; grid-row: 2; width: 100%; height: 100%; max-height: 52vh; }
+      .bstep[data-step="4"] .b-done { grid-column: 1; grid-row: 3; min-height: 56px; font-size: 26px; min-width: 180px; margin-bottom: calc(var(--safe-b) + 4px); }
+      .bstep[data-step="4"] .b-extras { grid-column: 2; grid-row: 2 / 4; height: 100%; align-self: stretch; grid-auto-rows: 100px; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); }
       .bstep[data-step="5"] .b-cap { grid-column: 1 / -1; margin: 0 170px; font-size: 22px; padding: 4px 16px 6px; }
       .bstep[data-step="garage"] { display: flex !important; }
       .bstep[data-step="garage"] .b-title { margin: 0 170px; }
@@ -2050,9 +2078,10 @@
         <div class="b-spares" id="b3-spares" role="group" aria-label="Parts"></div>
       </div>
       <div class="bstep" data-step="4" hidden>
-        <div class="b-title">Add a bit extra</div>
-        <div class="b-hero" id="b4-hero"></div>
+        <div class="b-title" id="b4-title">Add extras</div>
+        <div class="b-hero b4-hero" id="b4-hero"></div>
         <div class="b-extras" id="b4-grid" role="group" aria-label="Extras"></div>
+        <button type="button" class="btn b-done" id="b4-done">Done <span class="b-done-arrow" aria-hidden="true">&#10148;</span></button>
       </div>
       <div class="bstep" data-step="5" hidden>
         <div class="b-cap" id="b5-cap" aria-live="polite">Tap GO!</div>
@@ -2144,6 +2173,7 @@
           <button type="button" role="tab" id="tab-cars" aria-controls="pane-cars" aria-selected="true">Cars</button>
           <button type="button" role="tab" id="tab-difficulty" aria-controls="pane-difficulty" aria-selected="false">Match</button>
           <button type="button" role="tab" id="tab-names" aria-controls="pane-names" aria-selected="false">Names</button>
+          <button type="button" role="tab" id="tab-build" aria-controls="pane-build" aria-selected="false">Build</button>
           <button type="button" role="tab" id="tab-photos" aria-controls="pane-photos" aria-selected="false" hidden>Photos<span class="count-badge" id="tab-photos-badge" hidden>0</span></button>
           <button type="button" role="tab" id="tab-players" aria-controls="pane-players" aria-selected="false">Players</button>
           <button type="button" role="tab" id="tab-family" aria-controls="pane-family" aria-selected="false">Connection</button>
@@ -2245,16 +2275,6 @@
               <input id="diff-hooray" type="checkbox" checked>
             </div>
           </div>
-          <div class="diff-custom" id="build-options">
-            <h3>Build game for <span id="build-steps-who">this player</span></h3>
-            <div class="diff-row">
-              <label for="build-steps">Build steps (Simple: only colour and wheels, then GO)</label>
-              <select id="build-steps" aria-label="Build steps">
-                <option value="full">Full (5 steps)</option>
-                <option value="simple">Simple (colour, wheels)</option>
-              </select>
-            </div>
-          </div>
         </div>
         <div id="pane-names" class="settings-pane" role="tabpanel" aria-labelledby="tab-names" hidden>
           <p class="settings-lead">How Name Game works on this device.</p>
@@ -2295,6 +2315,44 @@
               <label for="name-set-cele">End celebration screen</label>
               <input id="name-set-cele" type="checkbox" checked>
             </div>
+          </div>
+        </div>
+        <div id="pane-build" class="settings-pane" role="tabpanel" aria-labelledby="tab-build" hidden>
+          <p class="settings-lead">How Build a car works on this device. Each player has their own Build settings and garage.</p>
+          <p class="device-only-note">This device only — not synced.</p>
+          <div class="diff-custom" id="build-options">
+            <h3>Build game for <span id="build-steps-who">this player</span></h3>
+            <div class="diff-row">
+              <label for="build-steps">Build steps (Simple: only colour and wheels, then GO)</label>
+              <select id="build-steps" aria-label="Build steps">
+                <option value="full">Full (5 steps)</option>
+                <option value="simple">Simple (colour, wheels)</option>
+              </select>
+            </div>
+            <div class="diff-row">
+              <label for="build-extras">Extras on each vehicle (Full steps only)</label>
+              <select id="build-extras" aria-label="Extras allowed">
+                <option value="any">Any</option>
+                <option value="3">Up to 3</option>
+                <option value="1">Just 1</option>
+              </select>
+            </div>
+          </div>
+          <div class="diff-custom" id="garage-options">
+            <h3>Garage</h3>
+            <p class="garage-count" id="garage-count"></p>
+            <div class="settings-btns garage-btns">
+              <button type="button" class="btn-mini warn" id="garage-clear-btn">Clear garage</button>
+              <button type="button" class="btn-mini" id="garage-clear-all-btn" hidden>Clear all players' garages</button>
+            </div>
+            <div id="garage-clear-confirm" class="reset-confirm" role="alertdialog" aria-labelledby="garage-clear-text" hidden>
+              <p id="garage-clear-text">Clear the garage?</p>
+              <div class="settings-btns">
+                <button type="button" class="btn-mini" id="garage-clear-no">Cancel</button>
+                <button type="button" class="btn-mini warn" id="garage-clear-yes">Clear</button>
+              </div>
+            </div>
+            <p class="garage-done" id="garage-clear-done" aria-live="polite" hidden></p>
           </div>
         </div>
         <div id="pane-photos" class="settings-pane" role="tabpanel" aria-labelledby="tab-photos" hidden>
@@ -2542,7 +2600,7 @@
     var BLOB_FETCH_MS = 20000;
     var bootStartedAt = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
     var keyChangeOpen = false;
-    var APP_VERSION = "35";
+    var APP_VERSION = "36";
     var MATCH_PAIR_CAP = 6;
     var NAME_ROUNDS = 6;
     var THUMB_MAX = 256;
@@ -4277,6 +4335,7 @@
         { tab: "tab-cars", pane: "pane-cars" },
         { tab: "tab-difficulty", pane: "pane-difficulty" },
         { tab: "tab-names", pane: "pane-names" },
+        { tab: "tab-build", pane: "pane-build" },
         { tab: "tab-photos", pane: "pane-photos" },
         { tab: "tab-players", pane: "pane-players" },
         { tab: "tab-family", pane: "pane-family" }
@@ -4289,10 +4348,11 @@
         if (pn) pn.hidden = !is;
       });
       if (name === "photos") { renderPhotoPeople(); renderPhotoManage(); loadReview(); }
+      if (name === "build") { hideGarageConfirm(); updateBuildSettingsUi(); }
     }
 
     function bindSettingsTabs() {
-      ["cars", "difficulty", "names", "photos", "players", "family"].forEach(function (name) {
+      ["cars", "difficulty", "names", "build", "photos", "players", "family"].forEach(function (name) {
         var tb = document.getElementById("tab-" + name);
         if (tb) tb.addEventListener("click", function () { showSettingsTab(name); });
       });
@@ -5296,7 +5356,8 @@
         nameSettings: normalizeNameSettings(raw.nameSettings || nameSettings),
         photoSettings: normalizePhotoSettings(raw.photoSettings || photoSettings),
         pic: sanitizePic(raw.pic),
-        buildSteps: raw.buildSteps === "simple" ? "simple" : "full"
+        buildSteps: raw.buildSteps === "simple" ? "simple" : "full",
+        buildExtras: raw.buildExtras === "1" || raw.buildExtras === "3" ? raw.buildExtras : "any"
       };
     }
     // Profile picture from the library (per device). Only a reference is kept; the picture itself
@@ -5532,6 +5593,7 @@
     function deleteProfile(id) {
       if ((profilesState.profiles || []).length <= 1) return false;
       profilesState.profiles = profilesState.profiles.filter(function (p) { return p.id !== id; });
+      try { localStorage.removeItem(BUILD_GARAGE_PREFIX + id); } catch (e) {}
       if (profilesState.activeId === id) {
         profilesState.activeId = profilesState.profiles[0].id;
         applyProfileSettings(activeProfile(), true);
@@ -7255,16 +7317,32 @@
       return '<g class="bv-part ' + (on ? "bv-on" : "bv-slot") + '" data-part="' + i + '" ' + bvOrigin(ox, oy) + '>' + inner + '</g>';
     }
 
-    // ---- extras ----
+    // ---- extras (v36: several per vehicle, each an original overlay layer) ----
     function bvLightBar(x, y) {
       return '<g transform="translate(' + (x - 31) + ' ' + (y - 12) + ')"><rect x="0" y="0" width="62" height="12" rx="3.5" fill="#1A1D21"/><rect x="3" y="2.2" width="56" height="7.6" rx="2.2" fill="#2A2E33"/>' +
         '<circle class="bv-glow" cx="12" cy="6" r="3.3" fill="#FFF8E1"/><circle class="bv-glow" cx="24" cy="6" r="3.3" fill="#FFEB3B"/><circle class="bv-glow" cx="36" cy="6" r="3.3" fill="#FFF8E1"/><circle class="bv-glow" cx="48" cy="6" r="3.3" fill="#FFEB3B"/></g>';
     }
-    function bvBeacon(x, y) {
-      return '<g transform="translate(' + x + ' ' + y + ')"><circle class="bv-flash" cx="0" cy="-12" r="18" fill="#FFB300" opacity="0.35"/>' +
+    function bvWorkLights(x, y) {
+      var s = '<g transform="translate(' + x + ' ' + y + ')"><rect x="-19" y="-5" width="38" height="5" rx="2" fill="#2A2E33"/>';
+      [-11, 11].forEach(function (dx) {
+        s += '<rect x="' + (dx - 3) + '" y="-9" width="6" height="5" fill="#2A2E33"/><rect x="' + (dx - 8) + '" y="-21" width="16" height="13" rx="2.5" fill="#3A3F44" stroke="#15171A" stroke-width="1"/>' +
+          '<rect class="bv-glow" x="' + (dx - 7) + '" y="-19" width="5" height="9" rx="1.5" fill="#FFF8E1"/>' +
+          '<path class="bv-glow" d="M' + (dx - 8) + ' -20 L' + (dx - 26) + ' -28 L' + (dx - 26) + ' -2 L' + (dx - 8) + ' -9 Z" fill="#FFF59D" opacity="0.35"/>';
+      });
+      return s + '</g>';
+    }
+    function bvSiren(x, y) {
+      return '<g transform="translate(' + (x - 30) + ' ' + (y - 13) + ')"><rect x="0" y="9" width="60" height="4" rx="1.5" fill="#2A2E33"/>' +
+        '<path d="M2 9 V4 C2 1 4 0 7 0 H29 V9 Z" fill="#E53935" stroke="#8E1414" stroke-width="1"/><path d="M31 9 V0 H53 C56 0 58 1 58 4 V9 Z" fill="#1E88E5" stroke="#0A3A75" stroke-width="1"/>' +
+        '<path class="bv-glow" d="M2 9 V4 C2 1 4 0 7 0 H29 V9 Z" fill="#FF8A80"/><path class="bv-glow2" d="M31 9 V0 H53 C56 0 58 1 58 4 V9 Z" fill="#82B1FF"/>' +
+        '<rect x="6" y="2" width="18" height="2.5" rx="1" fill="#fff" opacity="0.6"/><rect x="35" y="2" width="18" height="2.5" rx="1" fill="#fff" opacity="0.6"/></g>';
+    }
+    function bvBeacon(x, y, col) {
+      var c = col === "red" ? ["#E53935", "#8E1414", "#FF8A80", "#E53935"] : ["#FFA000", "#B26A00", "#FFE082", "#FFB300"];
+      return '<g transform="translate(' + x + ' ' + y + ')"><circle class="bv-flash" cx="0" cy="-12" r="18" fill="' + c[3] + '" opacity="0.35"/>' +
         '<rect x="-11" y="-5" width="22" height="6" rx="2" fill="#2A2E33"/>' +
-        '<path d="M-8 -5 L-8 -14 A8 8 0 0 1 8 -14 L8 -5 Z" fill="#FFA000" stroke="#B26A00" stroke-width="1"/>' +
-        '<path class="bv-flash" d="M-8 -5 L-8 -14 A8 8 0 0 1 8 -14 L8 -5 Z" fill="#FFE082"/>' +
+        '<path d="M-8 -5 L-8 -14 A8 8 0 0 1 8 -14 L8 -5 Z" fill="' + c[0] + '" stroke="' + c[1] + '" stroke-width="1"/>' +
+        '<path class="bv-flash" d="M-8 -5 L-8 -14 A8 8 0 0 1 8 -14 L8 -5 Z" fill="' + c[2] + '"/>' +
         '<rect x="-5" y="-17" width="3" height="9" rx="1.5" fill="#fff" opacity="0.7"/></g>';
     }
     function bvHorn(x, y) {
@@ -7279,28 +7357,315 @@
       for (var i = 8; i < len - 4; i += 16) s += '<rect x="' + i + '" y="0" width="4" height="20" fill="#9AA3AB"/>';
       return s + '</g>';
     }
-    function bvExtra(def, name) {
-      var a = def.anchors || {};
-      if (name === "lights" && a.roof) return bvLightBar(a.lights ? a.lights[0] : a.roof[0], a.lights ? a.lights[1] : a.roof[1]);
-      if (name === "beacon" && a.roof) return bvBeacon(a.beacon ? a.beacon[0] : a.roof[0], a.beacon ? a.beacon[1] : a.roof[1]);
-      if (name === "horn" && a.horn) return bvHorn(a.horn[0], a.horn[1]);
-      if (name === "ladder" && a.ladder) {
-        var L = a.ladder;
-        var s = "";
-        if (L[3]) L[3].forEach(function (px) { s += '<rect x="' + (px - 3) + '" y="' + (L[1] + 18) + '" width="6" height="' + (L[4] - L[1] - 18) + '" fill="#2A2E33"/>'; });
-        return s + bvLadder(L[0], L[1], L[2]);
+    function bvRoofBox(x, y, w) {
+      var l = x - w / 2, r = x + w / 2;
+      return '<rect x="' + (l + 14) + '" y="' + (y - 7) + '" width="5" height="8" fill="#2A2E33"/><rect x="' + (r - 19) + '" y="' + (y - 7) + '" width="5" height="8" fill="#2A2E33"/>' +
+        '<path d="M' + l + ' ' + (y - 7) + ' C' + (l + 4) + ' ' + (y - 24) + ' ' + (l + 22) + ' ' + (y - 30) + ' ' + (l + 40) + ' ' + (y - 30) + ' H' + (r - 10) + ' C' + (r - 2) + ' ' + (y - 30) + ' ' + r + ' ' + (y - 22) + ' ' + r + ' ' + (y - 14) + ' C' + r + ' ' + (y - 9) + ' ' + (r - 4) + ' ' + (y - 7) + ' ' + (r - 10) + ' ' + (y - 7) + ' Z" fill="#37474F" stroke="#1A1D21" stroke-width="1.3"/>' +
+        '<path d="M' + (l + 30) + ' ' + (y - 25) + ' H' + (r - 16) + '" stroke="#fff" stroke-opacity="0.3" stroke-width="3" stroke-linecap="round"/>' +
+        '<path d="M' + (l + 6) + ' ' + (y - 13) + ' H' + (r - 4) + '" stroke="#1A1D21" stroke-opacity="0.5" stroke-width="1.2"/>';
+    }
+    function bvSurfboard(x, y, w) {
+      var l = x - w / 2, r = x + w / 2;
+      return '<rect x="' + (x - 50) + '" y="' + (y - 7) + '" width="5" height="8" fill="#2A2E33"/><rect x="' + (x + 45) + '" y="' + (y - 7) + '" width="5" height="8" fill="#2A2E33"/><rect x="' + (x - 56) + '" y="' + (y - 9) + '" width="112" height="4" rx="2" fill="#2A2E33"/>' +
+        '<path d="M' + l + ' ' + (y - 14) + ' C' + (l + 20) + ' ' + (y - 24) + ' ' + (x - 30) + ' ' + (y - 23) + ' ' + x + ' ' + (y - 22) + ' C' + (r - 30) + ' ' + (y - 22) + ' ' + r + ' ' + (y - 18) + ' ' + r + ' ' + (y - 13) + ' C' + r + ' ' + (y - 9) + ' ' + (r - 20) + ' ' + (y - 9) + ' ' + x + ' ' + (y - 9) + ' C' + (l + 30) + ' ' + (y - 9) + ' ' + (l + 6) + ' ' + (y - 9) + ' ' + l + ' ' + (y - 14) + ' Z" fill="#4FC3F7" stroke="#01579B" stroke-width="1.3"/>' +
+        '<path d="M' + (l + 10) + ' ' + (y - 15) + ' C' + (x - 20) + ' ' + (y - 18) + ' ' + (x + 20) + ' ' + (y - 17) + ' ' + (r - 6) + ' ' + (y - 14) + '" stroke="#FFEB3B" stroke-width="3" fill="none"/>';
+    }
+    function bvStripes(x1, x2, y) {
+      return '<rect x="' + x1 + '" y="' + (y - 5) + '" width="' + (x2 - x1) + '" height="5" rx="2.5" fill="#fff" opacity="0.92"/>' +
+        '<rect x="' + x1 + '" y="' + (y + 3) + '" width="' + (x2 - x1) + '" height="3" rx="1.5" fill="#fff" opacity="0.92"/>' +
+        '<rect x="' + x1 + '" y="' + (y - 5) + '" width="' + (x2 - x1) + '" height="11" fill="none" stroke="#1A1D21" stroke-opacity="0.15" stroke-width="0.8"/>';
+    }
+    function bvFlames(x, y, len, h) {
+      h = h || 26;
+      var s = '<g transform="translate(' + x + ' ' + y + ') scale(' + (len / 120) + ' ' + (h / 26) + ')">';
+      s += '<path d="M0 -10 C10 -14 20 -6 30 -12 C40 -20 52 -8 60 -16 C66 -22 74 -10 82 -18 C90 -26 98 -12 120 -20 C104 -6 96 -2 86 2 C100 4 108 10 118 8 C100 16 80 14 66 12 C56 18 40 13 0 13 Z" fill="#E53935" stroke="#7F1414" stroke-width="1"/>';
+      s += '<path d="M0 -6 C14 -8 22 -2 34 -7 C44 -12 54 -3 64 -9 C72 -13 80 -4 92 -9 C82 0 74 3 66 6 C54 8 30 9 0 9 Z" fill="#FF9800"/>';
+      s += '<path d="M0 -2 C14 -3 26 1 38 -2 C48 -5 56 1 66 -1 C56 4 40 5 0 5 Z" fill="#FFEB3B"/>';
+      return s + '</g>';
+    }
+    function bvStar(cx, cy, r, fill) {
+      var p = "";
+      for (var i = 0; i < 10; i++) {
+        var a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * 0.45 : r;
+        p += (i ? "L" : "M") + (cx + rr * Math.cos(a)).toFixed(1) + " " + (cy + rr * Math.sin(a)).toFixed(1) + " ";
       }
-      if (name === "spoiler" && a.spoiler) return a.spoiler;
+      return '<path d="' + p + 'Z" fill="' + (fill || "#FFEB3B") + '" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/>';
+    }
+    function bvStars(x1, x2, y) {
+      var w = x2 - x1;
+      return bvStar(x1 + w * 0.15, y, 10, "#FFEB3B") + bvStar(x1 + w * 0.5, y - 2, 12, "#FFFFFF") + bvStar(x1 + w * 0.85, y, 10, "#FFEB3B");
+    }
+    function bvEsc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+    function bvPlateText(name, max) {
+      var t = String(name || "THEO").toUpperCase().replace(/[^A-Z0-9 ]/g, "").trim() || "THEO";
+      return t.length > max ? t.slice(0, max) : t;
+    }
+    function bvPlate(x, y, name) {
+      var t = bvPlateText(name, 8);
+      var fs = t.length > 6 ? 9 : 11;
+      return '<g transform="translate(' + x + ' ' + y + ')"><rect x="-27" y="-9" width="54" height="18" rx="3" fill="#FFFFFF" stroke="#1A237E" stroke-width="1.6"/>' +
+        '<text x="0" y="' + (fs * 0.36).toFixed(1) + '" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="' + fs + '" fill="#1A237E" letter-spacing="0.5">' + bvEsc(t) + '</text></g>';
+    }
+    function bvSign(x, y, w, h, name) {
+      var t = bvPlateText(name, 10);
+      var fs = Math.min(h - 5, (w - 8) / Math.max(4, t.length) * 1.6);
+      return '<rect x="' + (x + 3) + '" y="' + (y + 2.5) + '" width="' + (w - 6) + '" height="' + (h - 5) + '" rx="1" fill="#111"/>' +
+        '<text class="bv-glow" x="' + (x + w / 2) + '" y="' + (y + h / 2 + fs * 0.36).toFixed(1) + '" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="' + fs.toFixed(1) + '" fill="#FFB300">' + bvEsc(t) + '</text>';
+    }
+    function bvDog(x, y, s) {
+      s = s || 1;
+      return '<g transform="translate(' + x + ' ' + y + ') scale(' + s + ')">' +
+        '<path d="M-8 2 C-10 -12 -2 -22 8 -22 C18 -22 24 -14 22 2 Z" fill="#C68A4E" stroke="#6D4C2E" stroke-width="1.2"/>' +
+        '<path d="M-6 -12 C-14 -14 -22 -8 -24 -4 C-20 -4 -16 -6 -12 -6 Z" fill="#C68A4E" stroke="#6D4C2E" stroke-width="1.2"/>' +
+        '<ellipse cx="-22" cy="-6" rx="3" ry="2.6" fill="#1A1D21"/>' +
+        '<path d="M14 -20 C22 -22 26 -12 22 -2 C18 -6 14 -12 14 -20 Z" fill="#7B4F2C"/>' +
+        '<circle cx="0" cy="-14" r="2.4" fill="#1A1D21"/><circle cx="0.8" cy="-14.8" r="0.8" fill="#fff"/>' +
+        '<path d="M-14 -4 C-14 0 -12 3 -10 3 C-9 3 -8 0 -9 -4 Z" fill="#F06292" stroke="#AD1457" stroke-width="0.8"/>' +
+        '<path d="M-6 2 H22" stroke="#E53935" stroke-width="3"/></g>';
+    }
+    function bvFlag(x, y, h, kind) {
+      var top = y - h;
+      var s = '<rect x="' + (x - 1.6) + '" y="' + top + '" width="3.2" height="' + h + '" fill="#5A626A"/><circle cx="' + x + '" cy="' + top + '" r="3" fill="#FFD54F" stroke="#B28704" stroke-width="0.8"/>';
+      var f = "M" + x + " " + (top + 2) + " C" + (x + 10) + " " + (top - 2) + " " + (x + 20) + " " + (top + 6) + " " + (x + 32) + " " + (top + 2) + " L" + (x + 34) + " " + (top + 24) + " C" + (x + 22) + " " + (top + 28) + " " + (x + 12) + " " + (top + 20) + " " + x + " " + (top + 24) + " Z";
+      if (kind === "safety") return s + '<path class="bv-wave" d="' + f + '" fill="#FF6D00" stroke="#BF360C" stroke-width="1"/><path d="M' + (x + 2) + ' ' + (top + 12) + ' C' + (x + 12) + ' ' + (top + 9) + ' ' + (x + 22) + ' ' + (top + 16) + ' ' + (x + 33) + ' ' + (top + 12) + '" stroke="#fff" stroke-width="3" fill="none"/>';
+      var id = "chk" + x + "_" + y;
+      return s + '<defs><pattern id="' + id + '" width="12" height="12" patternUnits="userSpaceOnUse"><rect width="12" height="12" fill="#fff"/><rect width="6" height="6" fill="#1A1D21"/><rect x="6" y="6" width="6" height="6" fill="#1A1D21"/></pattern></defs>' +
+        '<path class="bv-wave" d="' + f + '" fill="url(#' + id + ')" stroke="#1A1D21" stroke-width="1"/>';
+    }
+    function bvBikeRack(x, y, dir) {
+      dir = dir || 1;
+      var s = '<g transform="translate(' + x + ' ' + y + ') scale(' + dir + ' 1)">';
+      s += '<rect x="0" y="0" width="16" height="5" rx="1.5" fill="#2A2E33"/><rect x="12" y="-36" width="4" height="40" fill="#2A2E33"/>';
+      s += '<g fill="none" stroke="#1A1D21" stroke-width="3"><circle cx="22" cy="-6" r="12"/><circle cx="58" cy="-6" r="12"/></g>';
+      s += '<g fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M22 -6 L34 -26 L52 -26 L58 -6 M34 -26 L40 -6 L52 -26 M40 -6 L22 -6" stroke="#E53935" stroke-width="3.2"/>' +
+        '<path d="M34 -26 L32 -32 M28 -32 H36 M52 -26 L50 -36 L56 -38" stroke="#1A1D21" stroke-width="2.6"/></g>';
+      return s + '</g>';
+    }
+    function bvTowBar(x, y) {
+      return '<rect x="' + (x - 4) + '" y="' + (y - 3) + '" width="18" height="6" rx="1.5" fill="#2A2E33"/><rect x="' + (x + 12) + '" y="' + (y - 8) + '" width="3.5" height="8" fill="#2A2E33"/><circle cx="' + (x + 14) + '" cy="' + (y - 11) + '" r="4.5" fill="#B0B6BB" stroke="#2A2E33" stroke-width="1.2"/>';
+    }
+    function bvBullbar(x, y, h) {
+      return '<g fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M' + (x + 14) + ' ' + (y + h) + ' L' + (x + 2) + ' ' + (y + h - 6) + ' L' + x + ' ' + (y + 10) + ' C' + x + ' ' + (y + 2) + ' ' + (x + 6) + ' ' + y + ' ' + (x + 16) + ' ' + y + ' L' + (x + 34) + ' ' + y + '" stroke="#2A2E33" stroke-width="7"/>' +
+        '<path d="M' + (x + 14) + ' ' + (y + h) + ' L' + (x + 2) + ' ' + (y + h - 6) + ' L' + x + ' ' + (y + 10) + ' C' + x + ' ' + (y + 2) + ' ' + (x + 6) + ' ' + y + ' ' + (x + 16) + ' ' + y + ' L' + (x + 34) + ' ' + y + '" stroke="#8A939C" stroke-width="2.2"/>' +
+        '<path d="M' + (x + 1) + ' ' + (y + h * 0.5) + ' H' + (x + 30) + '" stroke="#2A2E33" stroke-width="5"/></g>';
+    }
+    function bvSpotlights(x, y) {
+      var s = '<rect x="' + (x - 2) + '" y="' + (y - 1) + '" width="40" height="4" rx="2" fill="#2A2E33"/>';
+      [x + 6, x + 28].forEach(function (cx) {
+        s += '<rect x="' + (cx - 2) + '" y="' + (y - 6) + '" width="4" height="6" fill="#2A2E33"/><circle cx="' + cx + '" cy="' + (y - 13) + '" r="9" fill="#2A2E33"/><circle class="bv-glow" cx="' + (cx - 1.5) + '" cy="' + (y - 13) + '" r="6.2" fill="#FFF8E1" stroke="#F9A825" stroke-width="1"/>';
+      });
+      return s;
+    }
+    function bvSnorkel(x, y, h) {
+      return '<path d="M' + x + ' ' + y + ' V' + (y - h) + ' C' + x + ' ' + (y - h - 8) + ' ' + (x - 4) + ' ' + (y - h - 10) + ' ' + (x - 12) + ' ' + (y - h - 10) + '" fill="none" stroke="#1A1D21" stroke-width="9" stroke-linecap="round"/>' +
+        '<rect x="' + (x - 24) + '" y="' + (y - h - 17) + '" width="16" height="14" rx="4" fill="#2A2E33" stroke="#15171A" stroke-width="1"/>' +
+        '<path d="M' + (x - 21) + ' ' + (y - h - 13) + ' V' + (y - h - 6) + ' M' + (x - 16) + ' ' + (y - h - 13) + ' V' + (y - h - 6) + '" stroke="#5A626A" stroke-width="1.6"/>' +
+        '<rect x="' + (x - 6) + '" y="' + (y - h * 0.6) + '" width="12" height="4" rx="1" fill="#5A626A"/>';
+    }
+    function bvMudflaps(def) {
+      var s = "";
+      def.parts.forEach(function (pt) {
+        if (pt.t !== "wheel") return;
+        var fx = pt.cx + pt.r + 3, top = pt.cy - 6, bot = pt.cy + pt.r - 3;
+        s += '<path d="M' + fx + ' ' + top + ' H' + (fx + 7) + ' L' + (fx + 8) + ' ' + bot + ' H' + (fx - 1) + ' Z" fill="#1A1D21" stroke="#000" stroke-width="0.6"/><rect x="' + (fx + 1) + '" y="' + (bot - 9) + '" width="5" height="5" fill="#C5CAD0"/>';
+      });
+      return s;
+    }
+    function bvHoseReel(cx, cy, r) {
+      return '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r + 3) + '" fill="#9AA3AB" stroke="#2A2E33" stroke-width="1.4"/>' +
+        '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="#F1E3A0" stroke="#B28704" stroke-width="1"/>' +
+        '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r * 0.72) + '" fill="none" stroke="#C49A2C" stroke-width="2.2"/><circle cx="' + cx + '" cy="' + cy + '" r="' + (r * 0.45) + '" fill="none" stroke="#C49A2C" stroke-width="2.2"/>' +
+        '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r * 0.2) + '" fill="#5A626A"/>' +
+        '<path d="M' + (cx - r) + ' ' + cy + ' C' + (cx - r - 8) + ' ' + (cy + 8) + ' ' + (cx - r - 6) + ' ' + (cy + r + 4) + ' ' + (cx - r + 4) + ' ' + (cy + r + 10) + '" fill="none" stroke="#F1E3A0" stroke-width="4" stroke-linecap="round"/>' +
+        '<rect x="' + (cx - r - 1) + '" y="' + (cy + r + 7) + '" width="10" height="7" rx="1.5" fill="#B0B6BB" stroke="#2A2E33" stroke-width="1"/>';
+    }
+    function bvCannon(x, y) {
+      return '<g transform="translate(' + x + ' ' + y + ')"><rect x="-10" y="-6" width="20" height="7" rx="2" fill="#2A2E33"/><rect x="-4" y="-16" width="8" height="12" fill="#B0B6BB" stroke="#2A2E33" stroke-width="1"/>' +
+        '<path d="M2 -18 L-34 -30 L-36 -24 L0 -10 Z" fill="#C5CAD0" stroke="#2A2E33" stroke-width="1.2"/><circle cx="0" cy="-14" r="5" fill="#E53935" stroke="#7F1414" stroke-width="1"/>' +
+        '<g class="bv-spray" fill="#4FC3F7" opacity="0.85"><circle cx="-44" cy="-32" r="3"/><circle cx="-54" cy="-34" r="2.5"/><circle cx="-62" cy="-32" r="2.2"/><circle cx="-50" cy="-26" r="2"/><circle cx="-60" cy="-24" r="1.8"/></g></g>';
+    }
+    function bvCone(x, y, s) {
+      s = s || 1;
+      return '<g transform="translate(' + x + ' ' + y + ') scale(' + s + ')"><rect x="-10" y="-3" width="20" height="3" rx="1" fill="#E65100"/><path d="M-7 -3 L-2 -24 H2 L7 -3 Z" fill="#FF6D00" stroke="#BF360C" stroke-width="0.8"/>' +
+        '<path d="M-5.2 -10 L-3.6 -16.5 H3.6 L5.2 -10 Z" fill="#fff"/></g>';
+    }
+    function bvCones(x, y, n) {
+      var s = "";
+      for (var i = 0; i < n; i++) s += bvCone(x + (i - (n - 1) / 2) * 17, y, 1);
+      return s;
+    }
+    function bvDirt(d) {
+      return '<path d="' + d + '" fill="#6D4C41" stroke="#3E2723" stroke-width="1.2"/>';
+    }
+
+    var BV_EXTRA_INFO = {
+      spoiler: { name: "Spoiler", slot: "roof" },
+      lights: { name: "Light bar", cons: "Work lights" },
+      siren: { name: "Siren lights", slot: "roof" },
+      beacon: { name: "Flashing light" },
+      horn: { name: "Horn" },
+      ladder: { name: "Ladder" },
+      roofbox: { name: "Roof box", slot: "roof" },
+      surfboard: { name: "Surfboard", slot: "roof" },
+      stripes: { name: "Racing stripes", cons: "Stripes", slot: "decal" },
+      flames: { name: "Flames", slot: "decal" },
+      stars: { name: "Stars", slot: "decal" },
+      plate: { name: "Number plate" },
+      sign: { name: "Name sign" },
+      dog: { name: "Dog" },
+      flag: { name: "Flag" },
+      bikerack: { name: "Bike rack", slot: "rear" },
+      towbar: { name: "Tow bar", slot: "rear" },
+      bullbar: { name: "Bullbar" },
+      spotlights: { name: "Spotlights" },
+      snorkel: { name: "Snorkel" },
+      mudflaps: { name: "Mud flaps" },
+      hosereel: { name: "Hose reel" },
+      cannon: { name: "Water cannon" },
+      cones: { name: "Cones", slot: "load" },
+      dirt: { name: "Dirt", slot: "load" },
+      bigbucket: { name: "Big bucket", slot: "tool" },
+      claw: { name: "Claw", slot: "tool" },
+      breaker: { name: "Jackhammer", slot: "tool" },
+      pallet: { name: "Boxes", slot: "load" }
+    };
+    // In-group extras are drawn by the vehicle itself (they move with an arm, tray or forks).
+    var BV_INNER_EXTRAS = { dirt: 1, bigbucket: 1, claw: 1, breaker: 1, pallet: 1 };
+    var BV_EXTRA_ORDER = ["stripes", "flames", "stars", "mudflaps", "plate", "sign", "towbar", "bikerack", "bullbar", "spotlights", "snorkel", "dog", "roofbox", "surfboard", "lights", "siren", "beacon", "flag", "cones", "hosereel", "ladder", "cannon", "spoiler", "horn"];
+
+    function bvExtraName(name, def) {
+      var info = BV_EXTRA_INFO[name];
+      if (!info) return name;
+      return (def && def.group === "cons" && info.cons) || info.name;
+    }
+    function bvExtraSlot(def, name) {
+      if (def && def.xslot && Object.prototype.hasOwnProperty.call(def.xslot, name)) return def.xslot[name];
+      var info = BV_EXTRA_INFO[name];
+      return (info && info.slot) || "";
+    }
+    function bvExtraOne(def, name, opts) {
+      var a = def.xa || {};
+      var v = a[name];
+      if (BV_INNER_EXTRAS[name]) return "";
+      if (name === "mudflaps") return bvMudflaps(def);
+      if (!v) return "";
+      var cons = def.group === "cons";
+      switch (name) {
+        case "lights": return cons ? bvWorkLights(v[0], v[1]) : bvLightBar(v[0], v[1]);
+        case "siren": return v.length > 2 ? bvBeacon(v[0], v[1], "red") + bvBeacon(v[2], v[3], "red") : bvSiren(v[0], v[1]);
+        case "beacon": return bvBeacon(v[0], v[1]);
+        case "horn": return bvHorn(v[0], v[1]);
+        case "ladder": {
+          var s = "";
+          if (v[3]) v[3].forEach(function (px) { s += '<rect x="' + (px - 3) + '" y="' + (v[1] + 18) + '" width="6" height="' + (v[4] - v[1] - 18) + '" fill="#2A2E33"/>'; });
+          return s + bvLadder(v[0], v[1], v[2]);
+        }
+        case "spoiler": return v;
+        case "roofbox": return bvRoofBox(v[0], v[1], v[2]);
+        case "surfboard": return bvSurfboard(v[0], v[1], v[2]);
+        case "stripes": return bvStripes(v[0], v[1], v[2]);
+        case "flames": return bvFlames(v[0], v[1], v[2], v[3]);
+        case "stars": return bvStars(v[0], v[1], v[2]);
+        case "plate": return bvPlate(v[0], v[1], opts.name);
+        case "sign": return bvSign(v[0], v[1], v[2], v[3], opts.name);
+        case "dog": return bvDog(v[0], v[1], v[2]);
+        case "flag": return bvFlag(v[0], v[1], v[2], cons ? "safety" : "race");
+        case "bikerack": return bvBikeRack(v[0], v[1], v[2]);
+        case "towbar": return bvTowBar(v[0], v[1]);
+        case "bullbar": return bvBullbar(v[0], v[1], v[2]);
+        case "spotlights": return bvSpotlights(v[0], v[1]);
+        case "snorkel": return bvSnorkel(v[0], v[1], v[2]);
+        case "hosereel": return bvHoseReel(v[0], v[1], v[2]);
+        case "cannon": return bvCannon(v[0], v[1]);
+        case "cones": return bvCones(v[0], v[1], v[2]);
+      }
       return "";
     }
-    function bvExtraIcon(name) {
-      if (name === "spoiler") return '<svg viewBox="0 0 90 60"><path d="M8 44 L14 22 L22 16 H68 L80 22 L84 44 H70 L72 30 H20 L22 44 Z" fill="#4A4F55" stroke="#2A2E33" stroke-width="1.5"/><path d="M22 26 H70" stroke="#F5F7FA" stroke-width="3" stroke-linecap="round" opacity="0.45"/></svg>';
-      if (name === "lights") return '<svg viewBox="0 0 90 60"><rect x="10" y="22" width="70" height="18" rx="5" fill="#1A1D21"/><circle cx="26" cy="31" r="6" fill="#FFF8E1" stroke="#F9A825" stroke-width="0.8"/><circle cx="45" cy="31" r="6" fill="#FFEB3B"/><circle cx="64" cy="31" r="6" fill="#FFF8E1" stroke="#F9A825" stroke-width="0.8"/><path d="M26 10 v8 M45 6 v12 M64 10 v8" stroke="#F9A825" stroke-width="3" stroke-linecap="round"/></svg>';
-      if (name === "ladder") return '<svg viewBox="0 0 90 60"><g transform="rotate(-22 45 30)"><rect x="6" y="16" width="78" height="7" rx="1.5" fill="#C5CAD0" stroke="#6A727A" stroke-width="1.2"/><rect x="6" y="36" width="78" height="7" rx="1.5" fill="#C5CAD0" stroke="#6A727A" stroke-width="1.2"/><rect x="16" y="16" width="5" height="27" fill="#9AA3AB"/><rect x="32" y="16" width="5" height="27" fill="#9AA3AB"/><rect x="48" y="16" width="5" height="27" fill="#9AA3AB"/><rect x="64" y="16" width="5" height="27" fill="#9AA3AB"/></g></svg>';
-      if (name === "beacon") return '<svg viewBox="0 0 90 60"><circle cx="45" cy="30" r="26" fill="#FFB300" opacity="0.3"/><rect x="29" y="40" width="32" height="9" rx="3" fill="#2A2E33"/><path d="M33 40 L33 26 A12 12 0 0 1 57 26 L57 40 Z" fill="#FFA000" stroke="#B26A00" stroke-width="1.4"/><rect x="38" y="22" width="4" height="14" rx="2" fill="#fff" opacity="0.7"/><path d="M14 18 l8 4 M76 18 l-8 4 M45 2 v6" stroke="#FFA000" stroke-width="3" stroke-linecap="round"/></svg>';
-      return '<svg viewBox="0 0 90 60"><rect x="40" y="27" width="14" height="9" rx="1.5" fill="#3A3A3A"/><path d="M40 20 L14 10 L14 30 L40 30 Z" fill="#E0C26A" stroke="#6A4A10" stroke-width="1.3" stroke-linejoin="round"/><path d="M40 32 L18 34 L18 48 L40 40 Z" fill="#C4A45A" stroke="#6A4A10" stroke-width="1.3" stroke-linejoin="round"/><path d="M8 18 q-5 8 0 16 M4 12 q-8 14 0 28" fill="none" stroke="#FFB300" stroke-width="3" stroke-linecap="round"/></svg>';
+    // Normalise a list of extras for a vehicle: known, allowed, no duplicates, one per slot (last one wins).
+    function bvCleanExtras(def, list) {
+      if (!list) return [];
+      if (typeof list === "string") list = list ? list.split(",") : [];
+      var out = [];
+      list.forEach(function (x) {
+        x = String(x || "").trim();
+        if (!x || def.extras.indexOf(x) === -1 || out.indexOf(x) !== -1) return;
+        var slot = bvExtraSlot(def, x);
+        if (slot) out = out.filter(function (y) { return bvExtraSlot(def, y) !== slot; });
+        out.push(x);
+      });
+      return out;
     }
-    var BV_EXTRA_NAMES = { spoiler: "Spoiler", lights: "Lights", ladder: "Ladder", horn: "Horn", beacon: "Flashing light" };
+    function bvWrapExtra(name, inner) {
+      return inner ? '<g class="bv-extra bv-x-' + name + '" data-x="' + name + '">' + inner + '</g>' : "";
+    }
+    function bvExtrasSvg(def, list, opts) {
+      var s = "";
+      BV_EXTRA_ORDER.forEach(function (name) {
+        if (list.indexOf(name) !== -1) s += bvWrapExtra(name, bvExtraOne(def, name, opts));
+      });
+      return s;
+    }
+
+    function bvExtraIcon(name, def) {
+      var vb = '<svg viewBox="0 0 90 60">';
+      var car = '<path d="M6 44 C4 38 8 33 16 32 L28 30 C32 22 38 18 48 18 L62 18 C70 20 74 26 76 31 C82 32 86 36 86 42 L86 46 L6 46 Z" fill="#90A4AE"/><circle cx="24" cy="47" r="7" fill="#2A2E33"/><circle cx="70" cy="47" r="7" fill="#2A2E33"/>';
+      var cons = def && def.group === "cons";
+      switch (name) {
+        case "spoiler": return vb + '<path d="M8 44 L14 22 L22 16 H68 L80 22 L84 44 H70 L72 30 H20 L22 44 Z" fill="#4A4F55" stroke="#2A2E33" stroke-width="1.5"/><path d="M22 26 H70" stroke="#F5F7FA" stroke-width="3" stroke-linecap="round" opacity="0.45"/></svg>';
+        case "lights": return cons ? vb + '<g transform="translate(14 -4) scale(1.6)">' + bvWorkLights(20, 40) + '</g></svg>' : vb + '<rect x="10" y="22" width="70" height="18" rx="5" fill="#1A1D21"/><circle cx="26" cy="31" r="6" fill="#FFF8E1" stroke="#F9A825" stroke-width="0.8"/><circle cx="45" cy="31" r="6" fill="#FFEB3B"/><circle cx="64" cy="31" r="6" fill="#FFF8E1" stroke="#F9A825" stroke-width="0.8"/><path d="M26 10 v8 M45 6 v12 M64 10 v8" stroke="#F9A825" stroke-width="3" stroke-linecap="round"/></svg>';
+        case "siren": return vb + '<g transform="translate(-9 -14) scale(1.8)">' + bvSiren(30, 30) + '</g></svg>';
+        case "beacon": return vb + '<circle cx="45" cy="30" r="26" fill="#FFB300" opacity="0.3"/><rect x="29" y="40" width="32" height="9" rx="3" fill="#2A2E33"/><path d="M33 40 L33 26 A12 12 0 0 1 57 26 L57 40 Z" fill="#FFA000" stroke="#B26A00" stroke-width="1.4"/><rect x="38" y="22" width="4" height="14" rx="2" fill="#fff" opacity="0.7"/><path d="M14 18 l8 4 M76 18 l-8 4 M45 2 v6" stroke="#FFA000" stroke-width="3" stroke-linecap="round"/></svg>';
+        case "horn": return vb + '<rect x="40" y="27" width="14" height="9" rx="1.5" fill="#3A3A3A"/><path d="M40 20 L14 10 L14 30 L40 30 Z" fill="#E0C26A" stroke="#6A4A10" stroke-width="1.3" stroke-linejoin="round"/><path d="M40 32 L18 34 L18 48 L40 40 Z" fill="#C4A45A" stroke="#6A4A10" stroke-width="1.3" stroke-linejoin="round"/><path d="M8 18 q-5 8 0 16 M4 12 q-8 14 0 28" fill="none" stroke="#FFB300" stroke-width="3" stroke-linecap="round"/></svg>';
+        case "ladder": return vb + '<g transform="rotate(-22 45 30)"><rect x="6" y="16" width="78" height="7" rx="1.5" fill="#C5CAD0" stroke="#6A727A" stroke-width="1.2"/><rect x="6" y="36" width="78" height="7" rx="1.5" fill="#C5CAD0" stroke="#6A727A" stroke-width="1.2"/><rect x="16" y="16" width="5" height="27" fill="#9AA3AB"/><rect x="32" y="16" width="5" height="27" fill="#9AA3AB"/><rect x="48" y="16" width="5" height="27" fill="#9AA3AB"/><rect x="64" y="16" width="5" height="27" fill="#9AA3AB"/></g></svg>';
+        case "roofbox": return vb + bvRoofBox(46, 34, 70) + car.replace(/fill="#90A4AE"/, 'fill="#90A4AE" opacity="0.55"').replace(/cy="47"/g, 'cy="47" opacity="0.55"') + '</svg>';
+        case "surfboard": return vb + '<g transform="translate(45 30) scale(0.45 1.3) translate(-45 -22)">' + bvSurfboard(45, 34, 190) + '</g></svg>';
+        case "stripes": return vb + car + '<rect x="10" y="36" width="72" height="3.5" fill="#fff"/><rect x="10" y="41" width="72" height="2" fill="#fff"/></svg>';
+        case "flames": return vb + bvFlames(8, 30, 76, 34) + '</svg>';
+        case "stars": return vb + bvStar(20, 32, 12) + bvStar(45, 26, 16, "#FF9800") + bvStar(70, 32, 12) + '</svg>';
+        case "plate": return vb + '<g transform="translate(45 30) scale(1.4)">' + bvPlate(0, 0, bvPlateName()) + '</g></svg>';
+        case "sign": return vb + '<rect x="4" y="14" width="82" height="30" rx="4" fill="#1A1D21"/>' + bvSign(8, 18, 74, 22, bvPlateName()) + '</svg>';
+        case "dog": return vb + '<g transform="translate(46 50) scale(1.7)">' + bvDog(0, 0, 1) + '</g></svg>';
+        case "flag": return vb + '<g transform="translate(32 56) scale(1.5)">' + bvFlag(0, 0, 34, cons ? "safety" : "race") + '</g></svg>';
+        case "bikerack": return vb + '<g transform="translate(-4 52) scale(1.15)">' + bvBikeRack(0, 0, 1) + '</g></svg>';
+        case "towbar": return vb + '<g transform="translate(16 2) scale(2.4)">' + bvTowBar(4, 20) + '</g></svg>';
+        case "bullbar": return vb + '<g transform="translate(22 4) scale(1.3)">' + bvBullbar(0, 0, 38) + '</g></svg>';
+        case "spotlights": return vb + '<g transform="translate(14 22) scale(1.6)">' + bvSpotlights(0, 14) + '</g></svg>';
+        case "snorkel": return vb + '<g transform="translate(36 -4) scale(1.1)">' + bvSnorkel(20, 54, 30) + '</g></svg>';
+        case "mudflaps": return vb + '<circle cx="34" cy="30" r="22" fill="#2A2E33"/><circle cx="34" cy="30" r="10" fill="#9AA3AB"/><path d="M60 14 H70 L72 54 H60 Z" fill="#1A1D21"/><rect x="62" y="42" width="7" height="7" fill="#C5CAD0"/></svg>';
+        case "hosereel": return vb + bvHoseReel(46, 26, 18) + '</svg>';
+        case "cannon": return vb + '<g transform="translate(70 52) scale(1.25)">' + bvCannon(0, 0) + '</g></svg>';
+        case "cones": return vb + '<g transform="translate(0 6)">' + bvCone(24, 52, 1.6) + bvCone(64, 52, 1.6) + '</g></svg>';
+        case "dirt": return vb + bvDirt("M6 52 C14 20 34 8 50 12 C66 8 80 26 86 52 Z") + '<circle cx="34" cy="34" r="4" fill="#8D6E63"/><circle cx="58" cy="30" r="3" fill="#8D6E63"/><circle cx="48" cy="44" r="3.5" fill="#4E342E"/></svg>';
+        case "bigbucket": return vb + '<path d="M70 8 C40 4 14 16 8 34 C4 50 18 58 40 58 L72 56 C78 40 78 22 70 8 Z" fill="#8A939C" stroke="#15171A" stroke-width="1.4"/><path d="M10 40 L2 46 L14 48 Z M16 52 L10 58 L22 56 Z" fill="#C5CDD4" stroke="#2A2E33" stroke-width="1"/></svg>';
+        case "claw": return vb + '<g transform="translate(46 2) scale(1.15)">' + bvClaw(0, 0) + '</g></svg>';
+        case "breaker": return vb + '<g transform="translate(45 0) scale(1.1)">' + bvBreaker(0, 2) + '</g></svg>';
+        case "pallet": return vb + '<g transform="translate(-4 -118) scale(1.15)">' + bvPallet() + '</g></svg>';
+      }
+      return vb + '</svg>';
+    }
+    function bvPlateName() {
+      try { return (typeof buildPlayerName === "function" && buildPlayerName()) || "Theo"; } catch (e) { return "Theo"; }
+    }
+    // Tools that hang off an arm, drawn around a pin at (x, y).
+    function bvClaw(x, y) {
+      return '<g transform="translate(' + x + ' ' + y + ')"><rect x="-9" y="0" width="18" height="16" rx="3" fill="#5A626A" stroke="#15171A" stroke-width="1.2"/>' +
+        '<path d="M-6 14 C-26 22 -30 40 -18 52 L-12 48 C-20 38 -16 26 -2 20 Z" fill="#8A939C" stroke="#15171A" stroke-width="1.3"/>' +
+        '<path d="M6 14 C26 22 30 40 18 52 L12 48 C20 38 16 26 2 20 Z" fill="#8A939C" stroke="#15171A" stroke-width="1.3"/>' +
+        '<path d="M0 14 V44" stroke="#8A939C" stroke-width="5"/><path d="M0 40 L-4 52 H4 Z" fill="#C5CDD4" stroke="#2A2E33" stroke-width="1"/>' +
+        bvPin(0, 6, 4) + '</g>';
+    }
+    function bvBreaker(x, y) {
+      return '<g transform="translate(' + x + ' ' + y + ')"><rect x="-8" y="-2" width="16" height="10" rx="2" fill="#5A626A" stroke="#15171A" stroke-width="1.2"/>' +
+        '<rect x="-11" y="6" width="22" height="30" rx="3" fill="#FFB300" stroke="#8D5A00" stroke-width="1.3"/><rect x="-11" y="14" width="22" height="4" fill="#1A1D21" opacity="0.6"/>' +
+        '<rect x="-4" y="36" width="8" height="12" fill="#9AA3AB" stroke="#2A2E33" stroke-width="1"/><path d="M-4 48 L0 58 L4 48 Z" fill="#C5CDD4" stroke="#2A2E33" stroke-width="1"/>' +
+        '<g class="bv-honk" stroke="#FFB300" stroke-width="2.4" stroke-linecap="round"><path d="M-12 58 l-6 2 M12 58 l6 2 M-10 52 l-7 -2 M10 52 l7 -2"/></g></g>';
+    }
+    function bvPallet() {
+      return '<rect x="10" y="172" width="44" height="8" rx="1" fill="#A1764B" stroke="#5D3A1E" stroke-width="1"/><rect x="12" y="176" width="6" height="4" fill="#5D3A1E"/><rect x="29" y="176" width="6" height="4" fill="#5D3A1E"/><rect x="46" y="176" width="6" height="4" fill="#5D3A1E"/>' +
+        '<rect x="12" y="146" width="40" height="26" rx="1.5" fill="#D7A86E" stroke="#8D6E4C" stroke-width="1.2"/><path d="M12 152 H52 M32 146 V152" stroke="#B5844A" stroke-width="2"/>' +
+        '<rect x="17" y="124" width="30" height="22" rx="1.5" fill="#C8955A" stroke="#8D6E4C" stroke-width="1.2"/><path d="M17 130 H47 M32 124 V130" stroke="#A7743C" stroke-width="2"/>' +
+        '<path d="M22 162 l4 -4 l4 4 M26 158 v8" stroke="#5D3A1E" stroke-width="1.4" fill="none"/>';
+    }
 
     function bvMotion() {
       return '<g class="bv-motion" fill="none" stroke-linecap="round"><path d="M500 80 H580" stroke="#1A237E" stroke-width="5" opacity="0.25"/><path d="M506 112 H600" stroke="#1A237E" stroke-width="6" opacity="0.25"/><path d="M500 144 H570" stroke="#1A237E" stroke-width="5" opacity="0.25"/></g>';
@@ -7309,11 +7674,12 @@
     // Each vehicle faces left (front on the left) in a 500 x 220 box; the ground is y = 198.
     // draw(id, P, X) gets the rendered parts P[i] and the extra X and returns the layers in order.
     var BV_KINDS = [
-      { id: "car", name: "Car", say: "car", group: "road", extras: ["spoiler", "lights", "horn"],
+      { id: "car", name: "Car", say: "car", group: "road", extras: ["spoiler", "roofbox", "surfboard", "siren", "stripes", "flames", "plate", "dog", "horn", "bikerack"],
         parts: [{ t: "wheel", cx: 130, cy: 170, r: 28, s: "alloy" }, { t: "wheel", cx: 355, cy: 170, r: 28, s: "alloy" }],
-        anchors: { roof: [276, 67], horn: [62, 112],
+        xslot: { spoiler: "" },
+        xa: { horn: [62, 112], roofbox: [306, 66, 116], surfboard: [300, 66, 214], siren: [298, 66], stripes: [106, 412, 129], flames: [104, 133, 130, 24], plate: [436, 161], dog: [346, 110, 0.95], bikerack: [462, 152, 1],
           spoiler: '<path d="M412 104 L428 92 L456 92 L460 104 L456 108 L416 108 Z" fill="#2A2E33" stroke="#15171A" stroke-width="1.2"/><path d="M418 102 L430 96 L452 96 L456 102 Z" fill="#EEF2F5" opacity="0.35"/>' },
-        draw: function (id, P, X) {
+        draw: function (id, P, X, E) {
           var body = "M62 164 C50 164 46 150 54 140 C62 130 82 126 104 124 C136 120 168 118 192 116 C204 94 224 74 258 68 C282 64 334 64 360 70 C382 78 396 96 404 116 C424 118 444 122 456 130 C466 136 470 150 464 162 C460 172 448 176 434 176 L391 176 A36 36 0 0 0 319 176 L166 176 A36 36 0 0 0 94 176 L72 176 C62 176 56 170 62 164 Z";
           return bvShadow(255, 206, 195) + bvPaint(id, body) +
             '<path d="M54 150 C50 158 54 170 70 176 L88 176 L80 150 Z" fill="url(#' + id + '-bump)"/>' +
@@ -7331,39 +7697,42 @@
             '<path d="M199 104 L199 96 L214 92 L218 102 L204 108 Z" fill="url(#' + id + '-paint)" stroke="#333" stroke-width="0.8"/>' +
             X + P[0] + P[1];
         } },
-      { id: "ute", name: "Ute", say: "ute", group: "road", extras: ["lights", "ladder", "horn"],
-        parts: [{ t: "wheel", cx: 120, cy: 167, r: 31, s: "alloy" }, { t: "wheel", cx: 406, cy: 167, r: 31, s: "alloy" }],
-        anchors: { roof: [276, 54], horn: [48, 106], ladder: [262, 66, 222, [366, 474], 108] },
-        draw: function (id, P, X) {
-          // Dual cab with a long tray (tray lengthened in v35). Drawn 14 units left of the v2 mockup.
-          var b = "M60 156 C50 156 46 142 54 132 C64 122 88 118 114 116 C150 112 178 110 200 108 C210 86 226 66 258 58 C278 52 318 52 338 60 C352 66 360 82 364 102 L364 108 L372 108 L372 88 L378 88 L378 108 L498 108 L498 122 C504 128 506 140 504 154 C502 168 494 176 482 176 L458 176 A38 38 0 0 0 382 176 L172 176 A38 38 0 0 0 96 176 L72 176 C60 176 54 166 60 156 Z";
-          return '<g transform="translate(-14 0)">' + bvShadow(278, 206, 222) + bvPaint(id, b) +
-            '<path d="M380 112 L494 112 L494 124 L380 124 Z" fill="#3A3F44"/>' +
-            '<path d="M378 108 L378 124" stroke="#2A2E33" stroke-width="3"/>' +
-            '<path d="M498 108 L498 150" stroke="#2A2E33" stroke-width="3.5" stroke-linecap="round"/>' +
-            '<path d="M440 126 L440 170 M380 140 L496 140" stroke="#2A2A2A" stroke-opacity="0.25" stroke-width="1.2"/>' +
-            '<rect x="364" y="78" width="14" height="48" rx="1" fill="url(#' + id + '-paint)" stroke="rgba(0,0,0,0.35)" stroke-width="1"/>' +
-            '<path d="M50 144 C46 152 50 168 68 176 L90 176 L78 144 Z" fill="url(#' + id + '-bump)"/>' +
-            '<path d="M496 152 L512 152 L512 168 C508 176 498 176 486 176 L486 168 Z" fill="url(#' + id + '-bump)"/>' +
-            '<rect x="172" y="178" width="150" height="5" rx="2" fill="#2A2E33"/>' +
-            '<path d="M228 108 L224 176 M300 108 L302 176" fill="none" stroke="#2A2A2A" stroke-opacity="0.45" stroke-width="1.3"/>' +
-            bvHandle(246, 116) + bvHandle(318, 116) +
-            bvGlass("M206 106 L220 72 C234 60 252 54 276 54 L328 58 C344 64 354 80 360 104 L210 106 Z", id) +
-            bvShine("M220 84 L236 66 L270 62 L250 90 Z") +
-            '<path d="M292 56 L300 106 L284 106 L278 58 Z" fill="#1A1D21" opacity="0.8"/>' +
-            '<path d="M72 122 C64 124 60 132 62 140 L100 138 C102 128 94 122 84 120 Z" fill="#F4FAFF" stroke="#9AA3AB" stroke-width="0.8"/>' +
-            '<ellipse cx="80" cy="130" rx="9" ry="5.5" fill="#D7E8F5"/>' +
-            '<rect x="490" y="126" width="12" height="16" rx="2" fill="#C62828" stroke="#7F1414" stroke-width="0.7"/>' +
-            '<rect x="50" y="140" width="22" height="18" rx="1.5" fill="#1A1D21"/><path d="M53 144 H69 M53 149 H69 M53 154 H69" stroke="#8A939C" stroke-width="1.2"/>' +
-            '<rect x="52" y="160" width="16" height="8" rx="1" fill="#F1E3A0" stroke="#6A727A" stroke-width="0.6"/>' +
-            '<path d="M203 98 L203 88 L220 84 L224 96 L208 102 Z" fill="url(#' + id + '-paint)" stroke="#333" stroke-width="0.8"/>' +
-            '</g>' + X + P[0] + P[1];
+      { id: "ute", name: "Ute", say: "ute", group: "road", extras: ["lights", "ladder", "bullbar", "spotlights", "snorkel", "towbar", "mudflaps", "dog", "flag", "horn"],
+        parts: [{ t: "wheel", cx: 118, cy: 164, r: 34, s: "tread" }, { t: "wheel", cx: 400, cy: 164, r: 34, s: "tread" }],
+        xa: { lights: [286, 46], horn: [122, 68], ladder: [352, 68, 140, [360, 484], 100], bullbar: [28, 104, 48], spotlights: [34, 104], snorkel: [176, 146, 92], towbar: [497, 142], dog: [314, 94, 0.95], flag: [490, 100, 86] },
+        draw: function (id, P, X, E) {
+          // v36: realistic 4x4 dual-cab ute: lifted body, flared arches, all-terrain tyres, sports bar and side steps.
+          var b = "M44 146 L44 112 C44 104 50 100 60 99 L188 96 L230 60 C235 55 240 52 248 52 L322 52 C330 52 336 56 340 64 L346 96 L346 100 L488 100 C494 100 497 104 497 110 L497 146 C497 150 493 152 487 152 L444 152 A44 44 0 0 0 356 152 L162 152 A44 44 0 0 0 74 152 L52 152 C46 152 44 150 44 146 Z";
+          return bvShadow(270, 206, 232) +
+            '<rect x="150" y="146" width="220" height="24" rx="4" fill="#2A2E33"/><circle cx="260" cy="168" r="9" fill="#3A3F44" stroke="#15171A" stroke-width="1.2"/>' +
+            bvPaint(id, b) +
+            '<path d="M352 100 L356 64 L384 64 L388 100" fill="none" stroke="#2A2E33" stroke-width="6" stroke-linejoin="round"/>' +
+            '<path d="M346 100 H497 V110 H346 Z" fill="#1A1D21" opacity="0.55"/>' +
+            '<path d="M346 100 V150" stroke="#2A2E33" stroke-width="2.5"/>' +
+            '<path d="M352 120 H490" stroke="#2A2A2A" stroke-opacity="0.25" stroke-width="1.2"/>' +
+            '<path d="M196 98 L194 150 M286 96 L286 150" fill="none" stroke="#2A2A2A" stroke-opacity="0.45" stroke-width="1.3"/>' +
+            bvHandle(250, 106) + bvHandle(318, 106) +
+            bvGlass("M200 96 L234 62 C238 59 242 58 248 58 L282 58 L282 96 Z", id) +
+            bvGlass("M290 58 L320 58 C327 58 331 62 333 68 L339 96 L290 96 Z", id) +
+            bvShine("M214 88 L238 64 L262 62 L236 92 Z") +
+            '<rect x="282" y="56" width="8" height="42" fill="#1A1D21" opacity="0.85"/>' +
+            '<path d="M242 50 H332" stroke="#2A2E33" stroke-width="4" stroke-linecap="round"/><path d="M250 50 V54 M324 50 V54" stroke="#2A2E33" stroke-width="3"/>' +
+            '<g fill="none" stroke="#1A1D21" stroke-width="9" stroke-linecap="round"><path d="M68 152 A50 50 0 0 1 168 152"/><path d="M350 152 A50 50 0 0 1 450 152"/></g>' +
+            '<rect x="168" y="150" width="182" height="7" rx="3" fill="#3A3F44" stroke="#15171A" stroke-width="1"/>' +
+            '<rect x="44" y="106" width="22" height="26" rx="2" fill="#1A1D21"/><path d="M47 111 H63 M47 116 H63 M47 121 H63 M47 126 H63" stroke="#8A939C" stroke-width="1.6"/>' +
+            '<path d="M60 100 L98 98 C100 104 98 110 92 112 L62 112 Z" fill="#F4FAFF" stroke="#9AA3AB" stroke-width="0.9"/><ellipse cx="78" cy="105" rx="9" ry="4.5" fill="#D7E8F5"/>' +
+            '<path d="M36 132 H76 V152 H40 C37 152 36 150 36 148 Z" fill="#2A2E33"/><rect x="38" y="140" width="16" height="7" rx="1" fill="#F1E3A0" stroke="#6A727A" stroke-width="0.6"/>' +
+            '<rect x="70" y="146" width="8" height="6" rx="1.5" fill="#E53935"/>' +
+            '<rect x="487" y="108" width="10" height="20" rx="2" fill="#C62828" stroke="#7F1414" stroke-width="0.7"/>' +
+            '<rect x="484" y="146" width="16" height="8" rx="2" fill="#2A2E33"/>' +
+            '<path d="M196 92 L196 84 L210 80 L214 90 L200 96 Z" fill="url(#' + id + '-paint)" stroke="#333" stroke-width="0.8"/>' +
+            X + P[0] + P[1];
         } },
-      { id: "truck", name: "Truck", say: "truck", group: "road", extras: ["spoiler", "lights", "horn"],
+      { id: "truck", name: "Truck", say: "truck", group: "road", extras: ["spoiler", "lights", "stripes", "flames", "stars", "mudflaps", "towbar", "dog", "flag", "horn"],
         parts: [{ t: "wheel", cx: 118, cy: 166, r: 32 }, { t: "wheel", cx: 345, cy: 164, r: 34 }, { t: "wheel", cx: 420, cy: 164, r: 34 }],
-        anchors: { roof: [118, 52], lights: [116, 50], horn: [72, 128],
+        xa: { lights: [116, 50], horn: [72, 128], stripes: [200, 472, 88], flames: [196, 92, 170, 44], stars: [210, 470, 80], towbar: [488, 170], dog: [150, 116, 1], flag: [474, 24, 58],
           spoiler: '<path d="M64 52 L104 30 L184 24 L188 24 L188 50 Z" fill="#2A2E33" stroke="#15171A" stroke-width="1.2"/><path d="M80 46 L108 32 L180 28 L180 34 L112 38 Z" fill="#EEF2F5" opacity="0.3"/>' },
-        draw: function (id, P, X) {
+        draw: function (id, P, X, E) {
           var cab = "M58 176 L58 150 C50 148 44 140 46 128 L46 78 C46 66 58 58 78 54 L188 48 L188 176 L158 176 A40 40 0 0 0 78 176 Z";
           var box = "M188 176 L188 42 C188 30 200 24 218 24 L462 24 C476 24 484 34 484 48 L484 176 L458 176 A38 38 0 0 0 382 176 A38 38 0 0 0 307 176 L188 176 Z";
           return bvShadow(270, 208, 220) + bvPaint(id, cab) + bvPaint(id, box) +
@@ -7383,10 +7752,10 @@
             '<rect x="26" y="60" width="16" height="28" rx="3" fill="url(#' + id + '-paint)" stroke="#222" stroke-width="1"/><rect x="28" y="63" width="12" height="13" rx="1.4" fill="#A8C4D2" opacity="0.85"/>' +
             X + P[0] + P[1] + P[2];
         } },
-      { id: "bus", name: "Bus", say: "bus", group: "road", extras: ["lights", "beacon", "horn"],
+      { id: "bus", name: "Bus", say: "bus", group: "road", extras: ["sign", "lights", "stripes", "flames", "stars", "bikerack", "plate", "dog", "flag", "horn"],
         parts: [{ t: "wheel", cx: 142, cy: 168, r: 30 }, { t: "wheel", cx: 374, cy: 168, r: 30 }],
-        anchors: { roof: [112, 35], horn: [30, 104] },
-        draw: function (id, P, X) {
+        xa: { sign: [70, 40, 86, 16], lights: [244, 34], horn: [30, 88], stripes: [52, 486, 133], flames: [180, 136, 150, 24], stars: [190, 470, 138], bikerack: [34, 156, -1], plate: [462, 162], dog: [250, 120, 1], flag: [440, 34, 52] },
+        draw: function (id, P, X, E) {
           var busPath = "M36 156 C32 140 32 100 44 78 C58 50 80 36 110 34 L430 34 C466 34 490 56 490 92 L490 160 C490 170 480 176 466 176 L410 176 A36 36 0 0 0 338 176 L178 176 A36 36 0 0 0 106 176 L52 176 C40 176 34 168 36 156 Z";
           var s = bvShadow(265, 208, 230) + bvPaint(id, busPath) +
             '<path d="M44 128 H486" stroke="#fff" stroke-opacity="0.2" stroke-width="7"/><path d="M44 150 H486" stroke="#1A1D21" stroke-opacity="0.25" stroke-width="2"/>' +
@@ -7406,10 +7775,10 @@
             X + P[0] + P[1];
           return s;
         } },
-      { id: "fire", name: "Fire engine", say: "fire engine", group: "road", extras: ["beacon", "horn"],
+      { id: "fire", name: "Fire truck", say: "fire truck", group: "road", extras: ["ladder", "hosereel", "cannon", "siren", "plate", "mudflaps", "dog", "flag", "horn"],
         parts: [{ t: "wheel", cx: 112, cy: 166, r: 32 }, { t: "wheel", cx: 340, cy: 164, r: 34 }, { t: "wheel", cx: 420, cy: 164, r: 34 }],
-        anchors: { roof: [478, 52], horn: [62, 98] },
-        draw: function (id, P, X) {
+        xa: { horn: [62, 98], ladder: [150, 20, 310], hosereel: [400, 101, 13], cannon: [140, 46], siren: [292, 52, 476, 52], plate: [340, 66], dog: [214, 118, 1.15], flag: [484, 52, 50] },
+        draw: function (id, P, X, E) {
           var nose = "M48 176 L48 150 C40 146 38 136 44 126 L70 110 C86 104 110 100 130 98 L130 70 C130 56 144 48 164 46 L268 46 L268 176 L152 176 A40 40 0 0 0 72 176 L48 176 Z";
           var fbody = "M268 176 L268 70 C268 58 280 52 298 52 L470 52 C484 52 490 64 490 78 L490 176 L460 176 A40 40 0 0 0 380 176 A40 40 0 0 0 300 176 L268 176 Z";
           var s = bvShadow(270, 208, 220) + bvPaint(id, nose) + bvPaint(id, fbody) +
@@ -7430,16 +7799,15 @@
             '<path d="M48 126 C42 128 40 136 44 144 L76 138 C76 128 68 122 58 122 Z" fill="#F4FAFF" stroke="#9AA3AB" stroke-width="0.8"/>' +
             '<rect x="168" y="34" width="70" height="12" rx="3" fill="#1A1D21"/>' +
             '<circle class="bv-glow" cx="184" cy="40" r="3.4" fill="#FFF8E1"/><circle class="bv-glow2" cx="198" cy="40" r="3.4" fill="#E53935"/><circle class="bv-glow" cx="212" cy="40" r="3.4" fill="#FFF8E1"/><circle class="bv-glow2" cx="226" cy="40" r="3.4" fill="#E53935"/>' +
-            bvLadder(150, 20, 310) +
             '<path d="M126 86 L108 74" stroke="#2A2E33" stroke-width="3" stroke-linecap="round"/>' +
             '<rect x="92" y="64" width="16" height="26" rx="3" fill="url(#' + id + '-paint)" stroke="#333" stroke-width="0.8"/>' +
             X + P[0] + P[1] + P[2];
           return s;
         } },
-      { id: "excavator", name: "Excavator", say: "excavator", group: "cons", extras: ["beacon", "horn", "lights"], partWord: "tracks",
+      { id: "excavator", name: "Excavator", say: "excavator", group: "cons", extras: ["beacon", "lights", "horn", "flag", "stripes", "cones", "bigbucket", "claw", "breaker"], partWord: "tracks",
         parts: [{ t: "track", x: 176, y: 134, w: 240, h: 46, back: true }, { t: "track", x: 150, y: 150, w: 256, h: 48 }],
-        anchors: { roof: [236, 36], horn: [300, 58] },
-        draw: function (id, P, X) {
+        xa: { beacon: [258, 36], lights: [218, 36], horn: [300, 58], flag: [434, 90, 62], stripes: [196, 442, 133], cones: [404, 90, 2] },
+        draw: function (id, P, X, E) {
           var house = "M190 142 L190 100 C190 94 194 90 200 90 L414 90 C434 90 448 104 448 122 L448 134 C448 139 444 142 438 142 Z";
           var cab = "M196 92 L196 48 C196 42 200 36 208 36 L256 36 C264 36 268 42 270 50 L278 92 Z";
           var boom = "M262 134 L290 116 C262 72 214 40 160 24 L140 40 C184 56 230 88 262 134 Z";
@@ -7460,12 +7828,7 @@
               bvRam(204, 54, 150, 18, 8) +
               bvPaint(id, arm) +
               bvRam(140, 56, 92, 138, 7) +
-              '<g class="bv-bucket" ' + bvOrigin(86, 148) + '>' +
-                '<path d="' + bucket + '" fill="url(#' + id + '-iron)" stroke="#15171A" stroke-width="1.4"/>' +
-                '<path d="M60 150 C52 158 50 172 58 184" fill="none" stroke="#8A939C" stroke-width="2" opacity="0.6"/>' +
-                '<path d="M44 176 L34 184 L48 186 Z M50 188 L42 198 L56 196 Z M62 196 L58 206 L70 199 Z" fill="#C5CDD4" stroke="#2A2E33" stroke-width="1"/>' +
-                bvPin(86, 148, 6) +
-              '</g>' +
+              '<g class="bv-bucket" ' + bvOrigin(86, 148) + '>' + bvExcTool(id, bucket, E) + bvPin(86, 148, 6) + '</g>' +
               bvPin(150, 30, 6) + bvPin(276, 124, 8) +
             '</g>' +
             bvPaint(id, cab) +
@@ -7474,10 +7837,10 @@
             '<path d="M234 42 L238 86" stroke="#1A1D21" stroke-width="3" opacity="0.7"/>' +
             '<rect x="198" y="88" width="78" height="5" rx="2" fill="#2A2E33" opacity="0.6"/>' + X;
         } },
-      { id: "dump", name: "Dump truck", say: "dump truck", group: "cons", extras: ["beacon", "horn", "lights"],
+      { id: "dump", name: "Dump truck", say: "dump truck", group: "cons", extras: ["beacon", "lights", "horn", "flag", "dirt", "cones", "stripes", "mudflaps", "dog"],
         parts: [{ t: "wheel", cx: 112, cy: 166, r: 32 }, { t: "wheel", cx: 352, cy: 164, r: 34 }, { t: "wheel", cx: 428, cy: 164, r: 34 }],
-        anchors: { roof: [120, 54], horn: [66, 100] },
-        draw: function (id, P, X) {
+        xa: { beacon: [166, 50], lights: [112, 54], horn: [66, 100], flag: [497, 144, 92], stripes: [200, 470, 112], dog: [148, 116, 1] },
+        draw: function (id, P, X, E) {
           var cab = "M54 176 L54 150 C46 148 40 140 42 128 L42 80 C42 68 54 60 74 56 L182 50 L182 176 L152 176 A40 40 0 0 0 72 176 Z";
           var tray = "M192 128 L192 70 L176 48 L198 38 L474 38 L492 54 L492 128 Z";
           return bvShadow(272, 208, 222) +
@@ -7486,6 +7849,8 @@
             '<rect x="230" y="144" width="56" height="20" rx="6" fill="#3A3F44" stroke="#1A1D21" stroke-width="1"/>' +
             '<g class="bv-tray" ' + bvOrigin(490, 132) + '>' +
               bvRam(250, 150, 250, 112, 12) +
+              (E.dirt ? bvWrapExtra("dirt", bvDirt("M198 46 C214 18 248 6 286 10 C316 0 360 0 392 10 C424 6 456 20 470 46 Z") + '<circle cx="262" cy="26" r="5" fill="#8D6E63"/><circle cx="340" cy="18" r="4" fill="#8D6E63"/><circle cx="410" cy="28" r="5" fill="#4E342E"/>') : "") +
+              (E.cones ? bvWrapExtra("cones", bvCones(330, 48, 4)) : "") +
               bvPaint(id, tray) +
               '<path d="M196 46 H476" stroke="#1A1D21" stroke-opacity="0.4" stroke-width="5"/>' +
               '<path d="M250 50 V126 M310 50 V126 M370 50 V126 M430 50 V126" stroke="#1A1D21" stroke-opacity="0.28" stroke-width="5"/>' +
@@ -7505,10 +7870,10 @@
             '<rect x="484" y="142" width="10" height="16" rx="2" fill="#C62828"/>' +
             X + P[0] + P[1] + P[2];
         } },
-      { id: "roller", name: "Steamroller", say: "steamroller", group: "cons", extras: ["beacon", "horn", "lights"], partWord: "roller",
+      { id: "roller", name: "Steamroller", say: "steamroller", group: "cons", extras: ["beacon", "lights", "horn", "flag", "cones", "stripes", "stars", "dog"], partWord: "roller",
         parts: [{ t: "drum", cx: 122, cy: 148, r: 50 }, { t: "wheel", cx: 394, cy: 156, r: 42, s: "tread" }],
-        anchors: { roof: [296, 20], horn: [196, 92] },
-        draw: function (id, P, X) {
+        xa: { beacon: [340, 22], lights: [270, 22], horn: [196, 92], flag: [472, 82, 62], cones: [404, 82, 2], stripes: [232, 480, 140], stars: [250, 470, 122], dog: [308, 82, 1] },
+        draw: function (id, P, X, E) {
           var yoke = "M60 150 L60 104 C60 94 68 86 78 86 L168 86 C178 86 186 94 186 104 L186 150 L176 150 L176 112 C176 104 170 98 162 98 L84 98 C76 98 70 104 70 112 L70 150 Z";
           var rear = "M224 162 L224 96 C224 88 230 82 238 82 L464 82 C476 82 484 92 484 104 L484 152 C484 158 480 162 474 162 L440 162 A46 46 0 0 0 348 162 Z";
           return bvShadow(270, 206, 220) +
@@ -7527,10 +7892,10 @@
             '<rect x="230" y="38" width="10" height="8" rx="2" fill="#F4FAFF" stroke="#9AA3AB" stroke-width="0.8"/>' +
             X + P[1];
         } },
-      { id: "backhoe", name: "Backhoe", say: "backhoe", group: "cons", extras: ["beacon", "horn", "lights"],
+      { id: "backhoe", name: "Backhoe", say: "backhoe", group: "cons", extras: ["beacon", "lights", "horn", "flag", "cones", "stripes", "breaker", "dog"],
         parts: [{ t: "wheel", cx: 150, cy: 170, r: 28, s: "tread" }, { t: "wheel", cx: 352, cy: 156, r: 42, s: "tread" }],
-        anchors: { roof: [290, 24], horn: [150, 80] },
-        draw: function (id, P, X) {
+        xa: { beacon: [340, 26], lights: [262, 26], horn: [150, 80], flag: [120, 98, 58], cones: [380, 110, 2], stripes: [100, 428, 140], dog: [310, 104, 1] },
+        draw: function (id, P, X, E) {
           var body = "M96 162 L96 112 C96 104 102 98 110 98 L232 98 L232 40 L348 40 L352 110 L430 110 L430 160 L398 162 A46 46 0 0 0 306 162 L184 162 A34 34 0 0 0 116 162 Z";
           var arms = "M246 96 L232 112 L76 160 L68 146 Z";
           var lbucket = "M56 128 L86 130 C96 148 96 176 88 194 L26 194 Z";
@@ -7540,8 +7905,9 @@
             '<g class="bv-hoe" ' + bvOrigin(442, 124) + '>' +
               bvRam(458, 124, 484, 58, 8) +
               bvPaint(id, hboom) + bvPaint(id, harm) +
+              (E.breaker ? bvWrapExtra("breaker", '<g transform="translate(424 98) rotate(-10)">' + bvBreaker(0, 0) + '</g>') :
               '<path d="M426 94 L400 100 C396 114 404 126 418 128 L434 112 Z" fill="url(#' + id + '-iron)" stroke="#15171A" stroke-width="1.2"/>' +
-              '<path d="M402 122 L394 132 L408 128 Z" fill="#C5CDD4" stroke="#2A2E33" stroke-width="1"/>' +
+              '<path d="M402 122 L394 132 L408 128 Z" fill="#C5CDD4" stroke="#2A2E33" stroke-width="1"/>') +
               bvPin(486, 34, 5) + bvPin(442, 124, 7) +
             '</g>' +
             '<rect x="440" y="130" width="14" height="56" rx="3" fill="#2A2E33"/><rect x="432" y="186" width="30" height="8" rx="2" fill="#15171A"/>' +
@@ -7560,10 +7926,10 @@
             '</g>' +
             X + P[0] + P[1];
         } },
-      { id: "forklift", name: "Forklift", say: "forklift", group: "cons", extras: ["beacon", "horn", "lights"],
+      { id: "forklift", name: "Forklift", say: "forklift", group: "cons", extras: ["beacon", "lights", "horn", "flag", "pallet", "cones", "stripes", "stars"],
         parts: [{ t: "wheel", cx: 140, cy: 172, r: 26 }, { t: "wheel", cx: 352, cy: 176, r: 22 }],
-        anchors: { roof: [232, 24], horn: [112, 96] },
-        draw: function (id, P, X) {
+        xa: { beacon: [296, 20], lights: [204, 20], horn: [112, 96], flag: [404, 86, 58], cones: [356, 86, 2], stripes: [116, 412, 150], stars: [316, 404, 136] },
+        draw: function (id, P, X, E) {
           var body = "M104 186 L104 128 C104 120 110 114 118 114 L198 114 L214 128 L298 128 L298 98 C298 90 304 86 312 86 L394 86 C406 86 416 96 416 108 L416 178 C416 184 412 188 406 188 L380 188 A28 28 0 0 0 324 188 L172 188 A32 32 0 0 0 108 188 Z";
           return bvShadow(240, 208, 190) +
             '<rect x="78" y="22" width="12" height="170" rx="2" fill="url(#' + id + '-bump)"/>' +
@@ -7574,6 +7940,7 @@
               '<path d="M56 98 H80 M56 108 H80 M56 118 H80 M60 96 V130 M70 96 V130" stroke="#3A3F44" stroke-width="3"/>' +
               '<rect x="54" y="128" width="28" height="54" rx="3" fill="url(#' + id + '-iron)" stroke="#15171A" stroke-width="1"/>' +
               '<path d="M8 186 L80 186 L80 160 L72 160 L72 180 L8 180 Z" fill="#B0B6BD" stroke="#2A2E33" stroke-width="1.4"/>' +
+              (E.pallet ? bvWrapExtra("pallet", bvPallet()) : "") +
             '</g>' +
             '<path d="M150 116 L168 28 M296 88 L292 28" stroke="#2A2E33" stroke-width="7" stroke-linecap="round"/>' +
             '<rect x="152" y="20" width="160" height="10" rx="3" fill="#2A2E33"/>' +
@@ -7587,10 +7954,10 @@
             '<rect x="408" y="120" width="8" height="18" rx="2" fill="#C62828"/>' +
             X + P[0] + P[1];
         } },
-      { id: "loader", name: "Front loader", say: "front loader", group: "cons", extras: ["beacon", "horn", "lights"],
+      { id: "loader", name: "Front loader", say: "front loader", group: "cons", extras: ["beacon", "lights", "horn", "flag", "dirt", "cones", "stripes", "stars", "dog"],
         parts: [{ t: "wheel", cx: 166, cy: 156, r: 42, s: "tread" }, { t: "wheel", cx: 398, cy: 156, r: 42, s: "tread" }],
-        anchors: { roof: [306, 18], horn: [372, 62] },
-        draw: function (id, P, X) {
+        xa: { beacon: [342, 18], lights: [286, 18], horn: [372, 62], flag: [480, 84, 62], cones: [452, 84, 2], stripes: [124, 486, 136], stars: [262, 350, 124], dog: [330, 88, 1] },
+        draw: function (id, P, X, E) {
           var front = "M120 150 L120 112 C120 104 126 98 134 98 L232 98 L248 118 L248 150 L214 150 A48 48 0 0 0 118 150 Z";
           var rear = "M246 150 L246 104 L258 96 L258 28 C258 22 262 18 268 18 L346 18 C352 18 356 22 356 28 L356 84 L462 84 C478 84 488 96 488 112 L488 140 C488 146 484 150 478 150 L446 150 A48 48 0 0 0 350 150 Z";
           var arms = "M246 96 L230 116 L96 170 L86 154 Z";
@@ -7605,37 +7972,126 @@
             '<rect x="420" y="58" width="9" height="26" rx="2" fill="#2A2E33"/><rect x="418" y="54" width="13" height="6" rx="2" fill="#15171A"/>' +
             '<rect x="480" y="100" width="8" height="18" rx="2" fill="#C62828"/>' +
             '<rect x="252" y="30" width="10" height="8" rx="2" fill="#F4FAFF" stroke="#9AA3AB" stroke-width="0.8"/>' +
-            P[0] + P[1] +
+            X + P[0] + P[1] +
             '<g class="bv-loader" ' + bvOrigin(238, 106) + '>' +
               bvRam(226, 140, 140, 150, 9) +
-              bvPaint(id, arms) + bvPaint(id, bucket) +
+              bvPaint(id, arms) + (E.dirt ? bvWrapExtra("dirt", bvDirt("M56 118 C60 92 92 84 112 120 Z") + '<circle cx="80" cy="104" r="4" fill="#8D6E63"/>') : "") + bvPaint(id, bucket) +
               '<path d="M66 122 L100 124 C110 142 110 170 104 188 L42 188 Z" fill="#000" opacity="0.12"/>' +
               '<path d="M32 194 L22 198 L36 199 Z" fill="#C5CDD4" stroke="#2A2E33" stroke-width="1"/>' +
               bvPin(238, 106, 8) + bvPin(98, 160, 6) +
-            '</g>' +
-            X;
+            '</g>';
         } }
     ];
     function bvKind(id) { for (var i = 0; i < BV_KINDS.length; i++) if (BV_KINDS[i].id === id) return BV_KINDS[i]; return BV_KINDS[0]; }
-    // opts: color, parts (array of booleans; omitted = all on), extra, motion
+    function bvExcTool(id, bucket, E) {
+      if (E.claw) return bvWrapExtra("claw", bvClaw(86, 142));
+      if (E.breaker) return bvWrapExtra("breaker", bvBreaker(86, 142));
+      var b = '<path d="' + bucket + '" fill="url(#' + id + '-iron)" stroke="#15171A" stroke-width="1.4"/>' +
+        '<path d="M60 150 C52 158 50 172 58 184" fill="none" stroke="#8A939C" stroke-width="2" opacity="0.6"/>' +
+        '<path d="M44 176 L34 184 L48 186 Z M50 188 L42 198 L56 196 Z M62 196 L58 206 L70 199 Z" fill="#C5CDD4" stroke="#2A2E33" stroke-width="1"/>';
+      if (E.bigbucket) return bvWrapExtra("bigbucket", '<g transform="translate(86 136) scale(1.28) translate(-86 -148)">' + b + '</g>');
+      return b;
+    }
+    // opts: color, parts (array of booleans; omitted = all on), extras (array or comma string; "extra" also accepted), name, motion
     function bvSvg(kindId, opts) {
       opts = opts || {};
       var def = bvKind(kindId);
       var id = "bv" + (++bvUid);
       var p = BV_PAL[opts.color] || BV_PAL.grey;
       var P = def.parts.map(function (pt, i) { return bvPartSvg(pt, !opts.parts || !!opts.parts[i], id, i); });
-      var X = opts.extra ? '<g class="bv-extra bv-x-' + opts.extra + '">' + bvExtra(def, opts.extra) + '</g>' : "";
-      return '<svg class="bv-svg bv-k-' + def.id + '" viewBox="0 0 500 220" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" overflow="visible">' +
-        bvDefs(id, p) + (opts.motion ? bvMotion() : "") + def.draw(id, P, X) + '</svg>';
+      var list = bvCleanExtras(def, opts.extras != null ? opts.extras : opts.extra);
+      var E = {};
+      list.forEach(function (x) { E[x] = true; });
+      var X = bvExtrasSvg(def, def.id === "dump" ? list.filter(function (x) { return x !== "cones"; }) : list, { name: opts.name || bvPlateName() });
+      return '<svg class="bv-svg bv-k-' + def.id + '" viewBox="' + (opts.wide ? "-30 -16 560 246" : "0 0 500 220") + '" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" overflow="visible">' +
+        bvDefs(id, p) + (opts.motion ? bvMotion() : "") + def.draw(id, P, X, E) + '</svg>';
     }
 
     // ---- v35: Build a car game ----
     var BUILD_GARAGE_PREFIX = "theo-car-match-garage:";
     var BUILD_GARAGE_MAX = 36;
     var NUMBER_WORDS = ["zero", "one", "two", "three", "four", "five", "six"];
-    var build = { step: 0, steps: [1, 2, 3, 4, 5], kind: "", color: "", parts: [], extra: "", tab: "road", timers: [], busy: false, lastSimple: "", drag: null, gen: 0 };
+    var build = { step: 0, steps: [1, 2, 3, 4, 5], kind: "", color: "", parts: [], extras: [], tab: "road", timers: [], busy: false, lastSimple: "", drag: null, gen: 0 };
 
     function buildEl(id) { return document.getElementById(id); }
+    // v36: Build speaks with pre-recorded natural-voice clips (sounds/build/, Piper "Alba" voice, CC BY 4.0, see sounds/build/NOTES.md).
+    // Each part of a line is a clip; a part with no clip (a new player's name) or a clip that fails falls back to the device voice.
+    var BUILD_VOICE_DIR = SOUND_DIR + "build/";
+    var BUILD_SENTENCE_PLAYERS = { theo: 1, harper: 1 };
+    var BUILD_NAME_CLIPS = { theo: 1, harper: 1, jayden: 1 };
+    var buildSayLog = [];
+    function bvLine(k, t, gap) { return { k: k, t: t, gap: gap || 0 }; }
+    function bvNameKey(name) { return String(name || "").toLowerCase().replace(/[^a-z]/g, ""); }
+    function buildPhraseLine() {
+      var def = bvKind(build.kind);
+      var name = buildPlayerName();
+      var key = bvNameKey(name);
+      var rest = "built " + aOrAn(build.color) + " " + build.color + " " + def.say + "!";
+      var tail = build.color + "-" + def.id;
+      if (BUILD_SENTENCE_PLAYERS[key]) return [bvLine("s-" + key + "-" + tail, name + " " + rest)];
+      return [bvLine(BUILD_NAME_CLIPS[key] ? "name-" + key : "", name), bvLine("built-" + tail, rest, 60)];
+    }
+    function buildSay(parts, keepOthers) {
+      if (keepOthers) {
+        if (sharedAudio) { try { sharedAudio.pause(); } catch (e) {} }
+        playToken++;
+      } else stopSpeechAndAudio();
+      var token = playToken;
+      var i = 0;
+      buildSayLog.push(parts.map(function (p) { return p.k || ("tts:" + p.t); }).join(" + "));
+      if (buildSayLog.length > 60) buildSayLog.shift();
+      function next() {
+        if (token !== playToken || i >= parts.length) return;
+        var p = parts[i++];
+        if (p.gap && i > 1) { setTimeout(function () { play(p); }, p.gap); return; }
+        play(p);
+      }
+      function play(p) {
+        if (token !== playToken) return;
+        if (!p.k) { tts(p.t); return; }
+        var a = getSharedAudio();
+        customAudioEl = a;
+        var settled = false;
+        function clean() { a.removeEventListener("ended", onEnd); a.removeEventListener("error", onErr); }
+        function onEnd() { if (settled) return; settled = true; clean(); next(); }
+        function onErr(e) {
+          if (settled) return;
+          if (e && e.name === "AbortError") { settled = true; clean(); return; }
+          settled = true; clean();
+          if (token === playToken) tts(p.t);
+        }
+        a.addEventListener("ended", onEnd);
+        a.addEventListener("error", onErr);
+        try {
+          a.muted = false;
+          var src = BUILD_VOICE_DIR + p.k + ".mp3";
+          if (a.getAttribute("data-src") === src && a.src) { try { a.pause(); a.currentTime = 0; } catch (e0) {} }
+          else { a.setAttribute("data-src", src); a.src = src; }
+          var pr = a.play();
+          if (pr && pr.catch) pr.catch(onErr);
+        } catch (e) { onErr(e); }
+      }
+      function tts(text) {
+        text = applySayLike(text);
+        if (!text || !window.speechSynthesis) { next(); return; }
+        var done = false;
+        function fin() { if (done) return; done = true; if (token === playToken) next(); }
+        try {
+          var u = new SpeechSynthesisUtterance(text);
+          u.rate = 0.95;
+          u.pitch = 1;
+          if (!voicesCache.length) refreshVoices();
+          var voice = chosenVoice();
+          u.lang = (voice && voice.lang) || "en-AU";
+          if (voice) u.voice = voice;
+          u.onend = fin;
+          u.onerror = fin;
+          speechSynthesis.speak(u);
+          setTimeout(fin, 1200 + text.length * 110);
+        } catch (e) { fin(); }
+      }
+      next();
+    }
     function buildOpen() { var s = buildEl("build-screen"); return !!(s && !s.hidden); }
     function buildLater(fn, ms) {
       var g = build.gen;
@@ -7664,7 +8120,9 @@
         var raw = JSON.parse(localStorage.getItem(garageKey()) || "[]");
         if (!Array.isArray(raw)) return [];
         return raw.filter(function (g) { return g && typeof g === "object" && g.k; }).map(function (g) {
-          return { k: String(g.k), c: BV_PAL[g.c] ? String(g.c) : "grey", x: String(g.x || ""), t: Number(g.t) || 0 };
+          var xs = Array.isArray(g.xs) ? g.xs.map(String) : (g.x ? [String(g.x)] : []);
+          if (!g.v && String(g.k) === "fire" && xs.indexOf("ladder") === -1) xs.unshift("ladder");
+          return { k: String(g.k), c: BV_PAL[g.c] ? String(g.c) : "grey", xs: bvCleanExtras(bvKind(String(g.k)), xs), t: Number(g.t) || 0, v: 2 };
         });
       } catch (e) { return []; }
     }
@@ -7679,6 +8137,18 @@
     function buildPhrase() {
       var def = bvKind(build.kind);
       return buildPlayerName() + " built " + aOrAn(build.color) + " " + build.color + " " + def.say + "!";
+    }
+    // A fire truck starts with its ladder on (it can be taken off at the extras step).
+    function bvDefaultExtras(kindId) { return kindId === "fire" ? ["ladder"] : []; }
+    function buildExtrasLimit() {
+      var p = activeProfile();
+      var v = p && p.buildExtras;
+      return v === "1" ? 1 : v === "3" ? 3 : 0;
+    }
+    function buildPartsKey(def) {
+      if (def.id === "excavator") return "add-tracks";
+      if (def.id === "roller") return "add-roller";
+      return "add-wheels";
     }
     function buildPartsTitle(def) {
       if (def.id === "excavator") return "Add the tracks";
@@ -7717,12 +8187,13 @@
       buildEl("build-screen").hidden = false;
       updatePlayerUi();
       updateHomeBtn();
-      build.kind = ""; build.color = ""; build.extra = ""; build.parts = []; build.busy = false;
+      build.kind = ""; build.color = ""; build.extras = []; build.parts = []; build.busy = false;
       if (buildSimple()) {
         build.steps = [2, 3, 5];
         var pool = BV_KINDS.map(function (k) { return k.id; }).filter(function (id) { return id !== build.lastSimple; });
         build.kind = pool[Math.floor(Math.random() * pool.length)];
         build.lastSimple = build.kind;
+        build.extras = bvDefaultExtras(build.kind);
         buildGoStep(2);
         return;
       }
@@ -7768,7 +8239,7 @@
         b.className = "b-tile";
         b.setAttribute("data-kind", k.id);
         b.setAttribute("aria-label", k.name);
-        b.innerHTML = '<span class="b-art">' + bvSvg(k.id, { color: k.group === "cons" ? "yellow" : "grey" }) + '</span><span class="b-lbl">' + k.name + '</span>';
+        b.innerHTML = '<span class="b-art">' + bvSvg(k.id, { color: k.group === "cons" ? "yellow" : "grey", extras: bvDefaultExtras(k.id) }) + '</span><span class="b-lbl">' + k.name + '</span>';
         b.addEventListener("click", function () { pickBuildKind(k.id, b); });
         grid.appendChild(b);
       });
@@ -7778,27 +8249,28 @@
         gl.hidden = n === 0;
         gl.textContent = "Garage (" + n + ")";
       }
-      if (!quiet) speak("What will you build?");
+      if (!quiet) buildSay([bvLine("what-build", "What will you build?")]);
     }
     function setBuildTab(tab) {
       if (build.busy) return;
       build.tab = tab === "cons" ? "cons" : "road";
       renderBuildPick(true);
-      speak(build.tab === "cons" ? "Construction!" : "Road!");
+      buildSay([build.tab === "cons" ? bvLine("construction", "Construction!") : bvLine("road", "Road vehicles!")]);
     }
     function pickBuildKind(kindId, tile) {
       if (build.busy) return;
       build.busy = true;
       build.kind = kindId;
+      build.extras = bvDefaultExtras(kindId);
       if (tile) tile.classList.add("picked");
-      speak(bvKind(kindId).say + "!");
+      buildSay([bvLine("v-" + kindId, bvKind(kindId).say + "!")]);
       buildLater(function () { buildGoStep(2); }, 650);
     }
 
     // Step 2: colour
     function renderBuildColour() {
       var hero = buildEl("b2-hero");
-      hero.innerHTML = '<div class="b-layer b-grey">' + bvSvg(build.kind, { color: "grey" }) + '</div><div class="b-layer b-paint" id="b2-paint"></div><div class="b-splash" id="b2-splash"></div>';
+      hero.innerHTML = '<div class="b-layer b-grey">' + bvSvg(build.kind, { color: "grey", extras: build.extras }) + '</div><div class="b-layer b-paint" id="b2-paint"></div><div class="b-splash" id="b2-splash"></div>';
       var row = buildEl("b2-paints");
       row.innerHTML = "";
       BV_COLOURS.forEach(function (c) {
@@ -7809,7 +8281,7 @@
         b.addEventListener("click", function () { pickBuildColour(c.id, b); });
         row.appendChild(b);
       });
-      speak("Pick a colour!");
+      buildSay([bvLine("pick-colour", "Pick a colour!")]);
     }
     function pickBuildColour(color, btn) {
       if (build.busy) return;
@@ -7818,7 +8290,7 @@
       var paint = buildEl("b2-paint");
       if (paint) {
         paint.classList.remove("go");
-        paint.innerHTML = bvSvg(build.kind, { color: color });
+        paint.innerHTML = bvSvg(build.kind, { color: color, extras: build.extras });
         void paint.offsetWidth;
         paint.classList.add("go");
       }
@@ -7838,7 +8310,7 @@
       }
       var all = document.querySelectorAll("#b2-paints .b-blob");
       for (var j = 0; j < all.length; j++) all[j].classList.toggle("picked", all[j] === btn);
-      speak(color + "!");
+      buildSay([bvLine("c-" + color, color + "!")]);
       buildLater(function () { buildGoStep(3); }, 1200);
     }
 
@@ -7852,11 +8324,11 @@
       var cb = buildEl("b3-count");
       cb.textContent = "";
       cb.hidden = true;
-      speak(buildPartsTitle(def) + "!");
+      buildSay([bvLine(buildPartsKey(def), buildPartsTitle(def) + "!")]);
     }
     function renderBuildPartsHero(popIndex) {
       var hero = buildEl("b3-car");
-      hero.innerHTML = bvSvg(build.kind, { color: build.color, parts: build.parts });
+      hero.innerHTML = bvSvg(build.kind, { color: build.color, parts: build.parts, extras: build.extras });
       var slots = hero.querySelectorAll(".bv-slot");
       for (var i = 0; i < slots.length; i++) {
         (function (g) {
@@ -7975,54 +8447,95 @@
       cb.classList.remove("pop");
       void cb.offsetWidth;
       cb.classList.add("pop");
-      speak((NUMBER_WORDS[n] || String(n)) + "!");
+      var line = [bvLine("n-" + n, (NUMBER_WORDS[n] || String(n)) + "!")];
+      if (n === build.parts.length) line.push(bvLine("great-building", "Great building!", 250));
+      buildSay(line);
       if (n === build.parts.length) {
         build.busy = true;
-        buildLater(function () { buildNext(); }, 1500);
+        buildLater(function () { buildNext(); }, 2600);
       }
     }
 
-    // Step 4: one extra
+    // Step 4: extras (v36: several, toggled on and off, then Done)
     function renderBuildExtras() {
       var def = bvKind(build.kind);
-      buildEl("b4-hero").innerHTML = bvSvg(build.kind, { color: build.color });
+      build.extras = bvCleanExtras(def, build.extras);
+      var lim = buildExtrasLimit();
+      buildEl("b4-title").textContent = lim === 1 ? "Pick an extra" : lim === 3 ? "Pick up to 3 extras" : "Add extras";
+      renderBuildExtrasHero("");
       var grid = buildEl("b4-grid");
       grid.innerHTML = "";
-      grid.className = "b-extras n" + def.extras.length;
+      grid.scrollTop = 0;
       def.extras.forEach(function (x) {
         var b = document.createElement("button");
         b.type = "button";
         b.className = "b-extra";
-        b.setAttribute("aria-label", BV_EXTRA_NAMES[x]);
-        b.innerHTML = '<span class="b-art">' + bvExtraIcon(x) + '</span><span class="b-lbl">' + BV_EXTRA_NAMES[x] + '</span>';
-        b.addEventListener("click", function () { pickBuildExtra(x, b); });
+        b.setAttribute("data-x", x);
+        b.setAttribute("aria-label", bvExtraName(x, def));
+        b.setAttribute("aria-pressed", "false");
+        b.innerHTML = '<span class="b-art">' + bvExtraIcon(x, def) + '</span><span class="b-lbl">' + bvExtraName(x, def) + '</span><span class="b-tick" aria-hidden="true">&#10003;</span>';
+        b.addEventListener("click", function () { toggleBuildExtra(x); });
         grid.appendChild(b);
       });
-      speak("Pick something extra!");
+      syncBuildExtraTiles();
+      buildSay([lim === 1 ? bvLine("pick-extra", "Pick something extra!") : bvLine("pick-extras", "Pick some extras!")]);
     }
-    function pickBuildExtra(x, btn) {
-      if (build.busy) return;
-      build.busy = true;
-      build.extra = x;
+    function renderBuildExtrasHero(popX) {
       var hero = buildEl("b4-hero");
-      hero.innerHTML = bvSvg(build.kind, { color: build.color, extra: x });
-      var ex = hero.querySelector(".bv-extra");
-      if (ex) ex.classList.add("pop");
+      hero.innerHTML = bvSvg(build.kind, { color: build.color, extras: build.extras });
+      if (popX) {
+        var ex = hero.querySelectorAll('.bv-extra[data-x="' + popX + '"]');
+        for (var i = 0; i < ex.length; i++) ex[i].classList.add("pop");
+      }
+    }
+    function syncBuildExtraTiles() {
       var all = document.querySelectorAll("#b4-grid .b-extra");
-      for (var j = 0; j < all.length; j++) all[j].classList.toggle("picked", all[j] === btn);
-      speak(x === "horn" ? "Beep beep!" : BV_EXTRA_NAMES[x] + "!");
-      buildLater(function () { buildNext(); }, 1300);
+      for (var j = 0; j < all.length; j++) {
+        var on = build.extras.indexOf(all[j].getAttribute("data-x")) !== -1;
+        all[j].classList.toggle("on", on);
+        all[j].setAttribute("aria-pressed", on ? "true" : "false");
+      }
+    }
+    function toggleBuildExtra(x) {
+      if (build.busy || build.step !== 4) return;
+      var def = bvKind(build.kind);
+      if (def.extras.indexOf(x) === -1) return;
+      var at = build.extras.indexOf(x);
+      if (at !== -1) {
+        build.extras.splice(at, 1);
+        renderBuildExtrasHero("");
+        syncBuildExtraTiles();
+        stopSpeechAndAudio();
+        return;
+      }
+      // Extras that share a spot replace each other; a limit drops the oldest pick.
+      var slot = bvExtraSlot(def, x);
+      var next = build.extras.filter(function (y) { return !slot || bvExtraSlot(def, y) !== slot; });
+      var lim = buildExtrasLimit();
+      while (lim && next.length >= lim) next.shift();
+      next.push(x);
+      build.extras = bvCleanExtras(def, next);
+      renderBuildExtrasHero(x);
+      syncBuildExtraTiles();
+      buildSay([x === "horn" ? bvLine("beep-beep", "Beep beep!") : bvLine("x-" + bvExtraClip(x, def), bvExtraName(x, def) + "!")]);
+    }
+    function bvExtraClip(x, def) {
+      return x === "lights" && def.group === "cons" ? "worklights" : x === "stripes" && def.group === "cons" ? "stripes-plain" : x;
+    }
+    function buildExtrasDone() {
+      if (build.busy || build.step !== 4) return;
+      buildNext();
     }
 
     // Step 5: GO
     function renderBuildGo() {
       var wrap = buildEl("b5-hero");
       wrap.className = "b-hero b-go-hero";
-      wrap.innerHTML = bvSvg(build.kind, { color: build.color, extra: build.extra });
+      wrap.innerHTML = bvSvg(build.kind, { color: build.color, extras: build.extras });
       buildEl("b5-cap").textContent = "Tap GO!";
       var go = buildEl("b5-go");
       go.disabled = false;
-      speak("Ready? Tap go!");
+      buildSay([bvLine("ready-go", "Ready? Tap go!")]);
     }
     function buildGo() {
       if (build.busy || build.step !== 5) return;
@@ -8034,13 +8547,14 @@
       var src = nextRevSrc();
       var el = findPreload(revPreloads, src);
       if (el) playElement(el); else playSources([src], "");
+      buildSay([bvLine("vroom", "Vroom!")], true);
       wrap.classList.add("act");
       buildEl("b5-cap").textContent = "Vroom!";
-      var item = { k: build.kind, c: build.color || "grey", x: build.extra || "", t: Date.now() };
+      var item = { k: build.kind, c: build.color || "grey", xs: build.extras.slice(), t: Date.now(), v: 2 };
       saveGarageItem(item);
       buildLater(function () {
         wrap.classList.add("drive");
-        wrap.innerHTML = bvSvg(build.kind, { color: build.color, extra: build.extra, motion: true });
+        wrap.innerHTML = bvSvg(build.kind, { color: build.color, extras: build.extras, motion: true });
       }, 1500);
       buildLater(function () { showGarage(true); }, 3100);
     }
@@ -8058,8 +8572,8 @@
       } else cap.hidden = true;
       renderGarageShelves(justBuilt);
       showBuildView("garage");
-      if (justBuilt && build.kind) speak(buildPhrase());
-      else speak(possessive(name) + " garage!");
+      if (justBuilt && build.kind) buildSay(buildPhraseLine());
+      else buildSay([bvLine(BUILD_NAME_CLIPS[bvNameKey(name)] ? "g-" + bvNameKey(name) : "", possessive(name) + " garage!")]);
     }
     function renderGarageShelves(justBuilt) {
       var list = loadGarage();
@@ -8082,7 +8596,7 @@
           card.className = "b-card" + (isNew ? " latest" : "");
           var colour = g.c && g.c !== "grey" ? g.c.charAt(0).toUpperCase() + g.c.slice(1) + " " + def.say : def.name;
           card.innerHTML = (isNew ? '<span class="new-badge">NEW</span>' : "") +
-            '<span class="b-art">' + bvSvg(g.k, { color: g.c, extra: g.x }) + '</span><span class="b-lbl">' + colour + '</span>';
+            '<span class="b-art">' + bvSvg(g.k, { color: g.c, extras: g.xs, wide: true }) + '</span><span class="b-lbl">' + colour + '</span>';
           shelf.appendChild(card);
         });
         box.appendChild(shelf);
@@ -8098,6 +8612,7 @@
       buildEl("b5-go").addEventListener("click", buildGo);
       buildEl("b5-hero").addEventListener("click", buildGo);
       buildEl("bg-again").addEventListener("click", function () { startBuild(); });
+      buildEl("b4-done").addEventListener("click", buildExtrasDone);
       var gl = buildEl("b-garage-link");
       if (gl) gl.addEventListener("click", function () { if (!build.busy) showGarage(false); });
       var art = document.querySelector('#build-btn [data-art="build"]');
@@ -8110,14 +8625,99 @@
         saveProfilesStore();
         updateBuildSettingsUi();
       });
+      var xsel = buildEl("build-extras");
+      if (xsel) xsel.addEventListener("change", function () {
+        var p = activeProfile();
+        if (!p) return;
+        p.buildExtras = xsel.value === "1" || xsel.value === "3" ? xsel.value : "any";
+        saveProfilesStore();
+        updateBuildSettingsUi();
+      });
+      bindGarageClear();
       window.addEventListener("resize", function () { if (buildOpen() && build.step === "garage") renderGarageShelves(false); });
     }
     function updateBuildSettingsUi() {
       var sel = buildEl("build-steps");
       var p = activeProfile();
       if (sel && document.activeElement !== sel) sel.value = (p && p.buildSteps === "simple") ? "simple" : "full";
+      var xsel = buildEl("build-extras");
+      if (xsel && document.activeElement !== xsel) xsel.value = (p && (p.buildExtras === "1" || p.buildExtras === "3")) ? p.buildExtras : "any";
       var who = buildEl("build-steps-who");
       if (who) who.textContent = p ? p.name : "";
+      updateGarageSettingsUi();
+    }
+
+    // v36: clear garages (per device, from Settings > Build)
+    var garageClearMode = "";
+    function garageCountFor(id) {
+      try {
+        var raw = JSON.parse(localStorage.getItem(BUILD_GARAGE_PREFIX + id) || "[]");
+        return Array.isArray(raw) ? raw.length : 0;
+      } catch (e) { return 0; }
+    }
+    function updateGarageSettingsUi() {
+      var p = activeProfile();
+      var name = (p && p.name) || "Theo";
+      var n = garageCountFor((p && p.id) || "theo");
+      var cnt = buildEl("garage-count");
+      if (cnt) cnt.textContent = n === 0 ? possessive(name) + " garage is empty." : possessive(name) + " garage has " + n + (n === 1 ? " build." : " builds.");
+      var btn = buildEl("garage-clear-btn");
+      if (btn) { btn.textContent = "Clear " + possessive(name) + " garage"; btn.disabled = n === 0; }
+      var all = buildEl("garage-clear-all-btn");
+      var list = profilesState.profiles || [];
+      var total = 0;
+      list.forEach(function (q) { total += garageCountFor(q.id); });
+      if (all) { all.hidden = list.length < 2; all.disabled = total === 0; }
+    }
+    function hideGarageConfirm() {
+      garageClearMode = "";
+      var box = buildEl("garage-clear-confirm");
+      if (box) box.hidden = true;
+    }
+    function askGarageClear(mode) {
+      var p = activeProfile();
+      var name = (p && p.name) || "Theo";
+      garageClearMode = mode;
+      var t = buildEl("garage-clear-text");
+      if (t) t.textContent = mode === "all" ? "Clear every player's garage on this device? All their builds will be gone." : "Clear " + possessive(name) + " garage? All " + possessive(name) + " builds will be gone.";
+      var done = buildEl("garage-clear-done");
+      if (done) done.hidden = true;
+      var box = buildEl("garage-clear-confirm");
+      if (box) box.hidden = false;
+      var no = buildEl("garage-clear-no");
+      if (no) try { no.focus(); } catch (e) {}
+    }
+    function clearGarages(mode) {
+      var p = activeProfile();
+      var ids = mode === "all" ? (profilesState.profiles || []).map(function (q) { return q.id; }) : [(p && p.id) || "theo"];
+      ids.forEach(function (id) { try { localStorage.removeItem(BUILD_GARAGE_PREFIX + id); } catch (e) {} });
+      if (mode === "all") {
+        try {
+          for (var i = localStorage.length - 1; i >= 0; i--) {
+            var k = localStorage.key(i);
+            if (k && k.indexOf(BUILD_GARAGE_PREFIX) === 0) localStorage.removeItem(k);
+          }
+        } catch (e) {}
+      }
+      return ids.length;
+    }
+    function bindGarageClear() {
+      var one = buildEl("garage-clear-btn"), all = buildEl("garage-clear-all-btn");
+      var yes = buildEl("garage-clear-yes"), no = buildEl("garage-clear-no");
+      if (one) one.addEventListener("click", function () { askGarageClear("one"); });
+      if (all) all.addEventListener("click", function () { askGarageClear("all"); });
+      if (no) no.addEventListener("click", function () { hideGarageConfirm(); if (one) try { one.focus(); } catch (e) {} });
+      if (yes) yes.addEventListener("click", function () {
+        var mode = garageClearMode;
+        if (!mode) return;
+        var p = activeProfile();
+        var name = (p && p.name) || "Theo";
+        clearGarages(mode);
+        hideGarageConfirm();
+        updateGarageSettingsUi();
+        var done = buildEl("garage-clear-done");
+        if (done) { done.textContent = mode === "all" ? "All garages cleared." : possessive(name) + " garage cleared."; done.hidden = false; }
+      });
     }
 
     document.getElementById("play-btn").addEventListener("click", function () {
@@ -10627,12 +11227,16 @@
       placeBuildPart: placeBuildPart,
       pickBuildKind: pickBuildKind,
       pickBuildColour: pickBuildColour,
-      pickBuildExtra: pickBuildExtra,
       showGarage: showGarage,
       loadGarage: loadGarage,
       bvSvg: bvSvg,
       buildKinds: function () { return BV_KINDS.map(function (k) { return { id: k.id, name: k.name, group: k.group, parts: k.parts.length, extras: k.extras.slice() }; }); },
-      getBuildState: function () { return { step: build.step, steps: build.steps.slice(), kind: build.kind, color: build.color, parts: build.parts.slice(), extra: build.extra, tab: build.tab, busy: build.busy }; },
+      getBuildState: function () { return { step: build.step, steps: build.steps.slice(), kind: build.kind, color: build.color, parts: build.parts.slice(), extras: build.extras.slice(), tab: build.tab, busy: build.busy }; },
+      toggleBuildExtra: toggleBuildExtra,
+      bvKind: bvKind,
+      buildExtrasDone: buildExtrasDone,
+      loadGarage: loadGarage,
+      buildSayLog: function () { return buildSayLog.slice(); },
       familyFace: function (id) { var p = familyPeople.filter(function (x) { return x.id === id; })[0]; return p ? familyItem(p, p.face, "face") : null; }
     };
 
