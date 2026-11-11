@@ -283,6 +283,80 @@
       padding-right: 0.6em;
     }
     .face.front.is-family, .name-choice.is-family { padding: 0; background: #FFF8E1; }
+    /* v30: parent PIN keypad */
+    .pin-modal { position: fixed; inset: 0; z-index: 30; background: rgba(13, 40, 80, 0.55); display: flex; align-items: center; justify-content: center; padding: 16px; }
+    .pin-modal[hidden] { display: none; }
+    .pin-card { background: #fff; border-radius: 24px; padding: 18px 18px 14px; width: min(340px, 100%); text-align: center; box-shadow: 0 12px 40px rgba(0,0,0,0.3); }
+    .pin-card h3 { margin: 0 0 8px; color: #1A237E; font-size: 22px; }
+    .pin-dots { display: flex; justify-content: center; gap: 10px; min-height: 22px; margin: 6px 0; }
+    .pin-dots span { width: 16px; height: 16px; border-radius: 50%; background: #1A237E; }
+    .pin-msg { min-height: 1.3em; margin: 4px 0 8px; color: #C62828; font-weight: 700; font-size: 14px; }
+    .pin-keys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 12px; }
+    .pin-keys button { min-height: 60px; border: 0; border-radius: 16px; background: #E8EAF6; color: #1A237E; font-size: 26px; font-weight: 800; cursor: pointer; }
+    .pin-keys button:active { background: #C5CAE9; }
+    .pin-keys .pin-ok { background: #43A047; color: #fff; font-size: 20px; }
+    .parent-unlocked { font-size: 14px; vertical-align: middle; font-weight: 700; color: #2E7D32; white-space: nowrap; }
+    .parent-unlocked .btn-mini { font-size: 13px; padding: 4px 10px; margin-left: 4px; }
+    .parent-unlocked[hidden] { display: none; }
+    /* v30: Cars or Photos step */
+    .mode-picker { display: flex; flex-direction: column; align-items: center; gap: clamp(10px, 2.4vmin, 22px); width: min(920px, 100%); }
+    .mode-picker[hidden] { display: none; }
+    .start-actions[hidden], .hero-cars[hidden] { display: none !important; }
+    .mode-head { display: flex; align-items: center; justify-content: center; gap: 14px; width: 100%; }
+    .mode-head h2 { margin: 0; font-size: clamp(26px, 6vmin, 52px); color: #1A237E; text-shadow: 0 2px 0 rgba(255,255,255,0.7); }
+    .mode-back { width: 66px; height: 66px; border: 0; border-radius: 50%; background: rgba(255,255,255,0.95); color: #1A237E; box-shadow: 0 3px 0 rgba(0,0,0,0.1), 0 6px 14px rgba(0,0,0,0.14); display: flex; align-items: center; justify-content: center; flex: 0 0 auto; }
+    .mode-back svg { width: 36px; height: 36px; }
+    .mode-grid { display: flex; flex-wrap: wrap; gap: clamp(12px, 3vmin, 28px); justify-content: center; }
+    .mode-tile { width: min(40vw, 300px); border: 0; border-radius: 30px; background: #fff; box-shadow: 0 8px 0 rgba(26,35,126,0.35), 0 12px 24px rgba(0,0,0,0.18); display: flex; flex-direction: column; align-items: center; gap: 8px; padding: clamp(10px, 2vmin, 18px); font-weight: 800; font-size: clamp(24px, 6vmin, 48px); color: #1A237E; cursor: pointer; }
+    .mode-tile:active { transform: translateY(5px); box-shadow: 0 3px 0 rgba(26,35,126,0.35); }
+    .mode-tile:focus { outline: 5px solid var(--focus); outline-offset: 4px; }
+    .mode-tile[disabled] { opacity: 0.45; }
+    .mode-art { width: 100%; aspect-ratio: 1 / 1; border-radius: 22px; overflow: hidden; display: flex; align-items: center; justify-content: center; background: #E3F2FD; position: relative; }
+    .mode-art > img, .mode-art .family-art { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .mode-art svg { width: 92%; height: 92%; }
+    .mode-art.is-family { background: #FFF8E1; }
+    #photos-tile .mode-art { background: #FFF8E1; }
+    /* v30: photo approval */
+    .count-badge { display: inline-flex; min-width: 1.6em; height: 1.6em; padding: 0 0.4em; border-radius: 999px; align-items: center; justify-content: center; background: #E53935; color: #fff; font-size: 0.75em; font-weight: 800; margin-left: 6px; vertical-align: middle; }
+    .count-badge[hidden] { display: none; }
+    .review-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin: 10px 0 16px; }
+    .review-tile { background: #fff; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.12); overflow: hidden; display: flex; flex-direction: column; }
+    .review-tile img { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; display: block; background: #ECEFF1; }
+    .review-cap { font-weight: 700; color: #1A237E; font-size: 0.85rem; padding: 6px 8px 2px; }
+    .review-btns { display: flex; gap: 6px; padding: 6px 8px 8px; }
+    .review-btns button { flex: 1 1 0; min-width: 0; min-height: 44px; border: 0; border-radius: 12px; font-weight: 800; font-size: 0.9rem; padding: 0 4px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: clip; }
+    @media (max-width: 420px) { .review-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; } .review-btns button { font-size: 0.8rem; } }
+    .review-yes { background: #43A047; color: #fff; }
+    .review-yes:disabled { background: #C8E6C9; color: #2E7D32; cursor: default; }
+    .review-no { background: #E53935; color: #fff; }
+    .settings-btns button[hidden] { display: none; }
+    .face-pic { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; }
+    .face-pic-svg { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; border-radius: 50%; overflow: hidden; }
+    .face-pic-svg svg { width: 120%; height: auto; }
+    .has-pic { overflow: hidden; padding: 0 !important; }
+    .pic-library { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 8px; margin: 8px 0; max-height: 300px; overflow-y: auto; }
+    .pic-library button { aspect-ratio: 1 / 1; border-radius: 50%; overflow: hidden; border: 3px solid #C5CAE9; padding: 0; background: #E8EAF6; cursor: pointer; }
+    .pic-library button[aria-pressed="true"] { border-color: #FFB300; }
+    .pic-library button img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .pic-tools { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
+    .review-meta { display: flex; justify-content: space-between; align-items: center; gap: 4px; padding: 6px 8px 0; font-weight: 800; color: #1A237E; font-size: 14px; }
+    .review-tag { font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 999px; background: #FFF3E0; color: #E65100; white-space: nowrap; }
+    .review-tag.is-parent { background: #E8F5E9; color: #2E7D32; }
+    .review-btns { display: flex; gap: 8px; padding: 8px; }
+    .review-btns button { flex: 1; min-height: 48px; border: 0; border-radius: 12px; font-size: 22px; font-weight: 800; cursor: pointer; }
+    .review-ok { background: #43A047; color: #fff; }
+    .review-no { background: #E53935; color: #fff; }
+    .review-empty { color: #546E7A; font-weight: 700; padding: 8px 0; }
+    /* v30: profile pictures from the library */
+    .has-pic { overflow: hidden; padding: 0 !important; position: relative; }
+    .has-pic > img, .has-pic > .pic-car { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; }
+    .has-pic > .pic-car { display: flex; align-items: center; justify-content: center; }
+    .has-pic > .pic-car svg, .has-pic > .pic-car img { width: 100%; height: 100%; object-fit: cover; }
+    .pic-picks { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 8px; margin: 8px 0; max-height: 330px; overflow: auto; padding: 4px; }
+    .pic-pick { width: 64px; height: 64px; border-radius: 50%; border: 3px solid transparent; padding: 0; overflow: hidden; background: #E3F2FD; display: flex; align-items: center; justify-content: center; font-size: 30px; cursor: pointer; }
+    .pic-pick[aria-pressed="true"] { border-color: #1A237E; }
+    .pic-pick img, .pic-pick svg { width: 100%; height: 100%; object-fit: cover; }
+    .pic-tools { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0; }
     .family-art {
       width: 100%;
       height: 100%;
@@ -307,6 +381,8 @@
     .photo-thumb .thumb-bin { position: absolute; top: 4px; right: 4px; width: 34px; height: 34px; border-radius: 50%; border: 0; background: rgba(183,28,28,0.92); color: #fff; font-size: 17px; line-height: 34px; padding: 0; cursor: pointer; }
     .photo-thumbs.is-picking .photo-thumb:not(.is-face) { cursor: pointer; border-color: #43A047; box-shadow: 0 0 0 3px rgba(67,160,71,0.35); }
     .photo-thumbs.is-picking .thumb-bin { display: none; }
+    .photo-thumb .thumb-swap { position: absolute; top: 4px; right: 4px; width: 34px; height: 34px; border-radius: 50%; background: #FFB300; color: #1A237E; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.25); pointer-events: none; }
+    .photo-thumb .thumb-swap svg { width: 24px; height: 24px; }
     .photo-thumb-none { display: flex; align-items: center; justify-content: center; text-align: center; font-weight: 700; color: #5C6BC0; font-size: 0.8rem; padding: 6px; }
     .photo-person small { display: block; font-weight: 600; color: #5C6BC0; font-size: 0.8rem; }
     .btn-names:focus {
@@ -1633,7 +1709,18 @@
         <div class="start-actions" id="start-actions">
           <button type="button" class="btn btn-play" id="play-btn" aria-label="Match Game">MATCH</button>
           <button type="button" class="btn btn-names" id="names-btn" aria-label="Name Game">NAME</button>
-          <button type="button" class="btn btn-photos" id="photos-btn" aria-label="Family Photo Match" hidden>PHOTOS</button>
+        </div>
+        <div class="mode-picker" id="mode-picker" hidden>
+          <div class="mode-head">
+            <button type="button" class="mode-back" id="mode-back" aria-label="Back">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+            </button>
+            <h2 id="mode-title">Match game</h2>
+          </div>
+          <div class="mode-grid">
+            <button type="button" class="mode-tile" id="cars-tile" aria-label="Cars"><span class="mode-art" id="cars-tile-art"></span><span>Cars</span></button>
+            <button type="button" class="mode-tile" id="photos-tile" aria-label="Photos"><span class="mode-art" id="photos-tile-art"></span><span>Photos</span></button>
+          </div>
         </div>
       </div>
       <div class="player-picker" id="player-picker" hidden>
@@ -1722,9 +1809,6 @@
         <span class="sync-hud-icon" id="sync-hud-icon" aria-hidden="true"></span>
         <span class="sync-hud-text" id="sync-hud-text"></span>
       </div>
-      <button type="button" class="sync-hud-refresh" id="sync-hud-refresh" aria-label="Card sync now">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M17.65 6.35A7.95 7.95 0 0 0 12 4a8 8 0 1 0 8 8h-2a6 6 0 1 1-6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
-      </button>
       </div>
     </div>
 
@@ -1736,14 +1820,23 @@
       </div>
     </div>
 
+    <div class="pin-modal" id="pin-modal" hidden role="dialog" aria-modal="true" aria-labelledby="pin-title">
+      <div class="pin-card">
+        <h3 id="pin-title">Parent PIN</h3>
+        <div class="pin-dots" id="pin-dots" aria-live="polite"></div>
+        <p class="pin-msg" id="pin-msg"></p>
+        <div class="pin-keys" id="pin-keys"></div>
+        <button type="button" class="btn-mini" id="pin-cancel">Cancel</button>
+      </div>
+    </div>
     <section id="settings-screen" class="screen" hidden aria-label="Parent Settings">
       <div class="settings-panel">
-        <h2>Parent Settings</h2>
+        <h2>Parent Settings <span class="parent-unlocked" id="parent-unlocked" hidden><span title="Unlocked">🔓 Unlocked</span> <button type="button" class="btn-mini" id="parent-lock-btn">Lock</button></span></h2>
         <div class="settings-tabs" role="tablist" aria-label="Settings sections">
           <button type="button" role="tab" id="tab-cars" aria-controls="pane-cars" aria-selected="true">Cars</button>
           <button type="button" role="tab" id="tab-difficulty" aria-controls="pane-difficulty" aria-selected="false">Match</button>
           <button type="button" role="tab" id="tab-names" aria-controls="pane-names" aria-selected="false">Names</button>
-          <button type="button" role="tab" id="tab-photos" aria-controls="pane-photos" aria-selected="false" hidden>Photos</button>
+          <button type="button" role="tab" id="tab-photos" aria-controls="pane-photos" aria-selected="false" hidden>Photos<span class="count-badge" id="tab-photos-badge" hidden>0</span></button>
           <button type="button" role="tab" id="tab-players" aria-controls="pane-players" aria-selected="false">Players</button>
           <button type="button" role="tab" id="tab-family" aria-controls="pane-family" aria-selected="false">Family</button>
         </div>
@@ -1849,14 +1942,6 @@
           <p class="settings-lead">How Name Game works on this device.</p>
           <p class="device-only-note">This device only — not synced.</p>
           <div class="diff-custom" id="name-options">
-            <div class="diff-row" id="name-pool-row" hidden>
-              <label for="name-set-pool">Who to find</label>
-              <select id="name-set-pool">
-                <option value="cars">Cars</option>
-                <option value="family">Family</option>
-                <option value="both">Both</option>
-              </select>
-            </div>
             <div class="diff-row">
               <label for="name-set-choices">Choices</label>
               <select id="name-set-choices">
@@ -1883,7 +1968,29 @@
           </div>
         </div>
         <div id="pane-photos" class="settings-pane" role="tabpanel" aria-labelledby="tab-photos" hidden>
-          <p class="settings-lead">Family photos for the PHOTOS game and for Family in the Name Game. They come from the home computer and are only kept on your home devices.</p>
+          <p class="settings-lead">Family photos for Match and Name games (choose Photos after tapping MATCH or NAME). They come from the home computer and are only kept on your home devices.</p>
+          <p class="device-only-note">Changes here ask for the parent PIN once, then stay unlocked until you leave Settings or stop for 30 seconds.</p>
+          <div id="photo-review" hidden>
+            <h3 class="friends-title">Waiting for your OK <span class="count-badge" id="photo-pending-count" hidden>0</span></h3>
+            <p class="device-only-note">New photos only go into the games after you approve them here. Reject keeps a photo out for good (it stays in Immich).</p>
+            <div class="settings-btns">
+              <button type="button" class="btn-mini primary" id="photo-approve-all">Approve all shown</button>
+              <button type="button" class="btn-mini" id="photo-review-reload">Check again</button>
+            </div>
+            <div class="review-grid" id="photo-pending"></div>
+            <h3 class="friends-title">Review photos in the game</h3>
+            <p class="device-only-note">"Bot checked" photos passed Grok Bot's safety review but haven't had your OK yet. ✓ confirms a photo; ✕ takes it out of the game on every device.</p>
+            <div class="diff-custom">
+              <div class="diff-row">
+                <label for="photo-review-filter">Show</label>
+                <select id="photo-review-filter" aria-label="Which photos to review"></select>
+              </div>
+            </div>
+            <div class="settings-btns">
+              <button type="button" class="btn-mini primary" id="photo-keep-all">✓ all shown</button>
+            </div>
+            <div class="review-grid" id="photo-live"></div>
+          </div>
           <p class="device-only-note">These settings are for this player on this device.</p>
           <div class="diff-custom">
             <div class="diff-row">
@@ -1899,13 +2006,7 @@
           <div class="photo-people" id="photo-people"></div>
           <div class="settings-btns">
             <button type="button" class="btn-mini primary" id="photo-sync-btn">Sync photos now</button>
-          </div>
-          <div class="sync-field">
-            <label for="photo-pin">Parent PIN (needed to refresh or delete photos)</label>
-            <div class="say-row">
-              <input id="photo-pin" type="password" inputmode="numeric" autocomplete="off" minlength="4" placeholder="Parent PIN" aria-label="Parent PIN">
-              <button type="button" class="btn-mini" id="photo-refresh-btn">Get new photos from Immich</button>
-            </div>
+            <button type="button" class="btn-mini" id="photo-refresh-btn">Get new photos from Immich</button>
           </div>
           <h3 class="friends-title">Photos in the game</h3>
           <p class="device-only-note">Deleting takes a photo out of the game on every device. It stays in Immich.</p>
@@ -1958,13 +2059,6 @@
             <button type="button" class="btn-mini primary" id="sync-now-btn">Card sync now</button>
             <button type="button" class="btn-mini primary" id="sync-save-btn">Save my changes to home computer</button>
             <button type="button" class="btn-mini warn" id="sync-discard-btn">Discard my changes</button>
-          </div>
-          <div class="sync-field" id="sync-pin-row" hidden>
-            <label for="sync-pin">Parent PIN</label>
-            <div class="say-row">
-              <input id="sync-pin" type="password" inputmode="numeric" autocomplete="off" minlength="4" placeholder="PIN from the home computer" aria-label="Parent PIN">
-              <button type="button" class="btn-mini primary" id="sync-pin-go">Save</button>
-            </div>
           </div>
           <div class="family-sync-status" id="family-sync-status" hidden>
             <span class="family-sync-icon" id="family-sync-icon" aria-hidden="true"></span>
@@ -2111,7 +2205,7 @@
     var BLOB_FETCH_MS = 20000;
     var bootStartedAt = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
     var keyChangeOpen = false;
-    var APP_VERSION = "29";
+    var APP_VERSION = "30";
     var MATCH_PAIR_CAP = 6;
     var NAME_ROUNDS = 6;
     var THUMB_MAX = 256;
@@ -2131,7 +2225,7 @@
     var photoUrls = {};
     var photoDbPromise = null;
     var lastFamilyFiles = {};
-    var nameState = { active: false, round: 0, target: null, choices: [], locked: false, lastTargetId: "", remaining: [], repeatTimer: null };
+    var nameState = { active: false, round: 0, target: null, choices: [], locked: false, lastTargetId: "", remaining: [], repeatTimer: null, pool: "cars", lastFiles: {} };
     var updateBannerShown = false;
     var outboxCount = 0;
     var syncNotice = "";
@@ -3801,7 +3895,7 @@
         if (tb) tb.setAttribute("aria-selected", is ? "true" : "false");
         if (pn) pn.hidden = !is;
       });
-      if (name === "photos") { renderPhotoPeople(); renderPhotoManage(); }
+      if (name === "photos") { renderPhotoPeople(); renderPhotoManage(); loadReview(); }
     }
 
     function bindSettingsTabs() {
@@ -4278,6 +4372,11 @@
         return;
       }
       if (!document.getElementById("start-screen").hidden) {
+        if (modePickerOpen()) {
+          var ct = document.getElementById("cars-tile"), pt = document.getElementById("photos-tile");
+          (document.activeElement === ct ? pt : ct).focus();
+          return;
+        }
         document.getElementById("play-btn").focus();
         return;
       }
@@ -4315,6 +4414,12 @@
         return;
       }
       if (!document.getElementById("start-screen").hidden) {
+        if (modePickerOpen()) {
+          var ae = document.activeElement;
+          if (ae && (ae.id === "cars-tile" || ae.id === "photos-tile" || ae.id === "mode-back")) ae.click();
+          else document.getElementById("cars-tile").click();
+          return;
+        }
         document.getElementById("play-btn").click();
         return;
       }
@@ -4360,6 +4465,222 @@
       }
     }
 
+    // ---- Parent unlock (v30): PIN keypad once, then unlocked until 30 s idle or leaving Settings ----
+    var PARENT_IDLE_MS = 30000;
+    var parentSession = { token: "", timer: null, busy: 0, waiters: [] };
+    var pinEntry = "";
+    function parentToken() { return parentSession.token || ""; }
+    function parentUnlocked() { return !!parentSession.token; }
+    function updateParentIndicator() {
+      var el = document.getElementById("parent-unlocked");
+      if (el) el.hidden = !parentUnlocked();
+    }
+    function touchParent() {
+      if (!parentSession.token) return;
+      if (parentSession.timer) clearTimeout(parentSession.timer);
+      parentSession.timer = setTimeout(function () {
+        if (parentSession.busy > 0) { touchParent(); return; }
+        lockParent();
+      }, PARENT_IDLE_MS);
+    }
+    function lockParent() {
+      var t = parentSession.token;
+      parentSession.token = "";
+      if (parentSession.timer) { clearTimeout(parentSession.timer); parentSession.timer = null; }
+      hidePinModal(true);
+      updateParentIndicator();
+      if (t && syncConfigured()) {
+        var h = syncHeaders();
+        h["X-Parent-Token"] = t;
+        syncFetch("/api/parent/lock", { method: "POST", headers: h }).catch(function () {});
+      }
+    }
+    function renderPinDots() {
+      var d = document.getElementById("pin-dots");
+      if (!d) return;
+      d.innerHTML = "";
+      for (var i = 0; i < pinEntry.length; i++) d.appendChild(document.createElement("span"));
+    }
+    function hidePinModal(cancelled) {
+      var m = document.getElementById("pin-modal");
+      if (m) m.hidden = true;
+      pinEntry = "";
+      renderPinDots();
+      var w = parentSession.waiters;
+      parentSession.waiters = [];
+      if (cancelled) w.forEach(function (x) { x.reject(new Error("cancelled")); });
+    }
+    function showPinModal(msg) {
+      var m = document.getElementById("pin-modal");
+      if (!m) return;
+      pinEntry = "";
+      renderPinDots();
+      document.getElementById("pin-msg").textContent = msg || "";
+      m.hidden = false;
+      var ok = m.querySelector(".pin-ok");
+      if (ok) ok.focus();
+    }
+    function submitPin() {
+      var pin = pinEntry;
+      if (pin.length < 4) { document.getElementById("pin-msg").textContent = "At least 4 numbers."; return; }
+      document.getElementById("pin-msg").textContent = "Checking…";
+      var h = syncHeaders();
+      h["X-Parent-Pin"] = pin;
+      syncFetch("/api/parent/unlock", { method: "POST", headers: h }).then(function (r) {
+        return r.json().catch(function () { return {}; }).then(function (j) {
+          if (!r.ok || !j.token) {
+            pinEntry = "";
+            renderPinDots();
+            document.getElementById("pin-msg").textContent = (j && j.message) || "That PIN was not accepted.";
+            return;
+          }
+          parentSession.token = j.token;
+          updateParentIndicator();
+          touchParent();
+          var w = parentSession.waiters;
+          parentSession.waiters = [];
+          var m = document.getElementById("pin-modal");
+          if (m) m.hidden = true;
+          pinEntry = "";
+          w.forEach(function (x) { x.resolve(j.token); });
+        });
+      }).catch(function (e) {
+        document.getElementById("pin-msg").textContent = (e && e.message) || "Can't reach the home computer.";
+      });
+    }
+    function bindPinPad() {
+      var keys = document.getElementById("pin-keys");
+      if (!keys) return;
+      ["1","2","3","4","5","6","7","8","9","⌫","0","OK"].forEach(function (k) {
+        var b = document.createElement("button");
+        b.type = "button";
+        b.textContent = k;
+        if (k === "OK") b.className = "pin-ok";
+        b.setAttribute("aria-label", k === "⌫" ? "Delete" : k);
+        b.addEventListener("click", function () {
+          if (k === "OK") return submitPin();
+          if (k === "⌫") pinEntry = pinEntry.slice(0, -1);
+          else if (pinEntry.length < 12) pinEntry += k;
+          document.getElementById("pin-msg").textContent = "";
+          renderPinDots();
+        });
+        keys.appendChild(b);
+      });
+      document.getElementById("pin-cancel").addEventListener("click", function () { hidePinModal(true); });
+      var lb = document.getElementById("parent-lock-btn");
+      if (lb) lb.addEventListener("click", function () { lockParent(); });
+      document.addEventListener("keydown", function (e) {
+        var m = document.getElementById("pin-modal");
+        if (!m || m.hidden) return;
+        if (/^[0-9]$/.test(e.key)) { if (pinEntry.length < 12) pinEntry += e.key; renderPinDots(); e.preventDefault(); e.stopPropagation(); }
+        else if (e.key === "Backspace") { pinEntry = pinEntry.slice(0, -1); renderPinDots(); e.preventDefault(); e.stopPropagation(); }
+        else if (e.key === "Enter") { submitPin(); e.preventDefault(); e.stopPropagation(); }
+        else if (e.key === "Escape") { hidePinModal(true); e.preventDefault(); e.stopPropagation(); }
+      }, true);
+      var scr = document.getElementById("settings-screen");
+      if (scr) ["pointerdown", "keydown", "input", "scroll", "touchstart"].forEach(function (ev) {
+        scr.addEventListener(ev, function () { touchParent(); }, { passive: true, capture: true });
+      });
+    }
+    // Resolves with a parent token. Only works while Settings is open (never from game screens).
+    function requireParent() {
+      if (document.getElementById("settings-screen").hidden) return Promise.reject(new Error("Open Settings first."));
+      if (!syncConfigured()) return Promise.reject(new Error("Connect to the home computer on the Family tab first."));
+      if (parentSession.token) { touchParent(); return Promise.resolve(parentSession.token); }
+      return new Promise(function (resolve, reject) {
+        parentSession.waiters.push({ resolve: resolve, reject: reject });
+        var m = document.getElementById("pin-modal");
+        if (m && m.hidden) showPinModal("");
+      });
+    }
+    // A PIN-gated call to the home computer: asks for the PIN only when locked; retries once if
+    // the home computer has forgotten the unlock.
+    function parentFetch(path, opts, ms, retried) {
+      return requireParent().then(function (tok) {
+        var o = Object.assign({}, opts || {});
+        o.headers = Object.assign({}, o.headers || syncHeaders(!!o.body));
+        o.headers["X-Parent-Token"] = tok;
+        parentSession.busy += 1;
+        return syncFetch(path, o, ms).then(function (r) {
+          parentSession.busy -= 1;
+          touchParent();
+          if (r.status === 403 && !retried) {
+            return r.clone().json().catch(function () { return {}; }).then(function (j) {
+              if (j && j.error === "pin required") {
+                parentSession.token = "";
+                updateParentIndicator();
+                return parentFetch(path, opts, ms, true);
+              }
+              return r;
+            });
+          }
+          return r;
+        }, function (e) { parentSession.busy -= 1; throw e; });
+      });
+    }
+
+    var modeGame = "match";
+    function modePickerOpen() {
+      var mp = document.getElementById("mode-picker");
+      return !!(mp && !mp.hidden);
+    }
+    // Step 2 after MATCH / NAME: Cars or Photos. Photos only when this device has family photos
+    // (home copy, home Wi-Fi); otherwise it goes straight to cars.
+    function showModePicker(game) {
+      modeGame = game === "name" ? "name" : "match";
+      if (!photosAvailable()) { startChosen(modeGame, "cars"); return; }
+      document.getElementById("mode-title").textContent = modeGame === "name" ? "Name game" : "Match game";
+      var acts = document.getElementById("start-actions");
+      var hero = document.getElementById("hero-cars");
+      if (acts) acts.hidden = true;
+      if (hero) hero.hidden = true;
+      document.getElementById("mode-picker").hidden = false;
+      updatePlayerUi();
+      var ca = document.getElementById("cars-tile-art");
+      var fav = document.querySelector("#hero-cars .is-favourite") || document.querySelector("#hero-cars .car-wrap");
+      var car = fav ? carById(fav.getAttribute("data-car-id")) : null;
+      if (!car) car = allCars()[0];
+      if (ca && car) fillArt(ca, car);
+      var pa = document.getElementById("photos-tile-art");
+      var fam = activeFamily();
+      var prof = activeProfile();
+      var who = fam.filter(function (p) { return prof && p.name.toLowerCase() === String(prof.name).toLowerCase() && p.face; })[0] ||
+        fam.filter(function (p) { return p.face; })[0];
+      if (pa) { if (who) fillFamilyArt(pa, familyItem(who, who.face, "face")); else pa.innerHTML = ""; }
+      updateHomeBtn();
+      speak("Cars or photos?");
+      var ct = document.getElementById("cars-tile");
+      if (ct) ct.focus();
+    }
+    function hideModePicker() {
+      var mp = document.getElementById("mode-picker");
+      if (mp) mp.hidden = true;
+      var acts = document.getElementById("start-actions");
+      var hero = document.getElementById("hero-cars");
+      if (acts) acts.hidden = false;
+      if (hero) hero.hidden = false;
+      updatePlayerUi();
+      updateHomeBtn();
+    }
+    function startChosen(game, kind) {
+      hideModePicker();
+      stopSpeechAndAudio();
+      unlockMedia();
+      var photos = kind === "photos" && photosAvailable();
+      if (game === "name") {
+        nameState.pool = photos ? "family" : "cars";
+        startNameGame();
+        return;
+      }
+      if (photos) {
+        startPhotoMatch(false).then(function (ok) { if (ok) speak("Let's match the family!"); });
+        return;
+      }
+      matchMode = "cars";
+      startGame(0);
+      playPhrase("letsMatch", "Let's match the cars!");
+    }
+
     function stopAllSfx() {
       [hoorayPreloads, revPreloads, fartPreloads].forEach(function (list) {
         (list || []).forEach(function (a) { try { a.pause(); a.currentTime = 0; } catch (e) {} });
@@ -4372,7 +4693,7 @@
       var btn = document.getElementById("home-btn");
       if (!btn) return;
       var start = document.getElementById("start-screen");
-      var onStart = start && !start.hidden && document.getElementById("settings-screen").hidden;
+      var onStart = start && !start.hidden && document.getElementById("settings-screen").hidden && !modePickerOpen();
       btn.hidden = !!onStart;
       document.body.classList.toggle("home-on", !onStart);
     }
@@ -4383,9 +4704,8 @@
         if (settings) settings.hidden = true;
         var rc = document.getElementById("reset-confirm");
         if (rc) rc.hidden = true;
-        var ppin = document.getElementById("photo-pin");
-        if (ppin) ppin.value = "";
         photoManage.picking = false;
+        lockParent();
         goHome();
       };
       if (settings && !settings.hidden) {
@@ -4395,6 +4715,8 @@
 
     function goHome() {
       playGen++;
+      lockParent();
+      hideModePicker();
       stopNameGame();
       stopSpeechAndAudio();
       stopAllSfx();
@@ -4461,10 +4783,6 @@
       if (c && document.activeElement !== c) c.value = nameSettings.choices;
       if (s && document.activeElement !== s) s.value = nameSettings.say;
       if (e) e.checked = nameSettings.celebration !== false;
-      var pl = document.getElementById("name-set-pool");
-      if (pl && document.activeElement !== pl) pl.value = nameSettings.pool || "cars";
-      var plRow = document.getElementById("name-pool-row");
-      if (plRow) plRow.hidden = !photosAllowedHere();
     }
 
     function bindNameGameUi() {
@@ -4472,11 +4790,10 @@
         saveNameSettings({
           choices: (document.getElementById("name-set-choices") || {}).value,
           say: (document.getElementById("name-set-say") || {}).value,
-          celebration: !!(document.getElementById("name-set-cele") || {}).checked,
-          pool: (document.getElementById("name-set-pool") || {}).value || "cars"
+          celebration: !!(document.getElementById("name-set-cele") || {}).checked
         });
       }
-      ["name-set-choices", "name-set-say", "name-set-cele", "name-set-pool"].forEach(function (id) {
+      ["name-set-choices", "name-set-say", "name-set-cele"].forEach(function (id) {
         var el = document.getElementById(id);
         if (el) el.addEventListener("change", read);
       });
@@ -4509,8 +4826,67 @@
         color: color,
         difficulty: normalizeDifficulty(raw.difficulty || difficulty),
         nameSettings: normalizeNameSettings(raw.nameSettings || nameSettings),
-        photoSettings: normalizePhotoSettings(raw.photoSettings || photoSettings)
+        photoSettings: normalizePhotoSettings(raw.photoSettings || photoSettings),
+        pic: sanitizePic(raw.pic)
       };
+    }
+    // Profile picture from the library (per device). Only a reference is kept; the picture itself
+    // comes from this device's cars or its cached family photos, else the emoji is shown.
+    function sanitizePic(raw) {
+      if (!raw || typeof raw !== "object") return null;
+      var kind = raw.kind === "car" ? "car" : (raw.kind === "photo" ? "photo" : "");
+      var ref = String(raw.ref || "").slice(0, 120);
+      if (!kind || !ref) return null;
+      var x = Math.max(0, Math.min(100, Number(raw.x) || 50));
+      var y = Math.max(0, Math.min(100, Number(raw.y) || 50));
+      var z = Math.max(1, Math.min(2.5, Number(raw.z) || 1));
+      return { kind: kind, ref: ref, x: x, y: y, z: z };
+    }
+    function picPhotoOk(file) {
+      if (!photosAvailable()) return false;
+      return familyPeople.some(function (p) { return p.photos.indexOf(file) !== -1 || p.realFace === file || p.face === file; });
+    }
+    function paintProfileFace(el, p) {
+      if (!el || !p) return;
+      el.style.background = p.color;
+      el.classList.remove("has-pic");
+      el.innerHTML = "";
+      var pic = p.pic;
+      function emoji() { el.classList.remove("has-pic"); el.innerHTML = ""; el.textContent = p.emoji; }
+      function img(src) {
+        var im = document.createElement("img");
+        im.className = "face-pic";
+        im.alt = "";
+        im.draggable = false;
+        im.style.objectPosition = pic.x + "% " + pic.y + "%";
+        if (pic.z > 1) { im.style.transform = "scale(" + pic.z + ")"; im.style.transformOrigin = pic.x + "% " + pic.y + "%"; }
+        im.addEventListener("error", emoji);
+        im.src = src;
+        el.innerHTML = "";
+        el.classList.add("has-pic");
+        el.appendChild(im);
+      }
+      if (pic && pic.kind === "car") {
+        var car = carById(pic.ref);
+        if (car) {
+          var entry = customMedia[car.id] || {};
+          var src = entry.thumbUrl || entry.imageUrl;
+          if (src) { img(src); return; }
+          var w = document.createElement("span");
+          w.className = "face-pic-svg";
+          w.style.background = car.light || "#E3F2FD";
+          w.innerHTML = defaultArt(car);
+          el.classList.add("has-pic");
+          el.appendChild(w);
+          return;
+        }
+      }
+      if (pic && pic.kind === "photo" && picPhotoOk(pic.ref)) {
+        el.textContent = p.emoji;
+        photoUrlFor(pic.ref).then(function (u) { if (u && el.isConnected !== false) img(u); });
+        return;
+      }
+      emoji();
     }
 
     function saveProfilesStore() {
@@ -4663,7 +5039,8 @@
       var list = profilesState.profiles || [];
       for (var i = 0; i < list.length; i++) {
         if (list[i].id === id) {
-          if (patch.emoji) list[i].emoji = patch.emoji;
+          if (patch.emoji) { list[i].emoji = patch.emoji; list[i].pic = null; }
+          if (patch.pic !== undefined) list[i].pic = sanitizePic(patch.pic);
           if (patch.color) list[i].color = patch.color;
           saveProfilesStore();
           renderPlayersSettings();
@@ -4703,8 +5080,7 @@
         btn.setAttribute("data-profile-id", p.id);
         var face = document.createElement("span");
         face.className = "player-tile-face";
-        face.style.background = p.color;
-        face.textContent = p.emoji;
+        paintProfileFace(face, p);
         var lab = document.createElement("span");
         lab.textContent = p.name;
         btn.appendChild(face);
@@ -4712,6 +5088,86 @@
         btn.addEventListener("click", function () { setActiveProfile(p.id, true); });
         grid.appendChild(btn);
       });
+    }
+
+    var picOpenFor = "";
+    function profilePicTools(p) {
+      var wrap = document.createElement("div");
+      var tools = document.createElement("div");
+      tools.className = "pic-tools";
+      var open = document.createElement("button");
+      open.type = "button";
+      open.className = "btn-mini";
+      open.textContent = picOpenFor === p.id ? "Close pictures" : "Picture from the game";
+      open.addEventListener("click", function () { picOpenFor = picOpenFor === p.id ? "" : p.id; renderPlayersSettings(); });
+      tools.appendChild(open);
+      if (p.pic) {
+        var nudge = function (label, aria, fn) {
+          var b = document.createElement("button");
+          b.type = "button";
+          b.className = "btn-mini";
+          b.textContent = label;
+          b.setAttribute("aria-label", aria);
+          b.addEventListener("click", function () {
+            var q = Object.assign({}, p.pic);
+            fn(q);
+            setProfileStyle(p.id, { pic: q });
+          });
+          tools.appendChild(b);
+        };
+        nudge("◀", "Move picture left", function (q) { q.x = Math.max(0, q.x - 10); });
+        nudge("▶", "Move picture right", function (q) { q.x = Math.min(100, q.x + 10); });
+        nudge("▲", "Move picture up", function (q) { q.y = Math.max(0, q.y - 10); });
+        nudge("▼", "Move picture down", function (q) { q.y = Math.min(100, q.y + 10); });
+        nudge("＋", "Zoom in", function (q) { q.z = Math.min(2.5, q.z + 0.25); });
+        nudge("－", "Zoom out", function (q) { q.z = Math.max(1, q.z - 0.25); });
+        nudge("Centre", "Centre the picture", function (q) { q.x = 50; q.y = 50; q.z = 1; });
+        var clear = document.createElement("button");
+        clear.type = "button";
+        clear.className = "btn-mini";
+        clear.textContent = "Use emoji";
+        clear.addEventListener("click", function () { setProfileStyle(p.id, { pic: null }); });
+        tools.appendChild(clear);
+      }
+      wrap.appendChild(tools);
+      if (picOpenFor !== p.id) return wrap;
+      var grid = document.createElement("div");
+      grid.className = "pic-library";
+      function add(kind, ref, label, paint) {
+        var b = document.createElement("button");
+        b.type = "button";
+        b.setAttribute("aria-label", label);
+        b.setAttribute("aria-pressed", p.pic && p.pic.kind === kind && p.pic.ref === ref ? "true" : "false");
+        paint(b);
+        b.addEventListener("click", function () { picOpenFor = ""; setProfileStyle(p.id, { pic: { kind: kind, ref: ref } }); });
+        grid.appendChild(b);
+      }
+      if (photosAvailable()) {
+        familyPeople.forEach(function (fp) {
+          var files = [];
+          if (fp.realFace) files.push(fp.realFace);
+          fp.photos.forEach(function (f) { if (files.indexOf(f) === -1) files.push(f); });
+          files.forEach(function (f) {
+            add("photo", f, "Photo of " + fp.name, function (b) {
+              var im = document.createElement("img");
+              im.alt = "";
+              im.loading = "lazy";
+              b.appendChild(im);
+              photoUrlFor(f).then(function (u) { if (u) im.src = u; });
+            });
+          });
+        });
+      }
+      allCars().forEach(function (car) {
+        add("car", car.id, car.name || "Car", function (b) {
+          var entry = customMedia[car.id] || {};
+          var src = entry.thumbUrl || entry.imageUrl;
+          if (src) { var im = document.createElement("img"); im.alt = ""; im.src = src; b.appendChild(im); }
+          else { var w = document.createElement("span"); w.className = "face-pic-svg"; w.style.background = car.light || "#E3F2FD"; w.innerHTML = defaultArt(car); b.appendChild(w); }
+        });
+      });
+      wrap.appendChild(grid);
+      return wrap;
     }
 
     function renderPlayersSettings() {
@@ -4728,8 +5184,7 @@
         top.className = "player-edit-top";
         var face = document.createElement("span");
         face.className = "player-chip-face";
-        face.style.background = p.color;
-        face.textContent = p.emoji;
+        paintProfileFace(face, p);
         var input = document.createElement("input");
         input.type = "text";
         input.className = "name-input";
@@ -4762,7 +5217,7 @@
           b.type = "button";
           b.className = "emoji-pick";
           b.textContent = em;
-          b.setAttribute("aria-pressed", em === p.emoji ? "true" : "false");
+          b.setAttribute("aria-pressed", em === p.emoji && !p.pic ? "true" : "false");
           b.addEventListener("click", function () { setProfileStyle(p.id, { emoji: em }); });
           emojis.appendChild(b);
         });
@@ -4780,6 +5235,7 @@
           colours.appendChild(b);
         });
         row.appendChild(colours);
+        row.appendChild(profilePicTools(p));
         listEl.appendChild(row);
       });
     }
@@ -4814,15 +5270,13 @@
       var name = document.getElementById("player-chip-name");
       var p = activeProfile();
       var onStart = document.getElementById("start-screen") && !document.getElementById("start-screen").hidden;
-      if (face && p) {
-        face.textContent = p.emoji;
-        face.style.background = p.color;
-      }
+      if (face && p) paintProfileFace(face, p);
       if (name && p) name.textContent = p.name;
       var showPicker = onStart && shouldShowPicker();
       if (picker) picker.hidden = !showPicker;
       if (splash) splash.hidden = !!showPicker;
-      if (chip) chip.hidden = !p || showPicker || !onStart;
+      var setOpen = document.getElementById("settings-screen") && !document.getElementById("settings-screen").hidden;
+      if (chip) chip.hidden = !p || showPicker || !onStart || modePickerOpen() || setOpen;
       if (showPicker) renderPlayerPicker();
     }
 
@@ -5069,7 +5523,7 @@
       var count = Math.min(nameChoiceCount(pool.length), pool.length);
       var targetPool = pool.slice();
       if (nameState.lastTargetId && targetPool.length > 1) {
-        targetPool = targetPool.filter(function (c) { return c.id !== nameState.lastTargetId; });
+        targetPool = targetPool.filter(function (c) { return (c.person || c.id) !== nameState.lastTargetId; });
         if (!targetPool.length) targetPool = pool.slice();
       }
       var target = shuffle(targetPool)[0];
@@ -5085,7 +5539,8 @@
       nameState.choices = round.choices;
       nameState.remaining = round.choices.slice();
       nameState.target = round.target;
-      nameState.lastTargetId = round.target.id;
+      nameState.lastTargetId = round.target.person || round.target.id;
+      (round.choices || []).forEach(function (c) { if (c.family && c.person) nameState.lastFiles[c.person] = c.file; });
       nameState.sayPick = chooseNameSayOption(round.target);
       nameState.locked = false;
       round.choices.forEach(function (car, index) {
@@ -5828,8 +6283,10 @@
       updateNameGameUi();
       renderPlayersSettings();
       updateSyncUi();
+      loadReview();
       var screen = document.getElementById("settings-screen");
       screen.hidden = false;
+      updatePlayerUi();
       screen.scrollTop = 0;
       var heading = screen.querySelector("h2");
       if (heading) {
@@ -5841,9 +6298,8 @@
 
 
     function closeSettings() {
+      lockParent();
       stopRecording().then(function () {
-        var ppin = document.getElementById("photo-pin");
-        if (ppin) ppin.value = "";
         photoManage.picking = false;
         document.getElementById("settings-screen").hidden = true;
         document.getElementById("reset-confirm").hidden = true;
@@ -6083,25 +6539,27 @@
 
     document.getElementById("play-btn").addEventListener("click", function () {
       unlockMedia();
-      matchMode = "cars";
-      startGame(0);
-      playPhrase("letsMatch", "Let's match the cars!");
+      showModePicker("match");
     });
     document.getElementById("names-btn").addEventListener("click", function () {
       unlockMedia();
-      startNameGame();
+      showModePicker("name");
     });
-    document.getElementById("photos-btn").addEventListener("click", function () {
-      unlockMedia();
-      startPhotoMatch(false).then(function (ok) { if (ok) speak("Let's match the family!"); });
+    document.getElementById("cars-tile").addEventListener("click", function () { startChosen(modeGame, "cars"); });
+    document.getElementById("photos-tile").addEventListener("click", function () { startChosen(modeGame, "photos"); });
+    document.getElementById("mode-back").addEventListener("click", function () {
+      hideModePicker();
+      var pb = document.getElementById("play-btn");
+      if (pb) pb.focus();
     });
     bindPhotoUi();
+    bindPinPad();
     document.getElementById("next-btn").addEventListener("click", onNext);
     document.getElementById("match-home-btn").addEventListener("click", function () { goHome(); });
     document.getElementById("name-home-btn").addEventListener("click", function () { goHome(); });
     document.getElementById("home-btn").addEventListener("click", function () { goHomeFromAnywhere(); });
     (function () {
-      var ids = ["start-screen", "game-screen", "name-screen", "settings-screen", "win-overlay", "name-win-overlay"];
+      var ids = ["start-screen", "game-screen", "name-screen", "settings-screen", "win-overlay", "name-win-overlay", "mode-picker"];
       if (typeof MutationObserver === "undefined") return;
       var mo = new MutationObserver(function () { updateHomeBtn(); });
       ids.forEach(function (id) { var el = document.getElementById(id); if (el) mo.observe(el, { attributes: true, attributeFilter: ["hidden"] }); });
@@ -6289,7 +6747,8 @@
       familyPeople = [];
       ((manifest && manifest.people) || []).forEach(function (p) {
         if (!p || !p.id) return;
-        var person = { id: String(p.id), name: String(p.name || p.id), say: String(p.say || p.name || p.id), face: "", realFace: "", photos: [], looks: (p.looks && typeof p.looks === "object") ? p.looks : {} };
+        var person = { id: String(p.id), name: String(p.name || p.id), say: String(p.say || p.name || p.id), face: "", realFace: "", photos: [], solo: [], looks: (p.looks && typeof p.looks === "object") ? p.looks : {} };
+        (Array.isArray(p.solo) ? p.solo : []).forEach(function (f) { if (have[f]) person.solo.push(f); });
         if (p.face && have[p.face]) { person.face = p.face; person.realFace = p.face; }
         (p.photos || []).forEach(function (f) { if (have[f]) person.photos.push(f); });
         if (!person.face && person.photos.length) person.face = person.photos[0];
@@ -6429,20 +6888,48 @@
       });
     }
 
+    function nameFamilyMode() {
+      return nameState.pool === "family" && photosAvailable();
+    }
+    // Photo Name Game: one tile per person. Each person shows their face card or a photo where
+    // they're the only face, never a look that's already on the board (no near-identical tiles).
+    function nameFileFor(p, boardLooks) {
+      var opts = [];
+      if (p.face) opts.push({ file: p.face, kind: "face" });
+      (p.solo || []).forEach(function (f) { if (p.photos.indexOf(f) !== -1 && f !== p.face) opts.push({ file: f, kind: "photo" }); });
+      var ok = opts.filter(function (o) { return o.kind === "face" || !boardLooks[lookOf(p, o.file)]; });
+      if (!ok.length) ok = opts.slice(0, 1);
+      if (!ok.length) return null;
+      var fresh = ok.filter(function (o) { return o.file !== nameState.lastFiles[p.id]; });
+      var pick = shuffle((fresh.length ? fresh : ok).slice())[0];
+      return pick;
+    }
+    function familyNamePool() {
+      var boardLooks = {};
+      var out = [];
+      shuffle(activeFamily().slice()).forEach(function (p) {
+        var o = nameFileFor(p, boardLooks);
+        if (!o) return;
+        if (o.kind === "photo") boardLooks[lookOf(p, o.file)] = true;
+        out.push(familyItem(p, o.file, o.kind));
+      });
+      return out;
+    }
     function nameGamePool() {
-      var pool = nameSettings.pool || "cars";
-      var fam = [];
-      if (pool !== "cars" && photosAllowedHere()) {
-        fam = activeFamily().filter(function (p) { return p.face; }).map(function (p) { return familyItem(p, p.face, "face"); });
+      if (nameFamilyMode()) {
+        var fam = familyNamePool();
+        if (fam.length >= 2) return fam;
       }
-      if (pool === "family" && fam.length >= 2) return fam;
-      if (pool === "both" && fam.length) return allCars().concat(fam);
       return allCars().slice();
     }
 
     function preWarmNameFaces() {
-      if ((nameSettings.pool || "cars") === "cars") return Promise.resolve();
-      var files = activeFamily().map(function (p) { return p.face; });
+      if (!nameFamilyMode()) return Promise.resolve();
+      var files = [];
+      activeFamily().forEach(function (p) {
+        if (p.face) files.push(p.face);
+        (p.solo || []).forEach(function (f) { if (p.photos.indexOf(f) !== -1) files.push(f); });
+      });
       return warmPhotoUrls(files, true);
     }
 
@@ -6466,18 +6953,16 @@
       var allowed = photosAllowedHere();
       var tab = document.getElementById("tab-photos");
       if (tab) tab.hidden = !allowed;
-      var btn = document.getElementById("photos-btn");
-      var show = photosAvailable();
-      if (btn) btn.hidden = !show;
-      var acts = document.getElementById("start-actions");
-      if (acts) acts.classList.toggle("has-three", !!show);
+      var rv = document.getElementById("photo-review");
+      if (rv) rv.hidden = !(allowed && syncConfigured());
       var st = document.getElementById("photo-style");
       if (st && document.activeElement !== st) st.value = photoSettings.style;
-      var plRow = document.getElementById("name-pool-row");
-      if (plRow) plRow.hidden = !allowed;
       setPhotoStatus(photoStatusText());
       var pane = document.getElementById("pane-photos");
       if (pane && !pane.hidden) { renderPhotoPeople(); renderPhotoManage(); }
+      var chipFace = document.getElementById("player-chip-face");
+      var ap = activeProfile();
+      if (chipFace && ap && ap.pic && ap.pic.kind === "photo") paintProfileFace(chipFace, ap);
     }
 
     function renderPhotoPeople() {
@@ -6604,15 +7089,9 @@
     }
 
     function refreshPhotosOnServer() {
-      var pinEl = document.getElementById("photo-pin");
-      var pin = pinEl ? String(pinEl.value || "").trim() : "";
       if (!syncConfigured()) { setPhotoStatus("Connect to the home computer on the Family tab first."); return; }
-      if (!pin) { setPhotoStatus("Type the parent PIN first."); if (pinEl) pinEl.focus(); return; }
       setPhotoStatus("Asking the home computer for new photos…");
-      var h = syncHeaders();
-      h["X-Parent-Pin"] = pin;
-      syncFetch("/api/photos/refresh", { method: "POST", headers: h }).then(function (r) {
-        if (pinEl) pinEl.value = "";
+      parentFetch("/api/photos/refresh", { method: "POST", headers: syncHeaders() }).then(function (r) {
         return r.json().catch(function () { return {}; }).then(function (j) {
           if (!r.ok) throw new Error((j && j.message) || "The home computer said no.");
           var tries = 0;
@@ -6643,6 +7122,177 @@
       if (rb) rb.addEventListener("click", refreshPhotosOnServer);
       var mg = document.getElementById("photo-manage");
       if (mg) mg.addEventListener("change", function () { photoManage.person = mg.value; photoManage.picking = false; hidePhotoConfirm(); renderPhotoManage(); });
+      var aa = document.getElementById("photo-approve-all");
+      if (aa) aa.addEventListener("click", function () {
+        var ids = reviewState.pending.map(function (x) { return x.asset; });
+        if (ids.length) reviewAct("approve", ids, ids.length + " photo" + (ids.length === 1 ? "" : "s") + " approved.");
+      });
+      var rr = document.getElementById("photo-review-reload");
+      if (rr) rr.addEventListener("click", function () { loadReview(); });
+      var ka = document.getElementById("photo-keep-all");
+      if (ka) ka.addEventListener("click", function () {
+        var ids = reviewLiveShown().filter(function (x) { return x.by !== "parent"; }).map(function (x) { return x.asset; });
+        if (ids.length) reviewAct("keep", ids, ids.length + " photo" + (ids.length === 1 ? "" : "s") + " confirmed.");
+      });
+      var rf = document.getElementById("photo-review-filter");
+      if (rf) rf.addEventListener("change", function () { reviewState.filter = rf.value; renderReview(); });
+    }
+
+    // ---- Photo review (v30): nothing new plays until a parent approves it ----
+    var reviewState = { pending: [], live: [], filter: "bot", urls: {}, busy: false, seq: 0 };
+    function setReviewBadges(n) {
+      ["photo-pending-count", "tab-photos-badge"].forEach(function (id) {
+        var b = document.getElementById(id);
+        if (!b) return;
+        b.textContent = String(n);
+        b.hidden = !n;
+      });
+    }
+    function loadReview() {
+      if (!photosAllowedHere() || !syncConfigured()) { setReviewBadges(0); return Promise.resolve(); }
+      var seq = ++reviewState.seq;
+      return syncFetch("/api/photos/review", { headers: syncHeaders() }).then(function (r) {
+        if (!r.ok) throw new Error("no review");
+        return r.json();
+      }).then(function (j) {
+        if (seq !== reviewState.seq) return;
+        reviewState.pending = j.pending || [];
+        reviewState.live = j.live || [];
+        setReviewBadges(reviewState.pending.length);
+        renderReview();
+      }).catch(function () {});
+    }
+    function reviewLiveShown() {
+      var f = reviewState.filter || "bot";
+      return reviewState.live.filter(function (x) {
+        if (f === "bot") return x.by !== "parent";
+        if (f === "all") return true;
+        return x.personId === f;
+      });
+    }
+    function pendingUrl(file) {
+      if (reviewState.urls[file]) return Promise.resolve(reviewState.urls[file]);
+      return syncFetch("/api/photos/pimg/" + encodeURIComponent(file), { headers: syncHeaders() }, BLOB_FETCH_MS).then(function (r) {
+        if (!r.ok) return "";
+        return r.blob().then(function (b) { reviewState.urls[file] = URL.createObjectURL(b); return reviewState.urls[file]; });
+      }).catch(function () { return ""; });
+    }
+    function liveUrl(file) {
+      return photoUrlFor(file).then(function (u) {
+        if (u) return u;
+        if (reviewState.urls["live:" + file]) return reviewState.urls["live:" + file];
+        return syncFetch("/api/photos/img/" + encodeURIComponent(file), { headers: syncHeaders() }, BLOB_FETCH_MS).then(function (r) {
+          if (!r.ok) return "";
+          return r.blob().then(function (b) { reviewState.urls["live:" + file] = URL.createObjectURL(b); return reviewState.urls["live:" + file]; });
+        }).catch(function () { return ""; });
+      });
+    }
+    // Load thumbnails four at a time so the grid stays quick on an iPhone.
+    function loadThumbs(jobs) {
+      var i = 0;
+      function next() {
+        if (i >= jobs.length) return Promise.resolve();
+        var j = jobs[i++];
+        return j.get(j.file).then(function (u) { if (u) j.img.src = u; }).then(next);
+      }
+      for (var k = 0; k < 4; k++) next();
+    }
+    function reviewTile(x, isPending, jobs) {
+      var t = document.createElement("div");
+      t.className = "review-tile";
+      var img = document.createElement("img");
+      img.alt = "Photo of " + x.person;
+      t.appendChild(img);
+      jobs.push({ file: x.file, img: img, get: isPending ? pendingUrl : liveUrl });
+      var cap = document.createElement("div");
+      cap.className = "review-cap";
+      cap.textContent = x.person + (isPending ? "" : (x.by === "parent" ? " · your OK" : " · bot checked"));
+      t.appendChild(cap);
+      var row = document.createElement("div");
+      row.className = "review-btns";
+      var yes = document.createElement("button");
+      yes.type = "button";
+      yes.className = "review-yes";
+      yes.textContent = isPending ? "✓ Yes" : "✓";
+      yes.setAttribute("aria-label", "Approve this photo of " + x.person);
+      if (!isPending && x.by === "parent") yes.disabled = true;
+      yes.addEventListener("click", function () {
+        reviewAct(isPending ? "approve" : "keep", [x.asset], isPending ? "Approved." : "Confirmed.");
+      });
+      var no = document.createElement("button");
+      no.type = "button";
+      no.className = "review-no";
+      no.textContent = isPending ? "✕ No" : "✕";
+      no.setAttribute("aria-label", "Reject this photo of " + x.person);
+      no.addEventListener("click", function () {
+        if (isPending) { reviewAct("reject", [x.asset], "Rejected. It stays in Immich."); return; }
+        requireParent().then(function () {
+          return photoEdit("delete", { file: x.file }, "Photo taken out of the game on every device. It stays in Immich.");
+        }).then(function () { loadReview(); }).catch(function () {});
+      });
+      row.appendChild(yes);
+      row.appendChild(no);
+      t.appendChild(row);
+      return t;
+    }
+    function renderReview() {
+      var pend = document.getElementById("photo-pending");
+      var live = document.getElementById("photo-live");
+      if (!pend || !live) return;
+      var jobs = [];
+      pend.innerHTML = "";
+      if (!reviewState.pending.length) {
+        var none = document.createElement("p");
+        none.className = "device-only-note";
+        none.textContent = "Nothing waiting.";
+        pend.appendChild(none);
+      }
+      reviewState.pending.forEach(function (x) { pend.appendChild(reviewTile(x, true, jobs)); });
+      var aa = document.getElementById("photo-approve-all");
+      if (aa) aa.hidden = !reviewState.pending.length;
+      var sel = document.getElementById("photo-review-filter");
+      if (sel) {
+        var bot = reviewState.live.filter(function (x) { return x.by !== "parent"; }).length;
+        var opts = [{ v: "bot", t: "Bot checked (" + bot + ")" }, { v: "all", t: "All photos (" + reviewState.live.length + ")" }];
+        var seen = {};
+        reviewState.live.forEach(function (x) { if (!seen[x.personId]) { seen[x.personId] = 1; opts.push({ v: x.personId, t: x.person }); } });
+        sel.innerHTML = "";
+        opts.forEach(function (o) { var op = document.createElement("option"); op.value = o.v; op.textContent = o.t; sel.appendChild(op); });
+        if (!opts.some(function (o) { return o.v === reviewState.filter; })) reviewState.filter = "bot";
+        sel.value = reviewState.filter;
+      }
+      live.innerHTML = "";
+      var shown = reviewLiveShown();
+      if (!shown.length) {
+        var n2 = document.createElement("p");
+        n2.className = "device-only-note";
+        n2.textContent = reviewState.filter === "bot" ? "All photos have your OK." : "No photos.";
+        live.appendChild(n2);
+      }
+      shown.forEach(function (x) { live.appendChild(reviewTile(x, false, jobs)); });
+      var ka = document.getElementById("photo-keep-all");
+      if (ka) ka.hidden = !shown.some(function (x) { return x.by !== "parent"; });
+      loadThumbs(jobs);
+    }
+    function reviewAct(kind, assets, doneText) {
+      if (reviewState.busy) return Promise.resolve(false);
+      reviewState.busy = true;
+      setPhotoStatus("Saving on the home computer…");
+      return parentFetch("/api/photos/" + kind, { method: "POST", headers: syncHeaders(true), body: JSON.stringify({ assets: assets }) }, BLOB_FETCH_MS * 3).then(function (r) {
+        return r.json().catch(function () { return {}; }).then(function (j) {
+          if (!r.ok) throw new Error((j && j.message) || "The home computer said no.");
+          return kind === "keep" ? null : pullPhotos(true);
+        });
+      }).then(function () {
+        reviewState.busy = false;
+        photoSync.note = doneText || "";
+        updatePhotoUi();
+        return loadReview();
+      }).catch(function (e) {
+        reviewState.busy = false;
+        if (!(e && e.message === "cancelled")) { photoSync.error = (e && e.message) || "Could not save."; }
+        updatePhotoUi();
+      });
     }
 
     var photoManage = { person: "", picking: false, busy: false };
@@ -6671,26 +7321,12 @@
       try { box.scrollIntoView({ block: "nearest" }); } catch (e) {}
     }
 
-    function photoPin() {
-      var el = document.getElementById("photo-pin");
-      return el ? String(el.value || "").trim() : "";
-    }
-
     function photoEdit(kind, body, doneText) {
       if (!syncConfigured()) { setPhotoStatus("Connect to the home computer on the Family tab first."); return Promise.resolve(false); }
-      var pin = photoPin();
-      if (!pin) {
-        setPhotoStatus("Type the parent PIN first, then tap the bin again.");
-        var pe = document.getElementById("photo-pin");
-        if (pe) pe.focus();
-        return Promise.resolve(false);
-      }
       if (photoManage.busy) return Promise.resolve(false);
       photoManage.busy = true;
       setPhotoStatus("Saving on the home computer…");
-      var h = syncHeaders(true);
-      h["X-Parent-Pin"] = pin;
-      return syncFetch("/api/photos/" + kind, { method: "POST", headers: h, body: JSON.stringify(body) }, BLOB_FETCH_MS * 3).then(function (r) {
+      return parentFetch("/api/photos/" + kind, { method: "POST", headers: syncHeaders(true), body: JSON.stringify(body) }, BLOB_FETCH_MS * 3).then(function (r) {
         return r.json().catch(function () { return {}; }).then(function (j) {
           if (!r.ok) throw new Error((j && j.message) || "The home computer said no.");
           return pullPhotos(true);
@@ -6702,12 +7338,29 @@
         return true;
       }).catch(function (e) {
         photoManage.busy = false;
+        if (e && e.message === "cancelled") { setPhotoStatus(""); updatePhotoUi(); return false; }
         photoSync.error = (e && e.message) || "Could not change the photos.";
         updatePhotoUi();
         return false;
       });
     }
 
+    function swapBadge() {
+      var b = document.createElement("span");
+      b.className = "thumb-swap";
+      b.setAttribute("aria-hidden", "true");
+      // two curved arrows chasing each other (own drawing)
+      b.innerHTML = '<svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" d="M5.2 13.5A7 7 0 0 1 17 6.4"/><path fill="currentColor" d="M19.6 3.6l.4 6.2-6-1.6z"/><path fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" d="M18.8 10.5A7 7 0 0 1 7 17.6"/><path fill="currentColor" d="M4.4 20.4L4 14.2l6 1.6z"/></svg>';
+      return b;
+    }
+    function startFacePick(person) {
+      if (!person.photos.length) { setPhotoStatus(person.name + " has no photos to make a face card from."); return; }
+      photoManage.picking = true;
+      renderPhotoManage();
+      showPhotoConfirm("Tap one of " + person.name + "'s photos below to use as the face card.", [
+        { label: "Cancel", run: function () { photoManage.picking = false; renderPhotoManage(); } }
+      ]);
+    }
     function renderPhotoManage() {
       var sel = document.getElementById("photo-manage");
       var hold = document.getElementById("photo-thumbs");
@@ -6743,31 +7396,35 @@
           tag.textContent = "Face card";
           t.appendChild(tag);
         }
-        var bin = document.createElement("button");
-        bin.type = "button";
-        bin.className = "thumb-bin";
-        bin.textContent = "🗑";
-        bin.setAttribute("aria-label", isFace ? "Change or remove " + person.name + "'s face card" : "Delete this photo of " + person.name);
-        bin.addEventListener("click", function (ev) {
-          ev.stopPropagation();
-          if (isFace) {
-            showPhotoConfirm("Change " + person.name + "'s face card? It stays in Immich.", [
-              { label: "Pick a new face", primary: true, run: function () { photoManage.picking = true; setPhotoStatus("Tap one of " + person.name + "'s photos to use for the face card."); renderPhotoManage(); } },
-              { label: "No face card", warn: true, run: function () { photoEdit("face", { person: person.id, use: "none" }, person.name + " has no face card now."); } },
-              { label: "Cancel" }
-            ]);
-          } else {
+        if (isFace) {
+          // Tap the face card (or its swap badge) to choose a substitute from this person's photos.
+          t.appendChild(swapBadge());
+          t.setAttribute("role", "button");
+          t.setAttribute("tabindex", "0");
+          t.setAttribute("aria-label", "Swap " + person.name + "'s face card");
+          t.style.cursor = "pointer";
+          t.addEventListener("click", function () { startFacePick(person); });
+          t.addEventListener("keydown", function (ev) { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); startFacePick(person); } });
+        } else {
+          var bin = document.createElement("button");
+          bin.type = "button";
+          bin.className = "thumb-bin";
+          bin.textContent = "🗑";
+          bin.setAttribute("aria-label", "Delete this photo of " + person.name);
+          bin.addEventListener("click", function (ev) {
+            ev.stopPropagation();
             showPhotoConfirm("Delete this photo of " + person.name + " from the game on every device? It stays in Immich.", [
               { label: "Yes, delete", warn: true, run: function () { photoEdit("delete", { file: file }, "Photo deleted from the game."); } },
               { label: "Cancel" }
             ]);
-          }
-        });
-        t.appendChild(bin);
+          });
+          t.appendChild(bin);
+        }
         if (!isFace) {
           t.addEventListener("click", function () {
             if (!photoManage.picking) return;
             photoManage.picking = false;
+            hidePhotoConfirm();
             photoEdit("face", { person: person.id, use: file }, person.name + "'s face card was changed.");
           });
         }
@@ -6778,14 +7435,12 @@
         var none = document.createElement("div");
         none.className = "photo-thumb photo-thumb-none is-face";
         none.textContent = "No face card";
-        var pick = document.createElement("button");
-        pick.type = "button";
-        pick.className = "thumb-bin";
-        pick.style.background = "#43A047";
-        pick.textContent = "+";
-        pick.setAttribute("aria-label", "Pick a face card for " + person.name);
-        pick.addEventListener("click", function () { photoManage.picking = true; setPhotoStatus("Tap one of " + person.name + "'s photos to use for the face card."); renderPhotoManage(); });
-        none.appendChild(pick);
+        none.appendChild(swapBadge());
+        none.setAttribute("role", "button");
+        none.setAttribute("tabindex", "0");
+        none.setAttribute("aria-label", "Pick a face card for " + person.name);
+        none.style.cursor = "pointer";
+        none.addEventListener("click", function () { startFacePick(person); });
         hold.appendChild(none);
       }
       person.photos.forEach(function (f) { tile(f, false); });
@@ -7318,7 +7973,8 @@
     function syncHeaders(isJson, withPin) {
       var h = { Authorization: "Bearer " + syncFamilyKey };
       if (isJson) h["Content-Type"] = "application/json";
-      if (withPin && parentPinOnce) h["X-Parent-Pin"] = parentPinOnce;
+      if (parentSession && parentSession.token) h["X-Parent-Token"] = parentSession.token;
+      else if (withPin && parentPinOnce) h["X-Parent-Pin"] = parentPinOnce;
       return h;
     }
 
@@ -7458,7 +8114,8 @@
             "Content-Type": blob.type || "application/octet-stream",
             "X-Updated-At": String(tsFix)
           };
-          if (parentPinOnce) h["X-Parent-Pin"] = parentPinOnce;
+          if (parentSession.token) h["X-Parent-Token"] = parentSession.token;
+          else if (parentPinOnce) h["X-Parent-Pin"] = parentPinOnce;
           return h;
         })(),
         body: blob
@@ -7753,12 +8410,13 @@
         updateSyncUi();
         return Promise.resolve(false);
       }
-      if (!pin) {
+      if (!pin && !parentSession.token) {
         lastSyncError = "Enter the parent PIN to save changes to the home computer.";
         updateSyncUi();
         return Promise.resolve(false);
       }
-      parentPinOnce = pin;
+      parentPinOnce = parentSession.token ? "" : pin;
+      parentSession.busy += 1;
       pulling = true;
       updateSyncUi();
       return outboxAll().then(function (items) {
@@ -7766,6 +8424,7 @@
         var jobs = compactOutbox(items).filter(function (job) { return job.cardId !== SETTINGS_ID && job.type !== "settings"; });
         if (!jobs.length) {
           parentPinOnce = "";
+          parentSession.busy = Math.max(0, parentSession.busy - 1);
           pulling = false;
           lastSyncAt = Date.now();
           lastSyncOk = true;
@@ -7793,6 +8452,7 @@
           });
         });
         return chain.then(function () {
+          parentSession.busy = Math.max(0, parentSession.busy - 1);
           return outboxClearIds(doneQids);
         }).then(function () {
           return saveServerSeen();
@@ -7815,6 +8475,7 @@
         });
       }).catch(function (e) {
         parentPinOnce = "";
+        parentSession.busy = Math.max(0, parentSession.busy - 1);
         pulling = false;
         var msg = e.message || "Could not save to the home computer.";
         lastSyncError = msg;
@@ -8014,9 +8675,6 @@
       var nowBtn = document.getElementById("sync-now-btn");
       var saveBtn = document.getElementById("sync-save-btn");
       var discardBtn = document.getElementById("sync-discard-btn");
-      var pinRow = document.getElementById("sync-pin-row");
-      var pinInput = document.getElementById("sync-pin");
-      var pinGo = document.getElementById("sync-pin-go");
       var copyBtn = document.getElementById("sync-url-copy");
       var testBtn = document.getElementById("sync-url-test");
       function commit() {
@@ -8053,16 +8711,7 @@
       if (nowBtn) nowBtn.addEventListener("click", function () { commit(); pullFromServer(); });
       if (saveBtn) saveBtn.addEventListener("click", function () {
         commit();
-        if (pinRow) pinRow.hidden = false;
-        if (pinInput) pinInput.focus();
-      });
-      if (pinGo) pinGo.addEventListener("click", function () {
-        commit();
-        var pin = pinInput ? pinInput.value : "";
-        pushWithPin(pin).then(function (ok) {
-          if (ok && pinInput) pinInput.value = "";
-          if (ok && pinRow) pinRow.hidden = true;
-        });
+        requireParent().then(function () { return pushWithPin(""); }).catch(function () {});
       });
       if (discardBtn) discardBtn.addEventListener("click", function () {
         if (!window.confirm("Throw away unsaved changes on this phone and use the home computer copy?")) return;
@@ -8178,10 +8827,6 @@
       if (laterBtn) laterBtn.addEventListener("click", function () {
         try { sessionStorage.setItem("theo-dismissed-version", APP_VERSION + "->" + (window.__theoServerVersion || "newer")); } catch (e) {}
         hideUpdateBanner();
-      });
-      var hudRefresh = document.getElementById("sync-hud-refresh");
-      if (hudRefresh) hudRefresh.addEventListener("click", function () {
-        if (syncConfigured()) pullFromServer();
       });
     }
 
@@ -8316,6 +8961,10 @@
       pairSteps: pairSteps,
       startNameGame: startNameGame,
       goHome: goHome,
+      parentUnlocked: parentUnlocked,
+      requireParent: requireParent,
+      lockParent: lockParent,
+      loadReview: loadReview,
       goHomeFromAnywhere: goHomeFromAnywhere,
       getNameState: function () { return { active: nameState.active, round: nameState.round, target: nameState.target && nameState.target.id, remaining: (nameState.remaining || []).map(function (c) { return c.id; }), locked: nameState.locked, lastTargetId: nameState.lastTargetId, promptCount: nameState.promptCount || 0, repeatTimer: nameState.repeatTimer, sayPick: nameState.sayPick ? { mode: nameState.sayPick.mode, text: nameState.sayPick.text } : null }; },
       getNameSettings: function () { return JSON.parse(JSON.stringify(nameSettings)); },

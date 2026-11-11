@@ -153,7 +153,7 @@ function setCors(req, res) {
   if (origin) {
     res.setHeader("Access-Control-Allow-Origin", origin);
     addVary(res, "Origin");
-    res.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type, X-Family-Key, X-Parent-Pin, X-Updated-At, If-None-Match");
+    res.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type, X-Family-Key, X-Parent-Pin, X-Parent-Token, X-Updated-At, If-None-Match");
     res.setHeader("Access-Control-Allow-Methods", "GET, PUT, POST, DELETE, OPTIONS");
     res.setHeader("Access-Control-Expose-Headers", "ETag");
     res.setHeader("Access-Control-Max-Age", "86400");
@@ -545,6 +545,22 @@ function handleApi(req, res, url) {
 
   if (parts[1] === "photos") return handlePhotos(req, res, parts);
 
+  // Parent unlock: one PIN check gives a short-lived token for PIN-gated calls. The game drops it
+  // after 30 s idle or on leaving Settings; here it also expires after 2 minutes unused (max 30).
+  if (req.method === "POST" && parts.length === 3 && parts[1] === "parent" && parts[2] === "unlock") {
+    var g = requireParentPin(req, res, true);
+    if (g !== true) return g;
+    var tok = crypto.randomBytes(32).toString("hex");
+    pruneParentSessions();
+    parentSessions[tok] = { until: Date.now() + PARENT_IDLE_MS, max: Date.now() + PARENT_MAX_MS };
+    return sendJson(res, 200, { ok: true, token: tok, idleMs: PARENT_IDLE_MS });
+  }
+  if (req.method === "POST" && parts.length === 3 && parts[1] === "parent" && parts[2] === "lock") {
+    var t = String(req.headers["x-parent-token"] || "").trim();
+    if (t) delete parentSessions[t];
+    return sendJson(res, 200, { ok: true });
+  }
+
   if (req.method === "GET" && parts.length === 2 && parts[1] === "pin") {
     return sendJson(res, 200, { ok: true, set: pinStore.hasPin() });
   }
@@ -707,6 +723,34 @@ function handlePhotos(req, res, parts) {
       sendJson(res, code, { ok: false, error: "photo edit failed", message: (e && e.message) || "Could not change the photos." });
     });
   }
+  if (req.method === "GET" && parts.length === 3 && parts[2] === "review") {
+    return sendJson(res, 200, photoStore.review());
+  }
+  if (req.method === "POST" && parts.length === 3 && (parts[2] === "approve" || parts[2] === "reject" || parts[2] === "keep")) {
+    var gate3 = requireParentPin(req, res);
+    if (gate3 !== true) return gate3;
+    return readRequest(req, 65536).then(function (buf) {
+      var body = {};
+      try { body = JSON.parse(buf.toString("utf8") || "{}"); } catch (e) { return sendJson(res, 400, { ok: false, error: "bad json" }); }
+      var assets = Array.isArray(body.assets) ? body.assets.map(String).slice(0, 500) : [];
+      var job = parts[2] === "approve" ? photoStore.approvePending(assets) : (parts[2] === "reject" ? photoStore.rejectPending(assets) : photoStore.keepLive(assets));
+      return job.then(function (out) { sendJson(res, 200, out); });
+    }).catch(function (e) {
+      var code = e && (e.code === 400 || e.code === 404 || e.code === 409 || e.code === 413) ? e.code : 500;
+      sendJson(res, code, { ok: false, error: "photo review failed", message: (e && e.message) || "Could not save." });
+    });
+  }
+  if (req.method === "GET" && parts.length === 4 && parts[2] === "pimg") {
+    var pfile = photoStore.pendingPath(parts[3]);
+    if (!pfile) return send(res, 404, "text/plain; charset=utf-8", "No photo");
+    var pst = fs.statSync(pfile);
+    res.statusCode = 200;
+    res.setHeader("Content-Type", "image/jpeg");
+    res.setHeader("Content-Length", pst.size);
+    res.setHeader("Cache-Control", "private, no-store");
+    fs.createReadStream(pfile).pipe(res);
+    return;
+  }
   if (req.method === "GET" && parts.length === 4 && parts[2] === "img") {
     var file = photoStore.filePath(parts[3]);
     if (!file) return send(res, 404, "text/plain; charset=utf-8", "No photo");
@@ -734,7 +778,26 @@ function parentPinFrom(req) {
   return String(req.headers["x-parent-pin"] || "").trim();
 }
 
-function requireParentPin(req, res) {
+var PARENT_IDLE_MS = 2 * 60 * 1000;
+var PARENT_MAX_MS = 30 * 60 * 1000;
+var parentSessions = {};
+function pruneParentSessions() {
+  var now = Date.now();
+  Object.keys(parentSessions).forEach(function (k) { var s = parentSessions[k]; if (s.until <= now || s.max <= now) delete parentSessions[k]; });
+}
+function parentTokenOk(req) {
+  var t = String(req.headers["x-parent-token"] || "").trim();
+  if (!t || !/^[a-f0-9]{64}$/.test(t)) return false;
+  var s = parentSessions[t];
+  var now = Date.now();
+  if (!s) return false;
+  if (s.until <= now || s.max <= now) { delete parentSessions[t]; return false; }
+  s.until = Math.min(s.max, now + PARENT_IDLE_MS);
+  return true;
+}
+
+function requireParentPin(req, res, pinOnly) {
+  if (!pinOnly && parentTokenOk(req)) return true;
   if (!pinStore.hasPin()) {
     sendJson(res, 403, { ok: false, error: "pin not set", message: "A parent PIN has not been set on the home computer yet. On the computer, open http://127.0.0.1:8787/admin or run set-pin.bat." });
     return false;

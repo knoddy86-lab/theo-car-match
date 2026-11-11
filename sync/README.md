@@ -138,3 +138,14 @@ The PHOTOS game and Family in the Name Game use pictures from Immich on this PC.
 - Near-duplicates are kept out: at most one photo per person per day/event, none within 6 hours of another, and no two whose perceptual hash (64-bit dHash, `photo-hash.ps1`) differs by 12 bits or fewer.
 - Every cached photo gets a "look" id in the manifest (same Immich asset, same person+day, or near-identical hash share a look). The game never deals two cards with the same look on one board unless they're the matching pair, and avoids repeating a look in back-to-back games.
 - Deleting a photo in Settings (parent PIN) adds the asset to `skipAssets`, removes it from `photo-approved.json` and deletes the cached file; every device drops it on its next sync. Immich is never changed.
+
+## v30: parent approval and unlock
+
+- New photos only become playable after a parent approves them in Settings > Photos
+  ("Waiting for your OK"). Pending previews live in `data\photos\pending` on this computer and
+  are never sent to any game board. Reject adds the asset to `skipAssets` (Immich is untouched).
+- Photos already in the game from the bot's safety review are listed as "Bot checked" under
+  "Review photos in the game"; ✓ confirms one, ✕ removes it from every device.
+- Entering the parent PIN once (keypad pop-up) unlocks parent actions until 30 seconds of idle,
+  leaving Settings, pressing Home or tapping Lock. The server issues a short-lived token
+  (`POST /api/parent/unlock`, header `X-Parent-Token`, 2 min sliding / 30 min max).

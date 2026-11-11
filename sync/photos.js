@@ -37,6 +37,7 @@ function PhotoStore(opts) {
   this.configFile = path.join(this.dataDir, "photo-people.json");
   this.approvedFile = path.join(this.dataDir, "photo-approved.json");
   this.indexFile = path.join(this.dir, "index.json");
+  this.pendingDir = path.join(this.dir, "pending");
   this.immichUrl = process.env.IMMICH_URL || "http://127.0.0.1:2283";
   this.keyFile = process.env.IMMICH_KEY_FILE || path.join(os.homedir(), ".immich", "immich_api_key.txt");
   this.refreshing = null;
@@ -132,7 +133,8 @@ PhotoStore.prototype.manifest = function () {
     etag: idx.etag || "",
     refreshedAt: idx.refreshedAt || 0,
     people: (idx.people || []).map(function (p) {
-      return { id: p.id, name: p.name, say: p.say || p.name, face: p.face || "", photos: (p.photos || []).slice(), looks: p.looks || {} };
+      var solo = (p.items || []).filter(function (it) { return it.faces === 1; }).map(function (it) { return it.file; });
+      return { id: p.id, name: p.name, say: p.say || p.name, face: p.face || "", photos: (p.photos || []).slice(), looks: p.looks || {}, solo: solo };
     })
   };
 };
@@ -303,7 +305,7 @@ PhotoStore.prototype.refresh = function (reason) {
         while (usedSlugs[slug]) slug += "x";
         usedSlugs[slug] = true;
         var approvedIds = approved ? (approved.people[hit.cfg.name] || []) : null;
-        var getItems = approvedIds ? self.approvedItems(hit.person.id, approvedIds, cfg.perPerson, skip) : self.pickPhotos(hit.person.id, cfg.perPerson, skip);
+        var getItems = approvedIds ? self.approvedItems(hit.person.id, approvedIds, 1000, skip) : self.pickPhotos(hit.person.id, cfg.perPerson, skip);
         return getItems.then(function (picked) {
           var entry = { id: slug, name: hit.cfg.name, say: hit.cfg.say || hit.cfg.name, immichName: String(hit.person.name).trim(), totalAssets: picked.total, chosen: picked.items };
           people.push(entry);
@@ -367,7 +369,7 @@ PhotoStore.prototype.refresh = function (reason) {
         p.chosen.forEach(function (it) {
           if (it.skip) return;
           var n = place(it.out, p.id);
-          if (n) { photos.push(n); items.push({ file: n, asset: it.id, box: it.box, mime: it.mime || "", when: it.when || 0, day: dayKey(it.localDate || it.when) }); }
+          if (n) { photos.push(n); items.push({ file: n, asset: it.id, box: it.box, mime: it.mime || "", when: it.when || 0, day: dayKey(it.localDate || it.when), faces: it.faces || 0 }); }
         });
         var face = place(p.faceOut, p.id);
         outPeople.push({ id: p.id, name: p.name, say: p.say, face: face, faceAsset: face ? (p.faceAsset || "") : "", photos: photos, items: items });
@@ -558,12 +560,172 @@ PhotoStore.prototype.setFace = function (personId, use) {
   return this.refreshing;
 };
 
+// ---- Parent approval (v30) -------------------------------------------------------------
+// photo-approved.json: people {name: [asset]} = playable; by {asset: "bot"|"parent"};
+// pending [{asset, person, file, box, mime, when, day, faces, hash, addedAt}] = waiting for the
+// parent's OK. Pending photos are never in the manifest, so no device can deal them.
+PhotoStore.prototype.pendingPath = function (name) {
+  if (!FILE_RE.test(String(name || ""))) return null;
+  var p = path.join(this.pendingDir, name);
+  return fs.existsSync(p) ? p : null;
+};
+
+PhotoStore.prototype.review = function () {
+  var appr = this.readApproved() || { people: {}, by: {}, pending: [] };
+  var by = appr.by || {};
+  var live = [];
+  (this.index.people || []).forEach(function (p) {
+    (p.items || []).forEach(function (it) {
+      live.push({ person: p.name, personId: p.id, file: it.file, asset: it.asset, by: by[it.asset] === "parent" ? "parent" : "bot", face: false });
+    });
+  });
+  var pending = (appr.pending || []).filter(function (x) { return x && x.file; }).map(function (x) {
+    return { person: x.person, file: x.file, asset: x.asset, day: x.day || "", addedAt: x.addedAt || 0 };
+  });
+  return { ok: true, pending: pending, live: live, pendingCount: pending.length };
+};
+
+PhotoStore.prototype.pendingCount = function () {
+  var appr = this.readApproved();
+  return appr && Array.isArray(appr.pending) ? appr.pending.length : 0;
+};
+
+function busyErr() { return Object.assign(new Error("Photos are refreshing. Try again in a minute."), { code: 409 }); }
+
+// Parent approves pending photos: they join the game for every device on the next sync.
+PhotoStore.prototype.approvePending = function (assets) {
+  if (this.refreshing) return Promise.reject(busyErr());
+  var self = this;
+  var want = {};
+  (assets || []).forEach(function (a) { want[String(a)] = true; });
+  var moved = 0;
+  var appr = this.readApproved();
+  if (!appr) return Promise.reject(Object.assign(new Error("No approval list on the home computer."), { code: 404 }));
+  var keep = [];
+  appr.by = appr.by || {};
+  (appr.pending || []).forEach(function (x) {
+    if (!want[x.asset]) { keep.push(x); return; }
+    var person = (self.index.people || []).filter(function (p) { return p.name === x.person; })[0];
+    var src = self.pendingPath(x.file);
+    if (!person || !src) { keep.push(x); return; }
+    fs.renameSync(src, path.join(self.dir, x.file));
+    person.photos = person.photos || [];
+    person.items = person.items || [];
+    if (person.photos.indexOf(x.file) === -1) {
+      person.photos.push(x.file);
+      person.items.push({ file: x.file, asset: x.asset, box: x.box, mime: x.mime || "", when: x.when || 0, day: x.day || "", faces: x.faces || 0, hash: x.hash || "" });
+    }
+    if (!person.face) { person.face = x.file; }
+    appr.people[x.person] = appr.people[x.person] || [];
+    if (appr.people[x.person].indexOf(x.asset) === -1) appr.people[x.person].push(x.asset);
+    appr.by[x.asset] = "parent";
+    moved += 1;
+  });
+  appr.pending = keep;
+  fs.writeFileSync(this.approvedFile + ".tmp", JSON.stringify(appr, null, 2));
+  fs.renameSync(this.approvedFile + ".tmp", this.approvedFile);
+  this.saveIndex();
+  return Promise.resolve({ ok: true, approved: moved, pendingCount: keep.length });
+};
+
+// Parent rejects pending photos: never used (skipAssets), cached preview removed. Immich untouched.
+PhotoStore.prototype.rejectPending = function (assets) {
+  if (this.refreshing) return Promise.reject(busyErr());
+  var self = this;
+  var want = {};
+  (assets || []).forEach(function (a) { want[String(a)] = true; });
+  var appr = this.readApproved();
+  if (!appr) return Promise.reject(Object.assign(new Error("No approval list on the home computer."), { code: 404 }));
+  var gone = [];
+  appr.pending = (appr.pending || []).filter(function (x) {
+    if (!want[x.asset]) return true;
+    gone.push(x);
+    return false;
+  });
+  fs.writeFileSync(this.approvedFile + ".tmp", JSON.stringify(appr, null, 2));
+  fs.renameSync(this.approvedFile + ".tmp", this.approvedFile);
+  this.patchConfig(function (raw) {
+    raw.skipAssets = Array.isArray(raw.skipAssets) ? raw.skipAssets : [];
+    gone.forEach(function (x) { if (raw.skipAssets.indexOf(x.asset) === -1) raw.skipAssets.push(x.asset); });
+  });
+  gone.forEach(function (x) { var f = self.pendingPath(x.file); if (f) { try { fs.unlinkSync(f); } catch (e) {} } });
+  return Promise.resolve({ ok: true, rejected: gone.length, pendingCount: (appr.pending || []).length });
+};
+
+// Parent confirms live photos the bot pre-approved ("Looks good").
+PhotoStore.prototype.keepLive = function (assets) {
+  var appr = this.readApproved();
+  if (!appr) return Promise.reject(Object.assign(new Error("No approval list on the home computer."), { code: 404 }));
+  appr.by = appr.by || {};
+  var n = 0;
+  (assets || []).forEach(function (a) { a = String(a); if (appr.by[a] !== "parent") { appr.by[a] = "parent"; n += 1; } });
+  fs.writeFileSync(this.approvedFile + ".tmp", JSON.stringify(appr, null, 2));
+  fs.renameSync(this.approvedFile + ".tmp", this.approvedFile);
+  return Promise.resolve({ ok: true, marked: n });
+};
+
+// Queue photos for the parent's OK after the bot's safety review (used by the review tool).
+// Read-only on Immich: downloads a preview and makes the same crop the game uses.
+PhotoStore.prototype.addPending = function (personName, personImmichId, assetIds) {
+  var self = this;
+  var cfg = this.readConfig();
+  var skip = {};
+  cfg.skipAssets.forEach(function (id) { skip[id] = true; });
+  var appr = this.readApproved();
+  if (!appr) return Promise.reject(new Error("photo-approved.json missing"));
+  appr.pending = appr.pending || [];
+  var have = {};
+  (appr.people[personName] || []).forEach(function (a) { have[a] = true; });
+  appr.pending.forEach(function (x) { if (x.person === personName) have[x.asset] = true; });
+  var slug = ((this.index.people || []).filter(function (p) { return p.name === personName; })[0] || {}).id || slugify(personName);
+  fs.mkdirSync(this.pendingDir, { recursive: true });
+  var tmp = path.join(this.pendingDir, "_tmp");
+  fs.rmSync(tmp, { recursive: true, force: true });
+  fs.mkdirSync(tmp, { recursive: true });
+  var ids = (assetIds || []).filter(function (id) { return !skip[id] && !have[id]; });
+  return this.approvedItems(personImmichId, ids, 1000, skip).then(function (picked) {
+    var jobs = [];
+    var chain = Promise.resolve();
+    picked.items.forEach(function (it, i) {
+      chain = chain.then(function () {
+        var orig = smallFace(it.box) && /^image\/(jpeg|png)$/i.test(it.mime || "");
+        return self.immich("GET", orig ? "/api/assets/" + it.id + "/original" : "/api/assets/" + it.id + "/thumbnail?size=preview", null, true).then(function (img) {
+          var src = path.join(tmp, i + ".src");
+          fs.writeFileSync(src, img.buf);
+          it.out = path.join(tmp, i + ".jpg");
+          jobs.push({ in: src, out: it.out, crop: squareCrop(it.box, "photo"), size: 512, quality: 80, orient: orig });
+        }).catch(function () {});
+      });
+    });
+    return chain.then(function () { return self.resizeBatch(jobs); }).then(function () {
+      var added = [];
+      picked.items.forEach(function (it) {
+        if (!it.out || !fs.existsSync(it.out)) return;
+        var buf = fs.readFileSync(it.out);
+        var name = slug + "-" + crypto.createHash("sha1").update(buf).digest("hex").slice(0, 12) + ".jpg";
+        fs.writeFileSync(path.join(self.pendingDir, name), buf);
+        added.push({ asset: it.id, person: personName, file: name, box: it.box, mime: it.mime || "", when: it.when || 0, day: dayKey(it.localDate || it.when), faces: it.faces || 0, addedAt: Date.now() });
+      });
+      return self.hashFiles(added.map(function (a) { return path.join(self.pendingDir, a.file); })).then(function (h) {
+        added.forEach(function (a) { a.hash = h[path.join(self.pendingDir, a.file)] || ""; });
+        var fresh = self.readApproved();
+        fresh.pending = (fresh.pending || []).concat(added);
+        fs.writeFileSync(self.approvedFile + ".tmp", JSON.stringify(fresh, null, 2));
+        fs.renameSync(self.approvedFile + ".tmp", self.approvedFile);
+        fs.rmSync(tmp, { recursive: true, force: true });
+        return added.length;
+      });
+    });
+  });
+};
+
 PhotoStore.prototype.startSchedule = function () {
   var self = this;
   function tick() {
     var cfg = self.readConfig();
     var age = Date.now() - (self.index.refreshedAt || 0);
-    var old = (self.index.people || []).some(function (p) { return !Array.isArray(p.items); });
+    // v30: older caches lack per-photo face counts (needed for the photo Name Game), so refresh once.
+    var old = (self.index.people || []).some(function (p) { return !Array.isArray(p.items) || p.items.some(function (it) { return it.faces == null; }); });
     if (old || age > cfg.refreshHours * 3600 * 1000) {
       try { self.refresh("schedule"); } catch (e) { console.error("Photo refresh failed:", e && e.message); }
     }
