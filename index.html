@@ -42,11 +42,11 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Theo's Car Match">
+  <meta name="apple-mobile-web-app-title" content="Car Games">
   <meta name="theme-color" content="#4FC3F7">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-  <title>Theo's Car Match</title>
+  <title>Car Games</title>
   <style>
     :root {
       --sky-top: #7ED6FF;
@@ -1810,6 +1810,69 @@
       .start-actions.three .game-card { width: auto; }
       .start-actions.three .gc-label { font-size: clamp(18px, 6.4vh, 36px); }
     }
+    /* ---- v42: four game cards (MATCH / NAME / BUILD / SHADOW) ---- */
+    .start-actions.four { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(10px, 2.4vw, 30px); width: min(1120px, 100%); justify-items: stretch; align-items: stretch; }
+    .start-actions.four[hidden] { display: none !important; }
+    .start-actions.four .game-card { width: auto; max-width: none; min-width: 0; padding: clamp(8px, 1.6vmin, 16px) clamp(6px, 1.4vmin, 14px) clamp(10px, 1.8vmin, 18px); border-radius: clamp(20px, 3vmin, 30px); }
+    .start-actions.four .gc-label { font-size: clamp(18px, 4.4vmin, 46px); }
+    .start-actions.four .gc-bubble { font-size: clamp(20px, 5vmin, 50px); }
+    @media (max-width: 600px) and (orientation: portrait) {
+      .start-actions.four { grid-template-columns: repeat(2, minmax(0, 1fr)); width: min(100%, 440px); gap: 14px 16px; }
+      .start-actions.four .gc-art { aspect-ratio: 16 / 10; }
+      .start-actions.four .gc-label { font-size: clamp(20px, 6.4vw, 30px); }
+      .start-actions.four .game-card { gap: 4px; padding: 8px 8px 10px; }
+    }
+    @media (max-width: 600px) and (max-height: 700px) and (orientation: portrait) {
+      #start-screen .hero-cars { height: clamp(56px, 12vh, 90px); }
+      #start-screen .splash { gap: 8px; }
+    }
+    @media (max-height: 520px) and (orientation: landscape) {
+      .start-actions.four { width: auto; grid-template-columns: repeat(4, auto); }
+      .start-actions.four .game-card { width: auto; }
+      .start-actions.four .gc-art { height: min(30vh, calc((100vw - 180px) * 0.1875)); width: auto; }
+      .start-actions.four .gc-label { font-size: clamp(18px, 6.4vh, 36px); }
+    }
+    .gc-shadow { background: linear-gradient(180deg, #F06292, #D81B60); box-shadow: 0 8px 0 #AD1457, 0 14px 26px rgba(0,0,0,0.2); }
+    .gc-shadow:active { box-shadow: 0 2px 0 #AD1457, 0 6px 12px rgba(0,0,0,0.2); }
+    .gc-shadow .sh-art-sil, .gc-shadow .sh-art-car { position: absolute; bottom: 8%; width: 56%; height: 70%; display: flex; align-items: flex-end; justify-content: center; }
+    .gc-shadow .sh-art-sil { left: 1%; }
+    .gc-shadow .sh-art-car { right: 1%; }
+    .gc-shadow .sh-art-sil .mini-art { filter: brightness(0); filter: url(#sh-solid); opacity: 0.8; }
+    .gc-shadow .mini-art.has-photo { background: none; }
+    /* ---- v42: Shadow game ---- */
+    .shadow-screen { justify-content: flex-start; padding-top: calc(var(--safe-t) + 74px); gap: clamp(8px, 1.6vh, 16px); }
+    .shadow-screen .sh-title { font-size: clamp(20px, 3.6vmin, 36px); }
+    .sh-board { flex: 1 1 auto; min-height: 0; width: min(1100px, 100%); display: grid; grid-template-columns: repeat(var(--cols, 2), minmax(0, 1fr)); grid-auto-rows: minmax(0, 1fr); gap: clamp(8px, 2vmin, 20px); padding: 2px; }
+    .sh-slot { position: relative; min-width: 0; min-height: 0; border-radius: 24px; background: rgba(255,255,255,0.38); border: 4px dashed rgba(255,255,255,0.9); display: flex; align-items: center; justify-content: center; padding: clamp(4px, 1.2vmin, 12px); transition: background 0.2s, border-color 0.2s; }
+    .sh-slot.near { background: rgba(255,249,196,0.8); border-color: #FFB300; }
+    .sh-slot.done { background: rgba(232,248,236,0.92); border: 4px solid #34C759; }
+    .sh-art { position: relative; width: 100%; height: 100%; max-height: 100%; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+    .sh-art svg, .sh-art img, .b-drag-ghost.sh-ghost img { width: 100%; height: 100%; object-fit: contain; display: block; overflow: visible; }
+    /* solid dark shape: alpha >= 0.2 becomes fully dark (glass, shine and gaps don't show through), the faint ground shadow drops out */
+    .sh-sil svg, .sh-sil img.sh-css { filter: brightness(0); filter: url(#sh-solid); }
+    .sh-sil { opacity: 0.74; }
+    .sh-slot.done .sh-art { opacity: 1; animation: sh-pop 0.42s cubic-bezier(.3,1.6,.5,1); }
+    @keyframes sh-pop { 0% { transform: scale(0.82); } 60% { transform: scale(1.1); } 100% { transform: scale(1); } }
+    .sh-slot .sh-name { position: absolute; left: 50%; bottom: 4px; transform: translateX(-50%); background: #34C759; color: #fff; font-weight: 800; font-size: clamp(14px, 2.6vmin, 24px); border-radius: 999px; padding: 2px 12px; white-space: nowrap; max-width: 96%; overflow: hidden; text-overflow: ellipsis; box-shadow: 0 3px 0 #1E8E3E; }
+    .sh-tray { flex: 0 0 auto; width: min(1100px, 100%); height: var(--trayh, 120px); display: grid; grid-template-columns: repeat(var(--tcols, 2), minmax(0, 1fr)); grid-auto-rows: minmax(0, 1fr); gap: clamp(8px, 1.6vmin, 16px); padding: clamp(8px, 1.4vmin, 14px); margin-bottom: 6px; border-radius: 26px; background: rgba(255,255,255,0.55); box-shadow: inset 0 3px 8px rgba(0,0,0,0.08); }
+    .sh-piece { appearance: none; border: 0; font-family: inherit; min-width: 0; min-height: 0; background: #fff; border-radius: 20px; box-shadow: 0 5px 0 rgba(26,35,126,0.25), 0 8px 14px rgba(0,0,0,0.12); padding: 6px; display: flex; align-items: center; justify-content: center; touch-action: none; -webkit-user-select: none; user-select: none; cursor: grab; }
+    .sh-piece * { pointer-events: none; }
+    .sh-piece.dragging { opacity: 0.35; }
+    .sh-piece.used { visibility: hidden; }
+    .sh-piece .sh-art { height: 100%; }
+    .b-drag-ghost.sh-ghost { display: flex; align-items: center; justify-content: center; }
+    @media (orientation: landscape) and (max-height: 600px) {
+      .shadow-screen { padding-top: calc(var(--safe-t) + 70px); gap: 8px; }
+      .shadow-screen .sh-title { position: absolute; top: calc(var(--safe-t) + 12px); left: 50%; transform: translateX(-50%); font-size: 20px; padding: 4px 16px 5px; border-width: 3px; white-space: nowrap; }
+    }
+    /* v42: the floating Home button no longer covers the Settings title */
+    /* the settings scroller starts below the gear/Home row, so nothing scrolls under the buttons either */
+    body.home-on #settings-screen { top: calc(var(--safe-t) + 74px); padding-top: 0; }
+    body.home-on #settings-screen .settings-panel { margin-top: 8px; }
+    @media (max-width: 600px) and (orientation: portrait) {
+      #settings-screen .settings-tabs button#tab-shadow { flex: 1 1 auto; }
+      #settings-screen .settings-tabs button#tab-photos, #settings-screen .settings-tabs button#tab-players, #settings-screen .settings-tabs button#tab-family { flex: 1 1 auto; }
+    }
     .scene .garage-window, .scene .garage-door { display: none; }
     body.garage-on .scene .sun, body.garage-on .scene .hill, body.garage-on .scene .road { display: none; }
     body.garage-on .scene { background: linear-gradient(180deg, #8EC8EA 0 14%, #F0D9A8 14% 15.2%, #F6E6C4 15.2% 80%, #D7C4A0 80% 82%, #C9B48A 82% 100%); }
@@ -2010,12 +2073,12 @@
     <section id="start-screen" class="screen" aria-label="Start">
       <div class="splash">
         <div class="banner">
-          <h1 id="start-title">Theo's Car Match</h1>
-          <p class="tag">Match the cars!</p>
+          <h1 id="start-title">Car Games</h1>
+          <p class="tag">Pick a game!</p>
           <p class="for-theo" id="start-for">For Theo</p>
         </div>
         <div class="hero-cars" id="hero-cars"></div>
-        <div class="start-actions three" id="start-actions">
+        <div class="start-actions four" id="start-actions">
           <button type="button" class="game-card gc-match" id="play-btn" aria-label="Match Game">
             <span class="gc-art" aria-hidden="true">
               <span class="mini-card mc-a"><span class="mini-art" data-art="match"></span></span>
@@ -2046,6 +2109,13 @@
             </span>
             <span class="gc-label">BUILD</span>
           </button>
+          <button type="button" class="game-card gc-shadow" id="shadow-btn" aria-label="Shadow Game">
+            <span class="gc-art" aria-hidden="true">
+              <span class="sh-art-sil"><span class="mini-art" data-art="shadow-sil"></span></span>
+              <span class="sh-art-car"><span class="mini-art" data-art="shadow"></span></span>
+            </span>
+            <span class="gc-label">SHADOW</span>
+          </button>
         </div>
         <div class="mode-picker" id="mode-picker" hidden>
           <div class="mode-head">
@@ -2068,7 +2138,7 @@
 
     <section id="game-screen" class="screen" hidden aria-label="Game">
       <div class="hud">
-        <div class="hud-title" id="hud-title">Theo's Car Match</div>
+        <div class="hud-title" id="hud-title">Car Games</div>
         <div class="hud-level">
           <span id="level-label">Level 1</span>
           <div class="pips" id="pips" aria-hidden="true"></div>
@@ -2097,6 +2167,13 @@
       <div id="name-more-toast" hidden>More cards!</div>
     </section>
 
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><filter id="sh-solid" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0 0 0 0 0.12  0 0 0 0 0.13  0 0 0 0 0.2  0 0 0 1 0"/><feComponentTransfer><feFuncA type="discrete" tableValues="0 1 1 1 1"/></feComponentTransfer></filter></svg>
+    <section id="shadow-screen" class="screen shadow-screen" hidden aria-label="Shadow game">
+      <div class="b-pips" id="sh-pips" hidden></div>
+      <div class="b-title sh-title" id="sh-title">Put each car on its shadow</div>
+      <div class="sh-board" id="sh-board" role="group" aria-label="Shadows"></div>
+      <div class="sh-tray" id="sh-tray" role="group" aria-label="Cars to drag"></div>
+    </section>
     <section id="build-screen" class="screen build-screen" hidden aria-label="Build a car">
       <div class="b-pips" id="build-pips" hidden></div>
       <div class="bstep" data-step="1" hidden>
@@ -2215,6 +2292,7 @@
           <button type="button" role="tab" id="tab-difficulty" aria-controls="pane-difficulty" aria-selected="false">Match</button>
           <button type="button" role="tab" id="tab-names" aria-controls="pane-names" aria-selected="false">Names</button>
           <button type="button" role="tab" id="tab-build" aria-controls="pane-build" aria-selected="false">Build</button>
+          <button type="button" role="tab" id="tab-shadow" aria-controls="pane-shadow" aria-selected="false">Shadow</button>
           <button type="button" role="tab" id="tab-photos" aria-controls="pane-photos" aria-selected="false" hidden>Photos<span class="count-badge" id="tab-photos-badge" hidden>0</span></button>
           <button type="button" role="tab" id="tab-players" aria-controls="pane-players" aria-selected="false">Players</button>
           <button type="button" role="tab" id="tab-family" aria-controls="pane-family" aria-selected="false">Connection</button>
@@ -2397,10 +2475,10 @@
               </select>
             </div>
             <div class="diff-row">
-              <label for="build-style">Build style (Drag: drag the body, roof and extras onto the vehicle)</label>
+              <label for="build-style">Build style (Simple: tap to build; Extra: drag the body, roof, wheels and extras onto the vehicle)</label>
               <select id="build-style" aria-label="Build style">
-                <option value="tap">Tap (simple)</option>
-                <option value="drag">Drag</option>
+                <option value="tap">Simple</option>
+                <option value="drag">Extra</option>
               </select>
             </div>
             <div class="diff-row">
@@ -2431,6 +2509,44 @@
               </div>
             </div>
             <p class="garage-done" id="garage-clear-done" aria-live="polite" hidden></p>
+          </div>
+        </div>
+        <div id="pane-shadow" class="settings-pane" role="tabpanel" aria-labelledby="tab-shadow" hidden>
+          <p class="settings-lead">Shadow game: drag each car onto its dark shadow. Uses the Match cars (photo cards become shadows on this device) and the current player's Build garage. No family photos.</p>
+          <p class="device-only-note">This device only — not synced.</p>
+          <div class="diff-custom" id="shadow-options">
+            <h3>Shadow game</h3>
+            <div class="diff-row">
+              <label for="sh-set-start">Shadows to start with</label>
+              <select id="sh-set-start" aria-label="Shadows to start with">
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+              </select>
+            </div>
+            <div class="diff-row">
+              <label for="sh-set-harder">Get harder as you go (one more shadow after each board, up to the max)</label>
+              <input id="sh-set-harder" type="checkbox" checked>
+            </div>
+            <div class="diff-row" id="sh-set-max-row">
+              <label for="sh-set-max">Most shadows</label>
+              <select id="sh-set-max" aria-label="Most shadows">
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+              </select>
+            </div>
+            <div class="diff-row">
+              <label for="sh-set-pool">Pictures</label>
+              <select id="sh-set-pool" aria-label="Shadow pictures">
+                <option value="mix">Cars + garage</option>
+                <option value="cars">Cars only</option>
+              </select>
+            </div>
+            <div class="diff-row">
+              <label for="voice-style-shadow">Shadow voice</label>
+              <select id="voice-style-shadow" class="voice-style-select" data-part="shadow" aria-label="Shadow voice"><option value="alba">Alba</option><option value="classic">Classic</option></select>
+            </div>
           </div>
         </div>
         <div id="pane-photos" class="settings-pane" role="tabpanel" aria-labelledby="tab-photos" hidden>
@@ -2627,7 +2743,7 @@
     // v39: per-device voice for each part of the game. Classic = the pre-v37 voice (Sound of Text car-name clips
     // and the device voice); Alba = the natural recorded clips.
     var VOICE_STYLE_KEY = "theo-car-match-voice-styles";
-    var VOICE_STYLE_DEFAULTS = { name: "classic", match: "alba", build: "alba" };
+    var VOICE_STYLE_DEFAULTS = { name: "classic", match: "alba", build: "alba", shadow: "alba" };
     var voiceStyles = Object.assign({}, VOICE_STYLE_DEFAULTS);
     try {
       var vsRaw = JSON.parse(localStorage.getItem(VOICE_STYLE_KEY) || "{}") || {};
@@ -2703,7 +2819,7 @@
     var BLOB_FETCH_MS = 20000;
     var bootStartedAt = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
     var keyChangeOpen = false;
-    var APP_VERSION = "41";
+    var APP_VERSION = "42";
     var MATCH_PAIR_CAP = 6;
     var NAME_ROUNDS = 6;
     var THUMB_MAX = 256;
@@ -4509,6 +4625,7 @@
         { tab: "tab-difficulty", pane: "pane-difficulty" },
         { tab: "tab-names", pane: "pane-names" },
         { tab: "tab-build", pane: "pane-build" },
+        { tab: "tab-shadow", pane: "pane-shadow" },
         { tab: "tab-photos", pane: "pane-photos" },
         { tab: "tab-players", pane: "pane-players" },
         { tab: "tab-family", pane: "pane-family" }
@@ -4522,10 +4639,11 @@
       });
       if (name === "photos") { renderPhotoPeople(); renderPhotoManage(); loadReview(); }
       if (name === "build") { hideGarageConfirm(); updateBuildSettingsUi(); }
+      if (name === "shadow") updateShadowSettingsUi();
     }
 
     function bindSettingsTabs() {
-      ["cars", "difficulty", "names", "build", "photos", "players", "family"].forEach(function (name) {
+      ["cars", "difficulty", "names", "build", "shadow", "photos", "players", "family"].forEach(function (name) {
         var tb = document.getElementById("tab-" + name);
         if (tb) tb.addEventListener("click", function () { showSettingsTab(name); });
       });
@@ -5032,7 +5150,7 @@
           (document.activeElement === ct ? pt : ct).focus();
           return;
         }
-        var sl = ["play-btn", "names-btn", "build-btn"].map(function (id) { return document.getElementById(id); }).filter(Boolean);
+        var sl = ["play-btn", "names-btn", "build-btn", "shadow-btn"].map(function (id) { return document.getElementById(id); }).filter(Boolean);
         var si = sl.indexOf(document.activeElement);
         si = si === -1 ? 0 : (si + (dx || dy) + sl.length) % sl.length;
         sl[si].focus();
@@ -5398,6 +5516,7 @@
       hideModePicker();
       stopNameGame();
       if (typeof build === "object" && build) stopBuild();
+      stopShadow();
       stopSpeechAndAudio();
       stopAllSfx();
       hideWin();
@@ -6016,14 +6135,15 @@
       });
     }
 
-    // "Harper's Car Match", "James' Car Match".
+    // v42: "Harper's Car Games", "James' Car Games"; plain "Car Games" before a player is picked.
     function possessive(name) {
       name = String(name || "").trim() || "Theo";
       return /s$/i.test(name) ? name + "'" : name + "'s";
     }
-    function paintProfileTitles(p) {
+    function paintProfileTitles(p, picking) {
       var nm = (p && p.name) || "Theo";
-      var t = possessive(nm) + " Car Match";
+      var t = picking || !p ? "Car Games" : possessive(nm) + " Car Games";
+      if (document.title !== t) document.title = t;
       ["start-title", "hud-title"].forEach(function (id) { var el = document.getElementById(id); if (el && el.textContent !== t) el.textContent = t; });
       var f = document.getElementById("start-for");
       if (f) f.textContent = "For " + nm;
@@ -6038,8 +6158,8 @@
       var onStart = document.getElementById("start-screen") && !document.getElementById("start-screen").hidden;
       if (face && p) paintProfileFace(face, p);
       if (name && p) name.textContent = p.name;
-      paintProfileTitles(p);
       var showPicker = onStart && shouldShowPicker();
+      paintProfileTitles(p, showPicker);
       if (picker) picker.hidden = !showPicker;
       if (splash) splash.hidden = !!showPicker;
       var setOpen = document.getElementById("settings-screen") && !document.getElementById("settings-screen").hidden;
@@ -7165,6 +7285,7 @@
       updateDifficultyUi();
       updateNameGameUi();
       updateBuildSettingsUi();
+      updateShadowSettingsUi();
       renderPlayersSettings();
       updateSyncUi();
       loadReview();
@@ -8124,16 +8245,17 @@
           return s;
         } },
       { id: "rubbish", name: "Rubbish truck", say: "rubbish truck", group: "road", extras: ["bin", "beacon", "amber", "recycle", "plate", "dog", "arm", "bags", "stripes", "horn"],
-        // v40: generic rear-loader rubbish truck: cab-over cab, compactor body, rear hopper with bin lifter; 4 wheels each side (steer axle + 3 rear).
-        parts: [{ t: "wheel", cx: 98, cy: 170, r: 28 }, { t: "wheel", cx: 286, cy: 170, r: 28 }, { t: "wheel", cx: 346, cy: 170, r: 28 }, { t: "wheel", cx: 406, cy: 170, r: 28 }],
+        // v40: generic rear-loader rubbish truck: cab-over cab, compactor body, rear hopper with bin lifter.
+        // v42: 8x4 layout, 4 wheels each side: twin front steer axles (under/just behind the cab) + twin rear axles.
+        parts: [{ t: "wheel", cx: 88, cy: 170, r: 28 }, { t: "wheel", cx: 152, cy: 170, r: 28 }, { t: "wheel", cx: 344, cy: 170, r: 28 }, { t: "wheel", cx: 406, cy: 170, r: 28 }],
         xname: { stripes: "Stripes" }, xclip: { stripes: "stripes-plain" },
         xa: { bin: [494, 170, 1], beacon: [118, 46], amber: [298, 32], recycle: [300, 82, 30], plate: [44, 170], dog: [114, 110, 0.95], arm: [204, 94], bags: [468, 40], stripes: [156, 444, 136], horn: [62, 16] },
         draw: function (id, P, X, E) {
-          var cab = "M30 176 L30 152 C25 148 23 140 27 130 L33 72 C35 60 45 52 62 50 L150 46 L150 176 L134 176 A36 36 0 0 0 62 176 Z";
-          var body = "M150 176 L150 50 C150 38 160 32 176 32 L424 32 C438 32 446 42 446 56 L446 176 L442 176 A36 36 0 0 0 406 140 L286 140 A36 36 0 0 0 250 176 Z";
+          var cab = "M30 176 L30 152 C25 148 23 140 27 130 L33 72 C35 60 45 52 62 50 L150 46 L150 140 L88 140 A36 36 0 0 0 52 176 Z";
+          var body = "M188 176 A36 36 0 0 0 152 140 L150 140 L150 50 C150 38 160 32 176 32 L424 32 C438 32 446 42 446 56 L446 176 L442 176 A36 36 0 0 0 406 140 L344 140 A36 36 0 0 0 308 176 Z";
           var hopper = "M446 40 L474 50 C486 55 492 66 492 80 L492 168 C492 174 488 176 482 176 L446 176 Z";
           return bvShadow(262, 206, 236) +
-            '<rect x="140" y="158" width="312" height="14" rx="3" fill="#2A2E33"/>' +
+            '<rect x="52" y="158" width="400" height="14" rx="3" fill="#2A2E33"/>' +
             bvPaint(id, cab) + bvPaint(id, body) + bvPaint(id, hopper) +
             '<path d="M200 38 V136 M250 36 V136 M300 36 V136 M350 36 V136 M400 36 V136" stroke="#1A1D21" stroke-opacity="0.18" stroke-width="2"/>' +
             '<path d="M156 118 H442" stroke="#fff" stroke-opacity="0.2" stroke-width="6"/>' +
@@ -8150,7 +8272,7 @@
             '<rect x="26" y="126" width="26" height="22" rx="1.5" fill="#1A1D21"/><path d="M29 130 H49 M29 135 H49 M29 140 H49 M29 145 H49" stroke="#8A939C" stroke-width="1.2"/>' +
             '<rect x="24" y="150" width="20" height="10" rx="2" fill="#F4FAFF" stroke="#9AA3AB" stroke-width="0.8"/>' +
             '<rect x="18" y="160" width="52" height="16" rx="3" fill="url(#' + id + '-bump)"/>' +
-            '<rect x="88" y="150" width="30" height="5" rx="1.5" fill="#3A3F44"/><rect x="92" y="138" width="24" height="4" rx="1.5" fill="#3A3F44"/>' +
+            '<rect x="96" y="128" width="26" height="5" rx="1.5" fill="#3A3F44"/>' +
             '<path d="M40 86 L24 74" stroke="#2A2E33" stroke-width="3" stroke-linecap="round"/>' +
             '<rect x="10" y="62" width="15" height="26" rx="3" fill="url(#' + id + '-paint)" stroke="#222" stroke-width="1"/><rect x="12" y="65" width="11" height="12" rx="1.4" fill="#A8C4D2" opacity="0.85"/>' +
             X + P[0] + P[1] + P[2] + P[3];
@@ -9115,7 +9237,7 @@
         var gw = tr ? tr.width : br.width, gh = tr ? tr.height : br.height;
         if (gw > innerWidth * 0.9) { gh = gh * innerWidth * 0.9 / gw; gw = innerWidth * 0.9; }
         var div = document.createElement("div");
-        div.className = "b-ghost b-drag-ghost";
+        div.className = "b-ghost b-drag-ghost" + (o.ghostClass ? " " + o.ghostClass : "");
         div.innerHTML = gi.html;
         div.style.width = gw + "px"; div.style.height = gh + "px";
         st.fx = Math.min(1, Math.max(0, (st.x - br.left) / br.width));
@@ -9129,7 +9251,7 @@
       }
       el.addEventListener("pointerdown", function (e) {
         if (e.button !== undefined && e.button !== 0) return;
-        if (build.busy) return;
+        if (o.busy ? o.busy() : build.busy) return;
         var sc = o.scroller && o.scroller();
         st = { id: e.pointerId, x: e.clientX, y: e.clientY, mode: "", sc: sc, sl: sc ? sc.scrollLeft : 0, stp: sc ? sc.scrollTop : 0 };
         try { el.setPointerCapture(e.pointerId); } catch (err) {}
@@ -9181,6 +9303,388 @@
         if (e.detail === 0) (o.onKey || o.onTap)();
       });
       el.addEventListener("contextmenu", function (e) { e.preventDefault(); });
+    }
+
+    // ---- v42: Shadow game ----
+    // Dark shapes on a board, the matching vehicles in a tray. Drag each one onto its shadow
+    // (same rules as Drag build: a real drag of 30px+, an 80px snap zone, a tap only wiggles and says the name).
+    var SHADOW_KEY = "theo-car-match-shadow";
+    var SHADOW_SIL_PREFIX = "theo-car-match-shadow-sil:";
+    var shadowSettings = { start: 2, harder: true, max: 4, pool: "mix" };
+    try {
+      var shRaw = JSON.parse(localStorage.getItem(SHADOW_KEY) || "{}") || {};
+      shadowSettings = normalizeShadowSettings(shRaw);
+    } catch (e) {}
+    function normalizeShadowSettings(raw) {
+      raw = raw && typeof raw === "object" ? raw : {};
+      var st = Math.max(2, Math.min(4, parseInt(raw.start, 10) || 2));
+      var mx = Math.max(3, Math.min(5, parseInt(raw.max, 10) || 4));
+      return { start: st, harder: raw.harder !== false, max: Math.max(mx, st), pool: raw.pool === "cars" ? "cars" : "mix" };
+    }
+    function saveShadowSettings(next) {
+      shadowSettings = normalizeShadowSettings(next);
+      try { localStorage.setItem(SHADOW_KEY, JSON.stringify(shadowSettings)); } catch (e) {}
+      updateShadowSettingsUi();
+    }
+    function updateShadowSettingsUi() {
+      var a = document.getElementById("sh-set-start"), h = document.getElementById("sh-set-harder"), m = document.getElementById("sh-set-max"), pl = document.getElementById("sh-set-pool");
+      if (a) a.value = String(shadowSettings.start);
+      if (h) h.checked = shadowSettings.harder !== false;
+      if (m) m.value = String(shadowSettings.max);
+      if (pl) pl.value = shadowSettings.pool;
+      var row = document.getElementById("sh-set-max-row");
+      if (row) row.hidden = shadowSettings.harder === false;
+    }
+    var shg = { gen: 0, n: 2, items: [], placed: 0, busy: false, timers: [], last: {}, boards: 0, sayLog: [] };
+    function shEl(id) { return document.getElementById(id); }
+    function shadowOpen() { var s = shEl("shadow-screen"); return !!(s && !s.hidden); }
+    function shLater(fn, ms) {
+      var g = shg.gen;
+      var t = setTimeout(function () { if (g === shg.gen) fn(); }, ms);
+      shg.timers.push(t);
+      return t;
+    }
+    function shLog(x) { shg.sayLog.push(x); if (shg.sayLog.length > 60) shg.sayLog.shift(); }
+    function shSay(key, text) {
+      shLog("line:" + key);
+      voiceSay([bvLine(key, text)], false, voiceStyle("shadow") === "classic");
+    }
+    function shPhotoSrc(car) {
+      var e = customMedia[car.id] || {};
+      return e.imageUrl || e.thumbUrl || "";
+    }
+    // Pictures for the game: Match cars (never family photos) + the current player's garage.
+    function shadowCandidates() {
+      var cards = [], seen = {};
+      allCars().forEach(function (car) {
+        if (!car || car.family) return;
+        var e = customMedia[car.id] || {};
+        var src = shPhotoSrc(car);
+        if (src && e.removeWhite === false) return; // a photo with its background still on can't make a shadow
+        if (!src && car.custom) return; // a placeholder card has no shape
+        var shape = src ? "photo:" + car.id : "svg:" + (car.kind || car.id);
+        if (seen[shape]) return;
+        seen[shape] = true;
+        cards.push({ id: "c:" + car.id, type: "card", car: car, src: src, shape: shape, name: displayName ? displayName(car) : car.name });
+      });
+      var garage = [];
+      if (shadowSettings.pool !== "cars") {
+        var gk = {};
+        loadGarage().slice().sort(function (a, b) { return (b.t || 0) - (a.t || 0); }).forEach(function (g) {
+          if (gk[g.k]) return;
+          gk[g.k] = true;
+          var def = bvKind(g.k);
+          garage.push({ id: "g:" + g.k, type: "garage", g: g, shape: "bv:" + g.k, name: def.name || def.say });
+        });
+      }
+      return { cards: cards, garage: garage };
+    }
+    function shadowPick(n) {
+      var c = shadowCandidates();
+      function fresh(list) {
+        var a = shuffle(list.filter(function (it) { return !shg.last[it.id]; }));
+        var b = shuffle(list.filter(function (it) { return shg.last[it.id]; }));
+        return a.concat(b);
+      }
+      var cards = fresh(c.cards), garage = fresh(c.garage);
+      var g = Math.min(garage.length, Math.max(garage.length ? 1 : 0, Math.floor(n / 2)));
+      if (cards.length < n - g) g = Math.min(garage.length, n - cards.length);
+      var pick = garage.slice(0, g).concat(cards.slice(0, n - g));
+      return { pick: shuffle(pick), spare: cards.slice(n - g).concat(garage.slice(g)) };
+    }
+    // Silhouette of a cut-out photo card, made on this device: the opaque pixels plus any holes
+    // inside them (windows), painted dark. Cached per card + image version.
+    var shSilMem = {};
+    function shSilKey(it) {
+      var e = customMedia[it.car.id] || {};
+      return it.car.id + ":" + (e.updatedAt || 0) + ":" + String(it.src).length;
+    }
+    function shadowSilhouette(it) {
+      var key = shSilKey(it);
+      if (shSilMem[key]) return Promise.resolve(shSilMem[key]);
+      try {
+        var stored = JSON.parse(localStorage.getItem(SHADOW_SIL_PREFIX + it.car.id) || "null");
+        if (stored && stored.k === key && stored.u) { shSilMem[key] = stored.u; return Promise.resolve(stored.u); }
+      } catch (e) {}
+      return new Promise(function (resolve) {
+        var img = new Image();
+        var done = false;
+        function fin(v) { if (!done) { done = true; resolve(v); } }
+        setTimeout(function () { fin(null); }, 4000);
+        img.onerror = function () { fin(null); };
+        img.onload = function () {
+          try {
+            var max = 360, w = img.naturalWidth, h = img.naturalHeight;
+            if (!w || !h) { fin(null); return; }
+            var sc = Math.min(1, max / Math.max(w, h));
+            w = Math.max(1, Math.round(w * sc)); h = Math.max(1, Math.round(h * sc));
+            var cv = document.createElement("canvas");
+            cv.width = w; cv.height = h;
+            var cx = cv.getContext("2d");
+            cx.drawImage(img, 0, 0, w, h);
+            var d = cx.getImageData(0, 0, w, h), px = d.data, N = w * h;
+            var outside = new Uint8Array(N), stack = [];
+            function seed(i) { if (!outside[i] && px[i * 4 + 3] < 40) { outside[i] = 1; stack.push(i); } }
+            for (var x = 0; x < w; x++) { seed(x); seed((h - 1) * w + x); }
+            for (var y = 0; y < h; y++) { seed(y * w); seed(y * w + w - 1); }
+            while (stack.length) {
+              var i = stack.pop(), ix = i % w;
+              if (ix > 0) seed(i - 1);
+              if (ix < w - 1) seed(i + 1);
+              if (i >= w) seed(i - w);
+              if (i < N - w) seed(i + w);
+            }
+            var solid = 0;
+            for (var j = 0; j < N; j++) {
+              var a = outside[j] ? px[j * 4 + 3] : 255;
+              if (!outside[j]) solid++;
+              px[j * 4] = 30; px[j * 4 + 1] = 34; px[j * 4 + 2] = 52; px[j * 4 + 3] = a;
+            }
+            // Nearly all solid = the picture still has its background: no usable shadow.
+            if (solid > N * 0.93 || solid < N * 0.03) { fin(null); return; }
+            cx.putImageData(d, 0, 0);
+            var url = cv.toDataURL("image/png");
+            shSilMem[key] = url;
+            try { localStorage.setItem(SHADOW_SIL_PREFIX + it.car.id, JSON.stringify({ k: key, u: url })); } catch (e2) {}
+            fin(url);
+          } catch (e) { fin(null); }
+        };
+        img.src = it.src;
+      });
+    }
+    function shArtHtml(it, sil) {
+      if (it.type === "garage") return bvSvg(it.g.k, { color: it.g.c, extras: it.g.xs, wide: true });
+      if (it.src) {
+        if (sil) return it.silUrl ? '<img class="sh-img" alt="" draggable="false" src="' + it.silUrl + '">' : '<img class="sh-img sh-css" alt="" draggable="false" src="' + it.src + '">';
+        return '<img class="sh-img" alt="" draggable="false" src="' + it.src + '">';
+      }
+      return defaultArt(it.car);
+    }
+    function shSayName(it) {
+      var st = voiceStyle("shadow");
+      shLog("name:" + it.id);
+      if (it.type === "garage") {
+        var def = bvKind(it.g.k);
+        voiceSay([bvLine("v-" + def.id, def.say + "!")], false, st === "classic");
+        return;
+      }
+      playSources(soundSourcesFor(it.car, st), spokenLine(it.car), st);
+    }
+    function startShadow() {
+      shg.gen++;
+      shg.timers.forEach(function (t) { clearTimeout(t); });
+      shg.timers = [];
+      stopSpeechAndAudio();
+      unlockMedia();
+      hideModePicker();
+      stopConfetti();
+      document.getElementById("start-screen").hidden = true;
+      shEl("shadow-screen").hidden = false;
+      updatePlayerUi();
+      updateHomeBtn();
+      shg.n = shadowSettings.start;
+      shg.boards = 0;
+      shg.last = {};
+      shadowBoard(true);
+    }
+    function stopShadow() {
+      shg.gen++;
+      shg.timers.forEach(function (t) { clearTimeout(t); });
+      shg.timers = [];
+      shg.busy = false;
+      document.querySelectorAll(".b-drag-ghost.sh-ghost").forEach(function (g) { if (g.parentNode) g.parentNode.removeChild(g); });
+      var s = shEl("shadow-screen");
+      if (s) s.hidden = true;
+    }
+    function shadowBoard(first) {
+      var gen = ++shg.gen;
+      shg.busy = true;
+      var want = shg.n;
+      var res = shadowPick(want);
+      var pick = res.pick, spare = res.spare;
+      // Photo cards need their silhouette made first; a photo that can't make one is swapped out.
+      function ready() {
+        var jobs = pick.map(function (it) {
+          if (it.type !== "card" || !it.src) return Promise.resolve(true);
+          return shadowSilhouette(it).then(function (u) { it.silUrl = u; return !!u; });
+        });
+        return Promise.all(jobs).then(function (oks) {
+          var bad = 0;
+          pick = pick.filter(function (it, i) { if (!oks[i]) bad++; return oks[i]; });
+          if (!bad) return;
+          var used = {};
+          pick.forEach(function (it) { used[it.shape] = true; });
+          var more = spare.filter(function (it) { return !used[it.shape] && !(it.type === "card" && it.src); });
+          pick = pick.concat(more.slice(0, bad));
+        });
+      }
+      ready().then(function () {
+        if (gen !== shg.gen || !shadowOpen()) return;
+        shg.items = pick;
+        shg.last = {};
+        pick.forEach(function (it) { shg.last[it.id] = true; });
+        shg.placed = 0;
+        renderShadowBoard();
+        shg.busy = false;
+        if (first) shSay("sh-intro", "Put each car on its shadow!");
+        else if (shg.grew) shSay("sh-more", "More shadows!");
+        else shSay("sh-find", "Find the shadow!");
+      });
+    }
+    function shLayout(n) {
+      var land = innerWidth > innerHeight;
+      var cols, tcols;
+      if (land) { cols = n; tcols = n; }
+      else { cols = n <= 2 ? 1 : 2; tcols = n <= 3 ? n : Math.ceil(n / 2); }
+      if (!land && innerWidth >= 700) { cols = n <= 2 ? 2 : n <= 4 ? 2 : 3; tcols = n <= 3 ? n : Math.ceil(n / 2); }
+      var trows = Math.ceil(n / tcols);
+      var trayh;
+      if (land) trayh = Math.round(Math.min(innerHeight * 0.3, 170));
+      else trayh = Math.round(Math.min(innerHeight * (trows > 1 ? 0.3 : 0.19), trows > 1 ? 330 : 190));
+      return { cols: cols, tcols: tcols, trayh: trayh };
+    }
+    function renderShadowBoard() {
+      var board = shEl("sh-board"), tray = shEl("sh-tray");
+      var items = shg.items, n = items.length;
+      var L = shLayout(n);
+      board.style.setProperty("--cols", L.cols);
+      tray.style.setProperty("--tcols", L.tcols);
+      tray.style.setProperty("--trayh", L.trayh + "px");
+      board.innerHTML = "";
+      tray.innerHTML = "";
+      var pips = shEl("sh-pips");
+      if (pips) { pips.hidden = false; pips.innerHTML = items.map(function () { return '<span class="pip"></span>'; }).join(""); }
+      // Shadows in one order, cars in another.
+      var order = shuffle(items.map(function (_, i) { return i; }));
+      if (n > 1) {
+        var tries = 0;
+        while (tries++ < 6 && order.every(function (v, i) { return v === i; })) order = shuffle(order);
+      }
+      items.forEach(function (it, i) {
+        var slot = document.createElement("div");
+        slot.className = "sh-slot";
+        slot.setAttribute("data-sh", it.id);
+        slot.setAttribute("aria-label", "Shadow");
+        slot.innerHTML = '<span class="sh-art sh-sil">' + shArtHtml(it, true) + '</span>';
+        board.appendChild(slot);
+        it.slot = slot;
+      });
+      order.forEach(function (i) {
+        var it = items[i];
+        var b = document.createElement("button");
+        b.type = "button";
+        b.className = "sh-piece";
+        b.setAttribute("data-sh", it.id);
+        b.setAttribute("aria-label", it.name || "Car");
+        b.innerHTML = '<span class="sh-art">' + shArtHtml(it, false) + '</span>';
+        tray.appendChild(b);
+        it.piece = b;
+        bDrag(b, {
+          busy: function () { return shg.busy || it.done; },
+          scroller: function () { return null; },
+          onTap: function () { if (!it.done) shSayName(it); },
+          onKey: function () { if (!it.done && !shg.busy) shadowPlace(it); },
+          ghost: function () {
+            var r = it.slot.querySelector(".sh-art").getBoundingClientRect();
+            var pr = b.getBoundingClientRect();
+            var w = Math.max(pr.width * 0.9, Math.min(r.width, pr.width * 1.6)), h = Math.max(pr.height * 0.9, Math.min(r.height, pr.height * 1.6));
+            return { html: shArtHtml(it, false), rect: { width: w, height: h } };
+          },
+          ghostClass: "sh-ghost",
+          onDrop: function (x, y) { return shadowDrop(it, x, y); }
+        });
+      });
+    }
+    function shRectDist(r, x, y) {
+      var dx = x < r.left ? r.left - x : x > r.right ? x - r.right : 0;
+      var dy = y < r.top ? r.top - y : y > r.bottom ? y - r.bottom : 0;
+      return Math.sqrt(dx * dx + dy * dy);
+    }
+    function shadowDrop(it, x, y) {
+      if (shg.busy || it.done) return false;
+      var best = null, bestD = 1e9;
+      shg.items.forEach(function (o) {
+        if (o.done) return;
+        var r = o.slot.getBoundingClientRect();
+        var d = shRectDist(r, x, y);
+        if (d < bestD || (d === bestD && o === it)) { best = o; bestD = d; }
+      });
+      if (best === it && bestD <= B_DROP_SLOP) { shadowPlace(it); return true; }
+      shg.wrong = (shg.wrong || 0) + 1;
+      shSay("sh-try", "Try again!");
+      if (best && bestD <= B_DROP_SLOP) bWiggle(best.slot);
+      return false;
+    }
+    function shadowPlace(it) {
+      it.done = true;
+      shg.placed++;
+      var slot = it.slot;
+      slot.classList.add("done");
+      var art = slot.querySelector(".sh-art");
+      art.classList.remove("sh-sil");
+      art.innerHTML = shArtHtml(it, false);
+      var tag = document.createElement("span");
+      tag.className = "sh-name";
+      tag.textContent = it.name || "";
+      slot.appendChild(tag);
+      it.piece.classList.add("used");
+      it.piece.setAttribute("aria-hidden", "true");
+      var pips = shEl("sh-pips");
+      if (pips && pips.children[shg.placed - 1]) pips.children[shg.placed - 1].classList.add("done");
+      shSayName(it);
+      if (shg.placed >= shg.items.length) {
+        shg.busy = true;
+        shg.boards++;
+        shLater(function () {
+          shLog("cheer");
+          var keep = difficulty.hooray;
+          difficulty.hooray = true;
+          playHooray();
+          difficulty.hooray = keep;
+          startConfetti();
+          shLater(function () { shSay("sh-done", "You did it!"); }, 1300);
+        }, 1100);
+        shLater(function () {
+          stopConfetti();
+          var before = shg.n;
+          if (shadowSettings.harder !== false && shg.n < shadowSettings.max) shg.n++;
+          shg.grew = shg.n > before;
+          shadowBoard(false);
+        }, 4300);
+      }
+    }
+    function paintShadowStartArt() {
+      var car = (typeof builtinCar === "function" && builtinCar("skye")) || allCars()[2] || allCars()[0];
+      if (!car) return;
+      document.querySelectorAll('.mini-art[data-art="shadow"], .mini-art[data-art="shadow-sil"]').forEach(function (h) {
+        h.classList.remove("has-photo", "is-family");
+        h.innerHTML = defaultArt(car);
+      });
+    }
+    function bindShadowUi() {
+      var sb = shEl("shadow-btn");
+      if (sb) sb.addEventListener("click", function () { unlockMedia(); startShadow(); });
+      ["sh-set-start", "sh-set-harder", "sh-set-max", "sh-set-pool"].forEach(function (id) {
+        var el = shEl(id);
+        if (!el) return;
+        el.addEventListener("change", function () {
+          saveShadowSettings({
+            start: shEl("sh-set-start").value,
+            harder: shEl("sh-set-harder").checked,
+            max: shEl("sh-set-max").value,
+            pool: shEl("sh-set-pool").value
+          });
+        });
+      });
+      updateShadowSettingsUi();
+      paintShadowStartArt();
+      window.addEventListener("resize", function () {
+        if (!shadowOpen() || !shg.items.length) return;
+        var L = shLayout(shg.items.length);
+        shEl("sh-board").style.setProperty("--cols", L.cols);
+        shEl("sh-tray").style.setProperty("--tcols", L.tcols);
+        shEl("sh-tray").style.setProperty("--trayh", L.trayh + "px");
+      });
     }
 
     // Step 4: extras (v36: several, toggled on and off, then Done)
@@ -9489,12 +9993,13 @@
     bindPhotoUi();
     bindPinPad();
     bindBuildUi();
+    bindShadowUi();
     document.getElementById("next-btn").addEventListener("click", onNext);
     document.getElementById("match-home-btn").addEventListener("click", function () { goHome(); });
     document.getElementById("name-home-btn").addEventListener("click", function () { goHome(); });
     document.getElementById("home-btn").addEventListener("click", function () { goHomeFromAnywhere(); });
     (function () {
-      var ids = ["start-screen", "game-screen", "name-screen", "settings-screen", "win-overlay", "name-win-overlay", "mode-picker", "build-screen"];
+      var ids = ["start-screen", "game-screen", "name-screen", "settings-screen", "win-overlay", "name-win-overlay", "mode-picker", "build-screen", "shadow-screen"];
       if (typeof MutationObserver === "undefined") return;
       var mo = new MutationObserver(function () { updateHomeBtn(); });
       ids.forEach(function (id) { var el = document.getElementById(id); if (el) mo.observe(el, { attributes: true, attributeFilter: ["hidden"] }); });
@@ -10408,6 +10913,7 @@
       var mater = findHeroCar(HERO_SLOTS[1], {}) || builtinCar("tugger") || all[1] || all[0];
       document.querySelectorAll('.mini-art[data-art="match"]').forEach(function (h) { if (fav) fillArt(h, fav); });
       document.querySelectorAll('.mini-art[data-art="name"]').forEach(function (h) { if (mater) fillArt(h, mater); });
+      paintShadowStartArt();
     }
     function paintHero() {
       paintStartArt();
@@ -12096,6 +12602,14 @@
       getDeck: function () { return deck.map(function (d) { return { id: d.id, car: d.car.id, family: !!d.car.family }; }); },
       getMatchMode: function () { return matchMode; },
       startBuild: startBuild,
+      startShadow: startShadow,
+      shadowSettings: function (v) { if (v) saveShadowSettings(Object.assign({}, shadowSettings, v)); return Object.assign({}, shadowSettings); },
+      shadowState: function () {
+        return { open: shadowOpen(), n: shg.n, boards: shg.boards, placed: shg.placed, busy: shg.busy, wrong: shg.wrong || 0, sayLog: shg.sayLog.slice(),
+          items: shg.items.map(function (it) { return { id: it.id, type: it.type, name: it.name, done: !!it.done, photo: !!it.src, sil: it.silUrl ? "canvas" : (it.src ? "css" : "svg") }; }) };
+      },
+      shadowSilhouetteOf: function (src) { return shadowSilhouette({ car: { id: "test-" + Math.random().toString(36).slice(2) }, src: src }); },
+      shadowCandidates: function () { var c = shadowCandidates(); return { cards: c.cards.map(function (x) { return x.id; }), garage: c.garage.map(function (x) { return x.id; }) }; },
       stopBuild: stopBuild,
       buildGo: buildGo,
       placeBuildPart: placeBuildPart,

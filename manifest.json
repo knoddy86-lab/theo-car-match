@@ -1,7 +1,7 @@
 {
-  "name": "Theo's Car Match",
-  "short_name": "Car Match",
-  "description": "A gentle car matching game for Theo.",
+  "name": "Car Games",
+  "short_name": "Car Games",
+  "description": "Gentle car games: match, name, build and shadows.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

@@ -58,3 +58,5 @@ choppy. For other players the game says the name (a clip for Jayden, otherwise t
 All of these are listed in `sw.js` (`BUILD_VOICE`) so they are cached for offline play.
 
 v40: added the rubbish truck clips (v-rubbish, x-bin, x-amber "Warning lights!", x-recycle, x-arm, x-bags, built-*-rubbish, s-theo/s-harper-*-rubbish). Same en_GB-alba-medium Piper voice and processing, checked with Whisper.
+
+v42: Shadow game lines: sh-intro "Put each car on its shadow!", sh-try "Try again!", sh-done "You did it!", sh-more "More shadows!", sh-find "Find the shadow!". Same Alba voice and processing, checked with Whisper (5 of 5 exact).
