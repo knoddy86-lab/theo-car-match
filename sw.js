@@ -1,6 +1,6 @@
 /* Theo's Car Match service worker — cache-first so the game opens offline
    even when the home computer is unreachable (mobile data). Never caches /api. */
-var CACHE = "theo-car-match-v38";
+var CACHE = "theo-car-match-v39";
 var CORE = [
   "./",
   "./index.html",
@@ -11,6 +11,14 @@ var CORE = [
 ];
 var OPTIONAL = [
   "./version.json",
+  "./sounds/rosie.mp3",
+  "./sounds/tugger.mp3",
+  "./sounds/skye.mp3",
+  "./sounds/pip.mp3",
+  "./sounds/sunny.mp3",
+  "./sounds/hank.mp3",
+  "./sounds/officer.mp3",
+  "./sounds/lets-match.mp3",
   "./sounds/revs/01-idle-blip.mp3",
   "./sounds/revs/02-idle-blip-high.mp3",
   "./sounds/revs/03-double-blip.mp3",

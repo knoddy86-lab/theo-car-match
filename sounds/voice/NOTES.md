@@ -5,10 +5,17 @@ car names when a card flips, the Name game ("Where's Nanna?" for photos, the car
 Say option: Full, First, Last, Nickname and Mix), family people's names, player names ("Hello Theo!"),
 and the start-screen lines ("Cars or photos?", "Let's match the cars!", "Let's match the family!").
 
-The old car-name clips (`sounds/rosie.mp3`, `tugger.mp3`, `skye.mp3`, `pip.mp3`, `sunny.mp3`, `hank.mp3`,
+The older car-name clips (`sounds/rosie.mp3`, `tugger.mp3`, `skye.mp3`, `pip.mp3`, `sunny.mp3`, `hank.mp3`,
 `officer.mp3`, `lets-match.mp3`, `great-job.mp3`) were made with Sound of Text (Google's en-AU voice), which has no
-clear redistribution licence. They were removed in v37, and the game no longer fetches clips from Sound of Text
-for renamed or new cards.
+clear redistribution licence. They were taken out in v37 and put back in v39 for the **Classic** voice.
+
+## Which voice plays (v39)
+
+Settings has a per-device voice for each part of the game: **Name game voice**, **Match voice** and
+**Build voice**, each Classic or Alba. Defaults: Name game = Classic, Match = Alba, Build = Alba.
+Classic is the pre-v37 voice: the Sound of Text clips above, Sound of Text clips fetched online for renamed or
+new cards, and the device voice for everything else. Alba uses the clips in this folder (and `sounds/build/`).
+The start-screen prompts use Alba.
 
 ## Voice and licence
 

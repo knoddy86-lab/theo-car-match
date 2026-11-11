@@ -2188,13 +2188,29 @@
         </div>
         <div id="pane-cars" class="settings-pane" role="tabpanel" aria-labelledby="tab-cars">
         <p class="settings-lead">Add your own names, pictures and sounds for each car, or add a new card. If a name is said wrong, type how it should sound under Say it like.</p>
+        <div class="diff-custom voice-styles" id="voice-styles">
+          <h3>Voices</h3>
+          <p class="device-only-note">This device only — not synced. Classic is the original voice (car-name clips and this device's voice). Alba is the natural recorded voice.</p>
+            <div class="diff-row">
+              <label for="voice-style-name-cars">Name game voice</label>
+              <select id="voice-style-name-cars" class="voice-style-select" data-part="name" aria-label="Name game voice"><option value="classic">Classic (the original voice)</option><option value="alba">Alba (natural recorded voice)</option></select>
+            </div>
+            <div class="diff-row">
+              <label for="voice-style-match-cars">Match voice</label>
+              <select id="voice-style-match-cars" class="voice-style-select" data-part="match" aria-label="Match voice"><option value="alba">Alba (natural recorded voice)</option><option value="classic">Classic (the original voice)</option></select>
+            </div>
+            <div class="diff-row">
+              <label for="voice-style-build-cars">Build voice</label>
+              <select id="voice-style-build-cars" class="voice-style-select" data-part="build" aria-label="Build voice"><option value="alba">Alba (natural recorded voice)</option><option value="classic">Classic (the original voice)</option></select>
+            </div>
+        </div>
         <div class="voice-picker">
-          <label for="voice-select">Backup voice</label>
+          <label for="voice-select">Device voice</label>
           <div class="voice-row">
-            <select id="voice-select" aria-label="Backup voice"></select>
+            <select id="voice-select" aria-label="Device voice"></select>
             <button type="button" class="btn-mini primary" id="voice-test-btn">Test</button>
           </div>
-          <p class="voice-help">The game talks with its own recorded voice. This device voice is only used for a name that has no recording yet, like one you have just typed. For a nicer backup voice on iPhone: Settings &gt; Accessibility &gt; Spoken Content &gt; Voices &gt; English, and download an Enhanced or Premium voice.</p>
+          <p class="voice-help">Used by the Classic voice, and by Alba for a name that has no recording yet. Test plays this voice. For a nicer device voice on iPhone: Settings &gt; Accessibility &gt; Spoken Content &gt; Voices &gt; English, and download an Enhanced or Premium voice.</p>
         </div>
         <div class="settings-cards">
           <h3 class="friends-title">Cards</h3>
@@ -2205,6 +2221,12 @@
         <div id="pane-difficulty" class="settings-pane" role="tabpanel" aria-labelledby="tab-difficulty" hidden>
           <p class="settings-lead">How Match Game works on this device. Pick a starting age, or make your own.</p>
           <p class="device-only-note">This device only — not synced.</p>
+          <div class="diff-custom voice-styles">
+            <div class="diff-row">
+              <label for="voice-style-match-match">Match voice</label>
+              <select id="voice-style-match-match" class="voice-style-select" data-part="match" aria-label="Match voice"><option value="alba">Alba (natural recorded voice)</option><option value="classic">Classic (the original voice)</option></select>
+            </div>
+          </div>
           <div class="diff-presets" id="diff-presets">
             <button type="button" id="diff-age2" data-preset="age2" aria-pressed="true">Age 2<small>2 pairs, very big cards, a long first look</small></button>
             <button type="button" id="diff-age3" data-preset="age3" aria-pressed="false">Age 3<small>Start with 3 pairs</small></button>
@@ -2323,6 +2345,10 @@
               <label for="name-set-cele">End celebration screen</label>
               <input id="name-set-cele" type="checkbox" checked>
             </div>
+            <div class="diff-row">
+              <label for="voice-style-name-names">Name game voice</label>
+              <select id="voice-style-name-names" class="voice-style-select" data-part="name" aria-label="Name game voice"><option value="classic">Classic (the original voice)</option><option value="alba">Alba (natural recorded voice)</option></select>
+            </div>
           </div>
         </div>
         <div id="pane-build" class="settings-pane" role="tabpanel" aria-labelledby="tab-build" hidden>
@@ -2344,6 +2370,10 @@
                 <option value="3">Up to 3</option>
                 <option value="1">Just 1</option>
               </select>
+            </div>
+            <div class="diff-row">
+              <label for="voice-style-build-build">Build voice</label>
+              <select id="voice-style-build-build" class="voice-style-select" data-part="build" aria-label="Build voice"><option value="alba">Alba (natural recorded voice)</option><option value="classic">Classic (the original voice)</option></select>
             </div>
           </div>
           <div class="diff-custom" id="garage-options">
@@ -2553,6 +2583,27 @@
     // v37: every spoken line uses the same natural "Alba" voice clips as Build (Piper en_GB-alba-medium, CC BY 4.0,
     // see sounds/voice/NOTES.md). Keys are the spoken text in lowercase with apostrophes dropped and other characters as "-".
     var VOICE_DIR = SOUND_DIR + "voice/";
+    var PHRASE_CLIPS = { letsMatch: "lets-match.mp3" };
+    // v39: per-device voice for each part of the game. Classic = the pre-v37 voice (Sound of Text car-name clips
+    // and the device voice); Alba = the natural recorded clips.
+    var VOICE_STYLE_KEY = "theo-car-match-voice-styles";
+    var VOICE_STYLE_DEFAULTS = { name: "classic", match: "alba", build: "alba" };
+    var voiceStyles = Object.assign({}, VOICE_STYLE_DEFAULTS);
+    try {
+      var vsRaw = JSON.parse(localStorage.getItem(VOICE_STYLE_KEY) || "{}") || {};
+      Object.keys(VOICE_STYLE_DEFAULTS).forEach(function (k) { if (vsRaw[k] === "classic" || vsRaw[k] === "alba") voiceStyles[k] = vsRaw[k]; });
+    } catch (e) {}
+    function voiceStyle(part) { return voiceStyles[part] === "classic" ? "classic" : "alba"; }
+    function setVoiceStyle(part, value) {
+      if (!VOICE_STYLE_DEFAULTS[part]) return;
+      voiceStyles[part] = value === "classic" ? "classic" : "alba";
+      try { localStorage.setItem(VOICE_STYLE_KEY, JSON.stringify(voiceStyles)); } catch (e) {}
+      syncVoiceStyleSelects();
+    }
+    function syncVoiceStyleSelects() {
+      var list = document.querySelectorAll(".voice-style-select");
+      for (var i = 0; i < list.length; i++) list[i].value = voiceStyle(list[i].getAttribute("data-part"));
+    }
     var VOICE_CLIPS = {"ashleigh": 1, "ashley": 1, "berry": 1, "caitlyn": 1, "cars-or-photos": 1, "cruise": 1, "dart": 1, "delilah": 1, "do": 1, "doc": 1, "dot": 1, "fillmore": 1, "flo": 1, "francesco": 1, "grandad": 1, "guido": 1, "gwee-doh": 1, "hank": 1, "harper": 1, "hello": 1, "hello-ashleigh": 1, "hello-ashley": 1, "hello-caitlyn": 1, "hello-delilah": 1, "hello-grandad": 1, "hello-harper": 1, "hello-jason": 1, "hello-jay-den": 1, "hello-josh": 1, "hello-kelly": 1, "hello-lindsay": 1, "hello-marissa": 1, "hello-mitch": 1, "hello-nanna": 1, "hello-theo": 1, "inside": 1, "jason": 1, "jay-den": 1, "josh": 1, "kelly": 1, "laney": 1, "lets-match-the-cars": 1, "lets-match-the-family": 1, "lightning": 1, "lightning-mcqueen": 1, "lindsay": 1, "luigi": 1, "mack": 1, "marissa": 1, "mater": 1, "mcqueen": 1, "mitch": 1, "moss": 1, "nanna": 1, "nick": 1, "officer": 1, "officer-dot": 1, "pip": 1, "racer": 1, "ramone": 1, "rosie": 1, "rosie-racer": 1, "ryan": 1, "sal": 1, "sally": 1, "sarge": 1, "sheriff": 1, "shields": 1, "skye": 1, "sunny": 1, "theo": 1, "tugger": 1, "wheres": 1, "wheres-ashleigh": 1, "wheres-ashley": 1, "wheres-caitlyn": 1, "wheres-delilah": 1, "wheres-grandad": 1, "wheres-harper": 1, "wheres-jason": 1, "wheres-jay-den": 1, "wheres-josh": 1, "wheres-kelly": 1, "wheres-lindsay": 1, "wheres-marissa": 1, "wheres-mitch": 1, "wheres-nanna": 1, "wheres-theo": 1};
     var REV_CLIPS = [
       "01-idle-blip.mp3",
@@ -2612,7 +2663,7 @@
     var BLOB_FETCH_MS = 20000;
     var bootStartedAt = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
     var keyChangeOpen = false;
-    var APP_VERSION = "38";
+    var APP_VERSION = "39";
     var MATCH_PAIR_CAP = 6;
     var NAME_ROUNDS = 6;
     var THUMB_MAX = 256;
@@ -3825,27 +3876,51 @@
       return out;
     }
 
-    function speakText(text) {
+    function speakText(text, style) {
       try {
         text = applySayLike(text);
         if (!text) return;
-        buildSay(voiceParts(text));
+        if (style === "classic") { deviceSpeakText(text); return; }
+        voiceSay(voiceParts(text));
       } catch (e) {}
     }
 
-    function speak(text) {
+    // The pre-v37 device-voice path (used by the Classic voice).
+    function deviceSpeakText(text) {
+      try {
+        if (!window.speechSynthesis || !text) return;
+        var token = ++speakToken;
+        if (speakTimer) { clearTimeout(speakTimer); speakTimer = null; }
+        var u = new SpeechSynthesisUtterance(text);
+        u.rate = 0.95;
+        u.pitch = 1;
+        speakTimer = setTimeout(function () {
+          speakTimer = null;
+          if (token !== speakToken) return;
+          try {
+            if (!voicesCache.length) refreshVoices();
+            var voice = chosenVoice();
+            u.lang = (voice && voice.lang) || "en-AU";
+            if (voice) u.voice = voice;
+            speechSynthesis.speak(u);
+          } catch (e2) {}
+        }, 50);
+      } catch (e) {}
+    }
+
+    function speak(text, style) {
       stopSpeechAndAudio();
-      speakText(text);
+      speakText(text, style);
     }
 
 
-    function playSources(sources, fallbackText) {
+    function playSources(sources, fallbackText, style) {
       stopSpeechAndAudio();
       var token = playToken;
       var idx = 0;
       function next() {
         if (token !== playToken) return;
-        if (idx >= sources.length) { speakText(fallbackText); return; }
+        if (idx >= sources.length) { speakText(fallbackText, style); return; }
         var src = sources[idx++];
         var a = getSharedAudio();
         customAudioEl = a;
@@ -3875,27 +3950,42 @@
       next();
     }
 
-    function soundSourcesFor(car) {
+    // Classic voice: the Sound of Text clip for an unrenamed built-in car, or the auto clip fetched for a renamed/new card.
+    var CLASSIC_CAR_CLIPS = { rosie: 1, tugger: 1, skye: 1, pip: 1, sunny: 1, hank: 1, officer: 1 };
+    function classicSources(car) {
+      var entry = customMedia[car.id] || {};
+      var text = spokenLine(car);
+      var out = [];
+      if (CLASSIC_CAR_CLIPS[car.id] && !car.custom && !customName(car) && !customSayLike(car)) out.push(SOUND_DIR + car.id + ".mp3");
+      if (entry.autoSrc && entry.autoText === text) out.push(entry.autoSrc);
+      return out;
+    }
+
+    function soundSourcesFor(car, style) {
       var entry = customMedia[car.id] || {};
       var text = spokenLine(car);
       var out = [];
       if (entry.audioUrl) out.push(entry.audioUrl);
+      if (style === "classic") out = out.concat(classicSources(car));
       return out;
     }
 
-    function pronunciationSources(car) {
-      return [];
+    function pronunciationSources(car, style) {
+      return style === "classic" ? classicSources(car) : [];
     }
 
     function playPronunciation(car) {
-      playSources(pronunciationSources(car), spokenLine(car));
+      var st = voiceStyle("match");
+      playSources(pronunciationSources(car, st), spokenLine(car), st);
     }
 
     function speakCar(car) {
-      playSources(soundSourcesFor(car), spokenLine(car));
+      var st = voiceStyle("match");
+      playSources(soundSourcesFor(car, st), spokenLine(car), st);
     }
 
     function playPhrase(key, text) {
+      if (voiceStyle("match") === "classic" && PHRASE_CLIPS[key]) { playSources([SOUND_DIR + PHRASE_CLIPS[key]], text, "classic"); return; }
       speak(text);
     }
 
@@ -4019,12 +4109,53 @@
       return hoorayWait;
     }
 
+    /* Natural voice for renamed / custom names: Sound of Text (soundoftext.com, Google en-AU voice).
+       Only the spoken text is sent. Files can't be fetched as blobs (no CORS), so the URL is
+       cached in IndexedDB and played via <audio src>. Offline, the device voice is used. */
+    function fetchNameClip(text) {
+      var api = "https://api.soundoftext.com/sounds";
+      return fetch(api, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ engine: "Google", data: { text: text, voice: "en-AU" } })
+      }).then(function (r) { return r.json(); }).then(function (j) {
+        if (!j || !j.success || !j.id) throw new Error("tts create failed");
+        var tries = 0;
+        function poll() {
+          tries++;
+          return fetch(api + "/" + encodeURIComponent(j.id)).then(function (r) { return r.json(); }).then(function (s) {
+            if (s && s.status === "Done" && s.location) return s.location;
+            if (tries >= 10 || (s && s.status === "Error")) throw new Error("tts not ready");
+            return new Promise(function (res) { setTimeout(res, 600); }).then(poll);
+          });
+        }
+        return poll();
+      });
+    }
+
     function needsAutoClip(car) {
       return car.custom || !!customName(car) || !!customSayLike(car);
     }
 
-    // v37: names are spoken with the bundled Alba clips (or the device voice), so nothing is fetched from an online voice any more.
-    function refreshAutoClip(car, immediate) {}
+    function refreshAutoClip(car, immediate) {
+      if (!car) return;
+      if (autoTimers[car.id]) clearTimeout(autoTimers[car.id]);
+      autoTimers[car.id] = setTimeout(function () {
+        autoTimers[car.id] = null;
+        var live = carById(car.id) || car;
+        var entry = customMedia[live.id] || {};
+        if (!needsAutoClip(live)) return;
+        if (voiceStyle("name") !== "classic" && voiceStyle("match") !== "classic") return;
+        var text = spokenLine(live);
+        if (!text || (entry.autoSrc && entry.autoText === text)) return;
+        if (!window.fetch) return;
+        fetchNameClip(text).then(function (src) {
+          var cur = carById(live.id);
+          if (!cur || spokenLine(cur) !== text) return;
+          return saveCustom(live.id, { autoText: text, autoSrc: src });
+        }).catch(function () {});
+      }, immediate ? 0 : 900);
+    }
 
     function refreshAllAutoClips() {
       allCars().forEach(function (car) { if (needsAutoClip(car)) refreshAutoClip(car, true); });
@@ -5160,7 +5291,7 @@
         return;
       }
       if (photos) {
-        startPhotoMatch(false).then(function (ok) { if (ok) speak("Let's match the family!"); });
+        startPhotoMatch(false).then(function (ok) { if (ok) speak("Let's match the family!", voiceStyle("match")); });
         return;
       }
       matchMode = "cars";
@@ -6012,17 +6143,18 @@
         var fp = (nameState.sayPick && nameState.target && nameState.target.id === car.id) ? nameState.sayPick : chooseNameSayOption(car);
         var where = "Where's " + fp.text + "?";
         lastNamePrompt = { id: car.id, mode: "family", text: where, usedClip: false };
-        speak(where);
+        speak(where, voiceStyle("name"));
         return;
       }
       var pick = (nameState.sayPick && nameState.target && nameState.target.id === car.id)
         ? nameState.sayPick
         : chooseNameSayOption(car);
       lastNamePrompt = { id: car.id, mode: pick.mode, text: pick.text, usedClip: pick.mode === "full" };
+      var nst = voiceStyle("name");
       if (pick.mode === "full") {
-        playSources(soundSourcesFor(car), pick.text);
+        playSources(soundSourcesFor(car, nst), pick.text, nst);
       } else {
-        speak(pick.text);
+        speak(pick.text, nst);
       }
     }
 
@@ -6991,10 +7123,20 @@
         else localStorage.removeItem(VOICE_KEY);
       } catch (err) {}
     });
+    (function () {
+      var list = document.querySelectorAll(".voice-style-select");
+      for (var i = 0; i < list.length; i++) {
+        list[i].addEventListener("change", function (e) {
+          setVoiceStyle(e.target.getAttribute("data-part"), e.target.value);
+          if (e.target.getAttribute("data-part") !== "build") refreshAllAutoClips();
+        });
+      }
+      syncVoiceStyleSelects();
+    })();
     document.getElementById("voice-test-btn").addEventListener("click", function () {
       unlockMedia();
       var vp = activeProfile();
-      speak("Hello " + ((vp && vp.name) || "Theo") + "! Let's match the cars!");
+      speak("Hello " + ((vp && vp.name) || "Theo") + "! Let's match the cars!", "classic");
     });
     bindSyncUi();
     bindSettingsTabs();
@@ -8013,13 +8155,16 @@
       return [bvLine(BUILD_NAME_CLIPS[key] ? "name-" + key : "", name), bvLine("built-" + tail, rest, 60)];
     }
     function buildSay(parts, keepOthers) {
+      voiceSay(parts, keepOthers, voiceStyle("build") === "classic");
+    }
+    function voiceSay(parts, keepOthers, deviceOnly) {
       if (keepOthers) {
         if (sharedAudio) { try { sharedAudio.pause(); } catch (e) {} }
         playToken++;
       } else stopSpeechAndAudio();
       var token = playToken;
       var i = 0;
-      buildSayLog.push(parts.map(function (p) { return p.src ? ("voice/" + p.k) : (p.k || ("tts:" + p.t)); }).join(" + "));
+      buildSayLog.push(parts.map(function (p) { return deviceOnly ? ("tts:" + p.t) : (p.src ? ("voice/" + p.k) : (p.k || ("tts:" + p.t))); }).join(" + "));
       if (buildSayLog.length > 60) buildSayLog.shift();
       function next() {
         if (token !== playToken || i >= parts.length) return;
@@ -8029,7 +8174,7 @@
       }
       function play(p) {
         if (token !== playToken) return;
-        if (!p.k && !p.src) { tts(p.t); return; }
+        if (deviceOnly || (!p.k && !p.src)) { tts(p.t); return; }
         var a = getSharedAudio();
         customAudioEl = a;
         var settled = false;
@@ -11316,6 +11461,8 @@
       chooseNameSayOption: chooseNameSayOption,
       voiceParts: voiceParts,
       voiceClips: function () { return Object.keys(VOICE_CLIPS); },
+      voiceStyle: voiceStyle,
+      setVoiceStyle: setVoiceStyle,
       getFamilyFiles: function () { return familyPeople.map(function (p) { return { id: p.id, photos: p.photos.slice() }; }); },
       getPhotoSettings: function () { return JSON.parse(JSON.stringify(photoSettings)); },
       setPhotoSettings: savePhotoSettings,

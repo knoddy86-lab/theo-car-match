@@ -17,7 +17,6 @@ The game falls back to the device voice only when a clip is missing (for example
 
 There was no en_AU voice in the Piper catalogue. The older car-name clips (`sounds/<car>.mp3`) were made with
 Sound of Text (Google's en-AU voice), which has no clear redistribution licence, so it was not used for these clips.
-Since v37 the rest of the game uses the same Alba voice (see `sounds/voice/NOTES.md`) and those old clips are gone.
 
 Voices that were tried and not used:
 - `en_GB-cori-high` (public domain LibriVox data): words were often unclear (for example "Theo" heard as "See you though").
