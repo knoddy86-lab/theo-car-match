@@ -1,6 +1,6 @@
 /* Theo's Car Match service worker — cache-first so the game opens offline
    even when the home computer is unreachable (mobile data). Never caches /api. */
-var CACHE = "theo-car-match-v36";
+var CACHE = "theo-car-match-v37";
 var CORE = [
   "./",
   "./index.html",
@@ -11,14 +11,6 @@ var CORE = [
 ];
 var OPTIONAL = [
   "./version.json",
-  "./sounds/rosie.mp3",
-  "./sounds/tugger.mp3",
-  "./sounds/skye.mp3",
-  "./sounds/pip.mp3",
-  "./sounds/sunny.mp3",
-  "./sounds/hank.mp3",
-  "./sounds/officer.mp3",
-  "./sounds/lets-match.mp3",
   "./sounds/revs/01-idle-blip.mp3",
   "./sounds/revs/02-idle-blip-high.mp3",
   "./sounds/revs/03-double-blip.mp3",
@@ -99,6 +91,21 @@ var BUILD_VOICE = [
   "built-purple-loader", "s-theo-purple-loader", "s-harper-purple-loader"
 ];
 OPTIONAL = OPTIONAL.concat(BUILD_VOICE.map(function (k) { return "./sounds/build/" + k + ".mp3"; }));
+// v37: the rest of the game speaks with the same natural voice clips (see sounds/voice/NOTES.md), cached for offline play.
+var GAME_VOICE = [
+  "ashleigh", "ashley", "berry", "caitlyn", "cars-or-photos", "cruise", "dart", "delilah", "do", "doc", "dot",
+  "fillmore", "flo", "francesco", "grandad", "guido", "gwee-doh", "hank", "harper", "hello", "hello-ashleigh",
+  "hello-ashley", "hello-caitlyn", "hello-delilah", "hello-grandad", "hello-harper", "hello-jason",
+  "hello-jay-den", "hello-josh", "hello-kelly", "hello-lindsay", "hello-marissa", "hello-mitch", "hello-nanna",
+  "hello-theo", "inside", "jason", "jay-den", "josh", "kelly", "laney", "lets-match-the-cars",
+  "lets-match-the-family", "lightning", "lightning-mcqueen", "lindsay", "luigi", "mack", "marissa", "mater",
+  "mcqueen", "mitch", "moss", "nanna", "nick", "officer", "officer-dot", "pip", "racer", "ramone", "rosie",
+  "rosie-racer", "ryan", "sal", "sally", "sarge", "sheriff", "shields", "skye", "sunny", "theo", "tugger",
+  "wheres", "wheres-ashleigh", "wheres-ashley", "wheres-caitlyn", "wheres-delilah", "wheres-grandad",
+  "wheres-harper", "wheres-jason", "wheres-jay-den", "wheres-josh", "wheres-kelly", "wheres-lindsay",
+  "wheres-marissa", "wheres-mitch", "wheres-nanna", "wheres-theo"
+];
+OPTIONAL = OPTIONAL.concat(GAME_VOICE.map(function (k) { return "./sounds/voice/" + k + ".mp3"; }));
 
 function addBestEffort(cache, urls) {
   return Promise.all(urls.map(function (u) {
