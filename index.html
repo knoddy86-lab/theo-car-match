@@ -1773,6 +1773,159 @@
       .settings-row { grid-template-columns: 76px 1fr; }
       .settings-preview { width: 76px; height: 68px; }
     }
+    /* ---- v35: Build a car ---- */
+    .gc-build { background: linear-gradient(180deg, #FFB74D, #FB8C00); box-shadow: 0 8px 0 #EF6C00, 0 14px 26px rgba(0,0,0,0.2); }
+    .gc-build:active { box-shadow: 0 2px 0 #EF6C00, 0 6px 12px rgba(0,0,0,0.2); }
+    .gc-build .build-car { position: absolute; left: 4%; bottom: 4%; width: 70%; height: 74%; display: flex; align-items: flex-end; }
+    .gc-build .build-car svg { width: 100%; height: 100%; overflow: visible; }
+    .gc-tool { position: absolute; right: 4%; top: 8%; width: 40%; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2)); }
+    .gc-stars { position: absolute; left: 8%; top: 4%; width: 22%; }
+    .start-actions.three { gap: clamp(10px, 2.8vw, 36px); flex-wrap: nowrap; }
+    .start-actions.three .game-card { width: calc((100% - 2 * clamp(10px, 2.8vw, 36px)) / 3); max-width: 270px; min-width: 0; padding: clamp(8px, 1.6vmin, 16px) clamp(6px, 1.4vmin, 14px) clamp(10px, 1.8vmin, 18px); border-radius: clamp(20px, 3vmin, 30px); }
+    .start-actions.three .gc-label { font-size: clamp(19px, 5.2vmin, 52px); }
+    .start-actions.three .gc-bubble { font-size: clamp(20px, 5.4vmin, 54px); }
+    @media (max-height: 520px) and (orientation: landscape) {
+      .start-actions.three .game-card { width: auto; }
+      .start-actions.three .gc-label { font-size: clamp(18px, 6.4vh, 36px); }
+    }
+    .scene .garage-window, .scene .garage-door { display: none; }
+    body.garage-on .scene .sun, body.garage-on .scene .hill, body.garage-on .scene .road { display: none; }
+    body.garage-on .scene { background: linear-gradient(180deg, #8EC8EA 0 14%, #F0D9A8 14% 15.2%, #F6E6C4 15.2% 80%, #D7C4A0 80% 82%, #C9B48A 82% 100%); }
+    body.garage-on .scene .garage-door { display: block; position: absolute; left: 0; right: 0; bottom: 0; height: 9%; background: repeating-linear-gradient(180deg, #C9A36E 0 18px, #B38B58 18px 20px); box-shadow: inset 0 8px 0 rgba(0,0,0,0.12); }
+
+    .build-screen { justify-content: flex-start; padding-top: calc(var(--safe-t) + 74px); }
+    .build-screen .bstep { width: min(1100px, 100%); flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; align-items: center; gap: clamp(8px, 1.6vh, 18px); }
+    .build-screen .bstep[hidden] { display: none !important; }
+    .b-pips { position: absolute; top: calc(var(--safe-t) + 14px); right: calc(var(--safe-r) + 4px); z-index: 8; background: rgba(255,255,255,0.94); border-radius: 999px; padding: 10px 12px; display: flex; gap: 8px; align-items: center; box-shadow: 0 3px 0 rgba(0,0,0,0.1), 0 6px 14px rgba(0,0,0,0.12); }
+    .b-pips[hidden] { display: none !important; }
+    .b-pips .pip { width: 14px; height: 14px; border-radius: 50%; background: #C5CAE9; }
+    .b-pips .pip.done { background: #34C759; }
+    .b-pips .pip.on { background: #FFB300; box-shadow: 0 0 0 3px rgba(255,179,0,0.35); }
+    .b-title { background: rgba(255,255,255,0.92); border: 5px solid #FFF; border-radius: 22px; padding: 6px 22px 8px; box-shadow: 0 6px 0 rgba(25,40,90,0.10), 0 12px 24px rgba(0,0,0,0.10); font-size: clamp(24px, 4.2vmin, 40px); font-weight: 800; color: #1A237E; line-height: 1.1; text-align: center; flex: 0 0 auto; }
+    .b-tabs { display: flex; gap: 12px; flex: 0 0 auto; }
+    .b-tab { appearance: none; border: 0; border-radius: 999px; min-height: 58px; padding: 6px 22px; font-weight: 800; font-size: clamp(18px, 3.4vmin, 30px); color: #1A237E; background: rgba(255,255,255,0.85); box-shadow: 0 5px 0 rgba(26,35,126,0.25); }
+    .b-tab[aria-selected="true"] { background: #FFB300; color: #fff; box-shadow: 0 5px 0 #E65100; text-shadow: 0 2px 0 rgba(0,0,0,0.15); }
+    .b-tab:active { transform: translateY(3px); }
+    .b-grid { width: 100%; flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 1fr; gap: clamp(10px, 2vmin, 20px); padding: 4px 2px 8px; }
+    .b-grid-road .b-tile:last-child { grid-column: 1 / -1; width: calc((100% - clamp(10px, 2vmin, 20px)) / 2); justify-self: center; }
+    .b-tile, .b-extra { appearance: none; border: 0; font-family: inherit; background: #fff; border-radius: 24px; box-shadow: 0 6px 0 rgba(26,35,126,0.28), 0 10px 18px rgba(0,0,0,0.14); padding: 8px 6px 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 0; min-width: 0; }
+    .b-tile:active, .b-extra:active { transform: translateY(4px); box-shadow: 0 2px 0 rgba(26,35,126,0.28); }
+    .b-tile:focus, .b-extra:focus, .b-blob:focus, .b-spare:focus, .b-tab:focus { outline: 5px solid var(--focus); outline-offset: 3px; }
+    .b-tile.picked, .b-extra.picked { outline: 5px solid var(--focus); outline-offset: 3px; box-shadow: 0 6px 0 #F9A825, 0 10px 18px rgba(0,0,0,0.14); }
+    .b-tile .b-art { flex: 1 1 auto; width: 100%; min-height: 0; display: flex; align-items: center; justify-content: center; }
+    .b-tile .b-art svg, .b-extra .b-art svg, .b-card .b-art svg { width: 100%; height: 100%; overflow: visible; }
+    .b-lbl { font-weight: 800; font-size: clamp(16px, 2.8vmin, 26px); color: #1A237E; line-height: 1.1; text-align: center; }
+    .b-garage-link { appearance: none; border: 0; border-radius: 999px; min-height: 52px; padding: 6px 22px; font-weight: 800; font-size: 18px; color: #fff; background: #8D6E4C; box-shadow: 0 5px 0 #5D3A1E; flex: 0 0 auto; }
+    .b-garage-link[hidden] { display: none; }
+    .b-hero { position: relative; width: min(100%, 860px); height: clamp(150px, 34vh, 420px); flex: 0 0 auto; display: flex; align-items: center; justify-content: center; }
+    .b-hero > svg, .b-layer > svg { width: 100%; height: 100%; overflow: visible; }
+    .b-layer { position: absolute; inset: 0; }
+    .b-paint { clip-path: circle(0% at 50% 60%); }
+    .b-paint.go { animation: b-paint 0.75s ease-out forwards; }
+    @keyframes b-paint { from { clip-path: circle(0% at 50% 60%); } to { clip-path: circle(80% at 50% 60%); } }
+    .b-splash { position: absolute; left: 50%; top: 55%; width: 0; height: 0; pointer-events: none; }
+    .b-splash i { position: absolute; left: -14px; top: -14px; width: 28px; height: 28px; border-radius: 50%; opacity: 0; animation: b-drop 0.8s ease-out forwards; }
+    @keyframes b-drop { 0% { transform: translate(0,0) scale(0.4); opacity: 1; } 70% { opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) scale(1.1); opacity: 0; } }
+    .b-paints { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(14px, 3vmin, 30px); justify-items: center; padding: 6px 0 10px; width: min(100%, 520px); }
+    .b-blob { appearance: none; padding: 0; width: clamp(78px, min(24vw, 15vh), 140px); aspect-ratio: 1 / 1; border-radius: 50%; border: 6px solid rgba(255,255,255,0.95); position: relative; box-shadow: 0 6px 0 rgba(0,0,0,0.18), 0 10px 16px rgba(0,0,0,0.12), inset -10px -12px 0 rgba(0,0,0,0.12), inset 8px 8px 0 rgba(255,255,255,0.28); }
+    .b-blob::after { content: ""; position: absolute; top: 16%; left: 20%; width: 28%; height: 22%; border-radius: 50%; background: rgba(255,255,255,0.55); transform: rotate(-18deg); }
+    .b-blob:active { transform: translateY(4px) scale(0.96); }
+    .b-blob.picked { transform: scale(1.12); border-color: #FFD54F; }
+    .b-blob.red { background: #E53935; } .b-blob.blue { background: #1E88E5; } .b-blob.yellow { background: #FDD835; }
+    .b-blob.green { background: #43A047; } .b-blob.orange { background: #FB8C00; } .b-blob.purple { background: #8E24AA; }
+    .b-count { position: absolute; left: 0; top: 0; width: clamp(70px, 11vmin, 104px); aspect-ratio: 1 / 1; border-radius: 50%; background: #FFD54F; border: 6px solid #fff; box-shadow: 0 6px 0 #F9A825, 0 12px 18px rgba(0,0,0,0.16); color: #D32F2F; font-weight: 900; font-size: clamp(34px, 6vmin, 52px); display: flex; align-items: center; justify-content: center; z-index: 3; }
+    .b-count[hidden] { display: none; }
+    .b-count small { font-size: 0.6em; }
+    .b-count.pop { animation: b-pop 0.45s ease-out; }
+    .b-hero .bv-slot { cursor: pointer; }
+    .b-hero .bv-slot > :nth-child(2) { animation: b-slot 1.4s ease-in-out infinite; }
+    @keyframes b-slot { 0%, 100% { stroke: #455A64; } 50% { stroke: #FF9800; } }
+    .bv-part.pop, .bv-extra.pop { animation: b-pop 0.45s cubic-bezier(.3,1.6,.5,1); }
+    @keyframes b-pop { 0% { transform: scale(0.2); } 60% { transform: scale(1.18); } 100% { transform: scale(1); } }
+    .bv-extra { transform-box: fill-box; transform-origin: 50% 100%; }
+    .b-spares { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: clamp(18px, 5vw, 40px); min-height: clamp(100px, 16vh, 150px); padding: 10px 0; }
+    .b-spare { appearance: none; border: 0; padding: 6px; background: transparent; width: clamp(96px, 16vmin, 170px); aspect-ratio: 1 / 1; border-radius: 50%; position: relative; touch-action: none; filter: drop-shadow(0 8px 8px rgba(0,0,0,0.18)); }
+    .b-spare::before { content: ""; position: absolute; inset: -6px; border-radius: 50%; border: 4px dashed #FFD54F; }
+    .b-spare-track { width: clamp(150px, 28vmin, 280px); aspect-ratio: 2 / 1; border-radius: 30px; }
+    .b-spare-track::before { border-radius: 36px; }
+    .b-spare svg { width: 100%; height: 100%; pointer-events: none; }
+    .b-spare.dragging { opacity: 0.25; }
+    .b-ghost { position: fixed !important; z-index: 50; pointer-events: none; transform: scale(1.1); }
+    .b-extras { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(10px, 2vmin, 20px); width: min(100%, 640px); }
+    .b-extras.n2 { grid-template-columns: repeat(2, 1fr); width: min(100%, 440px); }
+    .b-extra { min-height: clamp(120px, 20vh, 190px); }
+    .b-extra .b-art { width: 100%; height: clamp(60px, 11vh, 110px); display: flex; align-items: center; justify-content: center; }
+    .b-cap { background: rgba(255,255,255,0.94); border: 5px solid #FFF; border-radius: 22px; padding: 8px 18px 10px; box-shadow: 0 6px 0 rgba(25,40,90,0.10), 0 12px 24px rgba(0,0,0,0.10); font-size: clamp(22px, 4vmin, 38px); font-weight: 800; color: #1A237E; text-align: center; line-height: 1.2; }
+    .b-cap[hidden] { display: none; }
+    .b-go-hero { height: clamp(170px, 36vh, 420px); cursor: pointer; }
+    .b-go { font-size: clamp(44px, 8vmin, 80px); min-width: 220px; min-height: 92px; letter-spacing: 0.08em; }
+    .b-go:disabled { opacity: 0.5; }
+    .b-go-hero .bv-flash { animation: b-flash 0.6s steps(2, jump-none) infinite; }
+    .b-go-hero.act .bv-glow { animation: b-flash 0.4s steps(2, jump-none) infinite; }
+    .b-go-hero.act .bv-honk { animation: b-flash 0.3s steps(2, jump-none) infinite; }
+    .b-go-hero .bv-honk { opacity: 0; }
+    @keyframes b-flash { 0% { opacity: 0.15; } 100% { opacity: 1; } }
+    .b-go-hero.act .bv-boom { animation: b-boom 1.4s ease-in-out; }
+    .b-go-hero.act .bv-bucket { animation: b-curl 1.4s ease-in-out; }
+    .b-go-hero.act .bv-tray { animation: b-tip 1.4s ease-in-out; }
+    .b-go-hero.act .bv-hoe { animation: b-hoe 1.4s ease-in-out; }
+    .b-go-hero.act .bv-front { animation: b-front 1.4s ease-in-out; }
+    .b-go-hero.act .bv-forks { animation: b-forks 1.4s ease-in-out; }
+    .b-go-hero.act .bv-loader { animation: b-loader 1.4s ease-in-out; }
+    .b-go-hero.act .bv-k-roller { animation: b-roll 1.4s ease-in-out; }
+    .b-go-hero.act .bv-k-roller .bv-rot, .b-go-hero.drive .bv-rot { animation: b-spin 0.6s linear infinite; }
+    .b-go-hero.act > svg { animation-fill-mode: both; }
+    .b-go-hero.act:not(.drive) .bv-k-car, .b-go-hero.act:not(.drive) .bv-k-ute, .b-go-hero.act:not(.drive) .bv-k-truck, .b-go-hero.act:not(.drive) .bv-k-bus, .b-go-hero.act:not(.drive) .bv-k-fire { animation: b-rev 0.25s ease-in-out 5; }
+    .b-go-hero.drive > svg { animation: b-drive 1.5s ease-in forwards; }
+    @keyframes b-boom { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(9deg); } }
+    @keyframes b-curl { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(-55deg); } }
+    @keyframes b-tip { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(16deg); } }
+    @keyframes b-hoe { 0%, 100% { transform: rotate(0); } 30% { transform: rotate(-14deg); } 70% { transform: rotate(10deg); } }
+    @keyframes b-front { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(10deg); } }
+    @keyframes b-forks { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-64px); } }
+    @keyframes b-loader { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(20deg); } }
+    @keyframes b-roll { 0% { transform: translateX(0); } 50% { transform: translateX(-12%); } 100% { transform: translateX(0); } }
+    @keyframes b-spin { from { transform: rotate(0); } to { transform: rotate(-360deg); } }
+    @keyframes b-rev { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px) rotate(-0.6deg); } }
+    @keyframes b-drive { 0% { transform: translateX(0); } 15% { transform: translateX(3%); } 100% { transform: translateX(-160vw); } }
+    .bg-shelves { width: 100%; flex: 1 1 auto; min-height: 0; overflow-y: auto; touch-action: pan-y; -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; gap: 26px; padding: 14px 6px 20px; }
+    .b-shelf { position: relative; display: grid; grid-template-columns: repeat(var(--per, 3), minmax(0, 1fr)); gap: 10px; padding: 8px 8px 20px; }
+    .b-shelf::after { content: ""; position: absolute; left: -4px; right: -4px; bottom: 0; height: 14px; border-radius: 4px 4px 6px 6px; background: linear-gradient(180deg, #A97845, #7A5230); box-shadow: 0 6px 0 #5D3A1E, 0 10px 14px rgba(0,0,0,0.18); }
+    .b-card { background: rgba(255,255,255,0.92); border-radius: 16px; padding: 6px 4px 8px; box-shadow: 0 3px 0 rgba(0,0,0,0.12); display: flex; flex-direction: column; align-items: center; position: relative; }
+    .b-card .b-art { width: 100%; aspect-ratio: 500 / 230; display: block; }
+    .b-card .b-lbl { font-size: clamp(12px, 2vmin, 18px); }
+    .b-card.latest { outline: 4px solid var(--focus); outline-offset: 2px; animation: b-pop 0.6s ease-out; }
+    .b-card .new-badge { position: absolute; top: -10px; right: -6px; background: #E53935; color: #fff; font-weight: 800; font-size: 13px; letter-spacing: 0.04em; padding: 3px 8px; border-radius: 999px; box-shadow: 0 2px 0 #9B1B1B; z-index: 1; }
+    .bg-empty { font-weight: 800; font-size: 20px; text-align: center; color: #5D3A1E; }
+    .bg-actions { flex: 0 0 auto; padding: 4px 0 calc(var(--safe-b) + 4px); }
+    .bg-again { font-size: clamp(24px, 4.6vmin, 44px); min-height: 72px; }
+    @media (orientation: landscape) and (min-height: 601px) {
+      .b-grid { grid-template-columns: repeat(3, 1fr); }
+      .b-grid-road .b-tile:last-child { grid-column: auto; width: auto; justify-self: stretch; }
+    }
+    /* Landscape phones: title sits in the top bar; picture left, choices right. */
+    @media (orientation: landscape) and (max-height: 600px) {
+      .build-screen { padding-top: calc(var(--safe-t) + 4px); }
+      .build-screen .bstep { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: auto 1fr; column-gap: 18px; row-gap: 8px; align-items: center; justify-items: center; }
+      .build-screen .b-title { grid-column: 1 / -1; font-size: 22px; padding: 4px 16px 6px; margin: 0 170px; }
+      .build-screen .bstep[data-step="1"] { grid-template-columns: auto 1fr auto; grid-template-rows: auto 1fr; }
+      .build-screen .bstep[data-step="1"] .b-title { grid-column: 1 / -1; }
+      .build-screen .bstep[data-step="1"] .b-tabs { grid-column: 1; grid-row: 2; flex-direction: column; }
+      .build-screen .bstep[data-step="1"] .b-grid { grid-column: 2; grid-row: 2; height: 100%; grid-template-columns: repeat(3, 1fr); grid-auto-rows: 1fr; }
+      .build-screen .bstep[data-step="1"] .b-garage-link { grid-column: 3; grid-row: 2; }
+      .b-grid-road .b-tile:last-child { grid-column: auto; width: auto; justify-self: stretch; }
+      .b-hero { width: 100%; height: 56vh; }
+      .b-go-hero { height: 58vh; }
+      .b-paints { gap: 12px; }
+      .b-blob { width: clamp(64px, 20vh, 100px); }
+      .b-spares { min-height: 0; }
+      .b-extra { min-height: 0; height: 40vh; }
+      .bstep[data-step="5"] .b-cap { grid-column: 1 / -1; margin: 0 170px; font-size: 22px; padding: 4px 16px 6px; }
+      .bstep[data-step="garage"] { display: flex !important; }
+      .bstep[data-step="garage"] .b-title { margin: 0 170px; }
+      .bstep[data-step="garage"] .b-cap { font-size: 20px; padding: 4px 14px 6px; }
+      .bg-shelves { padding-top: 6px; gap: 18px; }
+    }
   </style>
 </head>
 <body>
@@ -1782,6 +1935,7 @@
       <div class="hill a"></div>
       <div class="hill b"></div>
       <div class="road"></div>
+      <div class="garage-door"></div>
     </div>
 
     <section id="start-screen" class="screen" aria-label="Start">
@@ -1792,7 +1946,7 @@
           <p class="for-theo" id="start-for">For Theo</p>
         </div>
         <div class="hero-cars" id="hero-cars"></div>
-        <div class="start-actions" id="start-actions">
+        <div class="start-actions three" id="start-actions">
           <button type="button" class="game-card gc-match" id="play-btn" aria-label="Match Game">
             <span class="gc-art" aria-hidden="true">
               <span class="mini-card mc-a"><span class="mini-art" data-art="match"></span></span>
@@ -1808,6 +1962,20 @@
               <svg class="gc-waves" viewBox="0 0 40 60" aria-hidden="true"><path d="M8 18q8 12 0 24M18 10q14 20 0 40" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round"/></svg>
             </span>
             <span class="gc-label">NAME</span>
+          </button>
+          <button type="button" class="game-card gc-build" id="build-btn" aria-label="Build Game">
+            <span class="gc-art" aria-hidden="true">
+              <span class="build-car" data-art="build"></span>
+              <svg class="gc-stars" viewBox="0 0 40 40" aria-hidden="true"><path fill="#FFF59D" stroke="#F57F17" stroke-width="1.2" d="M20 3l3.2 8.6L32 14l-8.4 3.2L20 27l-3.6-9.8L8 14l8.8-2.4z"/></svg>
+              <svg class="gc-tool" viewBox="0 0 64 64" aria-hidden="true">
+                <g transform="rotate(-28 32 34)">
+                  <path d="M14 8 h16 a6 6 0 0 1 6 6 v4 h-5 v-3 h-6 v18 h6 v-3 h5 v4 a6 6 0 0 1-6 6 H14 a6 6 0 0 1-6-6 V14 a6 6 0 0 1 6-6z" fill="#ECEFF1" stroke="#37474F" stroke-width="2.2" stroke-linejoin="round"/>
+                  <path d="M24 22 h8 v8 a6 6 0 0 0 6 6 h4 v4 h-4 a10 10 0 0 1-10-10 V22z" fill="#B0BEC5" stroke="#37474F" stroke-width="1.6"/>
+                  <rect x="28" y="36" width="8" height="22" rx="3.5" fill="#CFD8DC" stroke="#37474F" stroke-width="2"/>
+                </g>
+              </svg>
+            </span>
+            <span class="gc-label">BUILD</span>
           </button>
         </div>
         <div class="mode-picker" id="mode-picker" hidden>
@@ -1858,6 +2026,45 @@
         <div class="name-choices" id="name-grid" role="group" aria-label="Cars"></div>
       </div>
       <div id="name-more-toast" hidden>More cards!</div>
+    </section>
+
+    <section id="build-screen" class="screen build-screen" hidden aria-label="Build a car">
+      <div class="b-pips" id="build-pips" hidden></div>
+      <div class="bstep" data-step="1" hidden>
+        <div class="b-title">What will you build?</div>
+        <div class="b-tabs" role="tablist" aria-label="Vehicle pages">
+          <button type="button" class="b-tab" role="tab" id="b-tab-road" aria-selected="true">Road</button>
+          <button type="button" class="b-tab" role="tab" id="b-tab-cons" aria-selected="false">Construction</button>
+        </div>
+        <div class="b-grid" id="b-grid" role="group" aria-label="Vehicles"></div>
+        <button type="button" class="b-garage-link" id="b-garage-link" hidden>Garage</button>
+      </div>
+      <div class="bstep" data-step="2" hidden>
+        <div class="b-title">Pick a colour</div>
+        <div class="b-hero" id="b2-hero"></div>
+        <div class="b-paints" id="b2-paints" role="group" aria-label="Colours"></div>
+      </div>
+      <div class="bstep" data-step="3" hidden>
+        <div class="b-title" id="b3-title">Add the wheels</div>
+        <div class="b-hero" id="b3-hero"><div class="b-count" id="b3-count" hidden aria-live="polite"></div><div class="b-layer" id="b3-car"></div></div>
+        <div class="b-spares" id="b3-spares" role="group" aria-label="Parts"></div>
+      </div>
+      <div class="bstep" data-step="4" hidden>
+        <div class="b-title">Add a bit extra</div>
+        <div class="b-hero" id="b4-hero"></div>
+        <div class="b-extras" id="b4-grid" role="group" aria-label="Extras"></div>
+      </div>
+      <div class="bstep" data-step="5" hidden>
+        <div class="b-cap" id="b5-cap" aria-live="polite">Tap GO!</div>
+        <div class="b-hero b-go-hero" id="b5-hero" role="button" aria-label="Drive"></div>
+        <button type="button" class="btn b-go" id="b5-go">GO!</button>
+      </div>
+      <div class="bstep" data-step="garage" hidden>
+        <div class="b-title" id="bg-title">Theo's Garage</div>
+        <div class="b-cap" id="bg-built" aria-live="polite" hidden></div>
+        <div class="bg-shelves" id="bg-shelves"></div>
+        <div class="bg-actions"><button type="button" class="btn bg-again" id="bg-again">Build another</button></div>
+      </div>
     </section>
 
     <div id="win-overlay" hidden>
@@ -2036,6 +2243,16 @@
             <div class="diff-row">
               <label for="diff-hooray">Hooray on match</label>
               <input id="diff-hooray" type="checkbox" checked>
+            </div>
+          </div>
+          <div class="diff-custom" id="build-options">
+            <h3>Build game for <span id="build-steps-who">this player</span></h3>
+            <div class="diff-row">
+              <label for="build-steps">Build steps (Simple: only colour and wheels, then GO)</label>
+              <select id="build-steps" aria-label="Build steps">
+                <option value="full">Full (5 steps)</option>
+                <option value="simple">Simple (colour, wheels)</option>
+              </select>
             </div>
           </div>
         </div>
@@ -2325,7 +2542,7 @@
     var BLOB_FETCH_MS = 20000;
     var bootStartedAt = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
     var keyChangeOpen = false;
-    var APP_VERSION = "34";
+    var APP_VERSION = "35";
     var MATCH_PAIR_CAP = 6;
     var NAME_ROUNDS = 6;
     var THUMB_MAX = 256;
@@ -4568,13 +4785,24 @@
         document.getElementById("next-btn").focus();
         return;
       }
+      if (typeof build === "object" && build && buildOpen()) {
+        var bl = Array.prototype.slice.call(document.querySelectorAll("#build-screen .bstep:not([hidden]) button:not([disabled])"));
+        if (!bl.length) return;
+        var bi = bl.indexOf(document.activeElement);
+        bi = bi === -1 ? 0 : (bi + (dx || dy) + bl.length) % bl.length;
+        bl[bi].focus();
+        return;
+      }
       if (!document.getElementById("start-screen").hidden) {
         if (modePickerOpen()) {
           var ct = document.getElementById("cars-tile"), pt = document.getElementById("photos-tile");
           (document.activeElement === ct ? pt : ct).focus();
           return;
         }
-        document.getElementById("play-btn").focus();
+        var sl = ["play-btn", "names-btn", "build-btn"].map(function (id) { return document.getElementById(id); }).filter(Boolean);
+        var si = sl.indexOf(document.activeElement);
+        si = si === -1 ? 0 : (si + (dx || dy) + sl.length) % sl.length;
+        sl[si].focus();
         return;
       }
       if (!document.getElementById("name-screen").hidden) {
@@ -4936,6 +5164,7 @@
       lockParent();
       hideModePicker();
       stopNameGame();
+      if (typeof build === "object" && build) stopBuild();
       stopSpeechAndAudio();
       stopAllSfx();
       hideWin();
@@ -5066,7 +5295,8 @@
         difficulty: normalizeDifficulty(raw.difficulty || difficulty),
         nameSettings: normalizeNameSettings(raw.nameSettings || nameSettings),
         photoSettings: normalizePhotoSettings(raw.photoSettings || photoSettings),
-        pic: sanitizePic(raw.pic)
+        pic: sanitizePic(raw.pic),
+        buildSteps: raw.buildSteps === "simple" ? "simple" : "full"
       };
     }
     // Profile picture from the library (per device). Only a reference is kept; the picture itself
@@ -5162,6 +5392,7 @@
       updateDifficultyUi();
       updateNameGameUi();
       updatePhotoUi();
+      updateBuildSettingsUi();
     }
 
     function harperSeeded() {
@@ -6620,6 +6851,7 @@
       renderSettings();
       updateDifficultyUi();
       updateNameGameUi();
+      updateBuildSettingsUi();
       renderPlayersSettings();
       updateSyncUi();
       loadReview();
@@ -6879,6 +7111,1015 @@
       else padsRunning = false;
     }
 
+    // ---- v35: Build a car — layered side-view vehicles (all original drawings, no brands) ----
+    var bvUid = 0;
+    var BV_PAL = {
+      grey:   { hi: "#D8DCE0", c: "#B0B6BB", mid: "#8E949A", d: "#5E656B" },
+      red:    { hi: "#EF9A9A", c: "#E53935", mid: "#C62828", d: "#7F1414" },
+      blue:   { hi: "#90CAF9", c: "#1E88E5", mid: "#1565C0", d: "#0A3A75" },
+      yellow: { hi: "#FFF59D", c: "#FDD835", mid: "#F9A825", d: "#C67C00" },
+      green:  { hi: "#A5D6A7", c: "#43A047", mid: "#2E7D32", d: "#1B5E20" },
+      orange: { hi: "#FFCC80", c: "#FB8C00", mid: "#EF6C00", d: "#BF360C" },
+      purple: { hi: "#CE93D8", c: "#8E24AA", mid: "#6A1B9A", d: "#4A148C" }
+    };
+    var BV_COLOURS = [
+      { id: "red", name: "red" }, { id: "blue", name: "blue" }, { id: "yellow", name: "yellow" },
+      { id: "green", name: "green" }, { id: "orange", name: "orange" }, { id: "purple", name: "purple" }
+    ];
+    function bvDefs(id, p) {
+      return '<defs>' +
+        '<linearGradient id="' + id + '-paint" x1="0" y1="0" x2="0.08" y2="1"><stop offset="0%" stop-color="' + p.hi + '"/><stop offset="18%" stop-color="' + p.c + '"/><stop offset="52%" stop-color="' + p.mid + '"/><stop offset="78%" stop-color="' + p.d + '"/><stop offset="100%" stop-color="' + p.d + '"/></linearGradient>' +
+        '<linearGradient id="' + id + '-gloss" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fff" stop-opacity="0.58"/><stop offset="22%" stop-color="#fff" stop-opacity="0.22"/><stop offset="42%" stop-color="#fff" stop-opacity="0.04"/><stop offset="58%" stop-color="#fff" stop-opacity="0"/></linearGradient>' +
+        '<linearGradient id="' + id + '-glass" x1="0.1" y1="0" x2="0.55" y2="1"><stop offset="0%" stop-color="#F4FCFF" stop-opacity="0.9"/><stop offset="18%" stop-color="#B3D9EE" stop-opacity="0.72"/><stop offset="48%" stop-color="#5E8CA3" stop-opacity="0.7"/><stop offset="100%" stop-color="#234051" stop-opacity="0.78"/></linearGradient>' +
+        '<radialGradient id="' + id + '-tyre" cx="38%" cy="34%" r="70%"><stop offset="0%" stop-color="#3F3F3F"/><stop offset="45%" stop-color="#1C1C1C"/><stop offset="100%" stop-color="#070707"/></radialGradient>' +
+        '<linearGradient id="' + id + '-rim" x1="0.2" y1="0" x2="0.85" y2="1"><stop offset="0%" stop-color="#F7F9FB"/><stop offset="35%" stop-color="#C9D0D7"/><stop offset="70%" stop-color="#8A949E"/><stop offset="100%" stop-color="#5C656D"/></linearGradient>' +
+        '<linearGradient id="' + id + '-steel" x1="0.3" y1="0" x2="0.8" y2="1"><stop offset="0%" stop-color="#E6E9ED"/><stop offset="40%" stop-color="#B0B6BD"/><stop offset="100%" stop-color="#6B737B"/></linearGradient>' +
+        '<linearGradient id="' + id + '-chrome" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#F5F7FA"/><stop offset="45%" stop-color="#C5CDD4"/><stop offset="100%" stop-color="#8A939C"/></linearGradient>' +
+        '<linearGradient id="' + id + '-bump" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#4A4F55"/><stop offset="50%" stop-color="#2A2E33"/><stop offset="100%" stop-color="#15171A"/></linearGradient>' +
+        '<linearGradient id="' + id + '-iron" x1="0" y1="0" x2="0.3" y2="1"><stop offset="0%" stop-color="#6A7078"/><stop offset="45%" stop-color="#454B52"/><stop offset="100%" stop-color="#25292E"/></linearGradient>' +
+      '</defs>';
+    }
+    function bvOrigin(x, y) { return 'style="transform-box:view-box;transform-origin:' + x + 'px ' + y + 'px"'; }
+    function bvPaint(id, d) {
+      return '<path d="' + d + '" fill="url(#' + id + '-paint)" stroke="rgba(0,0,0,0.35)" stroke-width="1.2" stroke-linejoin="round"/>' +
+        '<path d="' + d + '" fill="url(#' + id + '-gloss)"/>';
+    }
+    function bvGlass(d, id) {
+      return '<path d="' + d + '" fill="url(#' + id + '-glass)" stroke="#1A242C" stroke-width="1.1"/><path d="' + d + '" fill="#fff" opacity="0.12"/>';
+    }
+    function bvShine(d) { return '<path d="' + d + '" fill="#fff" opacity="0.22"/>'; }
+    function bvHandle(x, y) {
+      return '<rect x="' + x + '" y="' + y + '" width="13" height="4.2" rx="1.6" fill="#D5D9DE" stroke="#4A5158" stroke-width="0.7"/>';
+    }
+    function bvShadow(cx, cy, rx) {
+      return '<ellipse cx="' + cx + '" cy="' + cy + '" rx="' + rx + '" ry="9" fill="#000" opacity="0.22"/>' +
+        '<ellipse cx="' + cx + '" cy="' + (cy - 2) + '" rx="' + (rx * 0.72) + '" ry="5" fill="#000" opacity="0.12"/>';
+    }
+    function bvRam(x1, y1, x2, y2, w) {
+      w = w || 8;
+      var mx = x1 + (x2 - x1) * 0.55, my = y1 + (y2 - y1) * 0.55;
+      return '<path d="M' + x1 + ' ' + y1 + ' L' + mx + ' ' + my + '" stroke="#2A2E33" stroke-width="' + w + '" stroke-linecap="round"/>' +
+        '<path d="M' + mx + ' ' + my + ' L' + x2 + ' ' + y2 + '" stroke="#C5CDD4" stroke-width="' + (w * 0.55) + '" stroke-linecap="round"/>' +
+        '<path d="M' + mx + ' ' + my + ' L' + x2 + ' ' + y2 + '" stroke="#fff" stroke-width="1.2" stroke-linecap="round" opacity="0.6"/>';
+    }
+    function bvPin(x, y, r) {
+      return '<circle cx="' + x + '" cy="' + y + '" r="' + (r || 6) + '" fill="#3A3F44" stroke="#15171A" stroke-width="1"/><circle cx="' + x + '" cy="' + y + '" r="' + ((r || 6) * 0.4) + '" fill="#9AA3AB"/>';
+    }
+
+    // Wheel-like parts. Each is drawn as a dashed slot until it has been added.
+    function bvSlotCircle(cx, cy, r) {
+      return '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r + 14) + '" fill="#000" fill-opacity="0.001"/>' +
+        '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="#ECEFF1" fill-opacity="0.55" stroke="#455A64" stroke-width="2.8" stroke-dasharray="7 6"/>' +
+        '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r * 0.55) + '" fill="none" stroke="#78909C" stroke-width="1.8" stroke-dasharray="5 5"/>';
+    }
+    function bvWheel(cx, cy, r, id, style) {
+      var s = '<ellipse cx="' + cx + '" cy="' + (cy + r * 0.92) + '" rx="' + (r * 0.82) + '" ry="' + (r * 0.14) + '" fill="#000" opacity="0.28"/>' +
+        '<g class="bv-rot" ' + bvOrigin(cx, cy) + '>';
+      if (style === "tread") {
+        var lugs = 18;
+        for (var k = 0; k < lugs; k++) {
+          var ang = k * 360 / lugs;
+          s += '<rect x="' + (cx - r * 0.14) + '" y="' + (cy - r - 3) + '" width="' + (r * 0.28) + '" height="' + (r * 0.22) + '" rx="2" fill="#141414" transform="rotate(' + ang + ' ' + cx + ' ' + cy + ')"/>';
+        }
+      }
+      s += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="url(#' + id + '-tyre)"/>' +
+        '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r * 0.86) + '" fill="none" stroke="#2A2A2A" stroke-width="' + (r * 0.08) + '"/>';
+      var rim = style === "tread" ? r * 0.56 : r * 0.68;
+      s += '<circle cx="' + cx + '" cy="' + cy + '" r="' + rim + '" fill="url(#' + id + (style === "alloy" ? "-rim" : "-steel") + ')" stroke="#5A626A" stroke-width="1.1"/>' +
+        '<circle cx="' + cx + '" cy="' + cy + '" r="' + (rim * 0.9) + '" fill="none" stroke="#EEF2F5" stroke-width="2" opacity="0.8"/>';
+      if (style === "alloy") {
+        var inner = r * 0.22, outer = r * 0.58, half = 0.13;
+        for (var j = 0; j < 5; j++) {
+          var a0 = -Math.PI / 2 + j * Math.PI * 2 / 5, a1 = a0 - half, a2 = a0 + half;
+          s += '<path d="M' + (cx + Math.cos(a1) * inner).toFixed(1) + ',' + (cy + Math.sin(a1) * inner).toFixed(1) +
+            ' L' + (cx + Math.cos(a1 - 0.04) * outer).toFixed(1) + ',' + (cy + Math.sin(a1 - 0.04) * outer).toFixed(1) +
+            ' L' + (cx + Math.cos(a2 + 0.04) * outer).toFixed(1) + ',' + (cy + Math.sin(a2 + 0.04) * outer).toFixed(1) +
+            ' L' + (cx + Math.cos(a2) * inner).toFixed(1) + ',' + (cy + Math.sin(a2) * inner).toFixed(1) + ' Z" fill="#F4F6F8" stroke="#6A727A" stroke-width="0.8"/>';
+        }
+      } else {
+        for (var i = 0; i < 6; i++) {
+          var a = -Math.PI / 2 + i * Math.PI / 3;
+          var hx = cx + Math.cos(a) * rim * 0.6, hy = cy + Math.sin(a) * rim * 0.6;
+          s += '<circle cx="' + hx.toFixed(1) + '" cy="' + hy.toFixed(1) + '" r="' + (rim * 0.14).toFixed(1) + '" fill="#2C3338"/>';
+        }
+      }
+      s += '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r * 0.2) + '" fill="url(#' + id + '-chrome)" stroke="#5A626A" stroke-width="1"/>' +
+        '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r * 0.09) + '" fill="#4A5158"/></g>';
+      return s;
+    }
+    function bvDrum(cx, cy, r, id) {
+      var s = '<ellipse cx="' + cx + '" cy="' + (cy + r * 0.94) + '" rx="' + (r * 0.9) + '" ry="' + (r * 0.12) + '" fill="#000" opacity="0.3"/>' +
+        '<g class="bv-rot" ' + bvOrigin(cx, cy) + '>' +
+        '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="url(#' + id + '-steel)" stroke="#2A2E33" stroke-width="2"/>' +
+        '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r * 0.86) + '" fill="url(#' + id + '-iron)" stroke="#1A1D21" stroke-width="1.2"/>' +
+        '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r * 0.62) + '" fill="none" stroke="#7A828A" stroke-width="2.4"/>';
+      for (var i = 0; i < 8; i++) {
+        var a = i * Math.PI / 4;
+        s += '<path d="M' + (cx + Math.cos(a) * r * 0.3).toFixed(1) + ' ' + (cy + Math.sin(a) * r * 0.3).toFixed(1) + ' L' + (cx + Math.cos(a) * r * 0.6).toFixed(1) + ' ' + (cy + Math.sin(a) * r * 0.6).toFixed(1) + '" stroke="#8A939C" stroke-width="3" stroke-linecap="round"/>';
+      }
+      s += '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r * 0.3) + '" fill="url(#' + id + '-chrome)" stroke="#2A2E33" stroke-width="1.4"/>' +
+        '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r * 0.1) + '" fill="#2A2E33"/>' +
+        '<path d="M' + (cx - r * 0.7) + ' ' + (cy - r * 0.5) + ' A' + (r * 0.86) + ' ' + (r * 0.86) + ' 0 0 1 ' + (cx + r * 0.2) + ' ' + (cy - r * 0.84) + '" fill="none" stroke="#fff" stroke-width="3" opacity="0.35" stroke-linecap="round"/>' +
+        '</g>';
+      return s;
+    }
+    function bvTrack(x, y, w, h, id, back) {
+      var r = h / 2;
+      var s = '<g class="bv-track' + (back ? ' back' : '') + '">' +
+        '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="' + r + '" fill="#202326" stroke="#0C0D0E" stroke-width="2"/>';
+      for (var gx = x + r * 0.6; gx < x + w - r * 0.6; gx += 13) {
+        s += '<rect x="' + gx.toFixed(1) + '" y="' + (y - 3) + '" width="8" height="6" rx="1.5" fill="#2E3236"/>' +
+          '<rect x="' + gx.toFixed(1) + '" y="' + (y + h - 3) + '" width="8" height="6" rx="1.5" fill="#2E3236"/>';
+      }
+      s += '<rect x="' + (x + 7) + '" y="' + (y + 7) + '" width="' + (w - 14) + '" height="' + (h - 14) + '" rx="' + (r - 7) + '" fill="url(#' + id + '-iron)"/>' +
+        '<g class="bv-rot" ' + bvOrigin(x + r, y + r) + '>' + '<circle cx="' + (x + r) + '" cy="' + (y + r) + '" r="' + (r - 9) + '" fill="url(#' + id + '-steel)" stroke="#2A2E33" stroke-width="1.4"/><circle cx="' + (x + r) + '" cy="' + (y + r) + '" r="' + (r * 0.25) + '" fill="#3A3F44"/><path d="M' + (x + r) + ' ' + (y + 10) + ' V' + (y + h - 10) + ' M' + (x + 10) + ' ' + (y + r) + ' H' + (x + h - 10) + '" stroke="#5A626A" stroke-width="2"/></g>' +
+        '<g class="bv-rot" ' + bvOrigin(x + w - r, y + r) + '>' + '<circle cx="' + (x + w - r) + '" cy="' + (y + r) + '" r="' + (r - 8) + '" fill="url(#' + id + '-steel)" stroke="#2A2E33" stroke-width="1.4"/><circle cx="' + (x + w - r) + '" cy="' + (y + r) + '" r="' + (r * 0.25) + '" fill="#3A3F44"/><path d="M' + (x + w - r) + ' ' + (y + 10) + ' V' + (y + h - 10) + ' M' + (x + w - h + 10) + ' ' + (y + r) + ' H' + (x + w - 10) + '" stroke="#5A626A" stroke-width="2"/></g>';
+      var n = Math.max(3, Math.round((w - h) / 34));
+      for (var i = 0; i <= n; i++) {
+        var rx = x + r + (w - h) * i / n;
+        s += '<circle cx="' + rx.toFixed(1) + '" cy="' + (y + h - 11) + '" r="6.5" fill="#8A939C" stroke="#2A2E33" stroke-width="1.2"/>';
+      }
+      s += '<rect x="' + (x + r) + '" y="' + (y + 9) + '" width="' + (w - h) + '" height="5" rx="2" fill="#5A626A" opacity="0.8"/>';
+      if (back) s += '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="' + r + '" fill="#000" opacity="0.35"/>';
+      return s + '</g>';
+    }
+    function bvSlotTrack(x, y, w, h) {
+      return '<rect x="' + (x - 10) + '" y="' + (y - 10) + '" width="' + (w + 20) + '" height="' + (h + 20) + '" rx="' + (h / 2 + 10) + '" fill="#000" fill-opacity="0.001"/>' +
+        '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="' + (h / 2) + '" fill="#ECEFF1" fill-opacity="0.55" stroke="#455A64" stroke-width="2.8" stroke-dasharray="8 6"/>';
+    }
+    function bvPartSvg(pt, on, id, i) {
+      var inner, ox, oy;
+      if (pt.t === "track") { ox = pt.x + pt.w / 2; oy = pt.y + pt.h / 2; inner = on ? bvTrack(pt.x, pt.y, pt.w, pt.h, id, pt.back) : bvSlotTrack(pt.x, pt.y, pt.w, pt.h); }
+      else if (pt.t === "drum") { ox = pt.cx; oy = pt.cy; inner = on ? bvDrum(pt.cx, pt.cy, pt.r, id) : bvSlotCircle(pt.cx, pt.cy, pt.r); }
+      else { ox = pt.cx; oy = pt.cy; inner = on ? bvWheel(pt.cx, pt.cy, pt.r, id, pt.s || "steel") : bvSlotCircle(pt.cx, pt.cy, pt.r); }
+      return '<g class="bv-part ' + (on ? "bv-on" : "bv-slot") + '" data-part="' + i + '" ' + bvOrigin(ox, oy) + '>' + inner + '</g>';
+    }
+
+    // ---- extras ----
+    function bvLightBar(x, y) {
+      return '<g transform="translate(' + (x - 31) + ' ' + (y - 12) + ')"><rect x="0" y="0" width="62" height="12" rx="3.5" fill="#1A1D21"/><rect x="3" y="2.2" width="56" height="7.6" rx="2.2" fill="#2A2E33"/>' +
+        '<circle class="bv-glow" cx="12" cy="6" r="3.3" fill="#FFF8E1"/><circle class="bv-glow" cx="24" cy="6" r="3.3" fill="#FFEB3B"/><circle class="bv-glow" cx="36" cy="6" r="3.3" fill="#FFF8E1"/><circle class="bv-glow" cx="48" cy="6" r="3.3" fill="#FFEB3B"/></g>';
+    }
+    function bvBeacon(x, y) {
+      return '<g transform="translate(' + x + ' ' + y + ')"><circle class="bv-flash" cx="0" cy="-12" r="18" fill="#FFB300" opacity="0.35"/>' +
+        '<rect x="-11" y="-5" width="22" height="6" rx="2" fill="#2A2E33"/>' +
+        '<path d="M-8 -5 L-8 -14 A8 8 0 0 1 8 -14 L8 -5 Z" fill="#FFA000" stroke="#B26A00" stroke-width="1"/>' +
+        '<path class="bv-flash" d="M-8 -5 L-8 -14 A8 8 0 0 1 8 -14 L8 -5 Z" fill="#FFE082"/>' +
+        '<rect x="-5" y="-17" width="3" height="9" rx="1.5" fill="#fff" opacity="0.7"/></g>';
+    }
+    function bvHorn(x, y) {
+      return '<g transform="translate(' + x + ' ' + y + ')"><rect x="22" y="11" width="12" height="7" rx="1.5" fill="#3A3A3A"/>' +
+        '<path d="M22 8 L0 0 L0 16 L22 16 Z" fill="#E0C26A" stroke="#6A4A10" stroke-width="1.1" stroke-linejoin="round"/>' +
+        '<path d="M22 16 L4 18 L4 30 L22 24 Z" fill="#C4A45A" stroke="#6A4A10" stroke-width="1.1" stroke-linejoin="round"/>' +
+        '<g class="bv-honk" fill="none" stroke="#FFB300" stroke-width="3" stroke-linecap="round"><path d="M-8 4 q-6 8 0 16"/><path d="M-16 0 q-9 12 0 24"/></g></g>';
+    }
+    function bvLadder(x, y, len) {
+      var s = '<g transform="translate(' + x + ' ' + y + ')"><rect x="0" y="0" width="' + len + '" height="6" rx="1.5" fill="#C5CAD0" stroke="#6A727A" stroke-width="1"/>' +
+        '<rect x="0" y="14" width="' + len + '" height="6" rx="1.5" fill="#C5CAD0" stroke="#6A727A" stroke-width="1"/>';
+      for (var i = 8; i < len - 4; i += 16) s += '<rect x="' + i + '" y="0" width="4" height="20" fill="#9AA3AB"/>';
+      return s + '</g>';
+    }
+    function bvExtra(def, name) {
+      var a = def.anchors || {};
+      if (name === "lights" && a.roof) return bvLightBar(a.lights ? a.lights[0] : a.roof[0], a.lights ? a.lights[1] : a.roof[1]);
+      if (name === "beacon" && a.roof) return bvBeacon(a.beacon ? a.beacon[0] : a.roof[0], a.beacon ? a.beacon[1] : a.roof[1]);
+      if (name === "horn" && a.horn) return bvHorn(a.horn[0], a.horn[1]);
+      if (name === "ladder" && a.ladder) {
+        var L = a.ladder;
+        var s = "";
+        if (L[3]) L[3].forEach(function (px) { s += '<rect x="' + (px - 3) + '" y="' + (L[1] + 18) + '" width="6" height="' + (L[4] - L[1] - 18) + '" fill="#2A2E33"/>'; });
+        return s + bvLadder(L[0], L[1], L[2]);
+      }
+      if (name === "spoiler" && a.spoiler) return a.spoiler;
+      return "";
+    }
+    function bvExtraIcon(name) {
+      if (name === "spoiler") return '<svg viewBox="0 0 90 60"><path d="M8 44 L14 22 L22 16 H68 L80 22 L84 44 H70 L72 30 H20 L22 44 Z" fill="#4A4F55" stroke="#2A2E33" stroke-width="1.5"/><path d="M22 26 H70" stroke="#F5F7FA" stroke-width="3" stroke-linecap="round" opacity="0.45"/></svg>';
+      if (name === "lights") return '<svg viewBox="0 0 90 60"><rect x="10" y="22" width="70" height="18" rx="5" fill="#1A1D21"/><circle cx="26" cy="31" r="6" fill="#FFF8E1" stroke="#F9A825" stroke-width="0.8"/><circle cx="45" cy="31" r="6" fill="#FFEB3B"/><circle cx="64" cy="31" r="6" fill="#FFF8E1" stroke="#F9A825" stroke-width="0.8"/><path d="M26 10 v8 M45 6 v12 M64 10 v8" stroke="#F9A825" stroke-width="3" stroke-linecap="round"/></svg>';
+      if (name === "ladder") return '<svg viewBox="0 0 90 60"><g transform="rotate(-22 45 30)"><rect x="6" y="16" width="78" height="7" rx="1.5" fill="#C5CAD0" stroke="#6A727A" stroke-width="1.2"/><rect x="6" y="36" width="78" height="7" rx="1.5" fill="#C5CAD0" stroke="#6A727A" stroke-width="1.2"/><rect x="16" y="16" width="5" height="27" fill="#9AA3AB"/><rect x="32" y="16" width="5" height="27" fill="#9AA3AB"/><rect x="48" y="16" width="5" height="27" fill="#9AA3AB"/><rect x="64" y="16" width="5" height="27" fill="#9AA3AB"/></g></svg>';
+      if (name === "beacon") return '<svg viewBox="0 0 90 60"><circle cx="45" cy="30" r="26" fill="#FFB300" opacity="0.3"/><rect x="29" y="40" width="32" height="9" rx="3" fill="#2A2E33"/><path d="M33 40 L33 26 A12 12 0 0 1 57 26 L57 40 Z" fill="#FFA000" stroke="#B26A00" stroke-width="1.4"/><rect x="38" y="22" width="4" height="14" rx="2" fill="#fff" opacity="0.7"/><path d="M14 18 l8 4 M76 18 l-8 4 M45 2 v6" stroke="#FFA000" stroke-width="3" stroke-linecap="round"/></svg>';
+      return '<svg viewBox="0 0 90 60"><rect x="40" y="27" width="14" height="9" rx="1.5" fill="#3A3A3A"/><path d="M40 20 L14 10 L14 30 L40 30 Z" fill="#E0C26A" stroke="#6A4A10" stroke-width="1.3" stroke-linejoin="round"/><path d="M40 32 L18 34 L18 48 L40 40 Z" fill="#C4A45A" stroke="#6A4A10" stroke-width="1.3" stroke-linejoin="round"/><path d="M8 18 q-5 8 0 16 M4 12 q-8 14 0 28" fill="none" stroke="#FFB300" stroke-width="3" stroke-linecap="round"/></svg>';
+    }
+    var BV_EXTRA_NAMES = { spoiler: "Spoiler", lights: "Lights", ladder: "Ladder", horn: "Horn", beacon: "Flashing light" };
+
+    function bvMotion() {
+      return '<g class="bv-motion" fill="none" stroke-linecap="round"><path d="M500 80 H580" stroke="#1A237E" stroke-width="5" opacity="0.25"/><path d="M506 112 H600" stroke="#1A237E" stroke-width="6" opacity="0.25"/><path d="M500 144 H570" stroke="#1A237E" stroke-width="5" opacity="0.25"/></g>';
+    }
+
+    // Each vehicle faces left (front on the left) in a 500 x 220 box; the ground is y = 198.
+    // draw(id, P, X) gets the rendered parts P[i] and the extra X and returns the layers in order.
+    var BV_KINDS = [
+      { id: "car", name: "Car", say: "car", group: "road", extras: ["spoiler", "lights", "horn"],
+        parts: [{ t: "wheel", cx: 130, cy: 170, r: 28, s: "alloy" }, { t: "wheel", cx: 355, cy: 170, r: 28, s: "alloy" }],
+        anchors: { roof: [276, 67], horn: [62, 112],
+          spoiler: '<path d="M412 104 L428 92 L456 92 L460 104 L456 108 L416 108 Z" fill="#2A2E33" stroke="#15171A" stroke-width="1.2"/><path d="M418 102 L430 96 L452 96 L456 102 Z" fill="#EEF2F5" opacity="0.35"/>' },
+        draw: function (id, P, X) {
+          var body = "M62 164 C50 164 46 150 54 140 C62 130 82 126 104 124 C136 120 168 118 192 116 C204 94 224 74 258 68 C282 64 334 64 360 70 C382 78 396 96 404 116 C424 118 444 122 456 130 C466 136 470 150 464 162 C460 172 448 176 434 176 L391 176 A36 36 0 0 0 319 176 L166 176 A36 36 0 0 0 94 176 L72 176 C62 176 56 170 62 164 Z";
+          return bvShadow(255, 206, 195) + bvPaint(id, body) +
+            '<path d="M54 150 C50 158 54 170 70 176 L88 176 L80 150 Z" fill="url(#' + id + '-bump)"/>' +
+            '<path d="M456 148 C468 154 470 166 458 176 L434 176 C444 170 454 160 456 148 Z" fill="url(#' + id + '-bump)"/>' +
+            '<path d="M214 118 L210 176 M300 118 L304 176" fill="none" stroke="#2A2A2A" stroke-opacity="0.45" stroke-width="1.3"/>' +
+            bvHandle(230, 122) + bvHandle(318, 122) +
+            bvGlass("M200 114 L214 80 C228 70 250 66 270 66 L348 70 C366 78 378 96 386 114 Z", id) +
+            bvShine("M210 90 L230 74 L270 72 L250 96 Z") + bvShine("M310 78 L350 76 L360 100 L320 102 Z") +
+            '<path d="M292 68 L300 114 L286 114 L280 70 Z" fill="#1A1D21" opacity="0.8"/>' +
+            '<path d="M78 126 C70 128 66 136 68 142 L102 140 C104 132 98 126 90 124 Z" fill="#F4FAFF" stroke="#9AA3AB" stroke-width="0.8"/>' +
+            '<ellipse cx="86" cy="133" rx="8" ry="5" fill="#D7E8F5"/>' +
+            '<path d="M430 124 C444 128 452 136 450 144 L416 144 C418 132 422 126 430 124 Z" fill="#C62828"/>' +
+            '<rect x="52" y="138" width="18" height="16" rx="1.5" fill="#1A1D21"/><path d="M55 141 H67 M55 145 H67 M55 149 H67" stroke="#8A939C" stroke-width="1.1"/>' +
+            '<rect x="54" y="156" width="16" height="8" rx="1" fill="#F1E3A0" stroke="#6A727A" stroke-width="0.6"/>' +
+            '<path d="M199 104 L199 96 L214 92 L218 102 L204 108 Z" fill="url(#' + id + '-paint)" stroke="#333" stroke-width="0.8"/>' +
+            X + P[0] + P[1];
+        } },
+      { id: "ute", name: "Ute", say: "ute", group: "road", extras: ["lights", "ladder", "horn"],
+        parts: [{ t: "wheel", cx: 120, cy: 167, r: 31, s: "alloy" }, { t: "wheel", cx: 406, cy: 167, r: 31, s: "alloy" }],
+        anchors: { roof: [276, 54], horn: [48, 106], ladder: [262, 66, 222, [366, 474], 108] },
+        draw: function (id, P, X) {
+          // Dual cab with a long tray (tray lengthened in v35). Drawn 14 units left of the v2 mockup.
+          var b = "M60 156 C50 156 46 142 54 132 C64 122 88 118 114 116 C150 112 178 110 200 108 C210 86 226 66 258 58 C278 52 318 52 338 60 C352 66 360 82 364 102 L364 108 L372 108 L372 88 L378 88 L378 108 L498 108 L498 122 C504 128 506 140 504 154 C502 168 494 176 482 176 L458 176 A38 38 0 0 0 382 176 L172 176 A38 38 0 0 0 96 176 L72 176 C60 176 54 166 60 156 Z";
+          return '<g transform="translate(-14 0)">' + bvShadow(278, 206, 222) + bvPaint(id, b) +
+            '<path d="M380 112 L494 112 L494 124 L380 124 Z" fill="#3A3F44"/>' +
+            '<path d="M378 108 L378 124" stroke="#2A2E33" stroke-width="3"/>' +
+            '<path d="M498 108 L498 150" stroke="#2A2E33" stroke-width="3.5" stroke-linecap="round"/>' +
+            '<path d="M440 126 L440 170 M380 140 L496 140" stroke="#2A2A2A" stroke-opacity="0.25" stroke-width="1.2"/>' +
+            '<rect x="364" y="78" width="14" height="48" rx="1" fill="url(#' + id + '-paint)" stroke="rgba(0,0,0,0.35)" stroke-width="1"/>' +
+            '<path d="M50 144 C46 152 50 168 68 176 L90 176 L78 144 Z" fill="url(#' + id + '-bump)"/>' +
+            '<path d="M496 152 L512 152 L512 168 C508 176 498 176 486 176 L486 168 Z" fill="url(#' + id + '-bump)"/>' +
+            '<rect x="172" y="178" width="150" height="5" rx="2" fill="#2A2E33"/>' +
+            '<path d="M228 108 L224 176 M300 108 L302 176" fill="none" stroke="#2A2A2A" stroke-opacity="0.45" stroke-width="1.3"/>' +
+            bvHandle(246, 116) + bvHandle(318, 116) +
+            bvGlass("M206 106 L220 72 C234 60 252 54 276 54 L328 58 C344 64 354 80 360 104 L210 106 Z", id) +
+            bvShine("M220 84 L236 66 L270 62 L250 90 Z") +
+            '<path d="M292 56 L300 106 L284 106 L278 58 Z" fill="#1A1D21" opacity="0.8"/>' +
+            '<path d="M72 122 C64 124 60 132 62 140 L100 138 C102 128 94 122 84 120 Z" fill="#F4FAFF" stroke="#9AA3AB" stroke-width="0.8"/>' +
+            '<ellipse cx="80" cy="130" rx="9" ry="5.5" fill="#D7E8F5"/>' +
+            '<rect x="490" y="126" width="12" height="16" rx="2" fill="#C62828" stroke="#7F1414" stroke-width="0.7"/>' +
+            '<rect x="50" y="140" width="22" height="18" rx="1.5" fill="#1A1D21"/><path d="M53 144 H69 M53 149 H69 M53 154 H69" stroke="#8A939C" stroke-width="1.2"/>' +
+            '<rect x="52" y="160" width="16" height="8" rx="1" fill="#F1E3A0" stroke="#6A727A" stroke-width="0.6"/>' +
+            '<path d="M203 98 L203 88 L220 84 L224 96 L208 102 Z" fill="url(#' + id + '-paint)" stroke="#333" stroke-width="0.8"/>' +
+            '</g>' + X + P[0] + P[1];
+        } },
+      { id: "truck", name: "Truck", say: "truck", group: "road", extras: ["spoiler", "lights", "horn"],
+        parts: [{ t: "wheel", cx: 118, cy: 166, r: 32 }, { t: "wheel", cx: 345, cy: 164, r: 34 }, { t: "wheel", cx: 420, cy: 164, r: 34 }],
+        anchors: { roof: [118, 52], lights: [116, 50], horn: [72, 128],
+          spoiler: '<path d="M64 52 L104 30 L184 24 L188 24 L188 50 Z" fill="#2A2E33" stroke="#15171A" stroke-width="1.2"/><path d="M80 46 L108 32 L180 28 L180 34 L112 38 Z" fill="#EEF2F5" opacity="0.3"/>' },
+        draw: function (id, P, X) {
+          var cab = "M58 176 L58 150 C50 148 44 140 46 128 L46 78 C46 66 58 58 78 54 L188 48 L188 176 L158 176 A40 40 0 0 0 78 176 Z";
+          var box = "M188 176 L188 42 C188 30 200 24 218 24 L462 24 C476 24 484 34 484 48 L484 176 L458 176 A38 38 0 0 0 382 176 A38 38 0 0 0 307 176 L188 176 Z";
+          return bvShadow(270, 208, 220) + bvPaint(id, cab) + bvPaint(id, box) +
+            '<path d="M200 110 H472" stroke="#fff" stroke-opacity="0.18" stroke-width="6"/>' +
+            '<path d="M280 36 L280 176 M360 36 L360 176 M430 36 L430 176 M470 48 L470 176" fill="none" stroke="#2A2A2A" stroke-opacity="0.22" stroke-width="1.2"/>' +
+            '<rect x="40" y="148" width="28" height="28" rx="3" fill="url(#' + id + '-bump)"/>' +
+            '<rect x="42" y="168" width="18" height="8" rx="1" fill="#F1E3A0" stroke="#6A727A" stroke-width="0.6"/>' +
+            '<rect x="456" y="168" width="32" height="10" rx="2" fill="url(#' + id + '-bump)"/>' +
+            '<ellipse cx="250" cy="168" rx="22" ry="10" fill="#3A3F44" stroke="#1A1D21" stroke-width="1"/>' +
+            '<path d="M130 70 L128 176" fill="none" stroke="#2A2A2A" stroke-opacity="0.4" stroke-width="1.3"/>' + bvHandle(140, 116) +
+            bvGlass("M54 126 L56 76 C58 64 70 56 88 54 L108 53 L104 126 Z", id) + bvShine("M62 88 L74 66 L96 64 L86 100 Z") +
+            bvGlass("M118 70 L118 60 L174 56 L178 70 L178 118 L118 118 Z", id) + bvShine("M124 78 L136 64 L160 62 L148 88 Z") +
+            '<rect x="46" y="128" width="26" height="22" rx="1.5" fill="#1A1D21"/><path d="M49 132 H69 M49 137 H69 M49 142 H69 M49 147 H69" stroke="#B0B8C0" stroke-width="1.2"/>' +
+            '<rect x="44" y="118" width="16" height="22" rx="3" fill="#F4FAFF" stroke="#9AA3AB" stroke-width="0.9"/><ellipse cx="52" cy="128" rx="5" ry="7" fill="#E8F4FF"/>' +
+            '<rect x="476" y="100" width="8" height="22" rx="1.5" fill="#C62828"/>' +
+            '<path d="M58 86 L40 72" stroke="#2A2E33" stroke-width="3.2" stroke-linecap="round"/>' +
+            '<rect x="26" y="60" width="16" height="28" rx="3" fill="url(#' + id + '-paint)" stroke="#222" stroke-width="1"/><rect x="28" y="63" width="12" height="13" rx="1.4" fill="#A8C4D2" opacity="0.85"/>' +
+            X + P[0] + P[1] + P[2];
+        } },
+      { id: "bus", name: "Bus", say: "bus", group: "road", extras: ["lights", "beacon", "horn"],
+        parts: [{ t: "wheel", cx: 142, cy: 168, r: 30 }, { t: "wheel", cx: 374, cy: 168, r: 30 }],
+        anchors: { roof: [112, 35], horn: [30, 104] },
+        draw: function (id, P, X) {
+          var busPath = "M36 156 C32 140 32 100 44 78 C58 50 80 36 110 34 L430 34 C466 34 490 56 490 92 L490 160 C490 170 480 176 466 176 L410 176 A36 36 0 0 0 338 176 L178 176 A36 36 0 0 0 106 176 L52 176 C40 176 34 168 36 156 Z";
+          var s = bvShadow(265, 208, 230) + bvPaint(id, busPath) +
+            '<path d="M44 128 H486" stroke="#fff" stroke-opacity="0.2" stroke-width="7"/><path d="M44 150 H486" stroke="#1A1D21" stroke-opacity="0.25" stroke-width="2"/>' +
+            '<rect x="28" y="150" width="28" height="26" rx="4" fill="url(#' + id + '-bump)"/><rect x="30" y="166" width="18" height="8" rx="1" fill="#F1E3A0" stroke="#6A727A" stroke-width="0.6"/>' +
+            '<rect x="470" y="150" width="24" height="26" rx="4" fill="url(#' + id + '-bump)"/>' +
+            '<rect x="70" y="40" width="86" height="16" rx="2" fill="#1A1D21"/><rect x="74" y="43" width="78" height="10" rx="1" fill="#0E2A18"/>' +
+            bvGlass("M48 126 L50 64 C54 52 70 44 92 42 L168 42 L168 126 Z", id) + bvShine("M60 80 L78 54 L120 50 L96 90 Z");
+          [176, 224, 272, 320, 368, 416].forEach(function (wx) { s += bvGlass("M" + wx + " 48 H" + (wx + 40) + " V122 H" + wx + " Z", id); });
+          s += '<g fill="#1A1D21" opacity="0.75"><rect x="168" y="42" width="8" height="84"/><rect x="216" y="48" width="8" height="74"/><rect x="264" y="48" width="8" height="74"/><rect x="312" y="48" width="8" height="74"/><rect x="360" y="48" width="8" height="74"/><rect x="408" y="48" width="8" height="74"/></g>' +
+            '<rect x="130" y="48" width="28" height="128" rx="2" fill="none" stroke="#1A1D21" stroke-width="1.6"/><path d="M144 48 V176" stroke="#1A1D21" stroke-width="1.1"/>' +
+            '<rect x="300" y="48" width="24" height="128" rx="2" fill="none" stroke="#1A1D21" stroke-width="1.4"/>' +
+            '<rect x="340" y="24" width="70" height="14" rx="4" fill="#9AA3AB" stroke="#6A727A" stroke-width="0.8"/>' +
+            '<rect x="32" y="132" width="16" height="18" rx="3" fill="#F4FAFF" stroke="#9AA3AB" stroke-width="0.8"/>' +
+            '<rect x="478" y="100" width="10" height="28" rx="2" fill="#C62828"/>' +
+            '<path d="M48 84 L34 72" stroke="#2A2E33" stroke-width="3" stroke-linecap="round"/>' +
+            '<rect x="18" y="60" width="16" height="28" rx="3" fill="url(#' + id + '-paint)" stroke="#222" stroke-width="1"/>' +
+            X + P[0] + P[1];
+          return s;
+        } },
+      { id: "fire", name: "Fire engine", say: "fire engine", group: "road", extras: ["beacon", "horn"],
+        parts: [{ t: "wheel", cx: 112, cy: 166, r: 32 }, { t: "wheel", cx: 340, cy: 164, r: 34 }, { t: "wheel", cx: 420, cy: 164, r: 34 }],
+        anchors: { roof: [478, 52], horn: [62, 98] },
+        draw: function (id, P, X) {
+          var nose = "M48 176 L48 150 C40 146 38 136 44 126 L70 110 C86 104 110 100 130 98 L130 70 C130 56 144 48 164 46 L268 46 L268 176 L152 176 A40 40 0 0 0 72 176 L48 176 Z";
+          var fbody = "M268 176 L268 70 C268 58 280 52 298 52 L470 52 C484 52 490 64 490 78 L490 176 L460 176 A40 40 0 0 0 380 176 A40 40 0 0 0 300 176 L268 176 Z";
+          var s = bvShadow(270, 208, 220) + bvPaint(id, nose) + bvPaint(id, fbody) +
+            '<path d="M70 124 H488" stroke="#F5F5F5" stroke-width="10"/>' +
+            '<path d="M134 50 L134 70 L264 70 L264 50 C250 46 180 46 164 48 Z" fill="#F5F5F5" stroke="#D0D0D0" stroke-width="0.8"/>' +
+            '<path d="M310 78 L310 176 M370 78 L370 176 M430 78 L430 176" fill="none" stroke="#2A2A2A" stroke-opacity="0.3" stroke-width="1.2"/>' +
+            '<rect x="320" y="86" width="40" height="30" rx="2" fill="none" stroke="#2A2A2A" stroke-opacity="0.35" stroke-width="1.1"/>' +
+            '<rect x="380" y="86" width="40" height="30" rx="2" fill="none" stroke="#2A2A2A" stroke-opacity="0.35" stroke-width="1.1"/>' +
+            '<rect x="440" y="86" width="40" height="30" rx="2" fill="none" stroke="#2A2A2A" stroke-opacity="0.35" stroke-width="1.1"/>' +
+            '<circle cx="290" cy="150" r="14" fill="#3A3F44" stroke="#1A1D21" stroke-width="1.4"/><circle cx="290" cy="150" r="8" fill="#C5CAD0" stroke="#6A727A" stroke-width="1"/>' +
+            '<rect x="36" y="150" width="28" height="26" rx="3" fill="url(#' + id + '-bump)"/><rect x="38" y="166" width="16" height="8" rx="1" fill="#F1E3A0" stroke="#6A727A" stroke-width="0.6"/>' +
+            '<rect x="468" y="168" width="26" height="8" rx="2" fill="url(#' + id + '-bump)"/>' +
+            '<path d="M186 70 L184 176 M230 70 L232 176" fill="none" stroke="#2A2A2A" stroke-opacity="0.4" stroke-width="1.3"/>' +
+            bvHandle(200, 116) + bvHandle(242, 116) +
+            bvGlass("M78 122 L96 108 C110 100 122 98 132 98 L132 122 Z", id) +
+            bvGlass("M138 70 L138 50 C150 46 200 46 250 48 L262 50 L262 118 L138 118 Z", id) + bvShine("M150 70 L170 52 L210 52 L190 86 Z") +
+            '<rect x="44" y="128" width="28" height="20" rx="1.5" fill="#1A1D21"/><path d="M47 132 H69 M47 137 H69 M47 142 H69" stroke="#8A939C" stroke-width="1.2"/>' +
+            '<path d="M48 126 C42 128 40 136 44 144 L76 138 C76 128 68 122 58 122 Z" fill="#F4FAFF" stroke="#9AA3AB" stroke-width="0.8"/>' +
+            '<rect x="168" y="34" width="70" height="12" rx="3" fill="#1A1D21"/>' +
+            '<circle class="bv-glow" cx="184" cy="40" r="3.4" fill="#FFF8E1"/><circle class="bv-glow2" cx="198" cy="40" r="3.4" fill="#E53935"/><circle class="bv-glow" cx="212" cy="40" r="3.4" fill="#FFF8E1"/><circle class="bv-glow2" cx="226" cy="40" r="3.4" fill="#E53935"/>' +
+            bvLadder(150, 20, 310) +
+            '<path d="M126 86 L108 74" stroke="#2A2E33" stroke-width="3" stroke-linecap="round"/>' +
+            '<rect x="92" y="64" width="16" height="26" rx="3" fill="url(#' + id + '-paint)" stroke="#333" stroke-width="0.8"/>' +
+            X + P[0] + P[1] + P[2];
+          return s;
+        } },
+      { id: "excavator", name: "Excavator", say: "excavator", group: "cons", extras: ["beacon", "horn", "lights"], partWord: "tracks",
+        parts: [{ t: "track", x: 176, y: 134, w: 240, h: 46, back: true }, { t: "track", x: 150, y: 150, w: 256, h: 48 }],
+        anchors: { roof: [236, 36], horn: [300, 58] },
+        draw: function (id, P, X) {
+          var house = "M190 142 L190 100 C190 94 194 90 200 90 L414 90 C434 90 448 104 448 122 L448 134 C448 139 444 142 438 142 Z";
+          var cab = "M196 92 L196 48 C196 42 200 36 208 36 L256 36 C264 36 268 42 270 50 L278 92 Z";
+          var boom = "M262 134 L290 116 C262 72 214 40 160 24 L140 40 C184 56 230 88 262 134 Z";
+          var arm = "M138 22 L164 34 L98 150 L72 144 Z";
+          var bucket = "M90 140 C66 136 46 146 42 164 C38 182 50 196 72 198 L100 196 C104 184 102 166 96 154 Z";
+          return bvShadow(280, 206, 200) + P[0] +
+            '<rect x="214" y="136" width="150" height="16" rx="3" fill="#2A2E33"/>' +
+            bvPaint(id, house) +
+            '<path d="M392 92 L392 142" stroke="#1A1D21" stroke-opacity="0.35" stroke-width="1.6"/>' +
+            '<path d="M330 104 H384 M330 112 H384 M330 120 H384 M330 128 H384" stroke="#1A1D21" stroke-opacity="0.55" stroke-width="2.4"/>' +
+            '<rect x="366" y="66" width="9" height="26" rx="2" fill="#2A2E33"/><rect x="364" y="62" width="13" height="6" rx="2" fill="#15171A"/>' +
+            '<path d="M296 86 H420 M300 86 V92 M416 86 V92" stroke="#2A2E33" stroke-width="2.4" fill="none"/>' +
+            '<rect x="440" y="100" width="8" height="18" rx="2" fill="#C62828"/>' +
+            P[1] +
+            '<g class="bv-boom" ' + bvOrigin(276, 124) + '>' +
+              bvRam(256, 146, 196, 70, 10) +
+              bvPaint(id, boom) +
+              bvRam(204, 54, 150, 18, 8) +
+              bvPaint(id, arm) +
+              bvRam(140, 56, 92, 138, 7) +
+              '<g class="bv-bucket" ' + bvOrigin(86, 148) + '>' +
+                '<path d="' + bucket + '" fill="url(#' + id + '-iron)" stroke="#15171A" stroke-width="1.4"/>' +
+                '<path d="M60 150 C52 158 50 172 58 184" fill="none" stroke="#8A939C" stroke-width="2" opacity="0.6"/>' +
+                '<path d="M44 176 L34 184 L48 186 Z M50 188 L42 198 L56 196 Z M62 196 L58 206 L70 199 Z" fill="#C5CDD4" stroke="#2A2E33" stroke-width="1"/>' +
+                bvPin(86, 148, 6) +
+              '</g>' +
+              bvPin(150, 30, 6) + bvPin(276, 124, 8) +
+            '</g>' +
+            bvPaint(id, cab) +
+            bvGlass("M202 86 L202 50 C202 45 205 42 210 42 L252 42 C258 42 261 46 262 52 L270 86 Z", id) +
+            bvShine("M208 66 L216 46 L238 46 L226 74 Z") +
+            '<path d="M234 42 L238 86" stroke="#1A1D21" stroke-width="3" opacity="0.7"/>' +
+            '<rect x="198" y="88" width="78" height="5" rx="2" fill="#2A2E33" opacity="0.6"/>' + X;
+        } },
+      { id: "dump", name: "Dump truck", say: "dump truck", group: "cons", extras: ["beacon", "horn", "lights"],
+        parts: [{ t: "wheel", cx: 112, cy: 166, r: 32 }, { t: "wheel", cx: 352, cy: 164, r: 34 }, { t: "wheel", cx: 428, cy: 164, r: 34 }],
+        anchors: { roof: [120, 54], horn: [66, 100] },
+        draw: function (id, P, X) {
+          var cab = "M54 176 L54 150 C46 148 40 140 42 128 L42 80 C42 68 54 60 74 56 L182 50 L182 176 L152 176 A40 40 0 0 0 72 176 Z";
+          var tray = "M192 128 L192 70 L176 48 L198 38 L474 38 L492 54 L492 128 Z";
+          return bvShadow(272, 208, 222) +
+            '<rect x="180" y="128" width="312" height="16" rx="3" fill="#2A2E33"/>' +
+            '<path d="M310 144 C310 124 330 118 352 118 C380 118 404 118 428 118 C450 118 470 124 472 144 Z" fill="#1A1D21"/>' +
+            '<rect x="230" y="144" width="56" height="20" rx="6" fill="#3A3F44" stroke="#1A1D21" stroke-width="1"/>' +
+            '<g class="bv-tray" ' + bvOrigin(490, 132) + '>' +
+              bvRam(250, 150, 250, 112, 12) +
+              bvPaint(id, tray) +
+              '<path d="M196 46 H476" stroke="#1A1D21" stroke-opacity="0.4" stroke-width="5"/>' +
+              '<path d="M250 50 V126 M310 50 V126 M370 50 V126 M430 50 V126" stroke="#1A1D21" stroke-opacity="0.28" stroke-width="5"/>' +
+              '<path d="M252 50 V126 M312 50 V126 M372 50 V126 M432 50 V126" stroke="#fff" stroke-opacity="0.22" stroke-width="1.5"/>' +
+              '<path d="M476 40 L476 128" stroke="#1A1D21" stroke-opacity="0.45" stroke-width="2"/>' +
+              bvPin(486, 130, 5) +
+            '</g>' +
+            bvPaint(id, cab) +
+            '<path d="M124 70 L122 176" fill="none" stroke="#2A2A2A" stroke-opacity="0.4" stroke-width="1.3"/>' + bvHandle(134, 116) +
+            bvGlass("M50 126 L52 78 C54 66 66 58 84 56 L104 55 L100 126 Z", id) + bvShine("M58 90 L70 68 L92 66 L82 102 Z") +
+            bvGlass("M112 72 L112 62 L168 58 L172 72 L172 118 L112 118 Z", id) + bvShine("M118 80 L130 66 L154 64 L142 90 Z") +
+            '<rect x="36" y="148" width="28" height="28" rx="3" fill="url(#' + id + '-bump)"/>' +
+            '<rect x="42" y="128" width="26" height="20" rx="1.5" fill="#1A1D21"/><path d="M45 132 H65 M45 137 H65 M45 142 H65" stroke="#B0B8C0" stroke-width="1.2"/>' +
+            '<rect x="40" y="116" width="14" height="20" rx="3" fill="#F4FAFF" stroke="#9AA3AB" stroke-width="0.9"/>' +
+            '<path d="M54 86 L36 72" stroke="#2A2E33" stroke-width="3.2" stroke-linecap="round"/>' +
+            '<rect x="22" y="60" width="16" height="28" rx="3" fill="url(#' + id + '-paint)" stroke="#222" stroke-width="1"/>' +
+            '<rect x="484" y="142" width="10" height="16" rx="2" fill="#C62828"/>' +
+            X + P[0] + P[1] + P[2];
+        } },
+      { id: "roller", name: "Steamroller", say: "steamroller", group: "cons", extras: ["beacon", "horn", "lights"], partWord: "roller",
+        parts: [{ t: "drum", cx: 122, cy: 148, r: 50 }, { t: "wheel", cx: 394, cy: 156, r: 42, s: "tread" }],
+        anchors: { roof: [296, 20], horn: [196, 92] },
+        draw: function (id, P, X) {
+          var yoke = "M60 150 L60 104 C60 94 68 86 78 86 L168 86 C178 86 186 94 186 104 L186 150 L176 150 L176 112 C176 104 170 98 162 98 L84 98 C76 98 70 104 70 112 L70 150 Z";
+          var rear = "M224 162 L224 96 C224 88 230 82 238 82 L464 82 C476 82 484 92 484 104 L484 152 C484 158 480 162 474 162 L440 162 A46 46 0 0 0 348 162 Z";
+          return bvShadow(270, 206, 220) +
+            '<rect x="180" y="110" width="52" height="34" rx="6" fill="url(#' + id + '-bump)"/>' + bvPin(206, 127, 7) +
+            P[0] + bvPaint(id, yoke) +
+            '<path d="M70 104 H176" stroke="#fff" stroke-opacity="0.25" stroke-width="3"/>' +
+            '<rect x="60" y="138" width="16" height="12" rx="2" fill="#2A2E33"/><rect x="170" y="138" width="16" height="12" rx="2" fill="#2A2E33"/>' +
+            bvPaint(id, rear) +
+            '<path d="M372 98 H462 M372 108 H462 M372 118 H462 M372 128 H462" stroke="#1A1D21" stroke-opacity="0.5" stroke-width="2.4"/>' +
+            '<rect x="448" y="56" width="9" height="26" rx="2" fill="#2A2E33"/><rect x="446" y="52" width="13" height="6" rx="2" fill="#15171A"/>' +
+            '<rect x="476" y="96" width="8" height="18" rx="2" fill="#C62828"/>' +
+            '<rect x="236" y="22" width="122" height="10" rx="3" fill="url(#' + id + '-paint)" stroke="rgba(0,0,0,0.35)" stroke-width="1"/>' +
+            '<rect x="242" y="32" width="7" height="52" fill="#2A2E33"/><rect x="342" y="32" width="7" height="52" fill="#2A2E33"/>' +
+            bvGlass("M250 82 L250 34 L340 34 L340 82 Z", id) + bvShine("M256 60 L266 38 L292 38 L278 70 Z") +
+            '<path d="M296 34 V82" stroke="#1A1D21" stroke-width="2.5" opacity="0.7"/>' +
+            '<rect x="230" y="38" width="10" height="8" rx="2" fill="#F4FAFF" stroke="#9AA3AB" stroke-width="0.8"/>' +
+            X + P[1];
+        } },
+      { id: "backhoe", name: "Backhoe", say: "backhoe", group: "cons", extras: ["beacon", "horn", "lights"],
+        parts: [{ t: "wheel", cx: 150, cy: 170, r: 28, s: "tread" }, { t: "wheel", cx: 352, cy: 156, r: 42, s: "tread" }],
+        anchors: { roof: [290, 24], horn: [150, 80] },
+        draw: function (id, P, X) {
+          var body = "M96 162 L96 112 C96 104 102 98 110 98 L232 98 L232 40 L348 40 L352 110 L430 110 L430 160 L398 162 A46 46 0 0 0 306 162 L184 162 A34 34 0 0 0 116 162 Z";
+          var arms = "M246 96 L232 112 L76 160 L68 146 Z";
+          var lbucket = "M56 128 L86 130 C96 148 96 176 88 194 L26 194 Z";
+          var hboom = "M432 128 L452 116 L494 40 L476 30 Z";
+          var harm = "M474 24 L496 36 L432 106 L418 96 Z";
+          return bvShadow(270, 206, 220) +
+            '<g class="bv-hoe" ' + bvOrigin(442, 124) + '>' +
+              bvRam(458, 124, 484, 58, 8) +
+              bvPaint(id, hboom) + bvPaint(id, harm) +
+              '<path d="M426 94 L400 100 C396 114 404 126 418 128 L434 112 Z" fill="url(#' + id + '-iron)" stroke="#15171A" stroke-width="1.2"/>' +
+              '<path d="M402 122 L394 132 L408 128 Z" fill="#C5CDD4" stroke="#2A2E33" stroke-width="1"/>' +
+              bvPin(486, 34, 5) + bvPin(442, 124, 7) +
+            '</g>' +
+            '<rect x="440" y="130" width="14" height="56" rx="3" fill="#2A2E33"/><rect x="432" y="186" width="30" height="8" rx="2" fill="#15171A"/>' +
+            bvPaint(id, body) +
+            '<rect x="222" y="26" width="140" height="12" rx="3" fill="url(#' + id + '-paint)" stroke="rgba(0,0,0,0.35)" stroke-width="1"/>' +
+            bvGlass("M240 96 L240 44 L342 44 L346 104 L240 104 Z", id) + bvShine("M246 70 L256 48 L282 48 L268 80 Z") +
+            '<path d="M292 44 V104" stroke="#1A1D21" stroke-width="3" opacity="0.7"/>' +
+            '<path d="M120 112 H222 M120 122 H222" stroke="#1A1D21" stroke-opacity="0.45" stroke-width="2"/>' +
+            '<rect x="200" y="78" width="8" height="20" rx="2" fill="#2A2E33"/>' +
+            '<rect x="100" y="104" width="14" height="10" rx="2" fill="#F4FAFF" stroke="#9AA3AB" stroke-width="0.8"/>' +
+            '<g class="bv-front" ' + bvOrigin(240, 104) + '>' +
+              bvRam(200, 136, 110, 140, 8) +
+              bvPaint(id, arms) + bvPaint(id, lbucket) +
+              '<path d="M32 192 L22 196 L34 198 Z" fill="#C5CDD4" stroke="#2A2E33" stroke-width="1"/>' +
+              bvPin(240, 104, 7) + bvPin(74, 152, 6) +
+            '</g>' +
+            X + P[0] + P[1];
+        } },
+      { id: "forklift", name: "Forklift", say: "forklift", group: "cons", extras: ["beacon", "horn", "lights"],
+        parts: [{ t: "wheel", cx: 140, cy: 172, r: 26 }, { t: "wheel", cx: 352, cy: 176, r: 22 }],
+        anchors: { roof: [232, 24], horn: [112, 96] },
+        draw: function (id, P, X) {
+          var body = "M104 186 L104 128 C104 120 110 114 118 114 L198 114 L214 128 L298 128 L298 98 C298 90 304 86 312 86 L394 86 C406 86 416 96 416 108 L416 178 C416 184 412 188 406 188 L380 188 A28 28 0 0 0 324 188 L172 188 A32 32 0 0 0 108 188 Z";
+          return bvShadow(240, 208, 190) +
+            '<rect x="78" y="22" width="12" height="170" rx="2" fill="url(#' + id + '-bump)"/>' +
+            '<rect x="92" y="34" width="10" height="158" rx="2" fill="url(#' + id + '-iron)"/>' +
+            '<rect x="74" y="20" width="32" height="8" rx="2" fill="#2A2E33"/>' +
+            '<path d="M86 30 V180" stroke="#8A939C" stroke-width="2" stroke-dasharray="3 3"/>' +
+            '<g class="bv-forks">' +
+              '<path d="M56 98 H80 M56 108 H80 M56 118 H80 M60 96 V130 M70 96 V130" stroke="#3A3F44" stroke-width="3"/>' +
+              '<rect x="54" y="128" width="28" height="54" rx="3" fill="url(#' + id + '-iron)" stroke="#15171A" stroke-width="1"/>' +
+              '<path d="M8 186 L80 186 L80 160 L72 160 L72 180 L8 180 Z" fill="#B0B6BD" stroke="#2A2E33" stroke-width="1.4"/>' +
+            '</g>' +
+            '<path d="M150 116 L168 28 M296 88 L292 28" stroke="#2A2E33" stroke-width="7" stroke-linecap="round"/>' +
+            '<rect x="152" y="20" width="160" height="10" rx="3" fill="#2A2E33"/>' +
+            '<path d="M170 24 H300" stroke="#5A626A" stroke-width="2" stroke-dasharray="10 6"/>' +
+            '<path d="M232 120 L236 82 C236 76 244 74 252 76 L262 80 L258 118 Z" fill="#212121"/>' +
+            '<path d="M186 112 L200 82" stroke="#2A2E33" stroke-width="4"/><ellipse cx="200" cy="80" rx="14" ry="4" fill="none" stroke="#2A2E33" stroke-width="4" transform="rotate(-25 200 80)"/>' +
+            bvPaint(id, body) +
+            '<path d="M298 128 V188" stroke="#1A1D21" stroke-opacity="0.35" stroke-width="1.6"/>' +
+            '<path d="M316 104 H400 M316 112 H400" stroke="#1A1D21" stroke-opacity="0.35" stroke-width="2"/>' +
+            '<rect x="152" y="48" width="12" height="10" rx="2" fill="#F4FAFF" stroke="#9AA3AB" stroke-width="0.8"/>' +
+            '<rect x="408" y="120" width="8" height="18" rx="2" fill="#C62828"/>' +
+            X + P[0] + P[1];
+        } },
+      { id: "loader", name: "Front loader", say: "front loader", group: "cons", extras: ["beacon", "horn", "lights"],
+        parts: [{ t: "wheel", cx: 166, cy: 156, r: 42, s: "tread" }, { t: "wheel", cx: 398, cy: 156, r: 42, s: "tread" }],
+        anchors: { roof: [306, 18], horn: [372, 62] },
+        draw: function (id, P, X) {
+          var front = "M120 150 L120 112 C120 104 126 98 134 98 L232 98 L248 118 L248 150 L214 150 A48 48 0 0 0 118 150 Z";
+          var rear = "M246 150 L246 104 L258 96 L258 28 C258 22 262 18 268 18 L346 18 C352 18 356 22 356 28 L356 84 L462 84 C478 84 488 96 488 112 L488 140 C488 146 484 150 478 150 L446 150 A48 48 0 0 0 350 150 Z";
+          var arms = "M246 96 L230 116 L96 170 L86 154 Z";
+          var bucket = "M62 112 L106 116 C120 138 120 174 110 196 L26 196 Z";
+          return bvShadow(276, 206, 224) +
+            bvPaint(id, front) +
+            '<rect x="236" y="112" width="26" height="30" rx="6" fill="#2A2E33"/>' + bvPin(249, 127, 6) +
+            bvPaint(id, rear) +
+            bvGlass("M266 90 L266 30 L348 30 L348 90 Z", id) + bvShine("M272 62 L282 34 L306 34 L292 72 Z") +
+            '<path d="M306 30 V90" stroke="#1A1D21" stroke-width="3" opacity="0.7"/>' +
+            '<path d="M380 98 H470 M380 108 H470 M380 118 H470 M380 128 H470" stroke="#1A1D21" stroke-opacity="0.5" stroke-width="2.4"/>' +
+            '<rect x="420" y="58" width="9" height="26" rx="2" fill="#2A2E33"/><rect x="418" y="54" width="13" height="6" rx="2" fill="#15171A"/>' +
+            '<rect x="480" y="100" width="8" height="18" rx="2" fill="#C62828"/>' +
+            '<rect x="252" y="30" width="10" height="8" rx="2" fill="#F4FAFF" stroke="#9AA3AB" stroke-width="0.8"/>' +
+            P[0] + P[1] +
+            '<g class="bv-loader" ' + bvOrigin(238, 106) + '>' +
+              bvRam(226, 140, 140, 150, 9) +
+              bvPaint(id, arms) + bvPaint(id, bucket) +
+              '<path d="M66 122 L100 124 C110 142 110 170 104 188 L42 188 Z" fill="#000" opacity="0.12"/>' +
+              '<path d="M32 194 L22 198 L36 199 Z" fill="#C5CDD4" stroke="#2A2E33" stroke-width="1"/>' +
+              bvPin(238, 106, 8) + bvPin(98, 160, 6) +
+            '</g>' +
+            X;
+        } }
+    ];
+    function bvKind(id) { for (var i = 0; i < BV_KINDS.length; i++) if (BV_KINDS[i].id === id) return BV_KINDS[i]; return BV_KINDS[0]; }
+    // opts: color, parts (array of booleans; omitted = all on), extra, motion
+    function bvSvg(kindId, opts) {
+      opts = opts || {};
+      var def = bvKind(kindId);
+      var id = "bv" + (++bvUid);
+      var p = BV_PAL[opts.color] || BV_PAL.grey;
+      var P = def.parts.map(function (pt, i) { return bvPartSvg(pt, !opts.parts || !!opts.parts[i], id, i); });
+      var X = opts.extra ? '<g class="bv-extra bv-x-' + opts.extra + '">' + bvExtra(def, opts.extra) + '</g>' : "";
+      return '<svg class="bv-svg bv-k-' + def.id + '" viewBox="0 0 500 220" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" overflow="visible">' +
+        bvDefs(id, p) + (opts.motion ? bvMotion() : "") + def.draw(id, P, X) + '</svg>';
+    }
+
+    // ---- v35: Build a car game ----
+    var BUILD_GARAGE_PREFIX = "theo-car-match-garage:";
+    var BUILD_GARAGE_MAX = 36;
+    var NUMBER_WORDS = ["zero", "one", "two", "three", "four", "five", "six"];
+    var build = { step: 0, steps: [1, 2, 3, 4, 5], kind: "", color: "", parts: [], extra: "", tab: "road", timers: [], busy: false, lastSimple: "", drag: null, gen: 0 };
+
+    function buildEl(id) { return document.getElementById(id); }
+    function buildOpen() { var s = buildEl("build-screen"); return !!(s && !s.hidden); }
+    function buildLater(fn, ms) {
+      var g = build.gen;
+      var t = setTimeout(function () { if (g === build.gen) fn(); }, ms);
+      build.timers.push(t);
+      return t;
+    }
+    function buildClearTimers() {
+      build.timers.forEach(function (t) { clearTimeout(t); });
+      build.timers = [];
+    }
+    function buildPlayerName() {
+      var p = activeProfile();
+      return (p && p.name) || "Theo";
+    }
+    function buildSimple() {
+      var p = activeProfile();
+      return !!(p && p.buildSteps === "simple");
+    }
+    function garageKey() {
+      var p = activeProfile();
+      return BUILD_GARAGE_PREFIX + ((p && p.id) || "theo");
+    }
+    function loadGarage() {
+      try {
+        var raw = JSON.parse(localStorage.getItem(garageKey()) || "[]");
+        if (!Array.isArray(raw)) return [];
+        return raw.filter(function (g) { return g && typeof g === "object" && g.k; }).map(function (g) {
+          return { k: String(g.k), c: BV_PAL[g.c] ? String(g.c) : "grey", x: String(g.x || ""), t: Number(g.t) || 0 };
+        });
+      } catch (e) { return []; }
+    }
+    function saveGarageItem(item) {
+      var list = loadGarage();
+      list.unshift(item);
+      if (list.length > BUILD_GARAGE_MAX) list = list.slice(0, BUILD_GARAGE_MAX);
+      try { localStorage.setItem(garageKey(), JSON.stringify(list)); } catch (e) {}
+      return list;
+    }
+    function aOrAn(word) { return /^[aeiou]/i.test(String(word || "")) ? "an" : "a"; }
+    function buildPhrase() {
+      var def = bvKind(build.kind);
+      return buildPlayerName() + " built " + aOrAn(build.color) + " " + build.color + " " + def.say + "!";
+    }
+    function buildPartsTitle(def) {
+      if (def.id === "excavator") return "Add the tracks";
+      if (def.id === "roller") return "Add the roller and wheel";
+      return "Add the wheels";
+    }
+
+    function renderBuildPips() {
+      var el = buildEl("build-pips");
+      if (!el) return;
+      var idx = build.steps.indexOf(build.step);
+      el.hidden = idx === -1;
+      el.innerHTML = "";
+      build.steps.forEach(function (s, i) {
+        var d = document.createElement("span");
+        d.className = "pip" + (i < idx ? " done" : i === idx ? " on" : "");
+        el.appendChild(d);
+      });
+      el.setAttribute("aria-label", "Step " + (idx + 1) + " of " + build.steps.length);
+    }
+    function showBuildView(name) {
+      var views = document.querySelectorAll("#build-screen .bstep");
+      for (var i = 0; i < views.length; i++) views[i].hidden = views[i].getAttribute("data-step") !== String(name);
+      document.body.classList.toggle("garage-on", name === "garage");
+      renderBuildPips();
+    }
+
+    function startBuild() {
+      build.gen++;
+      buildClearTimers();
+      stopSpeechAndAudio();
+      unlockMedia();
+      preloadRevs();
+      hideModePicker();
+      document.getElementById("start-screen").hidden = true;
+      buildEl("build-screen").hidden = false;
+      updatePlayerUi();
+      updateHomeBtn();
+      build.kind = ""; build.color = ""; build.extra = ""; build.parts = []; build.busy = false;
+      if (buildSimple()) {
+        build.steps = [2, 3, 5];
+        var pool = BV_KINDS.map(function (k) { return k.id; }).filter(function (id) { return id !== build.lastSimple; });
+        build.kind = pool[Math.floor(Math.random() * pool.length)];
+        build.lastSimple = build.kind;
+        buildGoStep(2);
+        return;
+      }
+      build.steps = [1, 2, 3, 4, 5];
+      buildGoStep(1);
+    }
+    function stopBuild() {
+      build.gen++;
+      buildClearTimers();
+      build.busy = false;
+      endBuildDrag();
+      var s = buildEl("build-screen");
+      if (s) s.hidden = true;
+      document.body.classList.remove("garage-on");
+    }
+    function buildGoStep(n) {
+      build.step = n;
+      build.busy = false;
+      if (n === 1) renderBuildPick();
+      else if (n === 2) renderBuildColour();
+      else if (n === 3) renderBuildParts();
+      else if (n === 4) renderBuildExtras();
+      else if (n === 5) renderBuildGo();
+      showBuildView(n);
+      if (document.activeElement && document.activeElement.blur && buildEl("build-screen").contains(document.activeElement)) document.activeElement.blur();
+    }
+    function buildNext() {
+      var i = build.steps.indexOf(build.step);
+      if (i >= 0 && i < build.steps.length - 1) buildGoStep(build.steps[i + 1]);
+    }
+
+    // Step 1: pick a vehicle (Road / Construction pages)
+    function renderBuildPick(quiet) {
+      var grid = buildEl("b-grid");
+      var tabRoad = buildEl("b-tab-road"), tabCons = buildEl("b-tab-cons");
+      tabRoad.setAttribute("aria-selected", build.tab === "road" ? "true" : "false");
+      tabCons.setAttribute("aria-selected", build.tab === "cons" ? "true" : "false");
+      grid.className = "b-grid b-grid-" + build.tab;
+      grid.innerHTML = "";
+      BV_KINDS.filter(function (k) { return k.group === build.tab; }).forEach(function (k) {
+        var b = document.createElement("button");
+        b.type = "button";
+        b.className = "b-tile";
+        b.setAttribute("data-kind", k.id);
+        b.setAttribute("aria-label", k.name);
+        b.innerHTML = '<span class="b-art">' + bvSvg(k.id, { color: k.group === "cons" ? "yellow" : "grey" }) + '</span><span class="b-lbl">' + k.name + '</span>';
+        b.addEventListener("click", function () { pickBuildKind(k.id, b); });
+        grid.appendChild(b);
+      });
+      var gl = buildEl("b-garage-link");
+      if (gl) {
+        var n = loadGarage().length;
+        gl.hidden = n === 0;
+        gl.textContent = "Garage (" + n + ")";
+      }
+      if (!quiet) speak("What will you build?");
+    }
+    function setBuildTab(tab) {
+      if (build.busy) return;
+      build.tab = tab === "cons" ? "cons" : "road";
+      renderBuildPick(true);
+      speak(build.tab === "cons" ? "Construction!" : "Road!");
+    }
+    function pickBuildKind(kindId, tile) {
+      if (build.busy) return;
+      build.busy = true;
+      build.kind = kindId;
+      if (tile) tile.classList.add("picked");
+      speak(bvKind(kindId).say + "!");
+      buildLater(function () { buildGoStep(2); }, 650);
+    }
+
+    // Step 2: colour
+    function renderBuildColour() {
+      var hero = buildEl("b2-hero");
+      hero.innerHTML = '<div class="b-layer b-grey">' + bvSvg(build.kind, { color: "grey" }) + '</div><div class="b-layer b-paint" id="b2-paint"></div><div class="b-splash" id="b2-splash"></div>';
+      var row = buildEl("b2-paints");
+      row.innerHTML = "";
+      BV_COLOURS.forEach(function (c) {
+        var b = document.createElement("button");
+        b.type = "button";
+        b.className = "b-blob " + c.id;
+        b.setAttribute("aria-label", c.name);
+        b.addEventListener("click", function () { pickBuildColour(c.id, b); });
+        row.appendChild(b);
+      });
+      speak("Pick a colour!");
+    }
+    function pickBuildColour(color, btn) {
+      if (build.busy) return;
+      build.busy = true;
+      build.color = color;
+      var paint = buildEl("b2-paint");
+      if (paint) {
+        paint.classList.remove("go");
+        paint.innerHTML = bvSvg(build.kind, { color: color });
+        void paint.offsetWidth;
+        paint.classList.add("go");
+      }
+      var sp = buildEl("b2-splash");
+      if (sp) {
+        sp.innerHTML = "";
+        var hex = BV_PAL[color].c;
+        for (var i = 0; i < 9; i++) {
+          var d = document.createElement("i");
+          var ang = (i / 9) * Math.PI * 2;
+          d.style.background = hex;
+          d.style.setProperty("--dx", Math.round(Math.cos(ang) * 120) + "px");
+          d.style.setProperty("--dy", Math.round(Math.sin(ang) * 70) + "px");
+          d.style.animationDelay = (i * 18) + "ms";
+          sp.appendChild(d);
+        }
+      }
+      var all = document.querySelectorAll("#b2-paints .b-blob");
+      for (var j = 0; j < all.length; j++) all[j].classList.toggle("picked", all[j] === btn);
+      speak(color + "!");
+      buildLater(function () { buildGoStep(3); }, 1200);
+    }
+
+    // Step 3: wheels / tracks / roller
+    function renderBuildParts() {
+      var def = bvKind(build.kind);
+      build.parts = def.parts.map(function () { return false; });
+      buildEl("b3-title").textContent = buildPartsTitle(def);
+      renderBuildPartsHero(-1);
+      renderBuildSpares();
+      var cb = buildEl("b3-count");
+      cb.textContent = "";
+      cb.hidden = true;
+      speak(buildPartsTitle(def) + "!");
+    }
+    function renderBuildPartsHero(popIndex) {
+      var hero = buildEl("b3-car");
+      hero.innerHTML = bvSvg(build.kind, { color: build.color, parts: build.parts });
+      var slots = hero.querySelectorAll(".bv-slot");
+      for (var i = 0; i < slots.length; i++) {
+        (function (g) {
+          g.addEventListener("click", function () { placeBuildPart(+g.getAttribute("data-part")); });
+        })(slots[i]);
+      }
+      if (popIndex >= 0) {
+        var on = hero.querySelector('.bv-part[data-part="' + popIndex + '"]');
+        if (on) on.classList.add("pop");
+      }
+    }
+    function sparePartSvg(pt) {
+      var def = { id: "spare", parts: [], draw: null };
+      var id = "bv" + (++bvUid);
+      var inner;
+      if (pt.t === "track") inner = '<svg viewBox="0 0 120 60">' + bvDefs(id, BV_PAL.grey) + bvTrack(4, 8, 112, 44, id, false) + '</svg>';
+      else if (pt.t === "drum") inner = '<svg viewBox="0 0 100 100">' + bvDefs(id, BV_PAL.grey) + bvDrum(50, 48, 42, id) + '</svg>';
+      else inner = '<svg viewBox="0 0 100 100">' + bvDefs(id, BV_PAL.grey) + bvWheel(50, 48, 42, id, pt.s || "steel") + '</svg>';
+      return inner;
+    }
+    function renderBuildSpares() {
+      var def = bvKind(build.kind);
+      var tray = buildEl("b3-spares");
+      tray.innerHTML = "";
+      def.parts.forEach(function (pt, i) {
+        if (build.parts[i]) return;
+        var b = document.createElement("button");
+        b.type = "button";
+        b.className = "b-spare b-spare-" + pt.t;
+        b.setAttribute("data-part", String(i));
+        b.setAttribute("aria-label", pt.t === "track" ? "Track" : pt.t === "drum" ? "Roller" : "Wheel");
+        b.innerHTML = sparePartSvg(pt);
+        bindSpare(b, i);
+        tray.appendChild(b);
+      });
+    }
+    function nearestEmptySlot(type, x, y) {
+      var def = bvKind(build.kind);
+      var best = -1, bestD = Infinity;
+      var hero = buildEl("b3-car");
+      def.parts.forEach(function (pt, i) {
+        if (build.parts[i]) return;
+        if (type && pt.t !== type) return;
+        var g = hero.querySelector('.bv-part[data-part="' + i + '"]');
+        if (!g) return;
+        var r = g.getBoundingClientRect();
+        var cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+        var d = (cx - x) * (cx - x) + (cy - y) * (cy - y);
+        if (d < bestD) { bestD = d; best = i; }
+      });
+      if (best === -1 && type) return nearestEmptySlot("", x, y);
+      return best;
+    }
+    function bindSpare(btn, partIndex) {
+      btn.addEventListener("pointerdown", function (e) {
+        if (build.busy) return;
+        if (e.button !== undefined && e.button !== 0) return;
+        build.drag = { btn: btn, part: partIndex, x0: e.clientX, y0: e.clientY, ghost: null, id: e.pointerId };
+        try { btn.setPointerCapture(e.pointerId); } catch (err) {}
+      });
+      btn.addEventListener("pointermove", function (e) {
+        var d = build.drag;
+        if (!d || d.btn !== btn) return;
+        var dx = e.clientX - d.x0, dy = e.clientY - d.y0;
+        if (!d.ghost && dx * dx + dy * dy > 100) {
+          var r = btn.getBoundingClientRect();
+          var gh = btn.cloneNode(true);
+          gh.className += " b-ghost";
+          gh.style.width = r.width + "px";
+          gh.style.height = r.height + "px";
+          document.body.appendChild(gh);
+          d.ghost = gh;
+          d.w = r.width; d.h = r.height;
+          btn.classList.add("dragging");
+        }
+        if (d.ghost) {
+          d.ghost.style.left = (e.clientX - d.w / 2) + "px";
+          d.ghost.style.top = (e.clientY - d.h / 2) + "px";
+        }
+      });
+      function finish(e, cancelled) {
+        var d = build.drag;
+        if (!d || d.btn !== btn) return;
+        var dragged = !!d.ghost;
+        endBuildDrag();
+        if (cancelled && !dragged) return;
+        var def = bvKind(build.kind);
+        var type = def.parts[partIndex].t;
+        if (dragged) placeBuildPart(nearestEmptySlot(type, e.clientX, e.clientY));
+        else placeBuildPart(build.parts[partIndex] ? nearestEmptySlot(type, e.clientX, e.clientY) : partIndex);
+      }
+      btn.addEventListener("pointerup", function (e) { finish(e, false); });
+      btn.addEventListener("pointercancel", function (e) { finish(e, true); });
+      btn.addEventListener("click", function (e) {
+        // Keyboard / switch / game controller activation (no pointer events).
+        if (e.detail === 0) placeBuildPart(partIndex);
+      });
+    }
+    function endBuildDrag() {
+      var d = build.drag;
+      build.drag = null;
+      if (!d) return;
+      if (d.ghost && d.ghost.parentNode) d.ghost.parentNode.removeChild(d.ghost);
+      if (d.btn) d.btn.classList.remove("dragging");
+    }
+    function placeBuildPart(i) {
+      if (build.busy || build.step !== 3) return;
+      if (typeof i !== "number" || i < 0 || i >= build.parts.length || build.parts[i]) return;
+      build.parts[i] = true;
+      renderBuildPartsHero(i);
+      renderBuildSpares();
+      var n = build.parts.filter(Boolean).length;
+      var cb = buildEl("b3-count");
+      cb.hidden = false;
+      cb.innerHTML = n + "<small>!</small>";
+      cb.classList.remove("pop");
+      void cb.offsetWidth;
+      cb.classList.add("pop");
+      speak((NUMBER_WORDS[n] || String(n)) + "!");
+      if (n === build.parts.length) {
+        build.busy = true;
+        buildLater(function () { buildNext(); }, 1500);
+      }
+    }
+
+    // Step 4: one extra
+    function renderBuildExtras() {
+      var def = bvKind(build.kind);
+      buildEl("b4-hero").innerHTML = bvSvg(build.kind, { color: build.color });
+      var grid = buildEl("b4-grid");
+      grid.innerHTML = "";
+      grid.className = "b-extras n" + def.extras.length;
+      def.extras.forEach(function (x) {
+        var b = document.createElement("button");
+        b.type = "button";
+        b.className = "b-extra";
+        b.setAttribute("aria-label", BV_EXTRA_NAMES[x]);
+        b.innerHTML = '<span class="b-art">' + bvExtraIcon(x) + '</span><span class="b-lbl">' + BV_EXTRA_NAMES[x] + '</span>';
+        b.addEventListener("click", function () { pickBuildExtra(x, b); });
+        grid.appendChild(b);
+      });
+      speak("Pick something extra!");
+    }
+    function pickBuildExtra(x, btn) {
+      if (build.busy) return;
+      build.busy = true;
+      build.extra = x;
+      var hero = buildEl("b4-hero");
+      hero.innerHTML = bvSvg(build.kind, { color: build.color, extra: x });
+      var ex = hero.querySelector(".bv-extra");
+      if (ex) ex.classList.add("pop");
+      var all = document.querySelectorAll("#b4-grid .b-extra");
+      for (var j = 0; j < all.length; j++) all[j].classList.toggle("picked", all[j] === btn);
+      speak(x === "horn" ? "Beep beep!" : BV_EXTRA_NAMES[x] + "!");
+      buildLater(function () { buildNext(); }, 1300);
+    }
+
+    // Step 5: GO
+    function renderBuildGo() {
+      var wrap = buildEl("b5-hero");
+      wrap.className = "b-hero b-go-hero";
+      wrap.innerHTML = bvSvg(build.kind, { color: build.color, extra: build.extra });
+      buildEl("b5-cap").textContent = "Tap GO!";
+      var go = buildEl("b5-go");
+      go.disabled = false;
+      speak("Ready? Tap go!");
+    }
+    function buildGo() {
+      if (build.busy || build.step !== 5) return;
+      build.busy = true;
+      var wrap = buildEl("b5-hero");
+      var go = buildEl("b5-go");
+      go.disabled = true;
+      stopSpeechAndAudio();
+      var src = nextRevSrc();
+      var el = findPreload(revPreloads, src);
+      if (el) playElement(el); else playSources([src], "");
+      wrap.classList.add("act");
+      buildEl("b5-cap").textContent = "Vroom!";
+      var item = { k: build.kind, c: build.color || "grey", x: build.extra || "", t: Date.now() };
+      saveGarageItem(item);
+      buildLater(function () {
+        wrap.classList.add("drive");
+        wrap.innerHTML = bvSvg(build.kind, { color: build.color, extra: build.extra, motion: true });
+      }, 1500);
+      buildLater(function () { showGarage(true); }, 3100);
+    }
+
+    // Garage
+    function showGarage(justBuilt) {
+      build.step = "garage";
+      build.busy = false;
+      var name = buildPlayerName();
+      buildEl("bg-title").textContent = possessive(name) + " Garage";
+      var cap = buildEl("bg-built");
+      if (justBuilt && build.kind) {
+        cap.textContent = buildPhrase();
+        cap.hidden = false;
+      } else cap.hidden = true;
+      renderGarageShelves(justBuilt);
+      showBuildView("garage");
+      if (justBuilt && build.kind) speak(buildPhrase());
+      else speak(possessive(name) + " garage!");
+    }
+    function renderGarageShelves(justBuilt) {
+      var list = loadGarage();
+      var box = buildEl("bg-shelves");
+      box.innerHTML = "";
+      var w = window.innerWidth || 400, h = window.innerHeight || 800;
+      var per = w > h ? (w > 1000 ? 6 : 5) : (w > 700 ? 4 : 3);
+      box.style.setProperty("--per", per);
+      if (!list.length) {
+        box.innerHTML = '<p class="bg-empty">No builds yet. Tap Build another!</p>';
+        return;
+      }
+      for (var r = 0; r < list.length; r += per) {
+        var shelf = document.createElement("div");
+        shelf.className = "b-shelf";
+        list.slice(r, r + per).forEach(function (g, j) {
+          var def = bvKind(g.k);
+          var isNew = justBuilt && r === 0 && j === 0;
+          var card = document.createElement("div");
+          card.className = "b-card" + (isNew ? " latest" : "");
+          var colour = g.c && g.c !== "grey" ? g.c.charAt(0).toUpperCase() + g.c.slice(1) + " " + def.say : def.name;
+          card.innerHTML = (isNew ? '<span class="new-badge">NEW</span>' : "") +
+            '<span class="b-art">' + bvSvg(g.k, { color: g.c, extra: g.x }) + '</span><span class="b-lbl">' + colour + '</span>';
+          shelf.appendChild(card);
+        });
+        box.appendChild(shelf);
+      }
+      box.scrollTop = 0;
+    }
+
+    function bindBuildUi() {
+      var bb = buildEl("build-btn");
+      if (bb) bb.addEventListener("click", function () { unlockMedia(); startBuild(); });
+      buildEl("b-tab-road").addEventListener("click", function () { setBuildTab("road"); });
+      buildEl("b-tab-cons").addEventListener("click", function () { setBuildTab("cons"); });
+      buildEl("b5-go").addEventListener("click", buildGo);
+      buildEl("b5-hero").addEventListener("click", buildGo);
+      buildEl("bg-again").addEventListener("click", function () { startBuild(); });
+      var gl = buildEl("b-garage-link");
+      if (gl) gl.addEventListener("click", function () { if (!build.busy) showGarage(false); });
+      var art = document.querySelector('#build-btn [data-art="build"]');
+      if (art) art.innerHTML = bvSvg("car", { color: "yellow" });
+      var sel = buildEl("build-steps");
+      if (sel) sel.addEventListener("change", function () {
+        var p = activeProfile();
+        if (!p) return;
+        p.buildSteps = sel.value === "simple" ? "simple" : "full";
+        saveProfilesStore();
+        updateBuildSettingsUi();
+      });
+      window.addEventListener("resize", function () { if (buildOpen() && build.step === "garage") renderGarageShelves(false); });
+    }
+    function updateBuildSettingsUi() {
+      var sel = buildEl("build-steps");
+      var p = activeProfile();
+      if (sel && document.activeElement !== sel) sel.value = (p && p.buildSteps === "simple") ? "simple" : "full";
+      var who = buildEl("build-steps-who");
+      if (who) who.textContent = p ? p.name : "";
+    }
+
     document.getElementById("play-btn").addEventListener("click", function () {
       unlockMedia();
       showModePicker("match");
@@ -6896,12 +8137,13 @@
     });
     bindPhotoUi();
     bindPinPad();
+    bindBuildUi();
     document.getElementById("next-btn").addEventListener("click", onNext);
     document.getElementById("match-home-btn").addEventListener("click", function () { goHome(); });
     document.getElementById("name-home-btn").addEventListener("click", function () { goHome(); });
     document.getElementById("home-btn").addEventListener("click", function () { goHomeFromAnywhere(); });
     (function () {
-      var ids = ["start-screen", "game-screen", "name-screen", "settings-screen", "win-overlay", "name-win-overlay", "mode-picker"];
+      var ids = ["start-screen", "game-screen", "name-screen", "settings-screen", "win-overlay", "name-win-overlay", "mode-picker", "build-screen"];
       if (typeof MutationObserver === "undefined") return;
       var mo = new MutationObserver(function () { updateHomeBtn(); });
       ids.forEach(function (id) { var el = document.getElementById(id); if (el) mo.observe(el, { attributes: true, attributeFilter: ["hidden"] }); });
@@ -9379,6 +10621,18 @@
       getPhotoSync: function () { return JSON.parse(JSON.stringify(photoSync)); },
       getDeck: function () { return deck.map(function (d) { return { id: d.id, car: d.car.id, family: !!d.car.family }; }); },
       getMatchMode: function () { return matchMode; },
+      startBuild: startBuild,
+      stopBuild: stopBuild,
+      buildGo: buildGo,
+      placeBuildPart: placeBuildPart,
+      pickBuildKind: pickBuildKind,
+      pickBuildColour: pickBuildColour,
+      pickBuildExtra: pickBuildExtra,
+      showGarage: showGarage,
+      loadGarage: loadGarage,
+      bvSvg: bvSvg,
+      buildKinds: function () { return BV_KINDS.map(function (k) { return { id: k.id, name: k.name, group: k.group, parts: k.parts.length, extras: k.extras.slice() }; }); },
+      getBuildState: function () { return { step: build.step, steps: build.steps.slice(), kind: build.kind, color: build.color, parts: build.parts.slice(), extra: build.extra, tab: build.tab, busy: build.busy }; },
       familyFace: function (id) { var p = familyPeople.filter(function (x) { return x.id === id; })[0]; return p ? familyItem(p, p.face, "face") : null; }
     };
 
