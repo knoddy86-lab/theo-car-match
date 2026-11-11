@@ -11,3 +11,5 @@ Clips were faded, loudness-normalised to about −19 LUFS (the shortest clip is 
 | `01-short.mp3` | Short cartoony toot | ~0.4s | Fart Short | FartCTO | https://freesound.org/people/FartCTO/sounds/789839/ | CC0 1.0 |
 | `02-fluffy.mp3` | Short fluffy fart | ~0.8s | Short Fart 4 | BipolarBad | https://freesound.org/people/BipolarBad/sounds/759075/ | CC0 1.0 |
 | `03-squeaky.mp3` | Short squeaky fart | ~1.5s | Short Squeaky Fart | BipolarBad | https://freesound.org/people/BipolarBad/sounds/759915/ | CC0 1.0 |
+
+v43: the Shadow game uses the same three clips when a car is dropped on the wrong shadow (fart, then Alba's "Try again!"). Dropping in empty space just floats back with "Try again!". Other games are unchanged. Same files, already in the offline cache (`sw.js`).

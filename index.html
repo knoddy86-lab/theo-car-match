@@ -1842,6 +1842,7 @@
     /* ---- v42: Shadow game ---- */
     .shadow-screen { justify-content: flex-start; padding-top: calc(var(--safe-t) + 74px); gap: clamp(8px, 1.6vh, 16px); }
     .shadow-screen .sh-title { font-size: clamp(20px, 3.6vmin, 36px); }
+    .shadow-screen.sh-many .sh-title { display: none; }
     .sh-board { flex: 1 1 auto; min-height: 0; width: min(1100px, 100%); display: grid; grid-template-columns: repeat(var(--cols, 2), minmax(0, 1fr)); grid-auto-rows: minmax(0, 1fr); gap: clamp(8px, 2vmin, 20px); padding: 2px; }
     .sh-slot { position: relative; min-width: 0; min-height: 0; border-radius: 24px; background: rgba(255,255,255,0.38); border: 4px dashed rgba(255,255,255,0.9); display: flex; align-items: center; justify-content: center; padding: clamp(4px, 1.2vmin, 12px); transition: background 0.2s, border-color 0.2s; }
     .sh-slot.near { background: rgba(255,249,196,0.8); border-color: #FFB300; }
@@ -1960,6 +1961,10 @@
     body.b-dragging, body.b-dragging * { cursor: grabbing; }
     .b-extras.b-drag { grid-auto-flow: column; grid-template-rows: repeat(2, var(--xrow)); grid-auto-columns: clamp(104px, 29vw, 156px); grid-template-columns: none; overflow-x: auto; overflow-y: hidden; overscroll-behavior: contain; touch-action: none; }
     .b4-hero { height: clamp(110px, 26vh, 360px); flex: 0 1 auto; min-height: 84px; }
+    .b4-hero.b-dragoff { touch-action: none; -webkit-user-select: none; user-select: none; }
+    .b-extra.b-tapx { border-style: dashed; border-color: #C5CAE9; }
+    .b-extra.b-tapx.on { border-style: solid; border-color: #34C759; }
+    .b-extra .b-tapx-badge { position: absolute; left: 6px; top: 6px; font-size: 12px; font-weight: 800; color: #fff; background: #7986CB; border-radius: 999px; padding: 1px 7px; pointer-events: none; }
     .b-extras { --xrow: clamp(100px, 13.5vh, 160px); --xgap: clamp(12px, 2.2vmin, 22px); display: grid; grid-template-columns: repeat(auto-fill, minmax(clamp(100px, 28vw, 156px), 1fr)); grid-auto-rows: var(--xrow); align-content: start; gap: var(--xgap); width: min(100%, 940px); flex: 1 1 0; min-height: calc(2 * var(--xrow) + var(--xgap) + 30px); overflow-y: auto; -webkit-overflow-scrolling: touch; touch-action: pan-y; padding: 14px 12px 16px; border-radius: 24px; }
     @media (orientation: portrait) and (max-height: 720px) {
       .bstep[data-step="4"] .b-title { font-size: 22px; padding: 3px 16px 5px; }
@@ -2475,7 +2480,7 @@
               </select>
             </div>
             <div class="diff-row">
-              <label for="build-style">Build style (Simple: tap to build; Extra: drag the body, roof, wheels and extras onto the vehicle)</label>
+              <label for="build-style">Build style (Simple: drag the wheels on, tap extras on and off; Extra: drag the body, roof, wheels and parts like buckets and exhausts on, drag a part off to remove it)</label>
               <select id="build-style" aria-label="Build style">
                 <option value="tap">Simple</option>
                 <option value="drag">Extra</option>
@@ -2531,9 +2536,13 @@
             <div class="diff-row" id="sh-set-max-row">
               <label for="sh-set-max">Most shadows</label>
               <select id="sh-set-max" aria-label="Most shadows">
+                <option value="2">2</option>
                 <option value="3">3</option>
                 <option value="4">4</option>
                 <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
               </select>
             </div>
             <div class="diff-row">
@@ -2819,7 +2828,7 @@
     var BLOB_FETCH_MS = 20000;
     var bootStartedAt = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
     var keyChangeOpen = false;
-    var APP_VERSION = "42";
+    var APP_VERSION = "43";
     var MATCH_PAIR_CAP = 6;
     var NAME_ROUNDS = 6;
     var THUMB_MAX = 256;
@@ -7914,11 +7923,12 @@
       amber: { name: "Warning lights" },
       recycle: { name: "Recycling sign" },
       arm: { name: "Side arm" },
-      bags: { name: "Bin bags", slot: "load" }
+      bags: { name: "Bin bags", slot: "load" },
+      exhaust: { name: "Exhaust pipe" }
     };
     // In-group extras are drawn by the vehicle itself (they move with an arm, tray or forks).
     var BV_INNER_EXTRAS = { dirt: 1, bigbucket: 1, claw: 1, breaker: 1, pallet: 1 };
-    var BV_EXTRA_ORDER = ["stripes", "flames", "stars", "mudflaps", "plate", "sign", "towbar", "bikerack", "bullbar", "spotlights", "snorkel", "dog", "roofbox", "surfboard", "lights", "siren", "beacon", "flag", "cones", "hosereel", "ladder", "cannon", "spoiler", "recycle", "arm", "bags", "bin", "amber", "horn"];
+    var BV_EXTRA_ORDER = ["stripes", "flames", "stars", "mudflaps", "exhaust", "plate", "sign", "towbar", "bikerack", "bullbar", "spotlights", "snorkel", "dog", "roofbox", "surfboard", "lights", "siren", "beacon", "flag", "cones", "hosereel", "ladder", "cannon", "spoiler", "recycle", "arm", "bags", "bin", "amber", "horn"];
 
     function bvExtraName(name, def) {
       var info = BV_EXTRA_INFO[name];
@@ -7971,6 +7981,7 @@
         case "recycle": return bvRecycle(v[0], v[1], v[2]);
         case "arm": return bvSideArm(v[0], v[1]);
         case "bags": return bvBinBags(v[0], v[1]);
+        case "exhaust": return bvExhaust(v[0], v[1], v[2], v[3]);
       }
       return "";
     }
@@ -8023,6 +8034,7 @@
         case "towbar": return vb + '<g transform="translate(16 2) scale(2.4)">' + bvTowBar(4, 20) + '</g></svg>';
         case "bullbar": return vb + '<g transform="translate(22 4) scale(1.3)">' + bvBullbar(0, 0, 38) + '</g></svg>';
         case "spotlights": return vb + '<g transform="translate(14 22) scale(1.6)">' + bvSpotlights(0, 14) + '</g></svg>';
+        case "exhaust": return vb + '<g transform="translate(45 30) scale(1.25) translate(-45 -30)">' + bvExhaust(45, 6, 56) + '</g></svg>';
         case "snorkel": return vb + '<g transform="translate(36 -4) scale(1.1)">' + bvSnorkel(20, 54, 30) + '</g></svg>';
         case "mudflaps": return vb + '<circle cx="34" cy="30" r="22" fill="#2A2E33"/><circle cx="34" cy="30" r="10" fill="#9AA3AB"/><path d="M60 14 H70 L72 54 H60 Z" fill="#1A1D21"/><rect x="62" y="42" width="7" height="7" fill="#C5CAD0"/></svg>';
         case "hosereel": return vb + bvHoseReel(46, 26, 18) + '</svg>';
@@ -8098,6 +8110,21 @@
         '<path d="M12 64 C22 70 22 82 14 88 L10 84 C14 80 14 72 8 68 Z" fill="#8A939C" stroke="#15171A" stroke-width="1.2"/>' +
         '<circle cx="0" cy="9" r="4" fill="#C5CAD0" stroke="#15171A" stroke-width="1"/><circle cx="-2" cy="60" r="3.4" fill="#C5CAD0" stroke="#15171A" stroke-width="1"/></g>';
     }
+    // v43: exhaust pipe: a chrome stack behind the cab ("stack": x, top, bottom) or a tail pipe under the back ("tail": x, y, length).
+    function bvExhaust(x, y, z, type) {
+      if (type === "tail") {
+        return '<g><rect x="' + x + '" y="' + (y - 4) + '" width="' + z + '" height="8" rx="3.5" fill="#B8C0C8" stroke="#4A5258" stroke-width="1.3"/>' +
+          '<path d="M' + (x + 4) + ' ' + (y - 2) + ' H' + (x + z - 6) + '" stroke="#EEF2F5" stroke-width="1.6" stroke-linecap="round"/>' +
+          '<ellipse cx="' + (x + z) + '" cy="' + y + '" rx="3" ry="4.6" fill="#1A1D21" stroke="#4A5258" stroke-width="1"/></g>';
+      }
+      var h = z - y, sh = y + h * 0.34, shh = h * 0.3;
+      return '<g><rect x="' + (x - 5) + '" y="' + (y + 5) + '" width="10" height="' + (h - 5) + '" rx="3" fill="#B8C0C8" stroke="#4A5258" stroke-width="1.3"/>' +
+        '<path d="M' + (x - 2) + ' ' + (y + 9) + ' V' + (z - 4) + '" stroke="#EEF2F5" stroke-width="1.8" stroke-linecap="round"/>' +
+        '<rect x="' + (x - 7) + '" y="' + sh + '" width="14" height="' + shh + '" rx="3" fill="#2A2E33" stroke="#15171A" stroke-width="1"/>' +
+        '<path d="M' + (x - 4) + ' ' + (sh + 5) + ' V' + (sh + shh - 5) + ' M' + x + ' ' + (sh + 5) + ' V' + (sh + shh - 5) + ' M' + (x + 4) + ' ' + (sh + 5) + ' V' + (sh + shh - 5) + '" stroke="#5A626A" stroke-width="1.6" stroke-linecap="round"/>' +
+        '<path d="M' + (x - 7) + ' ' + (y + 7) + ' L' + (x + 6) + ' ' + (y + 1) + ' L' + (x + 8) + ' ' + (y + 5) + ' L' + (x - 6) + ' ' + (y + 11) + ' Z" fill="#3A3F44" stroke="#15171A" stroke-width="1"/>' +
+        '<rect x="' + (x - 8) + '" y="' + (z - 6) + '" width="16" height="6" rx="2" fill="#3A3F44"/></g>';
+    }
     function bvBinBags(x, y) {
       return '<g transform="translate(' + x + ' ' + y + ')">' +
         '<path d="M-22 12 C-26 0 -18 -10 -8 -8 C-6 -14 2 -14 2 -8 C10 -12 16 -4 12 12 Z" fill="#1A1D21" stroke="#000" stroke-width="1"/>' +
@@ -8114,10 +8141,10 @@
     // Each vehicle faces left (front on the left) in a 500 x 220 box; the ground is y = 198.
     // draw(id, P, X) gets the rendered parts P[i] and the extra X and returns the layers in order.
     var BV_KINDS = [
-      { id: "car", name: "Car", say: "car", group: "road", extras: ["spoiler", "roofbox", "surfboard", "siren", "stripes", "flames", "plate", "dog", "horn", "bikerack"],
+      { id: "car", name: "Car", say: "car", group: "road", extras: ["spoiler", "roofbox", "surfboard", "siren", "stripes", "flames", "plate", "dog", "exhaust", "horn", "bikerack"],
         parts: [{ t: "wheel", cx: 130, cy: 170, r: 28, s: "alloy" }, { t: "wheel", cx: 355, cy: 170, r: 28, s: "alloy" }],
         xslot: { spoiler: "" },
-        xa: { horn: [62, 112], roofbox: [306, 66, 116], surfboard: [300, 66, 214], siren: [298, 66], stripes: [106, 412, 129], flames: [104, 133, 130, 24], plate: [436, 161], dog: [346, 110, 0.95], bikerack: [462, 152, 1],
+        xa: { exhaust: [430, 176, 34, "tail"], horn: [62, 112], roofbox: [306, 66, 116], surfboard: [300, 66, 214], siren: [298, 66], stripes: [106, 412, 129], flames: [104, 133, 130, 24], plate: [436, 161], dog: [346, 110, 0.95], bikerack: [462, 152, 1],
           spoiler: '<path d="M412 104 L428 92 L456 92 L460 104 L456 108 L416 108 Z" fill="#2A2E33" stroke="#15171A" stroke-width="1.2"/><path d="M418 102 L430 96 L452 96 L456 102 Z" fill="#EEF2F5" opacity="0.35"/>' },
         draw: function (id, P, X, E) {
           var body = "M62 164 C50 164 46 150 54 140 C62 130 82 126 104 124 C136 120 168 118 192 116 C204 94 224 74 258 68 C282 64 334 64 360 70 C382 78 396 96 404 116 C424 118 444 122 456 130 C466 136 470 150 464 162 C460 172 448 176 434 176 L391 176 A36 36 0 0 0 319 176 L166 176 A36 36 0 0 0 94 176 L72 176 C62 176 56 170 62 164 Z";
@@ -8137,9 +8164,9 @@
             '<path d="M199 104 L199 96 L214 92 L218 102 L204 108 Z" fill="url(#' + id + '-paint)" stroke="#333" stroke-width="0.8"/>' +
             X + P[0] + P[1];
         } },
-      { id: "ute", name: "Ute", say: "ute", group: "road", extras: ["lights", "ladder", "bullbar", "spotlights", "snorkel", "towbar", "mudflaps", "dog", "flag", "horn"],
+      { id: "ute", name: "Ute", say: "ute", group: "road", extras: ["lights", "ladder", "bullbar", "spotlights", "snorkel", "towbar", "mudflaps", "dog", "flag", "exhaust", "horn"],
         parts: [{ t: "wheel", cx: 118, cy: 164, r: 34, s: "tread" }, { t: "wheel", cx: 400, cy: 164, r: 34, s: "tread" }],
-        xa: { lights: [286, 46], horn: [122, 68], ladder: [352, 68, 140, [360, 484], 100], bullbar: [28, 104, 48], spotlights: [34, 104], snorkel: [176, 146, 92], towbar: [497, 142], dog: [314, 94, 0.95], flag: [490, 100, 86] },
+        xa: { exhaust: [436, 164, 40, "tail"], lights: [286, 46], horn: [122, 68], ladder: [352, 68, 140, [360, 484], 100], bullbar: [28, 104, 48], spotlights: [34, 104], snorkel: [176, 146, 92], towbar: [497, 142], dog: [314, 94, 0.95], flag: [490, 100, 86] },
         draw: function (id, P, X, E) {
           // v36: realistic 4x4 dual-cab ute: lifted body, flared arches, all-terrain tyres, sports bar and side steps.
           var b = "M44 146 L44 112 C44 104 50 100 60 99 L188 96 L230 60 C235 55 240 52 248 52 L322 52 C330 52 336 56 340 64 L346 96 L346 100 L488 100 C494 100 497 104 497 110 L497 146 C497 150 493 152 487 152 L444 152 A44 44 0 0 0 356 152 L162 152 A44 44 0 0 0 74 152 L52 152 C46 152 44 150 44 146 Z";
@@ -8168,9 +8195,9 @@
             '<path d="M196 92 L196 84 L210 80 L214 90 L200 96 Z" fill="url(#' + id + '-paint)" stroke="#333" stroke-width="0.8"/>' +
             X + P[0] + P[1];
         } },
-      { id: "truck", name: "Truck", say: "truck", group: "road", extras: ["spoiler", "lights", "stripes", "flames", "stars", "mudflaps", "towbar", "dog", "flag", "horn"],
+      { id: "truck", name: "Truck", say: "truck", group: "road", extras: ["spoiler", "lights", "stripes", "flames", "stars", "mudflaps", "towbar", "dog", "flag", "exhaust", "horn"],
         parts: [{ t: "wheel", cx: 118, cy: 166, r: 32 }, { t: "wheel", cx: 345, cy: 164, r: 34 }, { t: "wheel", cx: 420, cy: 164, r: 34 }],
-        xa: { lights: [116, 50], horn: [72, 128], stripes: [200, 472, 88], flames: [196, 92, 170, 44], stars: [210, 470, 80], towbar: [488, 170], dog: [150, 116, 1], flag: [474, 24, 58],
+        xa: { exhaust: [189, 22, 168], lights: [116, 50], horn: [72, 128], stripes: [200, 472, 88], flames: [196, 92, 170, 44], stars: [210, 470, 80], towbar: [488, 170], dog: [150, 116, 1], flag: [474, 24, 58],
           spoiler: '<path d="M64 52 L104 30 L184 24 L188 24 L188 50 Z" fill="#2A2E33" stroke="#15171A" stroke-width="1.2"/><path d="M80 46 L108 32 L180 28 L180 34 L112 38 Z" fill="#EEF2F5" opacity="0.3"/>' },
         draw: function (id, P, X, E) {
           var cab = "M58 176 L58 150 C50 148 44 140 46 128 L46 78 C46 66 58 58 78 54 L188 48 L188 176 L158 176 A40 40 0 0 0 78 176 Z";
@@ -8192,9 +8219,9 @@
             '<rect x="26" y="60" width="16" height="28" rx="3" fill="url(#' + id + '-paint)" stroke="#222" stroke-width="1"/><rect x="28" y="63" width="12" height="13" rx="1.4" fill="#A8C4D2" opacity="0.85"/>' +
             X + P[0] + P[1] + P[2];
         } },
-      { id: "bus", name: "Bus", say: "bus", group: "road", extras: ["sign", "lights", "stripes", "flames", "stars", "bikerack", "plate", "dog", "flag", "horn"],
+      { id: "bus", name: "Bus", say: "bus", group: "road", extras: ["sign", "lights", "stripes", "flames", "stars", "bikerack", "plate", "dog", "flag", "exhaust", "horn"],
         parts: [{ t: "wheel", cx: 142, cy: 168, r: 30 }, { t: "wheel", cx: 374, cy: 168, r: 30 }],
-        xa: { sign: [70, 40, 86, 16], lights: [244, 34], horn: [30, 88], stripes: [52, 486, 133], flames: [180, 136, 150, 24], stars: [190, 470, 138], bikerack: [34, 156, -1], plate: [462, 162], dog: [250, 120, 1], flag: [440, 34, 52] },
+        xa: { exhaust: [448, 172, 38, "tail"], sign: [70, 40, 86, 16], lights: [244, 34], horn: [30, 88], stripes: [52, 486, 133], flames: [180, 136, 150, 24], stars: [190, 470, 138], bikerack: [34, 156, -1], plate: [462, 162], dog: [250, 120, 1], flag: [440, 34, 52] },
         draw: function (id, P, X, E) {
           var busPath = "M36 156 C32 140 32 100 44 78 C58 50 80 36 110 34 L430 34 C466 34 490 56 490 92 L490 160 C490 170 480 176 466 176 L410 176 A36 36 0 0 0 338 176 L178 176 A36 36 0 0 0 106 176 L52 176 C40 176 34 168 36 156 Z";
           var s = bvShadow(265, 208, 230) + bvPaint(id, busPath) +
@@ -8215,9 +8242,9 @@
             X + P[0] + P[1];
           return s;
         } },
-      { id: "fire", name: "Fire truck", say: "fire truck", group: "road", extras: ["ladder", "hosereel", "cannon", "siren", "plate", "mudflaps", "dog", "flag", "horn"],
+      { id: "fire", name: "Fire truck", say: "fire truck", group: "road", extras: ["ladder", "hosereel", "cannon", "siren", "plate", "mudflaps", "dog", "flag", "exhaust", "horn"],
         parts: [{ t: "wheel", cx: 112, cy: 166, r: 32 }, { t: "wheel", cx: 340, cy: 164, r: 34 }, { t: "wheel", cx: 420, cy: 164, r: 34 }],
-        xa: { horn: [62, 98], ladder: [150, 20, 310], hosereel: [400, 101, 13], cannon: [140, 46], siren: [292, 52, 476, 52], plate: [340, 66], dog: [214, 118, 1.15], flag: [484, 52, 50] },
+        xa: { exhaust: [271, 26, 156], horn: [62, 98], ladder: [150, 20, 310], hosereel: [400, 101, 13], cannon: [140, 46], siren: [292, 52, 476, 52], plate: [340, 66], dog: [214, 118, 1.15], flag: [484, 52, 50] },
         draw: function (id, P, X, E) {
           var nose = "M48 176 L48 150 C40 146 38 136 44 126 L70 110 C86 104 110 100 130 98 L130 70 C130 56 144 48 164 46 L268 46 L268 176 L152 176 A40 40 0 0 0 72 176 L48 176 Z";
           var fbody = "M268 176 L268 70 C268 58 280 52 298 52 L470 52 C484 52 490 64 490 78 L490 176 L460 176 A40 40 0 0 0 380 176 A40 40 0 0 0 300 176 L268 176 Z";
@@ -8244,12 +8271,12 @@
             X + P[0] + P[1] + P[2];
           return s;
         } },
-      { id: "rubbish", name: "Rubbish truck", say: "rubbish truck", group: "road", extras: ["bin", "beacon", "amber", "recycle", "plate", "dog", "arm", "bags", "stripes", "horn"],
+      { id: "rubbish", name: "Rubbish truck", say: "rubbish truck", group: "road", extras: ["bin", "beacon", "amber", "recycle", "plate", "dog", "arm", "bags", "stripes", "exhaust", "horn"],
         // v40: generic rear-loader rubbish truck: cab-over cab, compactor body, rear hopper with bin lifter.
         // v42: 8x4 layout, 4 wheels each side: twin front steer axles (under/just behind the cab) + twin rear axles.
         parts: [{ t: "wheel", cx: 88, cy: 170, r: 28 }, { t: "wheel", cx: 152, cy: 170, r: 28 }, { t: "wheel", cx: 344, cy: 170, r: 28 }, { t: "wheel", cx: 406, cy: 170, r: 28 }],
         xname: { stripes: "Stripes" }, xclip: { stripes: "stripes-plain" },
-        xa: { bin: [494, 170, 1], beacon: [118, 46], amber: [298, 32], recycle: [300, 82, 30], plate: [44, 170], dog: [114, 110, 0.95], arm: [204, 94], bags: [468, 40], stripes: [156, 444, 136], horn: [62, 16] },
+        xa: { exhaust: [146, 16, 136], bin: [494, 170, 1], beacon: [118, 46], amber: [298, 32], recycle: [300, 82, 30], plate: [44, 170], dog: [114, 110, 0.95], arm: [204, 94], bags: [468, 40], stripes: [156, 444, 136], horn: [62, 16] },
         draw: function (id, P, X, E) {
           var cab = "M30 176 L30 152 C25 148 23 140 27 130 L33 72 C35 60 45 52 62 50 L150 46 L150 140 L88 140 A36 36 0 0 0 52 176 Z";
           var body = "M188 176 A36 36 0 0 0 152 140 L150 140 L150 50 C150 38 160 32 176 32 L424 32 C438 32 446 42 446 56 L446 176 L442 176 A36 36 0 0 0 406 140 L344 140 A36 36 0 0 0 308 176 Z";
@@ -8310,9 +8337,9 @@
             '<path d="M234 42 L238 86" stroke="#1A1D21" stroke-width="3" opacity="0.7"/>' +
             '<rect x="198" y="88" width="78" height="5" rx="2" fill="#2A2E33" opacity="0.6"/>' + X;
         } },
-      { id: "dump", name: "Dump truck", say: "dump truck", group: "cons", extras: ["beacon", "lights", "horn", "flag", "dirt", "cones", "stripes", "mudflaps", "dog"],
+      { id: "dump", name: "Dump truck", say: "dump truck", group: "cons", extras: ["beacon", "lights", "exhaust", "horn", "flag", "dirt", "cones", "stripes", "mudflaps", "dog"],
         parts: [{ t: "wheel", cx: 112, cy: 166, r: 32 }, { t: "wheel", cx: 352, cy: 164, r: 34 }, { t: "wheel", cx: 428, cy: 164, r: 34 }],
-        xa: { beacon: [166, 50], lights: [112, 54], horn: [66, 100], flag: [497, 144, 92], stripes: [200, 470, 112], dog: [148, 116, 1] },
+        xa: { exhaust: [197, 28, 136], beacon: [166, 50], lights: [112, 54], horn: [66, 100], flag: [497, 144, 92], stripes: [200, 470, 112], dog: [148, 116, 1] },
         draw: function (id, P, X, E) {
           var cab = "M54 176 L54 150 C46 148 40 140 42 128 L42 80 C42 68 54 60 74 56 L182 50 L182 176 L152 176 A40 40 0 0 0 72 176 Z";
           var tray = "M192 128 L192 70 L176 48 L198 38 L474 38 L492 54 L492 128 Z";
@@ -8399,9 +8426,9 @@
             '</g>' +
             X + P[0] + P[1];
         } },
-      { id: "forklift", name: "Forklift", say: "forklift", group: "cons", extras: ["beacon", "lights", "horn", "flag", "pallet", "cones", "stripes", "stars"],
+      { id: "forklift", name: "Forklift", say: "forklift", group: "cons", extras: ["beacon", "lights", "exhaust", "horn", "flag", "pallet", "cones", "stripes", "stars"],
         parts: [{ t: "wheel", cx: 140, cy: 172, r: 26 }, { t: "wheel", cx: 352, cy: 176, r: 22 }],
-        xa: { beacon: [296, 20], lights: [204, 20], horn: [112, 96], flag: [404, 86, 58], cones: [356, 86, 2], stripes: [116, 412, 150], stars: [316, 404, 136] },
+        xa: { exhaust: [334, 36, 88], beacon: [296, 20], lights: [204, 20], horn: [112, 96], flag: [404, 86, 58], cones: [356, 86, 2], stripes: [116, 412, 150], stars: [316, 404, 136] },
         draw: function (id, P, X, E) {
           var body = "M104 186 L104 128 C104 120 110 114 118 114 L198 114 L214 128 L298 128 L298 98 C298 90 304 86 312 86 L394 86 C406 86 416 96 416 108 L416 178 C416 184 412 188 406 188 L380 188 A28 28 0 0 0 324 188 L172 188 A32 32 0 0 0 108 188 Z";
           return bvShadow(240, 208, 190) +
@@ -8737,7 +8764,7 @@
       build.busy = false;
       if (n === 1) renderBuildPick();
       else if (n === 2) renderBuildColour();
-      else if (n === 3) { if (buildDragMode()) renderDragParts(); else { buildEl("b3-spares").classList.remove("bvd-tray"); renderBuildParts(); } }
+      else if (n === 3) { build.dragWheels = false; if (buildDragMode()) renderDragParts(); else { buildEl("b3-spares").classList.remove("bvd-tray"); renderBuildParts(); } }
       else if (n === 4) renderBuildExtras();
       else if (n === 5) renderBuildGo();
       showBuildView(n);
@@ -9056,7 +9083,7 @@
     function bvdTopName(def) { return def.group === "cons" ? "Top" : "Roof"; }
     // A copy of the vehicle drawing cut to rows y1..y2 of the 500x220 drawing.
     function bvdSvg(opts) {
-      var s = bvSvg(build.kind, { color: opts.color || build.color, extras: build.extras });
+      var s = bvSvg(build.kind, { color: opts.color || build.color, extras: build.extras, parts: opts.parts });
       if (opts.cls) s = s.replace('class="bv-svg', 'class="bv-svg ' + opts.cls);
       if (opts.viewBox) s = s.replace(/viewBox="[^"]*"/, 'viewBox="' + opts.viewBox + '"').replace('overflow="visible"', 'overflow="hidden"');
       var open = s.indexOf(">") + 1, close = s.lastIndexOf("</svg>");
@@ -9099,11 +9126,14 @@
       var g = bvdGeom(build.kind, build.extras);
       var car = buildEl("b3-car");
       var body = build.parts[0], top = build.parts[1];
+      // v43: the wheels are no longer pre-fitted in Extra: the chassis shows empty wheel spots, and the
+      // wheels are dragged on after the body and roof.
+      var noWheels = def.parts.map(function () { return false; });
       var h = '<div class="b-layer bvd-ghost">' + bvdSvg({ cls: "bvd-nowheels", color: "grey" }) + '</div>';
-      if (body && top) h += '<div class="b-layer bvd-full' + (popId ? " bvd-pop" : "") + '">' + bvSvg(build.kind, { color: build.color, extras: build.extras }) + '</div>';
+      if (body && top) h += '<div class="b-layer bvd-full' + (popId ? " bvd-pop" : "") + '">' + bvSvg(build.kind, { color: build.color, extras: build.extras, parts: noWheels }) + '</div>';
       else {
-        if (body) h += '<div class="b-layer bvd-body' + (popId === "body" ? " bvd-pop" : "") + '">' + bvdSvg({ clip: [g.cut, g.y1 + 30] }) + '</div>';
-        else h += '<div class="b-layer bvd-chassis">' + bvdSvg({ cls: "bvd-chassis-only", pre: bvdChassisExtras(def, g) }) + '</div>';
+        if (body) h += '<div class="b-layer bvd-body' + (popId === "body" ? " bvd-pop" : "") + '">' + bvdSvg({ clip: [g.cut, g.y1 + 30], parts: noWheels }) + '</div>';
+        else h += '<div class="b-layer bvd-chassis">' + bvdSvg({ cls: "bvd-chassis-only", pre: bvdChassisExtras(def, g), parts: noWheels }) + '</div>';
         if (top) h += '<div class="b-layer bvd-top' + (popId === "top" ? " bvd-pop" : "") + '">' + bvdSvg({ cls: "bvd-nowheels", clip: [g.y0 - 40, g.cut] }) + '</div>';
       }
       car.innerHTML = h;
@@ -9154,7 +9184,7 @@
       return dx * dx + dy * dy <= B_DROP_SLOP * B_DROP_SLOP;
     }
     function placeDragPiece(pieceId) {
-      if (build.busy || build.step !== 3 || !buildDragMode()) return false;
+      if (build.busy || build.step !== 3 || !buildDragMode() || build.dragWheels) return false;
       var i = pieceId === "body" ? 0 : pieceId === "top" ? 1 : -1;
       if (i < 0 || build.parts[i]) return false;
       build.parts[i] = true;
@@ -9163,11 +9193,16 @@
       var done = build.parts[0] && build.parts[1];
       var pc = bvdPieces[i];
       var line = [bvLine(pc.line, pc.name + "!")];
-      if (done) line.push(bvLine("great-building", "Great building!", 250));
       buildSay(line);
       if (done) {
+        // v43: body and roof on, now drag the wheels (or tracks) onto the empty spots.
         build.busy = true;
-        buildLater(function () { buildNext(); }, 2400);
+        buildLater(function () {
+          build.dragWheels = true;
+          build.busy = false;
+          buildEl("b3-spares").classList.remove("bvd-tray");
+          renderBuildParts();
+        }, 1500);
       }
       return true;
     }
@@ -9310,16 +9345,18 @@
     // (same rules as Drag build: a real drag of 30px+, an 80px snap zone, a tap only wiggles and says the name).
     var SHADOW_KEY = "theo-car-match-shadow";
     var SHADOW_SIL_PREFIX = "theo-car-match-shadow-sil:";
-    var shadowSettings = { start: 2, harder: true, max: 4, pool: "mix" };
+    var shadowSettings = { start: 2, harder: true, max: 6, pool: "mix" };
     try {
       var shRaw = JSON.parse(localStorage.getItem(SHADOW_KEY) || "{}") || {};
       shadowSettings = normalizeShadowSettings(shRaw);
     } catch (e) {}
     function normalizeShadowSettings(raw) {
       raw = raw && typeof raw === "object" ? raw : {};
+      // v43: up to 8 shadows (Lindsay: "ability to have more shadows"); default max 6.
       var st = Math.max(2, Math.min(4, parseInt(raw.start, 10) || 2));
-      var mx = Math.max(3, Math.min(5, parseInt(raw.max, 10) || 4));
-      return { start: st, harder: raw.harder !== false, max: Math.max(mx, st), pool: raw.pool === "cars" ? "cars" : "mix" };
+      var mx = Math.max(2, Math.min(8, parseInt(raw.max, 10) || 6));
+      if (st > mx) st = mx;
+      return { start: st, harder: raw.harder !== false, max: mx, pool: raw.pool === "cars" ? "cars" : "mix" };
     }
     function saveShadowSettings(next) {
       shadowSettings = normalizeShadowSettings(next);
@@ -9470,7 +9507,24 @@
       }
       playSources(soundSourcesFor(it.car, st), spokenLine(it.car), st);
     }
+    // v43: iPhone only lets an audio element play from a timer once it has been started by a tap.
+    // Prime the cheer and fart clips (muted, paused at once) while the SHADOW tap is happening.
+    function shPrimeSfx() {
+      if (shg.primed) return;
+      shg.primed = true;
+      preloadHoorays();
+      preloadFarts();
+      hoorayPreloads.concat(fartPreloads).forEach(function (a) {
+        try {
+          a.muted = true;
+          var pr = a.play();
+          var undo = function () { try { a.pause(); a.currentTime = 0; } catch (e) {} a.muted = false; };
+          if (pr && pr.then) pr.then(undo, function () { a.muted = false; }); else undo();
+        } catch (e) { a.muted = false; }
+      });
+    }
     function startShadow() {
+      shPrimeSfx();
       shg.gen++;
       shg.timers.forEach(function (t) { clearTimeout(t); });
       shg.timers = [];
@@ -9534,12 +9588,13 @@
     function shLayout(n) {
       var land = innerWidth > innerHeight;
       var cols, tcols;
-      if (land) { cols = n; tcols = n; }
+      // v43: up to 8. Landscape: one row up to 5, then two rows. Portrait phones: 2 columns. iPad portrait: 2-3 columns.
+      if (land) { cols = n <= 5 ? n : Math.ceil(n / 2); tcols = n; }
       else { cols = n <= 2 ? 1 : 2; tcols = n <= 3 ? n : Math.ceil(n / 2); }
-      if (!land && innerWidth >= 700) { cols = n <= 2 ? 2 : n <= 4 ? 2 : 3; tcols = n <= 3 ? n : Math.ceil(n / 2); }
+      if (!land && innerWidth >= 700) { cols = n <= 4 ? 2 : 3; tcols = n <= 3 ? n : Math.ceil(n / 2); }
       var trows = Math.ceil(n / tcols);
       var trayh;
-      if (land) trayh = Math.round(Math.min(innerHeight * 0.3, 170));
+      if (land) trayh = Math.round(Math.min(innerHeight * (n >= 6 ? 0.26 : 0.3), 170));
       else trayh = Math.round(Math.min(innerHeight * (trows > 1 ? 0.3 : 0.19), trows > 1 ? 330 : 190));
       return { cols: cols, tcols: tcols, trayh: trayh };
     }
@@ -9547,6 +9602,8 @@
       var board = shEl("sh-board"), tray = shEl("sh-tray");
       var items = shg.items, n = items.length;
       var L = shLayout(n);
+      // v43: lots of shadows on a short phone: drop the title line to give the shadows room (the voice says it).
+      shEl("shadow-screen").classList.toggle("sh-many", n >= 6 && innerHeight < 760 && innerWidth < innerHeight);
       board.style.setProperty("--cols", L.cols);
       tray.style.setProperty("--tcols", L.tcols);
       tray.style.setProperty("--trayh", L.trayh + "px");
@@ -9611,8 +9668,15 @@
       });
       if (best === it && bestD <= B_DROP_SLOP) { shadowPlace(it); return true; }
       shg.wrong = (shg.wrong || 0) + 1;
-      shSay("sh-try", "Try again!");
-      if (best && bestD <= B_DROP_SLOP) bWiggle(best.slot);
+      var tok = shg.wrongTok = (shg.wrongTok || 0) + 1;
+      if (best && bestD <= B_DROP_SLOP) {
+        // v43: dropped on the wrong shadow = a cartoon fart (the CC0 clips from sounds/fart, rotated), then "Try again!".
+        bWiggle(best.slot);
+        stopSpeechAndAudio();
+        preloadFarts();
+        shLog("fart");
+        playFart().then(function () { if (tok === shg.wrongTok && shadowOpen()) shSay("sh-try", "Try again!"); });
+      } else shSay("sh-try", "Try again!");
       return false;
     }
     function shadowPlace(it) {
@@ -9635,22 +9699,26 @@
       if (shg.placed >= shg.items.length) {
         shg.busy = true;
         shg.boards++;
+        // v43: the Match game's hooray cheer + confetti when every shadow is filled, then "You did it!".
         shLater(function () {
           shLog("cheer");
           var keep = difficulty.hooray;
           difficulty.hooray = true;
-          playHooray();
+          var cheer = playHooray();
           difficulty.hooray = keep;
           startConfetti();
-          shLater(function () { shSay("sh-done", "You did it!"); }, 1300);
-        }, 1100);
+          var g = shg.gen;
+          Promise.resolve(cheer).then(function () {
+            if (g === shg.gen && shadowOpen()) { shLog("done-line"); shSay("sh-done", "You did it!"); }
+          });
+        }, 900);
         shLater(function () {
           stopConfetti();
           var before = shg.n;
           if (shadowSettings.harder !== false && shg.n < shadowSettings.max) shg.n++;
           shg.grew = shg.n > before;
           shadowBoard(false);
-        }, 4300);
+        }, 4800);
       }
     }
     function paintShadowStartArt() {
@@ -9692,6 +9760,8 @@
       var def = bvKind(build.kind);
       build.extras = bvCleanExtras(def, build.extras);
       var lim = buildExtrasLimit();
+      // v43: Extra style drags the physical parts (buckets, exhausts, lights, ladders...) onto the vehicle;
+      // paint and sign extras stay tap-on / tap-off tiles at the end of the strip. Simple style: all tap tiles.
       var dragOn = buildDragMode();
       buildEl("b4-title").textContent = dragOn ? (lim === 1 ? "Drag on an extra" : "Drag on extras") : lim === 1 ? "Pick an extra" : lim === 3 ? "Pick up to 3 extras" : "Add extras";
       renderBuildExtrasHero("");
@@ -9700,6 +9770,7 @@
       grid.scrollTop = 0;
       grid.scrollLeft = 0;
       grid.classList.toggle("b-drag", dragOn);
+      var tapTiles = [];
       def.extras.forEach(function (x) {
         var b = document.createElement("button");
         b.type = "button";
@@ -9708,20 +9779,95 @@
         b.setAttribute("aria-label", bvExtraName(x, def));
         b.setAttribute("aria-pressed", "false");
         b.innerHTML = '<span class="b-art">' + bvExtraIcon(x, def) + '</span><span class="b-lbl">' + bvExtraName(x, def) + '</span><span class="b-tick" aria-hidden="true">&#10003;</span>';
-        if (dragOn) bDrag(b, {
+        var tapOnly = dragOn && BV_TAP_EXTRAS[x];
+        if (tapOnly) { b.classList.add("b-tapx"); b.insertAdjacentHTML("beforeend", '<span class="b-tapx-badge" aria-hidden="true">tap</span>'); }
+        if (dragOn && !tapOnly) bDrag(b, {
           scroller: function () { return grid; },
-          onTap: function () { buildSay([x === "horn" ? bvLine("beep-beep", "Beep beep!") : bvLine("x-" + bvExtraClip(x, def), bvExtraName(x, def) + "!")]); },
+          // a tap on a part that is already on takes it off again; otherwise it wiggles and says its name
+          onTap: function () { if (build.extras.indexOf(x) !== -1) { toggleBuildExtra(x); return; } buildSay([x === "horn" ? bvLine("beep-beep", "Beep beep!") : bvLine("x-" + bvExtraClip(x, def), bvExtraName(x, def) + "!")]); },
           onKey: function () { toggleBuildExtra(x); },
           ghost: function () { return { html: bvExtraIcon(x, def), rect: null }; },
           onDrop: function (px, py) { return bvdNear(bvdExtraTargetRect(x), px, py) && dropBuildExtra(x); }
         });
         else bTap(b, function () { toggleBuildExtra(x); }, grid);
-        grid.appendChild(b);
+        if (tapOnly) tapTiles.push(b); else grid.appendChild(b);
       });
+      tapTiles.forEach(function (b) { grid.appendChild(b); });
+      bindHeroDragOff(dragOn);
       syncBuildExtraTiles();
       if (dragOn) buildSay([lim === 1 ? bvLine("dg-extra", "Drag on an extra!") : bvLine("dg-extras", "Drag on some extras!")]);
       else buildSay([lim === 1 ? bvLine("pick-extra", "Pick something extra!") : bvLine("pick-extras", "Pick some extras!")]);
     }
+    // v43: in Extra style these stay tap tiles (paint, decals, signs, the horn sound).
+    var BV_TAP_EXTRAS = { stripes: 1, flames: 1, stars: 1, plate: 1, sign: 1, recycle: 1, horn: 1 };
+    // v43: drag a part off the vehicle to take it off (Extra style). The part under the finger is found
+    // from each part's spot on the drawing; a real drag (30px+) that ends away from its spot removes it.
+    function heroExtraAt(px, py) {
+      var best = null, area = Infinity;
+      build.extras.forEach(function (x) {
+        if (BV_TAP_EXTRAS[x]) return;
+        var r = bvdExtraTargetRect(x);
+        if (!r) return;
+        // closest spot first (0 when the finger is on it), then the smaller part; up to 12px away counts
+        var dx = px < r.left ? r.left - px : px > r.left + r.width ? px - r.left - r.width : 0;
+        var dy = py < r.top ? r.top - py : py > r.top + r.height ? py - r.top - r.height : 0;
+        var d = Math.sqrt(dx * dx + dy * dy);
+        if (d > 12) return;
+        var score = d * 100000 + r.width * r.height;
+        if (score < area) { best = x; area = score; }
+      });
+      return best;
+    }
+    function bindHeroDragOff(on) {
+      var hero = buildEl("b4-hero");
+      hero.classList.toggle("b-dragoff", !!on);
+      if (hero.dataset.dragoff) return;
+      hero.dataset.dragoff = "1";
+      var st = null;
+      hero.addEventListener("pointerdown", function (e) {
+        if (!hero.classList.contains("b-dragoff") || build.busy || build.step !== 4) return;
+        var x = heroExtraAt(e.clientX, e.clientY);
+        if (!x) return;
+        st = { x: x, id: e.pointerId, x0: e.clientX, y0: e.clientY, max: 0, ghost: null };
+        try { hero.setPointerCapture(e.pointerId); } catch (err) {}
+      });
+      hero.addEventListener("pointermove", function (e) {
+        if (!st || e.pointerId !== st.id) return;
+        e.preventDefault();
+        var dx = e.clientX - st.x0, dy = e.clientY - st.y0, dd = dx * dx + dy * dy;
+        if (dd > st.max) st.max = dd;
+        if (!st.ghost && dd > 144) {
+          var r = bvdExtraTargetRect(st.x);
+          var w = Math.max(56, Math.min(180, r ? r.width : 80)), h = Math.max(44, Math.min(140, r ? r.height : 60));
+          var g = document.createElement("div");
+          g.className = "b-ghost b-drag-ghost";
+          g.innerHTML = bvExtraIcon(st.x, bvKind(build.kind));
+          g.style.width = w + "px"; g.style.height = h + "px";
+          document.body.appendChild(g);
+          st.ghost = g; st.w = w; st.h = h;
+          var ex = hero.querySelectorAll('.bv-extra[data-x="' + st.x + '"]');
+          for (var i = 0; i < ex.length; i++) ex[i].style.opacity = "0.25";
+          document.body.classList.add("b-dragging");
+        }
+        if (st.ghost) { st.ghost.style.left = (e.clientX - st.w / 2) + "px"; st.ghost.style.top = (e.clientY - st.h / 2) + "px"; }
+      });
+      function end(e, cancelled) {
+        if (!st || (e && e.pointerId !== st.id)) return;
+        var s0 = st; st = null;
+        document.body.classList.remove("b-dragging");
+        if (s0.ghost && s0.ghost.parentNode) s0.ghost.parentNode.removeChild(s0.ghost);
+        var off = !cancelled && s0.ghost && s0.max >= B_DRAG_MIN * B_DRAG_MIN && !bvdNear(bvdExtraTargetRect(s0.x), e.clientX, e.clientY);
+        if (off) { buildLog("dragoff:" + s0.x); toggleBuildExtra(s0.x); return; }
+        renderBuildExtrasHero("");
+        if (!s0.ghost && !cancelled) {
+          var def = bvKind(build.kind);
+          buildSay([s0.x === "horn" ? bvLine("beep-beep", "Beep beep!") : bvLine("x-" + bvExtraClip(s0.x, def), bvExtraName(s0.x, def) + "!")]);
+        }
+      }
+      hero.addEventListener("pointerup", function (e) { end(e, false); });
+      hero.addEventListener("pointercancel", function (e) { end(e, true); });
+    }
+    function buildLog(t) { buildSayLog.push(t); if (buildSayLog.length > 60) buildSayLog.shift(); }
     function renderBuildExtrasHero(popX) {
       var hero = buildEl("b4-hero");
       hero.innerHTML = bvSvg(build.kind, { color: build.color, extras: build.extras });
@@ -12609,6 +12755,8 @@
           items: shg.items.map(function (it) { return { id: it.id, type: it.type, name: it.name, done: !!it.done, photo: !!it.src, sil: it.silUrl ? "canvas" : (it.src ? "css" : "svg") }; }) };
       },
       shadowSilhouetteOf: function (src) { return shadowSilhouette({ car: { id: "test-" + Math.random().toString(36).slice(2) }, src: src }); },
+      bvSvg: function (k, o) { return bvSvg(k, o || {}); },
+      shadowTestBoard: function (n) { shg.n = Math.max(2, Math.min(8, n | 0)); shg.grew = false; shadowBoard(false); },
       shadowCandidates: function () { var c = shadowCandidates(); return { cards: c.cards.map(function (x) { return x.id; }), garage: c.garage.map(function (x) { return x.id; }) }; },
       stopBuild: stopBuild,
       buildGo: buildGo,
@@ -12619,7 +12767,7 @@
       loadGarage: loadGarage,
       bvSvg: bvSvg,
       buildKinds: function () { return BV_KINDS.map(function (k) { return { id: k.id, name: k.name, group: k.group, parts: k.parts.length, extras: k.extras.slice() }; }); },
-      getBuildState: function () { return { step: build.step, steps: build.steps.slice(), kind: build.kind, color: build.color, parts: build.parts.slice(), extras: build.extras.slice(), tab: build.tab, busy: build.busy }; },
+      getBuildState: function () { return { dragWheels: !!build.dragWheels, step: build.step, steps: build.steps.slice(), kind: build.kind, color: build.color, parts: build.parts.slice(), extras: build.extras.slice(), tab: build.tab, busy: build.busy }; },
       toggleBuildExtra: toggleBuildExtra,
       bvKind: bvKind,
       buildExtrasDone: buildExtrasDone,
