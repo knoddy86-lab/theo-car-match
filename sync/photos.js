@@ -51,7 +51,7 @@ function PhotoStore(opts) {
 PhotoStore.prototype.ensureConfig = function () {
   if (fs.existsSync(this.configFile)) return;
   var cfg = {
-    _help: "People for the PHOTOS game. 'match' is the person's name in Immich, 'name' is what the game shows and says. Add asset ids to 'skipAssets' to leave a photo out. Changes apply on the next photo refresh.",
+    _help: "People for the PHOTOS game. 'match' is the person's name in Immich, 'name' is what the game shows. Optional 'say' is how the voice should pronounce the name (the card still shows 'name'). Add asset ids to 'skipAssets' to leave a photo out. Changes apply on the next photo refresh.",
     perPerson: 12,
     refreshHours: 24,
     people: DEFAULT_PEOPLE,
@@ -147,10 +147,12 @@ PhotoStore.prototype.manifest = function () {
   cfg.people.forEach(function (c) { byName[c.name] = c; });
   var people = (idx.people || []).map(function (p) {
     var solo = (p.items || []).filter(function (it) { return it.faces === 1; }).map(function (it) { return it.file; });
-    var np = nameParts(byName[p.name] || { match: p.name, name: p.name });
-    return { id: p.id, name: p.name, say: p.say || p.name, first: np.first, last: np.last, nick: np.nick, face: p.face || "", photos: (p.photos || []).slice(), looks: p.looks || {}, solo: solo };
+    var cfgP = byName[p.name] || { match: p.name, name: p.name };
+    var np = nameParts(cfgP);
+    var sayLike = String(cfgP.say || "").trim();
+    return { id: p.id, name: p.name, say: sayLike, sayLike: sayLike, first: np.first, last: np.last, nick: np.nick, face: p.face || "", photos: (p.photos || []).slice(), looks: p.looks || {}, solo: solo };
   });
-  var tag = (idx.etag || "") + "-" + crypto.createHash("sha1").update(JSON.stringify(people.map(function (p) { return [p.id, p.first, p.last, p.nick]; }))).digest("hex").slice(0, 8);
+  var tag = (idx.etag || "") + "-" + crypto.createHash("sha1").update(JSON.stringify(people.map(function (p) { return [p.id, p.first, p.last, p.nick, p.say]; }))).digest("hex").slice(0, 8);
   return { ok: true, etag: tag, refreshedAt: idx.refreshedAt || 0, people: people };
 };
 
@@ -159,16 +161,26 @@ function cleanNamePart(v) {
 }
 
 // Parent edits a person's names; every device gets them with the next manifest.
-PhotoStore.prototype.setNames = function (personId, first, last, nick) {
+function cleanSayLike(v) {
+  return String(v == null ? "" : v).replace(/[\u0000-\u001f\u007f<>]/g, "").replace(/\s+/g, " ").trim().slice(0, 60);
+}
+
+PhotoStore.prototype.setNames = function (personId, first, last, nick, sayLike) {
   var person = findPerson(this.index, String(personId || ""));
   if (!person) return Promise.reject(Object.assign(new Error("Unknown person."), { code: 404 }));
   var f = cleanNamePart(first), l = cleanNamePart(last), n = cleanNamePart(nick);
   if (!f && !n) return Promise.reject(Object.assign(new Error("Give a first name or a nickname."), { code: 400 }));
+  var hasSay = arguments.length >= 5 && sayLike !== undefined;
+  var s = hasSay ? cleanSayLike(sayLike) : null;
   var found = false;
   this.patchConfig(function (raw) {
     raw.people = Array.isArray(raw.people) && raw.people.length ? raw.people : DEFAULT_PEOPLE.map(function (x) { return Object.assign({}, x); });
     raw.people.forEach(function (c) {
-      if (c && String(c.name || c.match).trim() === person.name) { c.first = f; c.last = l; c.nick = n; found = true; }
+      if (c && String(c.name || c.match).trim() === person.name) {
+        c.first = f; c.last = l; c.nick = n;
+        if (hasSay) c.say = s;
+        found = true;
+      }
     });
   });
   if (!found) return Promise.reject(Object.assign(new Error("That person isn't in photo-people.json."), { code: 404 }));

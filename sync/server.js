@@ -717,7 +717,7 @@ function handlePhotos(req, res, parts) {
       var body = {};
       try { body = JSON.parse(buf.toString("utf8") || "{}"); } catch (e) { return sendJson(res, 400, { ok: false, error: "bad json" }); }
       var job = parts[2] === "delete" ? photoStore.deletePhoto(String(body.file || ""))
-        : (parts[2] === "person" ? photoStore.setNames(String(body.person || ""), body.first, body.last, body.nick)
+        : (parts[2] === "person" ? photoStore.setNames(String(body.person || ""), body.first, body.last, body.nick, (Object.prototype.hasOwnProperty.call(body, "sayLike") || Object.prototype.hasOwnProperty.call(body, "say")) ? (body.sayLike != null ? body.sayLike : body.say) : undefined)
         : photoStore.setFace(String(body.person || ""), String(body.use || "")));
       return job.then(function (man) { sendJson(res, 200, man); });
     }).catch(function (e) {

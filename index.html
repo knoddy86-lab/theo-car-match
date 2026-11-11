@@ -2133,6 +2133,7 @@
             <div class="diff-row"><label for="pn-first">First name</label><input id="pn-first" class="name-input" type="text" maxlength="40" autocomplete="off"></div>
             <div class="diff-row"><label for="pn-last">Last name</label><input id="pn-last" class="name-input" type="text" maxlength="40" autocomplete="off"></div>
             <div class="diff-row"><label for="pn-nick">Nickname</label><input id="pn-nick" class="name-input" type="text" maxlength="40" autocomplete="off"></div>
+            <div class="diff-row"><label for="pn-say">Say it like</label><input id="pn-say" class="name-input" type="text" maxlength="60" autocomplete="off" placeholder="Optional, if the voice says the name wrong"></div>
             <div class="settings-btns"><button type="button" class="btn-mini primary" id="pn-save">Save names</button></div>
           </div>
           <div class="photo-thumbs" id="photo-thumbs"></div>
@@ -2324,7 +2325,7 @@
     var BLOB_FETCH_MS = 20000;
     var bootStartedAt = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
     var keyChangeOpen = false;
-    var APP_VERSION = "32";
+    var APP_VERSION = "33";
     var MATCH_PAIR_CAP = 6;
     var NAME_ROUNDS = 6;
     var THUMB_MAX = 256;
@@ -3031,8 +3032,58 @@
       return s;
     }
 
+    // Display names stay as typed. Only the spoken string uses these spellings.
+    // Add a lowercase name on the left, and how the voice should say it on the right.
+    var SAY_LIKE = {
+      jayden: "Jay den"
+    };
+
+    function personFromCar(car) {
+      if (!car || !car.family || !car.person) return null;
+      var list = familyPeople || [];
+      for (var i = 0; i < list.length; i++) if (list[i].id === car.person) return list[i];
+      return null;
+    }
+
+    function personSayLike(person) {
+      if (!person) return "";
+      var like = String(person.sayLike || person.say || "").trim();
+      if (!like) return "";
+      var shown = String(person.first || person.name || "").trim();
+      if (shown && like.toLowerCase() === shown.toLowerCase()) return "";
+      var named = String(person.name || "").trim();
+      if (named && like.toLowerCase() === named.toLowerCase()) return "";
+      return like;
+    }
+
+    function sayLikeWordMap(person) {
+      var map = {};
+      Object.keys(SAY_LIKE).forEach(function (k) { map[k] = SAY_LIKE[k]; });
+      if (!person) return map;
+      var like = personSayLike(person);
+      if (!like) return map;
+      [person.first, person.name, person.nick].forEach(function (w) {
+        var key = String(w || "").trim().toLowerCase();
+        if (key && key.indexOf(" ") === -1) map[key] = like;
+      });
+      return map;
+    }
+
+    // Rewrite spoken text only. Words not in the map are left alone.
+    function applySayLike(text, person) {
+      var raw = String(text == null ? "" : text);
+      if (!raw) return raw;
+      var map = sayLikeWordMap(person);
+      return raw.replace(/[A-Za-z']+/g, function (word) {
+        var repl = map[word.toLowerCase()];
+        return repl || word;
+      });
+    }
+
     function spokenLine(car) {
-      return customSayLike(car) || displayFullName(car);
+      var custom = customSayLike(car);
+      if (custom) return custom;
+      return applySayLike(displayFullName(car), personFromCar(car));
     }
 
     function refreshCardLabels() {
@@ -3458,6 +3509,7 @@
 
     function speakText(text) {
       try {
+        text = applySayLike(text);
         if (!window.speechSynthesis || !text) return;
         var token = ++speakToken;
         if (speakTimer) { clearTimeout(speakTimer); speakTimer = null; }
@@ -5587,7 +5639,8 @@
     }
 
     function spokenNameGameFull(car) {
-      return customSayLike(car) || coreFullName(car);
+      if (customSayLike(car)) return customSayLike(car);
+      return applySayLike(coreFullName(car), personFromCar(car));
     }
 
     function cardNickname(car) {
@@ -5616,6 +5669,7 @@
       function add(mode, text) {
         var t = String(text || "").trim();
         if (!t) return;
+        t = applySayLike(t, personFromCar(car));
         var key = nameSayKey(t);
         if (seen[key]) return;
         seen[key] = true;
@@ -5642,27 +5696,29 @@
           var t = parts[m];
           if (!t || seen[t.toLowerCase()]) return;
           seen[t.toLowerCase()] = true;
-          opts.push({ mode: m, text: t });
+          opts.push({ mode: m, text: applySayLike(t, p), display: t });
         });
-        if (!opts.length) return { mode: "nick", text: fallback };
+        if (!opts.length) return { mode: "nick", text: applySayLike(fallback, p), display: fallback };
         return opts[Math.floor(Math.random() * opts.length)];
       }
       var t = parts[mode] || fallback;
-      return { mode: parts[mode] ? mode : "nick", text: t };
+      var spoken = applySayLike(t, p);
+      return { mode: parts[mode] ? mode : "nick", text: spoken, display: t };
     }
     function chooseNameSayOption(car, mode) {
       mode = mode || (nameSettings.say || "mix");
       if (car && car.family) return familySayOption(car, mode);
       var fullText = spokenNameGameFull(car);
       var core = coreFullName(car);
+      var person = personFromCar(car);
       if (mode === "mix") {
         var opts = uniqueNameSayOptions(car);
         if (!opts.length) return { mode: "full", text: fullText };
         return opts[Math.floor(Math.random() * opts.length)];
       }
-      if (mode === "first") return { mode: "first", text: firstWord(core) || fullText };
-      if (mode === "last") return { mode: "last", text: lastWord(core) || fullText };
-      if (mode === "nick") return { mode: "nick", text: cardNickname(car) || fullText };
+      if (mode === "first") return { mode: "first", text: applySayLike(firstWord(core) || fullText, person) };
+      if (mode === "last") return { mode: "last", text: applySayLike(lastWord(core) || fullText, person) };
+      if (mode === "nick") return { mode: "nick", text: applySayLike(cardNickname(car) || fullText, person) };
       return { mode: "full", text: fullText };
     }
 
@@ -7018,7 +7074,7 @@
       if (!item) {
         item = {
           id: id, family: true, custom: true, person: person.id, file: file, kind: kind,
-          name: person.name, fullName: person.say || person.name, say: person.say || person.name,
+          name: person.name, fullName: person.name, say: person.say || person.name,
           color: pal.color, dark: pal.dark, light: pal.light, window: pal.window
         };
         familyIndex[id] = item;
@@ -7033,7 +7089,9 @@
       familyPeople = [];
       ((manifest && manifest.people) || []).forEach(function (p) {
         if (!p || !p.id) return;
-        var person = { id: String(p.id), name: String(p.name || p.id), say: String(p.say || p.name || p.id),
+        var shown = String(p.name || p.id);
+        var rawSay = String(p.sayLike || p.say || "").trim();
+        var person = { id: String(p.id), name: shown, say: rawSay, sayLike: rawSay,
           first: String(p.first || ""), last: String(p.last || ""), nick: String(p.nick || ""), face: "", realFace: "", photos: [], solo: [], looks: (p.looks && typeof p.looks === "object") ? p.looks : {} };
         (Array.isArray(p.solo) ? p.solo : []).forEach(function (f) { if (have[f]) person.solo.push(f); });
         if (p.face && have[p.face]) { person.face = p.face; person.realFace = p.face; }
@@ -7427,7 +7485,7 @@
       if (pns) pns.addEventListener("click", function () {
         var pid = photoManage.person;
         if (!pid) return;
-        var body = { person: pid, first: document.getElementById("pn-first").value, last: document.getElementById("pn-last").value, nick: document.getElementById("pn-nick").value };
+        var body = { person: pid, first: document.getElementById("pn-first").value, last: document.getElementById("pn-last").value, nick: document.getElementById("pn-nick").value, sayLike: document.getElementById("pn-say").value };
         photoEdit("person", body, "Names saved for every device.");
       });
       var rf = document.getElementById("photo-review-filter");
@@ -7676,7 +7734,8 @@
       sel.value = photoManage.person;
       var np = familyPeople.filter(function (x) { return x.id === photoManage.person; })[0];
       if (np) {
-        [["pn-first", np.first], ["pn-last", np.last], ["pn-nick", np.nick]].forEach(function (f) {
+        var sayShown = personSayLike(np);
+        [["pn-first", np.first], ["pn-last", np.last], ["pn-nick", np.nick], ["pn-say", sayShown]].forEach(function (f) {
           var el = document.getElementById(f[0]);
           if (el && document.activeElement !== el) el.value = f[1] || "";
         });
@@ -9215,6 +9274,8 @@
       voiceFor: voiceFor,
       speakCar: speakCar,
       spokenLine: spokenLine,
+      applySayLike: applySayLike,
+      SAY_LIKE: SAY_LIKE,
       displayName: displayName,
       displayFullName: displayFullName,
       refreshVoices: refreshVoices,
@@ -9309,7 +9370,7 @@
       pullPhotos: pullPhotos,
       loadFamilyLocal: loadFamilyLocal,
       startPhotoMatch: startPhotoMatch,
-      getFamily: function () { return familyPeople.map(function (p) { return { id: p.id, name: p.name, say: p.say, first: p.first, last: p.last, nick: p.nick, face: !!p.face, photos: p.photos.length }; }); },
+      getFamily: function () { return familyPeople.map(function (p) { return { id: p.id, name: p.name, say: p.say, sayLike: p.sayLike || p.say, first: p.first, last: p.last, nick: p.nick, face: !!p.face, photos: p.photos.length }; }); },
       familySayOption: familySayOption,
       getFamilyFiles: function () { return familyPeople.map(function (p) { return { id: p.id, photos: p.photos.slice() }; }); },
       getPhotoSettings: function () { return JSON.parse(JSON.stringify(photoSettings)); },
