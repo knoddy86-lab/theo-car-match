@@ -628,6 +628,7 @@
       justify-content: space-between;
       gap: 12px;
       padding: 4px 8px 8px;
+      min-height: 66px;
     }
     .hud-title {
       font-size: clamp(16px, 3.4vmin, 32px);
@@ -991,6 +992,24 @@
       color: #283593;
       font-weight: 700;
     }
+    #name-more-toast {
+      position: absolute;
+      top: 18%;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 4;
+      background: rgba(255,255,255,0.96);
+      border-radius: 999px;
+      padding: 0.35em 0.95em;
+      font-weight: 800;
+      font-size: clamp(22px, 5vmin, 44px);
+      color: #F9A825;
+      text-shadow: 0 2px 0 #FFF8E1;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    #name-more-toast[hidden] { display: none !important; }
 
     #fx {
       position: absolute;
@@ -1052,7 +1071,12 @@
     .home-btn:active { transform: translateY(2px); }
     .home-btn:focus { outline: 4px solid var(--focus); outline-offset: 3px; }
     body.home-on .hud { padding-left: calc(152px + var(--safe-l)); }
-    body.home-on .hud .hud-level { white-space: nowrap; flex-shrink: 0; }
+    body.home-on .hud .hud-level { white-space: nowrap; flex-shrink: 1; min-width: 0; }
+    @media (max-width: 440px) {
+      body.home-on .hud .hud-level { font-size: 15px; gap: 6px; padding: 0.15em 0.55em; }
+      body.home-on .hud .pips { gap: 4px; }
+      body.home-on .hud .pip { width: 11px; height: 11px; }
+    }
     @media (max-width: 900px) {
       #settings-screen .settings-panel { margin-top: calc(var(--safe-t) + 84px); }
     }
@@ -1644,7 +1668,7 @@
       height: 22px;
       accent-color: #3949AB;
     }
-    #diff-max-row[hidden], #diff-fixed-row[hidden] { display: none !important; }
+    #diff-max-row[hidden], #diff-fixed-row[hidden], #name-max-row[hidden] { display: none !important; }
     .settings-actions {
       display: flex;
       flex-wrap: wrap;
@@ -1833,6 +1857,7 @@
       <div class="board" id="name-board">
         <div class="name-choices" id="name-grid" role="group" aria-label="Cars"></div>
       </div>
+      <div id="name-more-toast" hidden>More cards!</div>
     </section>
 
     <div id="win-overlay" hidden>
@@ -1945,7 +1970,7 @@
           <div class="diff-custom" id="diff-options">
             <h3>Options</h3>
             <div class="diff-row">
-              <label for="diff-grow">Grow each round</label>
+              <label for="diff-grow">Get harder as you go (one more pair after each board, up to the max)</label>
               <input id="diff-grow" type="checkbox" checked>
             </div>
             <div class="diff-row" id="diff-fixed-row" hidden>
@@ -1957,7 +1982,7 @@
               <select id="diff-start" aria-label="Starting number of pairs"></select>
             </div>
             <div class="diff-row" id="diff-max-row">
-              <label for="diff-max">Most pairs</label>
+              <label for="diff-max">Max pairs</label>
               <select id="diff-max" aria-label="Maximum number of pairs"></select>
             </div>
             <div class="diff-row">
@@ -2028,8 +2053,16 @@
               </select>
             </div>
             <div class="diff-row">
-              <label for="name-set-harder">Get harder as you go (one more every 2 rounds, up to 6)</label>
+              <label for="name-set-harder">Get harder as you go (one more every 2 rounds, up to the max)</label>
               <input id="name-set-harder" type="checkbox" checked>
+            </div>
+            <div class="diff-row" id="name-max-row">
+              <label for="name-set-max">Max cards</label>
+              <select id="name-set-max" aria-label="Maximum number of cards">
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+              </select>
             </div>
             <div class="diff-row">
               <label for="name-set-say">Say</label>
@@ -2291,7 +2324,7 @@
     var BLOB_FETCH_MS = 20000;
     var bootStartedAt = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
     var keyChangeOpen = false;
-    var APP_VERSION = "31";
+    var APP_VERSION = "32";
     var MATCH_PAIR_CAP = 6;
     var NAME_ROUNDS = 6;
     var THUMB_MAX = 256;
@@ -2300,7 +2333,7 @@
     var speakTimer = null;
     var padsRunning = false;
     var NAME_SETTINGS_KEY = "theo-car-match-name-game";
-    var nameSettings = { choices: "auto", say: "full", celebration: true, pool: "cars" };
+    var nameSettings = { choices: "auto", say: "full", celebration: true, harder: true, maxChoices: 6, pool: "cars" };
     var matchMode = "cars";
     var playGen = 0;
     var pendingFamilyDeck = null;
@@ -3815,8 +3848,13 @@
 
     function pairSteps() {
       var cap = Math.min(maxAvailablePairs(), MATCH_PAIR_CAP);
-      var n = Math.min(Math.max(2, difficulty.startPairs), cap);
-      return [n];
+      var start = Math.min(Math.max(2, difficulty.startPairs), cap);
+      var max = difficulty.grow ? difficulty.maxPairs : difficulty.startPairs;
+      max = Math.min(Math.max(start, max), cap);
+      var list = [];
+      for (var n = start; n <= max; n++) list.push(n);
+      if (!list.length) list = [start];
+      return list;
     }
 
     function pairsForLevel(lvl) {
@@ -4213,7 +4251,13 @@
 
     function renderHUD() {
       var total = currentPairTotal();
-      document.getElementById("level-label").textContent = matchedCount + " / " + total;
+      var steps = pairSteps();
+      var label = document.getElementById("level-label");
+      if (difficulty.grow !== false && steps.length > 1) {
+        label.textContent = "Level " + (level + 1);
+      } else {
+        label.textContent = matchedCount + " / " + total;
+      }
       var pips = document.getElementById("pips");
       pips.innerHTML = "";
       for (var i = 0; i < total; i++) {
@@ -4421,14 +4465,29 @@
         if (g === playGen && difficulty.revs !== false && matchMode !== "photos") playRoundRev();
       });
       startConfetti();
+      var steps = pairSteps();
+      var leveling = difficulty.grow !== false && level < steps.length - 1;
+      var title = document.querySelector("#win-overlay h2");
       var sub = document.getElementById("win-sub");
-      if (sub) sub.textContent = matchMode === "photos" ? "You matched everyone!" : "You matched all the cars";
       var next = document.getElementById("next-btn");
-      if (next) {
-        next.textContent = "Play again";
-        next.focus();
+      if (leveling) {
+        if (title) title.textContent = "More cards!";
+        if (sub) sub.textContent = "Level " + (level + 2);
+        if (next) next.textContent = "Next";
+      } else {
+        if (title) title.textContent = "Great job!";
+        if (sub) sub.textContent = matchMode === "photos" ? "You matched everyone!" : "You matched all the cars";
+        if (next) next.textContent = "Play again";
       }
+      if (next) next.focus();
       document.getElementById("win-overlay").hidden = false;
+      if (leveling) {
+        if (advanceTimer) clearTimeout(advanceTimer);
+        advanceTimer = setTimeout(function () {
+          advanceTimer = null;
+          if (g === playGen && !document.getElementById("win-overlay").hidden && !settingsOpen()) onNext();
+        }, 2200);
+      }
     }
 
     function hideWin() {
@@ -4523,14 +4582,34 @@
       hideWin();
       stopConfetti();
       if (advanceTimer) { clearTimeout(advanceTimer); advanceTimer = null; }
-      if (matchMode === "photos") { startPhotoMatch(true); return; }
-      startGame(0, true);
+      var steps = pairSteps();
+      var atTop = level >= steps.length - 1 || difficulty.grow === false;
+      var nextLvl = atTop ? (steps.length - 1) : (level + 1);
+      if (matchMode === "photos") { startPhotoMatch(atTop, nextLvl); return; }
+      startGame(nextLvl, atTop);
     }
 
 
     function hideNameWin() {
       var el = document.getElementById("name-win-overlay");
       if (el) el.hidden = true;
+    }
+
+    var nameMoreTimer = null;
+    function hideNameMoreCards() {
+      if (nameMoreTimer) { clearTimeout(nameMoreTimer); nameMoreTimer = null; }
+      var el = document.getElementById("name-more-toast");
+      if (el) el.hidden = true;
+    }
+    function showNameMoreCards() {
+      var el = document.getElementById("name-more-toast");
+      if (!el) return;
+      el.hidden = false;
+      if (nameMoreTimer) clearTimeout(nameMoreTimer);
+      nameMoreTimer = setTimeout(function () {
+        nameMoreTimer = null;
+        el.hidden = true;
+      }, 1400);
     }
 
     function stopNameRepeat() {
@@ -4545,6 +4624,7 @@
       nameState.active = false;
       nameState.locked = false;
       hideNameWin();
+      hideNameMoreCards();
       if (!keepScreens) {
         var ns = document.getElementById("name-screen");
         if (ns) ns.hidden = true;
@@ -4836,11 +4916,15 @@
       if (say !== "first" && say !== "last" && say !== "nick" && say !== "mix") say = "full";
       var pool = String(raw.pool || "cars");
       if (pool !== "family" && pool !== "both") pool = "cars";
+      var startHint = choices === "auto" ? 4 : clampInt(choices, 4, 6, 4);
+      var maxChoices = clampInt(raw.maxChoices, 4, 6, 6);
+      if (maxChoices < startHint) maxChoices = startHint;
       return {
         choices: choices,
         say: say,
         celebration: raw.celebration !== false,
         harder: raw.harder !== false,
+        maxChoices: maxChoices,
         pool: pool
       };
     }
@@ -4872,6 +4956,18 @@
       if (e) e.checked = nameSettings.celebration !== false;
       var hd = document.getElementById("name-set-harder");
       if (hd) hd.checked = nameSettings.harder !== false;
+      var maxRow = document.getElementById("name-max-row");
+      if (maxRow) maxRow.hidden = nameSettings.harder === false;
+      var mx = document.getElementById("name-set-max");
+      if (mx) {
+        var startHint = nameSettings.choices === "auto" ? 4 : clampInt(nameSettings.choices, 4, 6, 4);
+        var opts = mx.options;
+        for (var i = 0; i < opts.length; i++) {
+          var v = clampInt(opts[i].value, 4, 6, 4);
+          opts[i].disabled = v < startHint;
+        }
+        if (document.activeElement !== mx) mx.value = String(nameSettings.maxChoices || 6);
+      }
     }
 
     function bindNameGameUi() {
@@ -4880,10 +4976,11 @@
           choices: (document.getElementById("name-set-choices") || {}).value,
           say: (document.getElementById("name-set-say") || {}).value,
           celebration: !!(document.getElementById("name-set-cele") || {}).checked,
-          harder: !!(document.getElementById("name-set-harder") || {}).checked
+          harder: !!(document.getElementById("name-set-harder") || {}).checked,
+          maxChoices: clampInt((document.getElementById("name-set-max") || {}).value, 4, 6, 6)
         });
       }
-      ["name-set-choices", "name-set-say", "name-set-cele", "name-set-harder"].forEach(function (id) {
+      ["name-set-choices", "name-set-say", "name-set-cele", "name-set-harder", "name-set-max"].forEach(function (id) {
         var el = document.getElementById(id);
         if (el) el.addEventListener("change", read);
       });
@@ -5695,12 +5792,17 @@
     function pickNameRound() {
       var pool = nameGamePool();
       if (!pool.length) return null;
-      // "Get harder as you go": one more tile every 2 rounds (4,4,5,5,6,6), never past 6 or the
-      // number of different cars / people there are. Only changes between rounds.
+      // "Get harder as you go": one more tile every 2 correct answers, from the chosen start
+      // count up to Max cards (default 6), never past the number of different cars / people.
       var start = nameChoiceCount(pool.length);
+      var maxTiles = Math.max(start, clampInt(nameSettings.maxChoices, start, 6, 6));
       var count = start;
-      if (nameSettings.harder !== false && start < 6) count = Math.min(6, start + Math.floor(Math.max(0, (nameState.round || 1) - 1) / 2));
+      if (nameSettings.harder !== false && start < maxTiles) {
+        count = Math.min(maxTiles, start + Math.floor(Math.max(0, (nameState.round || 1) - 1) / 2));
+      }
       count = Math.min(count, pool.length);
+      if (nameState.lastCount && count > nameState.lastCount) showNameMoreCards();
+      nameState.lastCount = count;
       var targetPool = pool.slice();
       if (nameState.lastTargetId && targetPool.length > 1) {
         targetPool = targetPool.filter(function (c) { return (c.person || c.id) !== nameState.lastTargetId; });
@@ -5760,6 +5862,7 @@
       nameState.active = true;
       nameState.round = 1;
       nameState.lastTargetId = "";
+      nameState.lastCount = 0;
       document.getElementById("start-screen").hidden = true;
       document.getElementById("game-screen").hidden = true;
       document.getElementById("name-screen").hidden = false;
@@ -7032,7 +7135,7 @@
 
     function dealFamilyDeck() {
       var people = shuffle(activeFamily().slice());
-      var n = Math.min(pairsForLevel(0), MATCH_PAIR_CAP, people.length);
+      var n = Math.min(pairsForLevel(level), MATCH_PAIR_CAP, people.length);
       var style = photoSettings.style || "photos";
       var items = [];
       var boardLooks = {};
@@ -7058,16 +7161,18 @@
       return items.map(function (it, i) { return { uid: it.car.id + "-" + i, id: it.id, car: it.car }; });
     }
 
-    function startPhotoMatch(fresh) {
+    function startPhotoMatch(fresh, lvl) {
       if (!photosAvailable()) { goHome(); return Promise.resolve(false); }
       matchMode = "photos";
+      if (typeof lvl === "number") level = lvl;
+      else if (!fresh) level = 0;
       var d = dealFamilyDeck();
       var files = d.map(function (x) { return x.car.file; });
       var g = playGen;
       return warmPhotoUrls(files, true).then(function () {
         if (g !== playGen) return false;
         pendingFamilyDeck = d;
-        startGame(0, !!fresh);
+        startGame(level, !!fresh);
         return true;
       });
     }
@@ -9161,7 +9266,7 @@
       matchGameIsOpen: matchGameIsOpen,
       onCardActivate: onCardActivate,
       getRevState: function () { return { clips: REV_CLIPS.slice(), queue: revQueue.slice(), last: lastRev }; },
-      getState: function () { return { level: level, roundCount: roundCount, levelCars: levelCars.map(function (c) { return c.id; }), pairs: pairsForLevel(level), steps: pairSteps(), deckLen: deck.length }; },
+      getState: function () { return { level: level, roundCount: roundCount, levelCars: levelCars.map(function (c) { return c.id; }), pairs: pairsForLevel(level), steps: pairSteps(), deckLen: deck.length, locked: locked, matchedCount: matchedCount }; },
       getDifficulty: function () { return JSON.parse(JSON.stringify(difficulty)); },
       setDifficulty: saveDifficulty,
       applyDifficultyPreset: applyDifficultyPreset,
