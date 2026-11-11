@@ -1877,6 +1877,25 @@
     .b-spare.dragging { opacity: 0.25; }
     .b-ghost { position: fixed !important; z-index: 50; pointer-events: none; transform: scale(1.1); }
     /* v40 (t209u): the tiles always get room for 2 full rows; the preview gives way first (down to 84px). */
+    /* v41: Drag build */
+    svg.bvd-chassis-only * { visibility: hidden; }
+    svg.bvd-chassis-only .bv-part, svg.bvd-chassis-only .bv-part *, svg.bvd-chassis-only .bvd-show, svg.bvd-chassis-only .bvd-show * { visibility: visible; }
+    svg.bvd-nowheels .bv-part { visibility: hidden; }
+    .bvd-ghost { opacity: 0.16; filter: grayscale(1) brightness(0.6); }
+    .bvd-pop { animation: b-pop 0.45s cubic-bezier(.3,1.6,.5,1); transform-origin: 50% 70%; }
+    .b-spares.bvd-tray { flex-direction: column; flex-wrap: nowrap; gap: clamp(12px, 2.4vh, 26px); align-items: center; }
+    .b-piece { appearance: none; border: 4px dashed rgba(26,35,126,0.25); background: rgba(255,255,255,0.75); border-radius: 22px; padding: 10px 14px 32px; position: relative; width: min(92vw, 560px); touch-action: none; -webkit-user-select: none; user-select: none; box-shadow: 0 6px 0 rgba(26,35,126,0.18); }
+    .b-piece > svg { width: 100%; height: auto; max-height: 18vh; pointer-events: none; display: block; }
+    .b-piece * { pointer-events: none; }
+    .b-piece-lbl { position: absolute; left: 0; right: 0; bottom: 4px; font-weight: 900; font-size: clamp(15px, 2.4vmin, 22px); color: #1A237E; }
+    .b-piece.dragging, .b-extra.dragging { opacity: 0.3; }
+    .b-wiggle { animation: b-wiggle 0.45s ease-in-out; }
+    @keyframes b-wiggle { 0%, 100% { transform: rotate(0); } 20% { transform: rotate(-9deg); } 45% { transform: rotate(8deg); } 70% { transform: rotate(-5deg); } 85% { transform: rotate(3deg); } }
+    .b-drag-ghost { position: fixed; z-index: 60; pointer-events: none; transform: none; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.3)); }
+    .b-drag-ghost > svg { width: 100%; height: 100%; display: block; overflow: visible; }
+    .b-ghost-back { transition: left 0.3s ease, top 0.3s ease, width 0.3s ease, height 0.3s ease, opacity 0.3s ease; }
+    body.b-dragging, body.b-dragging * { cursor: grabbing; }
+    .b-extras.b-drag { grid-auto-flow: column; grid-template-rows: repeat(2, var(--xrow)); grid-auto-columns: clamp(104px, 29vw, 156px); grid-template-columns: none; overflow-x: auto; overflow-y: hidden; overscroll-behavior: contain; touch-action: none; }
     .b4-hero { height: clamp(110px, 26vh, 360px); flex: 0 1 auto; min-height: 84px; }
     .b-extras { --xrow: clamp(100px, 13.5vh, 160px); --xgap: clamp(12px, 2.2vmin, 22px); display: grid; grid-template-columns: repeat(auto-fill, minmax(clamp(100px, 28vw, 156px), 1fr)); grid-auto-rows: var(--xrow); align-content: start; gap: var(--xgap); width: min(100%, 940px); flex: 1 1 0; min-height: calc(2 * var(--xrow) + var(--xgap) + 30px); overflow-y: auto; -webkit-overflow-scrolling: touch; touch-action: pan-y; padding: 14px 12px 16px; border-radius: 24px; }
     @media (orientation: portrait) and (max-height: 720px) {
@@ -1966,6 +1985,10 @@
       .bstep[data-step="4"] .b4-hero { grid-column: 1; grid-row: 2; width: 100%; height: 100%; max-height: 52vh; }
       .bstep[data-step="4"] .b-done { grid-column: 1; grid-row: 3; min-height: 56px; font-size: 26px; min-width: 180px; margin-bottom: calc(var(--safe-b) + 4px); }
       .bstep[data-step="4"] .b-extras { grid-column: 2; grid-row: 2 / 4; height: 100%; align-self: stretch; grid-auto-rows: 100px; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); min-height: 0; flex: initial; }
+      .b-piece { width: min(42vw, 400px); padding: 6px 10px 26px; }
+      .b-piece > svg { max-height: 17vh; }
+      .b-spares.bvd-tray { gap: 12px; }
+      .bstep[data-step="4"] .b-extras.b-drag { grid-auto-flow: row; grid-template-rows: none; grid-auto-columns: auto; overflow-y: auto; overflow-x: hidden; }
       .bstep[data-step="5"] .b-cap { grid-column: 1 / -1; margin: 0 170px; font-size: 22px; padding: 4px 16px 6px; }
       .bstep[data-step="garage"] { display: flex !important; }
       .bstep[data-step="garage"] .b-title { margin: 0 170px; }
@@ -2374,6 +2397,13 @@
               </select>
             </div>
             <div class="diff-row">
+              <label for="build-style">Build style (Drag: drag the body, roof and extras onto the vehicle)</label>
+              <select id="build-style" aria-label="Build style">
+                <option value="tap">Tap (simple)</option>
+                <option value="drag">Drag</option>
+              </select>
+            </div>
+            <div class="diff-row">
               <label for="build-extras">Extras on each vehicle (Full steps only)</label>
               <select id="build-extras" aria-label="Extras allowed">
                 <option value="any">Any</option>
@@ -2614,7 +2644,7 @@
       var list = document.querySelectorAll(".voice-style-select");
       for (var i = 0; i < list.length; i++) list[i].value = voiceStyle(list[i].getAttribute("data-part"));
     }
-    var VOICE_CLIPS = {"ashleigh": 1, "ashley": 1, "berry": 1, "caitlyn": 1, "cars-or-photos": 1, "cruise": 1, "dart": 1, "delilah": 1, "do": 1, "doc": 1, "dot": 1, "fillmore": 1, "flo": 1, "francesco": 1, "grandad": 1, "guido": 1, "gwee-doh": 1, "hank": 1, "harper": 1, "hello": 1, "hello-ashleigh": 1, "hello-ashley": 1, "hello-caitlyn": 1, "hello-delilah": 1, "hello-grandad": 1, "hello-harper": 1, "hello-jason": 1, "hello-jay-den": 1, "hello-josh": 1, "hello-kelly": 1, "hello-lindsay": 1, "hello-marissa": 1, "hello-mitch": 1, "hello-nanna": 1, "hello-theo": 1, "inside": 1, "jason": 1, "jay-den": 1, "josh": 1, "kelly": 1, "laney": 1, "lets-match-the-cars": 1, "lets-match-the-family": 1, "lightning": 1, "lightning-mcqueen": 1, "lindsay": 1, "luigi": 1, "mack": 1, "marissa": 1, "mater": 1, "mcqueen": 1, "mitch": 1, "moss": 1, "nanna": 1, "nick": 1, "officer": 1, "officer-dot": 1, "pip": 1, "racer": 1, "ramone": 1, "rosie": 1, "rosie-racer": 1, "ryan": 1, "sal": 1, "sally": 1, "sarge": 1, "sheriff": 1, "shields": 1, "skye": 1, "sunny": 1, "theo": 1, "tugger": 1, "wheres": 1, "wheres-ashleigh": 1, "wheres-ashley": 1, "wheres-caitlyn": 1, "wheres-delilah": 1, "wheres-grandad": 1, "wheres-harper": 1, "wheres-jason": 1, "wheres-jay-den": 1, "wheres-josh": 1, "wheres-kelly": 1, "wheres-lindsay": 1, "wheres-marissa": 1, "wheres-mitch": 1, "wheres-nanna": 1, "wheres-theo": 1};
+    var VOICE_CLIPS = {"ashleigh": 1, "ashley": 1, "berry": 1, "caitlyn": 1, "cars-or-photos": 1, "cruise": 1, "dart": 1, "delilah": 1, "do": 1, "doc": 1, "dot": 1, "fillmore": 1, "flo": 1, "francesco": 1, "grandad": 1, "guido": 1, "gwee-doh": 1, "hank": 1, "harper": 1, "hello": 1, "hello-ashleigh": 1, "hello-ashley": 1, "hello-caitlyn": 1, "hello-delilah": 1, "hello-grandad": 1, "hello-harper": 1, "hello-jason": 1, "hello-jay-den": 1, "hello-josh": 1, "hello-kelly": 1, "hello-lindsay": 1, "hello-marissa": 1, "hello-mitch": 1, "hello-nanna": 1, "hello-theo": 1, "inside": 1, "jason": 1, "jay-den": 1, "josh": 1, "kelly": 1, "laney": 1, "lets-match-the-cars": 1, "lets-match-the-family": 1, "lightning": 1, "lightning-mcqueen": 1, "lindsay": 1, "luigi": 1, "mack": 1, "marissa": 1, "mater": 1, "mcqueen": 1, "mitch": 1, "moss": 1, "nanna": 1, "nick": 1, "officer": 1, "officer-dot": 1, "pip": 1, "racer": 1, "ramone": 1, "rosie": 1, "rosie-racer": 1, "ryan": 1, "sal": 1, "sally": 1, "sarge": 1, "sheriff": 1, "shields": 1, "skye": 1, "sunny": 1, "theo": 1, "tugger": 1, "wheres": 1, "wheres-ashleigh": 1, "wheres-ashley": 1, "wheres-caitlyn": 1, "wheres-delilah": 1, "wheres-grandad": 1, "wheres-harper": 1, "wheres-jason": 1, "wheres-jay-den": 1, "wheres-josh": 1, "wheres-kelly": 1, "wheres-lindsay": 1, "wheres-marissa": 1, "wheres-mitch": 1, "wheres-nanna": 1, "wheres-theo": 1, "uncle-ashley": 1, "aunty-ashleigh": 1, "wheres-uncle-ashley": 1, "wheres-aunty-ashleigh": 1};
     var REV_CLIPS = [
       "01-idle-blip.mp3",
       "02-idle-blip-high.mp3",
@@ -2673,7 +2703,7 @@
     var BLOB_FETCH_MS = 20000;
     var bootStartedAt = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
     var keyChangeOpen = false;
-    var APP_VERSION = "40";
+    var APP_VERSION = "41";
     var MATCH_PAIR_CAP = 6;
     var NAME_ROUNDS = 6;
     var THUMB_MAX = 256;
@@ -3890,11 +3920,32 @@
       try {
         text = applySayLike(text);
         if (!text) return;
-        if (style === "classic") { deviceSpeakText(text); return; }
+        if (style === "classic") { classicSpeakText(text); return; }
         voiceSay(voiceParts(text));
       } catch (e) {}
     }
 
+    // v41: a few Classic lines have their own recorded clip (same Sound of Text voice as the old car names);
+    // anything else uses the device voice as before.
+    var CLASSIC_LINE_CLIPS = { "uncle-ashley": 1, "aunty-ashleigh": 1, "wheres-uncle-ashley": 1, "wheres-aunty-ashleigh": 1 };
+    function classicSpeakText(text) {
+      var k = voiceKey(text);
+      if (!CLASSIC_LINE_CLIPS[k]) { deviceSpeakText(text); return; }
+      var token = playToken;
+      var a = getSharedAudio();
+      customAudioEl = a;
+      var failed = false;
+      function fail() { if (failed) return; failed = true; a.removeEventListener("error", fail); if (token === playToken) deviceSpeakText(text); }
+      a.addEventListener("error", fail);
+      try {
+        var src = SOUND_DIR + "classic/" + k + ".mp3";
+        a.muted = false;
+        a.setAttribute("data-src", src);
+        a.src = src;
+        var pr = a.play();
+        if (pr && pr.then) pr.then(function () { a.removeEventListener("error", fail); failed = true; }, fail);
+      } catch (e) { fail(); }
+    }
     // The pre-v37 device-voice path (used by the Classic voice).
     function deviceSpeakText(text) {
       try {
@@ -5479,7 +5530,8 @@
         photoSettings: normalizePhotoSettings(raw.photoSettings || photoSettings),
         pic: sanitizePic(raw.pic),
         buildSteps: raw.buildSteps === "simple" ? "simple" : "full",
-        buildExtras: raw.buildExtras === "1" || raw.buildExtras === "3" ? raw.buildExtras : "any"
+        buildExtras: raw.buildExtras === "1" || raw.buildExtras === "3" ? raw.buildExtras : "any",
+        buildStyle: raw.buildStyle === "drag" ? "drag" : "tap"
       };
     }
     // Profile picture from the library (per device). Only a reference is kept; the picture itself
@@ -6104,6 +6156,12 @@
       var first = String(p.first || "").trim(), last = String(p.last || "").trim(), nick = String(p.nick || "").trim();
       var fallback = nick || first || item.say || item.name;
       var full = [first, last].filter(Boolean).join(" ");
+      // v41: a nickname that includes the first name ("Uncle Ashley", "Aunty Ashleigh") is how this person
+      // is said in First mode too (and as the full name when there's no surname), so they never sound alike.
+      if (nick && first && nick.toLowerCase() !== first.toLowerCase() && (" " + nick.toLowerCase() + " ").indexOf(" " + first.toLowerCase() + " ") !== -1) {
+        first = nick;
+        if (!last) full = nick;
+      }
       var parts = { full: full, first: first, last: last, nick: nick };
       if (mode === "mix") {
         var seen = {}, opts = [];
@@ -6261,8 +6319,78 @@
       nameCards().forEach(function (el) { el.style.setProperty("--card", best.card + "px"); });
     }
 
-    function pickNameRound() {
-      var pool = nameGamePool();
+    // ---- v41: no sound-alikes on one Name game board ----
+    // Two people (or cars) whose names sound the same (Ashley / Ashleigh) are never on the same board
+    // when one of them is being asked for. The check uses the words the voice will actually say
+    // (after Say and "Say it like"), with a simple sound key and a small list of known spellings.
+    var NAME_SOUND_ALIASES = {
+      ashleigh: "ashley", ashlee: "ashley", ashlie: "ashley", ashly: "ashley",
+      jaden: "jayden", jaiden: "jayden", jadyn: "jayden", jaydon: "jayden",
+      katy: "katie", katey: "katie", kaitlyn: "caitlyn", katelyn: "caitlyn", caitlin: "caitlyn", kaitlin: "caitlyn",
+      zoey: "zoe", sofie: "sophie", sofia: "sophia", isobel: "isabel", isabelle: "isabel",
+      lindsey: "lindsay", lyndsay: "lindsay", kelli: "kelly", kellie: "kelly", mitchel: "mitch",
+      jon: "john", jonathon: "jonathan", stephen: "steven", nan: "nanna", nana: "nanna", granddad: "grandad"
+    };
+    function nameSoundKey(text) {
+      var words = String(text || "").toLowerCase().replace(/['\u2019]/g, "").split(/[^a-z]+/).filter(Boolean);
+      var s = words.map(function (w) { return NAME_SOUND_ALIASES[w] || w; }).join("");
+      if (!s) return "";
+      s = s.replace(/ph/g, "f").replace(/ck/g, "k").replace(/c(?=[eiy])/g, "s").replace(/c/g, "k").replace(/q/g, "k")
+        .replace(/x/g, "ks").replace(/z/g, "s").replace(/^kn/, "n").replace(/^wr/, "r");
+      s = s.replace(/eigh|igh/g, "i").replace(/gh/g, "");
+      s = s.replace(/ey|ee|ea|ie|ei/g, "i").replace(/y(?=[^aeiou]|$)/g, "i").replace(/ai|ay/g, "a").replace(/oa|ow/g, "o").replace(/oo/g, "u");
+      s = s.replace(/([^aeiou])h/g, function (m, c) { return "sct".indexOf(c) !== -1 ? m : c; });
+      return s.replace(/(.)\1+/g, "$1");
+    }
+    // Every way the game might say this person or car (full, first, last, nickname), as sound keys.
+    function nameSoundForms(c) {
+      var texts = [];
+      if (c && c.family) {
+        var p = familyPeople.filter(function (x) { return x.id === c.person; })[0] || {};
+        var first = String(p.first || "").trim(), last = String(p.last || "").trim(), nick = String(p.nick || "").trim();
+        [[first, last].filter(Boolean).join(" "), first, last, nick, c.say, c.name].forEach(function (t) { if (t) texts.push(applySayLike(t, p)); });
+      } else if (c) {
+        uniqueNameSayOptions(c).forEach(function (o) { texts.push(o.text); });
+      }
+      var keys = [];
+      texts.forEach(function (t) { var k = nameSoundKey(t); if (k && keys.indexOf(k) === -1) keys.push(k); });
+      return keys;
+    }
+    function nameSoundsLike(promptText, c) {
+      var k = nameSoundKey(promptText);
+      return !!k && nameSoundForms(c).indexOf(k) !== -1;
+    }
+    // Every pair in a pool that could be confused (shares a sound key in any name form).
+    function nameSoundAlikePairs(pool) {
+      var out = [];
+      for (var i = 0; i < pool.length; i++) for (var j = i + 1; j < pool.length; j++) {
+        var a = nameSoundForms(pool[i]), b = nameSoundForms(pool[j]);
+        var shared = a.filter(function (k) { return b.indexOf(k) !== -1; });
+        if (shared.length) out.push({ a: pool[i].name, b: pool[j].name, key: shared.join(",") });
+      }
+      return out;
+    }
+    // Pick the prompt for the target, then keep anyone who sounds like it off the board. If that
+    // leaves too few tiles, try saying the target another way (full name or nickname); if nothing
+    // works, the board just has fewer tiles. Never two sound-alikes together.
+    function nameBoardFor(target, others, count) {
+      var first = chooseNameSayOption(target);
+      var tries = [first];
+      var alt = target.family ? ["full", "nick", "first", "last"] : ["full", "nick", "first", "last"];
+      alt.forEach(function (m) {
+        var o = chooseNameSayOption(target, m);
+        if (o && o.text && !tries.some(function (t) { return nameSayKey(t.text) === nameSayKey(o.text); })) tries.push(o);
+      });
+      var best = null;
+      tries.forEach(function (say) {
+        var ok = others.filter(function (c) { return !nameSoundsLike(say.text, c); });
+        if (!best || (best.ok.length < count - 1 && ok.length > best.ok.length)) best = { say: say, ok: ok };
+      });
+      return { say: best.say, others: best.ok.slice(0, count - 1) };
+    }
+
+    function pickNameRound(poolOverride) {
+      var pool = poolOverride || nameGamePool();
       if (!pool.length) return null;
       // "Get harder as you go": one more tile every 2 correct answers, from the chosen start
       // count up to Max cards (default 6), never past the number of different cars / people.
@@ -6281,10 +6409,10 @@
         if (!targetPool.length) targetPool = pool.slice();
       }
       var target = shuffle(targetPool)[0];
-      var others = shuffle(pool.filter(function (c) { return c.id !== target.id; }));
-      var choices = [target].concat(others.slice(0, count - 1));
-      choices = shuffle(choices);
-      return { target: target, choices: choices };
+      var others = shuffle(pool.filter(function (c) { return c.id !== target.id && (!c.person || c.person !== target.person); }));
+      var board = nameBoardFor(target, others, count);
+      var choices = shuffle([target].concat(board.others));
+      return { target: target, choices: choices, sayPick: board.say };
     }
 
     function renderNameRound(round) {
@@ -6295,7 +6423,7 @@
       nameState.target = round.target;
       nameState.lastTargetId = round.target.person || round.target.id;
       (round.choices || []).forEach(function (c) { if (c.family && c.person) nameState.lastFiles[c.person] = c.file; });
-      nameState.sayPick = chooseNameSayOption(round.target);
+      nameState.sayPick = round.sayPick || chooseNameSayOption(round.target);
       nameState.locked = false;
       round.choices.forEach(function (car, index) {
         var btn = document.createElement("button");
@@ -8487,7 +8615,7 @@
       build.busy = false;
       if (n === 1) renderBuildPick();
       else if (n === 2) renderBuildColour();
-      else if (n === 3) renderBuildParts();
+      else if (n === 3) { if (buildDragMode()) renderDragParts(); else { buildEl("b3-spares").classList.remove("bvd-tray"); renderBuildParts(); } }
       else if (n === 4) renderBuildExtras();
       else if (n === 5) renderBuildGo();
       showBuildView(n);
@@ -8602,12 +8730,7 @@
     function renderBuildPartsHero(popIndex) {
       var hero = buildEl("b3-car");
       hero.innerHTML = bvSvg(build.kind, { color: build.color, parts: build.parts, extras: build.extras });
-      var slots = hero.querySelectorAll(".bv-slot");
-      for (var i = 0; i < slots.length; i++) {
-        (function (g) {
-          g.addEventListener("click", function () { placeBuildPart(+g.getAttribute("data-part")); });
-        })(slots[i]);
-      }
+      // v41: tapping an empty slot no longer drops a wheel in; wheels go on only by dragging.
       if (popIndex >= 0) {
         var on = hero.querySelector('.bv-part[data-part="' + popIndex + '"]');
         if (on) on.classList.add("pop");
@@ -8659,14 +8782,16 @@
       btn.addEventListener("pointerdown", function (e) {
         if (build.busy) return;
         if (e.button !== undefined && e.button !== 0) return;
-        build.drag = { btn: btn, part: partIndex, x0: e.clientX, y0: e.clientY, ghost: null, id: e.pointerId };
+        build.drag = { btn: btn, part: partIndex, x0: e.clientX, y0: e.clientY, ghost: null, id: e.pointerId, max: 0 };
         try { btn.setPointerCapture(e.pointerId); } catch (err) {}
       });
       btn.addEventListener("pointermove", function (e) {
         var d = build.drag;
         if (!d || d.btn !== btn) return;
         var dx = e.clientX - d.x0, dy = e.clientY - d.y0;
-        if (!d.ghost && dx * dx + dy * dy > 100) {
+        var dd = dx * dx + dy * dy;
+        if (dd > d.max) d.max = dd;
+        if (!d.ghost && dd > 100) {
           var r = btn.getBoundingClientRect();
           var gh = btn.cloneNode(true);
           gh.className += " b-ghost";
@@ -8685,13 +8810,23 @@
       function finish(e, cancelled) {
         var d = build.drag;
         if (!d || d.btn !== btn) return;
-        var dragged = !!d.ghost;
+        // v41: a wheel goes on only after a real drag (moved at least 30px while held) that ends
+        // within 80px of an empty slot. A quick tap just wiggles the wheel; a miss floats back.
+        var dragged = !!d.ghost && d.max >= B_DRAG_MIN * B_DRAG_MIN;
+        var gh = d.ghost;
+        if (gh) d.ghost = null;
         endBuildDrag();
-        if (cancelled && !dragged) return;
         var def = bvKind(build.kind);
         var type = def.parts[partIndex].t;
-        if (dragged) placeBuildPart(nearestEmptySlot(type, e.clientX, e.clientY));
-        else placeBuildPart(build.parts[partIndex] ? nearestEmptySlot(type, e.clientX, e.clientY) : partIndex);
+        var slot = (!cancelled && dragged) ? nearestEmptySlot(type, e.clientX, e.clientY) : -1;
+        if (slot !== -1 && !bvdNear(bvSlotRect(slot), e.clientX, e.clientY)) slot = -1;
+        if (slot !== -1) {
+          if (gh && gh.parentNode) gh.parentNode.removeChild(gh);
+          placeBuildPart(slot);
+          return;
+        }
+        if (gh) bFloatBack(gh, btn);
+        else if (!cancelled) bWiggle(btn);
       }
       btn.addEventListener("pointerup", function (e) { finish(e, false); });
       btn.addEventListener("pointercancel", function (e) { finish(e, true); });
@@ -8699,6 +8834,25 @@
         // Keyboard / switch / game controller activation (no pointer events).
         if (e.detail === 0) placeBuildPart(partIndex);
       });
+    }
+    var B_DRAG_MIN = 30;
+    function bvSlotRect(i) {
+      var g = buildEl("b3-car").querySelector('.bv-part[data-part="' + i + '"]');
+      return g ? g.getBoundingClientRect() : null;
+    }
+    function bWiggle(el) {
+      if (!el) return;
+      el.classList.remove("b-wiggle");
+      void el.offsetWidth;
+      el.classList.add("b-wiggle");
+    }
+    function bFloatBack(gh, el) {
+      var r = el.getBoundingClientRect();
+      gh.classList.add("b-ghost-back");
+      gh.style.left = r.left + "px"; gh.style.top = r.top + "px";
+      gh.style.width = r.width + "px"; gh.style.height = r.height + "px";
+      gh.style.opacity = "0.35";
+      setTimeout(function () { if (gh.parentNode) gh.parentNode.removeChild(gh); }, 340);
     }
     function endBuildDrag() {
       var d = build.drag;
@@ -8729,16 +8883,319 @@
       }
     }
 
+    // ---- v41: Drag build (Settings > Build > Build style). The vehicle starts as a bare chassis with its
+    // wheels or tracks; the body and the roof/top are big pieces dragged on, then extras are dragged on too.
+    // Same pointer rules as v40: no long press, no page scroll while dragging, generous drop zones (80px).
+    var B_DROP_SLOP = 80;
+    function buildDragMode() {
+      var p = activeProfile();
+      return !!(p && p.buildStyle === "drag");
+    }
+    var bvdGeomCache = {};
+    function bvdMeasureBox() {
+      var box = document.getElementById("bvd-measure");
+      if (!box) {
+        box = document.createElement("div");
+        box.id = "bvd-measure";
+        box.setAttribute("aria-hidden", "true");
+        box.style.cssText = "position:fixed;left:-2000px;top:0;width:500px;height:220px;visibility:hidden;pointer-events:none;";
+        document.body.appendChild(box);
+      }
+      return box;
+    }
+    // Where the body, the roof/top and the wheels sit, in the 500x220 drawing.
+    function bvdGeom(kindId, extras) {
+      var key = kindId + "|" + (extras || []).join(",");
+      if (bvdGeomCache[key]) return bvdGeomCache[key];
+      var def = bvKind(kindId);
+      var box = bvdMeasureBox();
+      box.innerHTML = bvSvg(kindId, { color: "grey", extras: extras || [] });
+      var svg = box.querySelector("svg");
+      var parts = svg.querySelectorAll(".bv-part");
+      for (var i = 0; i < parts.length; i++) parts[i].style.display = "none";
+      var bb = { x: 20, y: 30, width: 460, height: 180 };
+      try { bb = svg.getBBox(); } catch (e) {}
+      var wheelTop = 220;
+      def.parts.forEach(function (pt) {
+        var t = pt.t === "track" ? pt.y : pt.cy - pt.r;
+        if (t < wheelTop) wheelTop = t;
+      });
+      var y0 = Math.max(-16, Math.floor(bb.y) - 2);
+      var g = {
+        x0: Math.floor(bb.x) - 4, x1: Math.ceil(bb.x + bb.width) + 4, y0: y0,
+        cut: Math.round(y0 + (wheelTop - y0) * 0.5),
+        y1: Math.max(214, Math.ceil(bb.y + bb.height) + 2),
+        wheelTop: wheelTop
+      };
+      box.innerHTML = "";
+      bvdGeomCache[key] = g;
+      return g;
+    }
+    function bvdTopName(def) { return def.group === "cons" ? "Top" : "Roof"; }
+    // A copy of the vehicle drawing cut to rows y1..y2 of the 500x220 drawing.
+    function bvdSvg(opts) {
+      var s = bvSvg(build.kind, { color: opts.color || build.color, extras: build.extras });
+      if (opts.cls) s = s.replace('class="bv-svg', 'class="bv-svg ' + opts.cls);
+      if (opts.viewBox) s = s.replace(/viewBox="[^"]*"/, 'viewBox="' + opts.viewBox + '"').replace('overflow="visible"', 'overflow="hidden"');
+      var open = s.indexOf(">") + 1, close = s.lastIndexOf("</svg>");
+      var pre = opts.pre || "";
+      if (opts.clip) {
+        var cid = "bvdc" + (++bvUid);
+        pre += '<defs><clipPath id="' + cid + '"><rect x="-60" y="' + opts.clip[0] + '" width="620" height="' + (opts.clip[1] - opts.clip[0]) + '"/></clipPath></defs>';
+        return s.slice(0, open) + pre + '<g clip-path="url(#' + cid + ')">' + s.slice(open, close) + '</g></svg>';
+      }
+      return s.slice(0, open) + pre + s.slice(open);
+    }
+    function bvdChassisExtras(def, g) {
+      var cy = def.parts.reduce(function (m, pt) { return Math.max(m, pt.t === "track" ? pt.y + pt.h / 2 : pt.cy); }, 0);
+      var xs = def.parts.map(function (pt) { return pt.t === "track" ? pt.x : pt.cx - pt.r; });
+      var xe = def.parts.map(function (pt) { return pt.t === "track" ? pt.x + pt.w : pt.cx + pt.r; });
+      var a = Math.min.apply(null, xs) + 10, b = Math.max.apply(null, xe) - 10;
+      return '<g class="bvd-show"><ellipse cx="' + ((g.x0 + g.x1) / 2) + '" cy="206" rx="' + ((g.x1 - g.x0) / 2 - 10) + '" ry="9" fill="#000" opacity="0.2"/>' +
+        '<rect x="' + a + '" y="' + (cy - 16) + '" width="' + (b - a) + '" height="14" rx="4" fill="#3A3F44" stroke="#15171A" stroke-width="1.5"/>' +
+        '<rect x="' + (a + 6) + '" y="' + (cy - 13) + '" width="' + (b - a - 12) + '" height="3" rx="1.5" fill="#7A838C"/></g>';
+    }
+    var bvdPieces = [];
+    function renderDragParts() {
+      var def = bvKind(build.kind);
+      var g = bvdGeom(build.kind, build.extras);
+      bvdPieces = [
+        { id: "body", name: "Body", clip: [g.cut, g.y1 + 20], vb: [g.x0, g.cut, g.x1 - g.x0, g.y1 - g.cut], line: "p-body" },
+        { id: "top", name: bvdTopName(def), clip: [g.y0 - 40, g.cut], vb: [g.x0, g.y0, g.x1 - g.x0, g.cut - g.y0], line: def.group === "cons" ? "p-top" : "p-roof" }
+      ];
+      build.parts = [false, false];
+      buildEl("b3-title").textContent = "Drag the parts on";
+      var cb = buildEl("b3-count");
+      cb.textContent = "";
+      cb.hidden = true;
+      renderDragHero("");
+      renderDragTray();
+      buildSay([bvLine("dg-parts", "Drag the parts on!")]);
+    }
+    function renderDragHero(popId) {
+      var def = bvKind(build.kind);
+      var g = bvdGeom(build.kind, build.extras);
+      var car = buildEl("b3-car");
+      var body = build.parts[0], top = build.parts[1];
+      var h = '<div class="b-layer bvd-ghost">' + bvdSvg({ cls: "bvd-nowheels", color: "grey" }) + '</div>';
+      if (body && top) h += '<div class="b-layer bvd-full' + (popId ? " bvd-pop" : "") + '">' + bvSvg(build.kind, { color: build.color, extras: build.extras }) + '</div>';
+      else {
+        if (body) h += '<div class="b-layer bvd-body' + (popId === "body" ? " bvd-pop" : "") + '">' + bvdSvg({ clip: [g.cut, g.y1 + 30] }) + '</div>';
+        else h += '<div class="b-layer bvd-chassis">' + bvdSvg({ cls: "bvd-chassis-only", pre: bvdChassisExtras(def, g) }) + '</div>';
+        if (top) h += '<div class="b-layer bvd-top' + (popId === "top" ? " bvd-pop" : "") + '">' + bvdSvg({ cls: "bvd-nowheels", clip: [g.y0 - 40, g.cut] }) + '</div>';
+      }
+      car.innerHTML = h;
+    }
+    function renderDragTray() {
+      var tray = buildEl("b3-spares");
+      tray.innerHTML = "";
+      tray.classList.add("bvd-tray");
+      bvdPieces.forEach(function (pc, i) {
+        if (build.parts[i]) return;
+        var b = document.createElement("button");
+        b.type = "button";
+        b.className = "b-piece";
+        b.setAttribute("data-piece", pc.id);
+        b.setAttribute("aria-label", pc.name);
+        b.innerHTML = bvdSvg({ cls: "bvd-nowheels", clip: pc.clip, viewBox: pc.vb.join(" ") }).replace("<svg ", '<svg style="aspect-ratio: ' + pc.vb[2] + ' / ' + Math.max(30, pc.vb[3]) + '" ') + '<span class="b-piece-lbl">' + pc.name + '</span>';
+        bDrag(b, {
+          onTap: function () { buildSay([bvLine(pc.line, pc.name + "!")]); },
+          onKey: function () { placeDragPiece(pc.id); },
+          ghost: function () { return { html: bvdSvg({ cls: "bvd-nowheels", clip: pc.clip, viewBox: pc.vb.join(" ") }), rect: bvdTargetRect(pc.id) }; },
+          onDrop: function (x, y) { return bvdNear(bvdTargetRect(pc.id), x, y) && placeDragPiece(pc.id); }
+        });
+        tray.appendChild(b);
+      });
+    }
+    // Screen rectangle of a spot in the hero, given drawing coordinates.
+    function bvdScreenRect(svg, x, y, w, h) {
+      if (!svg || !svg.getScreenCTM) return null;
+      var m = svg.getScreenCTM();
+      if (!m) return null;
+      var pt = svg.createSVGPoint();
+      pt.x = x; pt.y = y;
+      var a = pt.matrixTransform(m);
+      pt.x = x + w; pt.y = y + h;
+      var b = pt.matrixTransform(m);
+      return { left: Math.min(a.x, b.x), top: Math.min(a.y, b.y), width: Math.abs(b.x - a.x), height: Math.abs(b.y - a.y) };
+    }
+    function bvdTargetRect(pieceId) {
+      var pc = bvdPieces.filter(function (p) { return p.id === pieceId; })[0];
+      if (!pc) return null;
+      var svg = buildEl("b3-car").querySelector(".bvd-ghost svg");
+      return bvdScreenRect(svg, pc.vb[0], pc.vb[1], pc.vb[2], pc.vb[3]);
+    }
+    function bvdNear(r, x, y) {
+      if (!r) return false;
+      var dx = x < r.left ? r.left - x : x > r.left + r.width ? x - r.left - r.width : 0;
+      var dy = y < r.top ? r.top - y : y > r.top + r.height ? y - r.top - r.height : 0;
+      return dx * dx + dy * dy <= B_DROP_SLOP * B_DROP_SLOP;
+    }
+    function placeDragPiece(pieceId) {
+      if (build.busy || build.step !== 3 || !buildDragMode()) return false;
+      var i = pieceId === "body" ? 0 : pieceId === "top" ? 1 : -1;
+      if (i < 0 || build.parts[i]) return false;
+      build.parts[i] = true;
+      renderDragHero(pieceId);
+      renderDragTray();
+      var done = build.parts[0] && build.parts[1];
+      var pc = bvdPieces[i];
+      var line = [bvLine(pc.line, pc.name + "!")];
+      if (done) line.push(bvLine("great-building", "Great building!", 250));
+      buildSay(line);
+      if (done) {
+        build.busy = true;
+        buildLater(function () { buildNext(); }, 2400);
+      }
+      return true;
+    }
+    // Where an extra lands on the vehicle (drawing coordinates), measured once per vehicle.
+    var bvdExtraBoxCache = {};
+    function bvdExtraBox(x) {
+      var key = build.kind + "|" + x;
+      if (bvdExtraBoxCache[key]) return bvdExtraBoxCache[key];
+      var box = bvdMeasureBox();
+      box.innerHTML = bvSvg(build.kind, { color: "grey", extras: [x] });
+      var els = box.querySelectorAll('.bv-extra[data-x="' + x + '"]');
+      var r = null;
+      for (var i = 0; i < els.length; i++) {
+        var b;
+        try { b = els[i].getBBox(); } catch (e) { continue; }
+        if (!b || (!b.width && !b.height)) continue;
+        var m = els[i].getCTM && els[i].getCTM(), svgM = box.querySelector("svg").getCTM();
+        var bx = b.x, by = b.y;
+        if (m && svgM) {
+          var inv = svgM.inverse().multiply(m);
+          bx = inv.a * b.x + inv.c * b.y + inv.e; by = inv.b * b.x + inv.d * b.y + inv.f;
+        }
+        var nr = { x: bx, y: by, w: b.width, h: b.height };
+        if (!r) r = nr;
+        else {
+          var x0 = Math.min(r.x, nr.x), y0 = Math.min(r.y, nr.y);
+          r = { x: x0, y: y0, w: Math.max(r.x + r.w, nr.x + nr.w) - x0, h: Math.max(r.y + r.h, nr.y + nr.h) - y0 };
+        }
+      }
+      box.innerHTML = "";
+      if (!r) r = { x: 200, y: 60, w: 100, h: 80 };
+      bvdExtraBoxCache[key] = r;
+      return r;
+    }
+    function bvdExtraTargetRect(x) {
+      var svg = buildEl("b4-hero").querySelector("svg");
+      var r = bvdExtraBox(x);
+      return bvdScreenRect(svg, r.x, r.y, r.w, r.h);
+    }
+    function dropBuildExtra(x) {
+      if (build.busy || build.step !== 4) return false;
+      if (build.extras.indexOf(x) !== -1) {
+        renderBuildExtrasHero(x);
+        buildSay([x === "horn" ? bvLine("beep-beep", "Beep beep!") : bvLine("x-" + bvExtraClip(x, bvKind(build.kind)), bvExtraName(x, bvKind(build.kind)) + "!")]);
+        return true;
+      }
+      toggleBuildExtra(x);
+      return build.extras.indexOf(x) !== -1;
+    }
+
+    // One drag helper for Drag build: a short press without moving is a tap (debounced like bTap);
+    // moving starts a drag at once (no hold needed). Inside a scrolling strip, moving along the strip scrolls it instead.
+    function bDrag(el, o) {
+      var st = null, lastTap = 0, tapAt = 0;
+      function cleanup() {
+        if (st && st.ghost && st.ghost.parentNode && !st.keepGhost) st.ghost.parentNode.removeChild(st.ghost);
+        el.classList.remove("b-press", "dragging");
+        document.body.classList.remove("b-dragging");
+        st = null;
+      }
+      function floatBack(gh) { bFloatBack(gh, el); }
+      function startDrag() {
+        st.mode = "drag";
+        var gi = o.ghost();
+        var br = el.getBoundingClientRect();
+        var tr = gi.rect;
+        var gw = tr ? tr.width : br.width, gh = tr ? tr.height : br.height;
+        if (gw > innerWidth * 0.9) { gh = gh * innerWidth * 0.9 / gw; gw = innerWidth * 0.9; }
+        var div = document.createElement("div");
+        div.className = "b-ghost b-drag-ghost";
+        div.innerHTML = gi.html;
+        div.style.width = gw + "px"; div.style.height = gh + "px";
+        st.fx = Math.min(1, Math.max(0, (st.x - br.left) / br.width));
+        st.fy = Math.min(1, Math.max(0, (st.y - br.top) / br.height));
+        st.gw = gw; st.gh = gh;
+        document.body.appendChild(div);
+        st.ghost = div;
+        el.classList.remove("b-press");
+        el.classList.add("dragging");
+        document.body.classList.add("b-dragging");
+      }
+      el.addEventListener("pointerdown", function (e) {
+        if (e.button !== undefined && e.button !== 0) return;
+        if (build.busy) return;
+        var sc = o.scroller && o.scroller();
+        st = { id: e.pointerId, x: e.clientX, y: e.clientY, mode: "", sc: sc, sl: sc ? sc.scrollLeft : 0, stp: sc ? sc.scrollTop : 0 };
+        try { el.setPointerCapture(e.pointerId); } catch (err) {}
+        el.classList.add("b-press");
+      });
+      el.addEventListener("pointermove", function (e) {
+        if (!st || e.pointerId !== st.id) return;
+        e.preventDefault();
+        var dx = e.clientX - st.x, dy = e.clientY - st.y;
+        if (dx * dx + dy * dy > (st.max || 0)) st.max = dx * dx + dy * dy;
+        if (!st.mode) {
+          if (dx * dx + dy * dy < 12 * 12) return;
+          var sc = st.sc, ax = sc && sc.scrollWidth > sc.clientWidth + 4, ay = sc && sc.scrollHeight > sc.clientHeight + 4;
+          // Along the strip clearly (3:1) = scroll it; anything else (towards the vehicle) = drag.
+          if (ax && Math.abs(dx) > Math.abs(dy) * 3) st.mode = "scrollx";
+          else if (ay && !ax && Math.abs(dy) > Math.abs(dx) * 3) st.mode = "scrolly";
+          else startDrag();
+        }
+        // Started as a scroll but the finger heads for the vehicle (50px across the strip): it becomes a drag.
+        if (st.mode === "scrollx" && Math.abs(dy) > 50) { st.sc.scrollLeft = st.sl; startDrag(); }
+        else if (st.mode === "scrolly" && Math.abs(dx) > 50) { st.sc.scrollTop = st.stp; startDrag(); }
+        if (st.mode === "scrollx") st.sc.scrollLeft = st.sl - dx;
+        else if (st.mode === "scrolly") st.sc.scrollTop = st.stp - dy;
+        else if (st.mode === "drag") {
+          st.ghost.style.left = (e.clientX - st.fx * st.gw) + "px";
+          st.ghost.style.top = (e.clientY - st.fy * st.gh) + "px";
+        }
+      });
+      el.addEventListener("pointerup", function (e) {
+        if (!st || e.pointerId !== st.id) return;
+        var mode = st.mode, gh = st.ghost;
+        if (mode === "drag") {
+          var ok = false;
+          if ((st.max || 0) >= B_DRAG_MIN * B_DRAG_MIN) { try { ok = !!o.onDrop(e.clientX, e.clientY); } catch (err) {} }
+          if (!ok && gh) { st.keepGhost = true; floatBack(gh); }
+        } else if (!mode) {
+          var now = Date.now();
+          // A quick tap never places anything in Drag build: the piece wiggles and says its name.
+          if (now - lastTap >= B_TAP_DEBOUNCE) { lastTap = now; tapAt = now; bWiggle(el); if (o.onTap) o.onTap(); }
+        }
+        cleanup();
+      });
+      el.addEventListener("pointercancel", function () {
+        if (st && st.ghost) { st.keepGhost = true; floatBack(st.ghost); }
+        cleanup();
+      });
+      el.addEventListener("click", function (e) {
+        if (Date.now() - tapAt < 800) return;
+        if (e.detail === 0) (o.onKey || o.onTap)();
+      });
+      el.addEventListener("contextmenu", function (e) { e.preventDefault(); });
+    }
+
     // Step 4: extras (v36: several, toggled on and off, then Done)
     function renderBuildExtras() {
       var def = bvKind(build.kind);
       build.extras = bvCleanExtras(def, build.extras);
       var lim = buildExtrasLimit();
-      buildEl("b4-title").textContent = lim === 1 ? "Pick an extra" : lim === 3 ? "Pick up to 3 extras" : "Add extras";
+      var dragOn = buildDragMode();
+      buildEl("b4-title").textContent = dragOn ? (lim === 1 ? "Drag on an extra" : "Drag on extras") : lim === 1 ? "Pick an extra" : lim === 3 ? "Pick up to 3 extras" : "Add extras";
       renderBuildExtrasHero("");
       var grid = buildEl("b4-grid");
       grid.innerHTML = "";
       grid.scrollTop = 0;
+      grid.scrollLeft = 0;
+      grid.classList.toggle("b-drag", dragOn);
       def.extras.forEach(function (x) {
         var b = document.createElement("button");
         b.type = "button";
@@ -8747,11 +9204,19 @@
         b.setAttribute("aria-label", bvExtraName(x, def));
         b.setAttribute("aria-pressed", "false");
         b.innerHTML = '<span class="b-art">' + bvExtraIcon(x, def) + '</span><span class="b-lbl">' + bvExtraName(x, def) + '</span><span class="b-tick" aria-hidden="true">&#10003;</span>';
-        bTap(b, function () { toggleBuildExtra(x); }, grid);
+        if (dragOn) bDrag(b, {
+          scroller: function () { return grid; },
+          onTap: function () { buildSay([x === "horn" ? bvLine("beep-beep", "Beep beep!") : bvLine("x-" + bvExtraClip(x, def), bvExtraName(x, def) + "!")]); },
+          onKey: function () { toggleBuildExtra(x); },
+          ghost: function () { return { html: bvExtraIcon(x, def), rect: null }; },
+          onDrop: function (px, py) { return bvdNear(bvdExtraTargetRect(x), px, py) && dropBuildExtra(x); }
+        });
+        else bTap(b, function () { toggleBuildExtra(x); }, grid);
         grid.appendChild(b);
       });
       syncBuildExtraTiles();
-      buildSay([lim === 1 ? bvLine("pick-extra", "Pick something extra!") : bvLine("pick-extras", "Pick some extras!")]);
+      if (dragOn) buildSay([lim === 1 ? bvLine("dg-extra", "Drag on an extra!") : bvLine("dg-extras", "Drag on some extras!")]);
+      else buildSay([lim === 1 ? bvLine("pick-extra", "Pick something extra!") : bvLine("pick-extras", "Pick some extras!")]);
     }
     function renderBuildExtrasHero(popX) {
       var hero = buildEl("b4-hero");
@@ -8909,6 +9374,14 @@
         saveProfilesStore();
         updateBuildSettingsUi();
       });
+      var ssel = buildEl("build-style");
+      if (ssel) ssel.addEventListener("change", function () {
+        var p = activeProfile();
+        if (!p) return;
+        p.buildStyle = ssel.value === "drag" ? "drag" : "tap";
+        saveProfilesStore();
+        updateBuildSettingsUi();
+      });
       bindGarageClear();
       window.addEventListener("resize", function () { if (buildOpen() && build.step === "garage") renderGarageShelves(false); });
     }
@@ -8918,6 +9391,8 @@
       if (sel && document.activeElement !== sel) sel.value = (p && p.buildSteps === "simple") ? "simple" : "full";
       var xsel = buildEl("build-extras");
       if (xsel && document.activeElement !== xsel) xsel.value = (p && (p.buildExtras === "1" || p.buildExtras === "3")) ? p.buildExtras : "any";
+      var ssel = buildEl("build-style");
+      if (ssel && document.activeElement !== ssel) ssel.value = (p && p.buildStyle === "drag") ? "drag" : "tap";
       var who = buildEl("build-steps-who");
       if (who) who.textContent = p ? p.name : "";
       updateGarageSettingsUi();
@@ -11634,6 +12109,36 @@
       toggleBuildExtra: toggleBuildExtra,
       bvKind: bvKind,
       buildExtrasDone: buildExtrasDone,
+      nameSoundKey: nameSoundKey,
+      speakLine: function (t, v) { speak(t, v); },
+      familySayFor: function (person, mode) { var saved = familyPeople; try { familyPeople = [Object.assign({ id: "tpx" }, person)]; return familySayOption({ person: "tpx", name: person.name }, mode).text; } finally { familyPeople = saved; } },
+      // Test helper: run Name game boards over a list of people {first,last,nick,name,sayLike} (no photos needed).
+      testNameBoards: function (people, mode, rounds, count) {
+        var savedPeople = familyPeople, savedSay = nameSettings.say, savedMax = nameSettings.maxChoices;
+        var res = { pairs: [], boards: 0, clashes: [], alternates: 0, small: 0, keys: {} };
+        try {
+          familyPeople = people.map(function (p, i) { return Object.assign({ id: "tp" + i }, p); });
+          nameSettings.say = mode || "mix";
+          var pool = familyPeople.map(function (p) { return { id: "card-" + p.id, family: true, person: p.id, name: p.name, say: p.name }; });
+          pool.forEach(function (c) { res.keys[c.name] = nameSoundForms(c); });
+          res.pairs = nameSoundAlikePairs(pool);
+          for (var r = 0; r < (rounds || 500); r++) {
+            var target = pool[r % pool.length];
+            var others = shuffle(pool.filter(function (c) { return c.id !== target.id; }));
+            var b = nameBoardFor(target, others, count || 6);
+            res.boards++;
+            if (b.others.length < (count || 6) - 1) res.small++;
+            var def = chooseNameSayOption(target);
+            if (nameSayKey(def.text) !== nameSayKey(b.say.text) && nameSettings.say !== "mix") res.alternates++;
+            b.others.forEach(function (c) { if (nameSoundsLike(b.say.text, c)) res.clashes.push(b.say.text + " / " + c.name); });
+          }
+        } finally { familyPeople = savedPeople; nameSettings.say = savedSay; nameSettings.maxChoices = savedMax; }
+        return res;
+      },
+      setBuildStyle: function (v) { var p = activeProfile(); if (p) { p.buildStyle = v === "drag" ? "drag" : "tap"; saveProfilesStore(); updateBuildSettingsUi(); } return buildDragMode() ? "drag" : "tap"; },
+      buildStyle: function () { return buildDragMode() ? "drag" : "tap"; },
+      placeDragPiece: placeDragPiece,
+      dragTarget: function (what) { var r = what === "body" || what === "top" ? bvdTargetRect(what) : bvdExtraTargetRect(what); return r ? { x: r.left + r.width / 2, y: r.top + r.height / 2, w: r.width, h: r.height } : null; },
       loadGarage: loadGarage,
       buildSayLog: function () { return buildSayLog.slice(); },
       familyFace: function (id) { var p = familyPeople.filter(function (x) { return x.id === id; })[0]; return p ? familyItem(p, p.face, "face") : null; }

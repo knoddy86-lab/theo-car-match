@@ -47,3 +47,5 @@ If a whole line has no clip, the game tries each sentence, then "Where's" or "He
 part with no clip at all (for example a name typed after this version was made) is said by the device voice.
 Family members' own recordings on a card still play first. The offline single HTML file has no clips, so it
 uses the device voice.
+
+v41: added uncle-ashley, aunty-ashleigh, wheres-uncle-ashley, wheres-aunty-ashleigh (same Alba voice and processing).
