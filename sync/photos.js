@@ -68,7 +68,8 @@ PhotoStore.prototype.readConfig = function () {
     perPerson: Math.max(1, Math.min(30, parseInt(raw.perPerson, 10) || 12)),
     refreshHours: Math.max(1, Math.min(24 * 14, parseInt(raw.refreshHours, 10) || 24)),
     people: people.filter(function (p) { return p && p.match; }).map(function (p) {
-      return { match: String(p.match).trim(), name: String(p.name || p.match).trim().slice(0, 40), say: p.say ? String(p.say).trim().slice(0, 60) : "" };
+      return { match: String(p.match).trim(), name: String(p.name || p.match).trim().slice(0, 40), say: p.say ? String(p.say).trim().slice(0, 60) : "",
+        first: typeof p.first === "string" ? p.first : null, last: typeof p.last === "string" ? p.last : null, nick: typeof p.nick === "string" ? p.nick : null };
     }),
     skipAssets: Array.isArray(raw.skipAssets) ? raw.skipAssets.map(String) : [],
     faceAssets: raw.faceAssets && typeof raw.faceAssets === "object" ? raw.faceAssets : {}
@@ -126,17 +127,52 @@ PhotoStore.prototype.readIndex = function () {
   return { refreshedAt: 0, etag: "", people: [], report: null };
 };
 
+// First / last / nickname per person (v31). Defaults: first name = the Immich name, nickname =
+// the display name when it differs (Nanna, Grandad); last names start blank.
+function nameParts(c) {
+  var match = String((c && c.match) || "").trim();
+  var name = String((c && c.name) || match).trim();
+  var firstWord = match.split(/\s+/)[0] || name;
+  return {
+    first: c && c.first !== null && c.first !== undefined ? c.first : firstWord,
+    last: c && c.last !== null && c.last !== undefined ? c.last : "",
+    nick: c && c.nick !== null && c.nick !== undefined ? c.nick : (name && name.toLowerCase() !== firstWord.toLowerCase() ? name : "")
+  };
+}
+
 PhotoStore.prototype.manifest = function () {
   var idx = this.index;
-  return {
-    ok: true,
-    etag: idx.etag || "",
-    refreshedAt: idx.refreshedAt || 0,
-    people: (idx.people || []).map(function (p) {
-      var solo = (p.items || []).filter(function (it) { return it.faces === 1; }).map(function (it) { return it.file; });
-      return { id: p.id, name: p.name, say: p.say || p.name, face: p.face || "", photos: (p.photos || []).slice(), looks: p.looks || {}, solo: solo };
-    })
-  };
+  var cfg = this.readConfig();
+  var byName = {};
+  cfg.people.forEach(function (c) { byName[c.name] = c; });
+  var people = (idx.people || []).map(function (p) {
+    var solo = (p.items || []).filter(function (it) { return it.faces === 1; }).map(function (it) { return it.file; });
+    var np = nameParts(byName[p.name] || { match: p.name, name: p.name });
+    return { id: p.id, name: p.name, say: p.say || p.name, first: np.first, last: np.last, nick: np.nick, face: p.face || "", photos: (p.photos || []).slice(), looks: p.looks || {}, solo: solo };
+  });
+  var tag = (idx.etag || "") + "-" + crypto.createHash("sha1").update(JSON.stringify(people.map(function (p) { return [p.id, p.first, p.last, p.nick]; }))).digest("hex").slice(0, 8);
+  return { ok: true, etag: tag, refreshedAt: idx.refreshedAt || 0, people: people };
+};
+
+function cleanNamePart(v) {
+  return String(v == null ? "" : v).replace(/[\u0000-\u001f\u007f<>]/g, "").replace(/\s+/g, " ").trim().slice(0, 40);
+}
+
+// Parent edits a person's names; every device gets them with the next manifest.
+PhotoStore.prototype.setNames = function (personId, first, last, nick) {
+  var person = findPerson(this.index, String(personId || ""));
+  if (!person) return Promise.reject(Object.assign(new Error("Unknown person."), { code: 404 }));
+  var f = cleanNamePart(first), l = cleanNamePart(last), n = cleanNamePart(nick);
+  if (!f && !n) return Promise.reject(Object.assign(new Error("Give a first name or a nickname."), { code: 400 }));
+  var found = false;
+  this.patchConfig(function (raw) {
+    raw.people = Array.isArray(raw.people) && raw.people.length ? raw.people : DEFAULT_PEOPLE.map(function (x) { return Object.assign({}, x); });
+    raw.people.forEach(function (c) {
+      if (c && String(c.name || c.match).trim() === person.name) { c.first = f; c.last = l; c.nick = n; found = true; }
+    });
+  });
+  if (!found) return Promise.reject(Object.assign(new Error("That person isn't in photo-people.json."), { code: 404 }));
+  return Promise.resolve(this.manifest());
 };
 
 PhotoStore.prototype.status = function () {

@@ -282,6 +282,61 @@
       padding-left: 0.6em;
       padding-right: 0.6em;
     }
+    /* v31: game cards on the start screen (MATCH / NAME) and the Cars / Photos step */
+    .start-actions { gap: clamp(18px, 5vw, 44px); }
+    .game-card { appearance: none; border: 0; cursor: pointer; font-family: inherit; display: flex; flex-direction: column; align-items: center; gap: clamp(6px, 1.4vmin, 12px);
+      width: min(41vw, 300px); padding: clamp(10px, 2vmin, 18px) clamp(10px, 2vmin, 18px) clamp(12px, 2.2vmin, 20px); border-radius: 30px; color: #fff;
+      transition: transform 0.12s ease, box-shadow 0.12s ease; }
+    .game-card:active { transform: translateY(6px); }
+    .game-card:focus { outline: 5px solid var(--focus); outline-offset: 5px; }
+    .gc-match { background: linear-gradient(180deg, #43D364, #2BB24C); box-shadow: 0 8px 0 #1B7A33, 0 14px 26px rgba(0,0,0,0.2); }
+    .gc-match:active { box-shadow: 0 2px 0 #1B7A33, 0 6px 12px rgba(0,0,0,0.2); }
+    .gc-name { background: linear-gradient(180deg, #5C6BC0, #3949AB); box-shadow: 0 8px 0 #1A237E, 0 14px 26px rgba(0,0,0,0.2); }
+    .gc-name:active { box-shadow: 0 2px 0 #1A237E, 0 6px 12px rgba(0,0,0,0.2); }
+    .gc-cars { background: linear-gradient(180deg, #FFA726, #F57C00); box-shadow: 0 8px 0 #BF5B00, 0 14px 26px rgba(0,0,0,0.2); }
+    .gc-cars:active { box-shadow: 0 2px 0 #BF5B00; }
+    .gc-photos { background: linear-gradient(180deg, #26A69A, #00897B); box-shadow: 0 8px 0 #004D40, 0 14px 26px rgba(0,0,0,0.2); }
+    .gc-photos:active { box-shadow: 0 2px 0 #004D40; }
+    .gc-art { position: relative; width: 100%; aspect-ratio: 4 / 3; border-radius: 22px; background: rgba(255,255,255,0.22); display: block; }
+    .gc-label { font-weight: 800; letter-spacing: 0.05em; font-size: clamp(26px, 6.4vmin, 60px); line-height: 1; text-shadow: 0 3px 0 rgba(0,0,0,0.18); }
+    .mini-card { position: absolute; top: 12%; width: 42%; height: 76%; border-radius: 14px; background: #fff; box-shadow: 0 4px 0 rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .mini-card.mc-a { left: 6%; transform: rotate(-8deg); }
+    .mini-card.mc-b { right: 6%; transform: rotate(8deg); }
+    .mini-art, .name-car .mini-art { width: 92%; height: 92%; display: flex; align-items: center; justify-content: center; }
+    .mini-art svg, .mini-art img { width: 100%; height: 100%; object-fit: contain; }
+    .gc-spark { position: absolute; left: 50%; top: 2%; width: 26%; transform: translateX(-50%); filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2)); }
+    .name-car { position: absolute; left: 4%; bottom: 6%; width: 64%; height: 70%; display: flex; align-items: flex-end; }
+    .gc-bubble { position: absolute; right: 6%; top: 6%; width: 34%; aspect-ratio: 1 / 1; border-radius: 50%; background: #fff; color: #3949AB; font-weight: 900; font-size: clamp(26px, 7vmin, 64px); display: flex; align-items: center; justify-content: center; box-shadow: 0 3px 0 rgba(0,0,0,0.15); }
+    .gc-bubble::after { content: ""; position: absolute; left: 4%; bottom: -2%; border: 10px solid transparent; border-top-color: #fff; border-left-color: #fff; transform: rotate(10deg); }
+    .gc-waves { position: absolute; right: 8%; bottom: 10%; width: 14%; opacity: 0.9; }
+    .gc-match .gc-art { animation: none; }
+    .mode-tile.game-card { width: min(41vw, 300px); padding: clamp(10px, 2vmin, 18px) clamp(10px, 2vmin, 18px) clamp(12px, 2.2vmin, 20px); }
+    .mode-tile.gc-cars { background: linear-gradient(180deg, #FFA726, #F57C00); box-shadow: 0 8px 0 #BF5B00, 0 14px 26px rgba(0,0,0,0.2); }
+    .mode-tile.gc-photos { background: linear-gradient(180deg, #26A69A, #00897B); box-shadow: 0 8px 0 #004D40, 0 14px 26px rgba(0,0,0,0.2); }
+    .mode-tile.gc-cars:active { box-shadow: 0 2px 0 #BF5B00; }
+    .mode-tile.gc-photos:active { box-shadow: 0 2px 0 #004D40; }
+    .mode-tile.game-card .mode-art { position: absolute; inset: 8%; width: auto; aspect-ratio: auto; border-radius: 18px; background: #fff; }
+    #photos-tile .mode-art { background: #FFF8E1; }
+    .mode-tile.game-card .gc-label { color: #fff; }
+    @media (prefers-reduced-motion: no-preference) {
+      .gc-spark { animation: gc-twinkle 1.6s ease-in-out infinite; }
+      @keyframes gc-twinkle { 0%, 100% { transform: translateX(-50%) scale(1) rotate(0); } 50% { transform: translateX(-50%) scale(1.18) rotate(12deg); } }
+      .gc-waves { animation: gc-wave 1.2s ease-in-out infinite; }
+      @keyframes gc-wave { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
+    }
+    /* Smaller heroes above the cards so nothing clutters on phones. */
+    .hero-cars { height: clamp(70px, 15vh, 150px); }
+    @media (max-height: 520px) and (orientation: landscape) {
+      .game-card, .mode-tile.game-card { width: auto; padding: 8px 10px 10px; border-radius: 22px; gap: 4px; }
+      .gc-art { width: auto; height: 30vh; aspect-ratio: 4 / 3; border-radius: 16px; }
+      .gc-label { font-size: clamp(20px, 7vh, 40px); }
+      .hero-cars { height: 16vh; }
+      .gc-bubble { font-size: clamp(18px, 6vh, 40px); }
+    }
+    @media (max-width: 600px) and (orientation: portrait) {
+      #settings-screen .settings-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); overflow: visible; }
+      #settings-screen .settings-tabs button { min-width: 0; padding: 6px 4px; white-space: nowrap; }
+    }
     .face.front.is-family, .name-choice.is-family { padding: 0; background: #FFF8E1; }
     /* v30: parent PIN keypad */
     .pin-modal { position: fixed; inset: 0; z-index: 30; background: rgba(13, 40, 80, 0.55); display: flex; align-items: center; justify-content: center; padding: 16px; }
@@ -339,6 +394,13 @@
     .pic-library button[aria-pressed="true"] { border-color: #FFB300; }
     .pic-library button img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .pic-tools { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
+    .photo-names { margin: 6px 0 10px; }
+    .photo-names .name-input { width: 100%; max-width: 260px; }
+    .pic-names { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; margin: 8px 0; }
+    .pic-name { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 4px; border-radius: 16px; border: 2px solid #C5CAE9; background: #fff; color: #1A237E; font-weight: 800; font-size: 0.9rem; cursor: pointer; min-height: 44px; }
+    .pic-name-face { width: 64px; height: 64px; border-radius: 50%; overflow: hidden; background: #E8EAF6; display: flex; align-items: center; justify-content: center; }
+    .pic-name-face img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .pic-step-head { display: flex; align-items: center; gap: 10px; margin: 8px 0 4px; color: #1A237E; font-size: 1.05rem; }
     .review-meta { display: flex; justify-content: space-between; align-items: center; gap: 4px; padding: 6px 8px 0; font-weight: 800; color: #1A237E; font-size: 14px; }
     .review-tag { font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 999px; background: #FFF3E0; color: #E65100; white-space: nowrap; }
     .review-tag.is-parent { background: #E8F5E9; color: #2E7D32; }
@@ -1701,14 +1763,28 @@
     <section id="start-screen" class="screen" aria-label="Start">
       <div class="splash">
         <div class="banner">
-          <h1>Theo's Car Match</h1>
+          <h1 id="start-title">Theo's Car Match</h1>
           <p class="tag">Match the cars!</p>
-          <p class="for-theo">For Theo</p>
+          <p class="for-theo" id="start-for">For Theo</p>
         </div>
         <div class="hero-cars" id="hero-cars"></div>
         <div class="start-actions" id="start-actions">
-          <button type="button" class="btn btn-play" id="play-btn" aria-label="Match Game">MATCH</button>
-          <button type="button" class="btn btn-names" id="names-btn" aria-label="Name Game">NAME</button>
+          <button type="button" class="game-card gc-match" id="play-btn" aria-label="Match Game">
+            <span class="gc-art" aria-hidden="true">
+              <span class="mini-card mc-a"><span class="mini-art" data-art="match"></span></span>
+              <span class="mini-card mc-b"><span class="mini-art" data-art="match"></span></span>
+              <svg class="gc-spark" viewBox="0 0 40 40" aria-hidden="true"><path fill="#FFD54F" stroke="#F57F17" stroke-width="1.5" d="M20 2l4.6 12.2L37 18.5l-12.4 4.4L20 38l-4.6-15.1L3 18.5l12.4-4.3z"/></svg>
+            </span>
+            <span class="gc-label">MATCH</span>
+          </button>
+          <button type="button" class="game-card gc-name" id="names-btn" aria-label="Name Game">
+            <span class="gc-art" aria-hidden="true">
+              <span class="name-car"><span class="mini-art" data-art="name"></span></span>
+              <span class="gc-bubble">?</span>
+              <svg class="gc-waves" viewBox="0 0 40 60" aria-hidden="true"><path d="M8 18q8 12 0 24M18 10q14 20 0 40" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round"/></svg>
+            </span>
+            <span class="gc-label">NAME</span>
+          </button>
         </div>
         <div class="mode-picker" id="mode-picker" hidden>
           <div class="mode-head">
@@ -1718,8 +1794,8 @@
             <h2 id="mode-title">Match game</h2>
           </div>
           <div class="mode-grid">
-            <button type="button" class="mode-tile" id="cars-tile" aria-label="Cars"><span class="mode-art" id="cars-tile-art"></span><span>Cars</span></button>
-            <button type="button" class="mode-tile" id="photos-tile" aria-label="Photos"><span class="mode-art" id="photos-tile-art"></span><span>Photos</span></button>
+            <button type="button" class="mode-tile game-card gc-cars" id="cars-tile" aria-label="Cars"><span class="gc-art"><span class="mode-art" id="cars-tile-art"></span></span><span class="gc-label">Cars</span></button>
+            <button type="button" class="mode-tile game-card gc-photos" id="photos-tile" aria-label="Photos"><span class="gc-art"><span class="mode-art" id="photos-tile-art"></span></span><span class="gc-label">Photos</span></button>
           </div>
         </div>
       </div>
@@ -1731,7 +1807,7 @@
 
     <section id="game-screen" class="screen" hidden aria-label="Game">
       <div class="hud">
-        <div class="hud-title">Theo's Car Match</div>
+        <div class="hud-title" id="hud-title">Theo's Car Match</div>
         <div class="hud-level">
           <span id="level-label">Level 1</span>
           <div class="pips" id="pips" aria-hidden="true"></div>
@@ -1952,6 +2028,10 @@
               </select>
             </div>
             <div class="diff-row">
+              <label for="name-set-harder">Get harder as you go (one more every 2 rounds, up to 6)</label>
+              <input id="name-set-harder" type="checkbox" checked>
+            </div>
+            <div class="diff-row">
               <label for="name-set-say">Say</label>
               <select id="name-set-say">
                 <option value="full">Full name</option>
@@ -2015,6 +2095,12 @@
               <label for="photo-manage">Person</label>
               <select id="photo-manage" aria-label="Person whose photos to show"></select>
             </div>
+          </div>
+          <div class="photo-names" id="photo-names">
+            <div class="diff-row"><label for="pn-first">First name</label><input id="pn-first" class="name-input" type="text" maxlength="40" autocomplete="off"></div>
+            <div class="diff-row"><label for="pn-last">Last name</label><input id="pn-last" class="name-input" type="text" maxlength="40" autocomplete="off"></div>
+            <div class="diff-row"><label for="pn-nick">Nickname</label><input id="pn-nick" class="name-input" type="text" maxlength="40" autocomplete="off"></div>
+            <div class="settings-btns"><button type="button" class="btn-mini primary" id="pn-save">Save names</button></div>
           </div>
           <div class="photo-thumbs" id="photo-thumbs"></div>
           <div id="photo-confirm" class="reset-confirm" hidden>
@@ -2205,7 +2291,7 @@
     var BLOB_FETCH_MS = 20000;
     var bootStartedAt = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
     var keyChangeOpen = false;
-    var APP_VERSION = "30";
+    var APP_VERSION = "31";
     var MATCH_PAIR_CAP = 6;
     var NAME_ROUNDS = 6;
     var THUMB_MAX = 256;
@@ -4746,7 +4832,7 @@
       var choices = String(raw.choices || "auto");
       if (choices === "2" || choices === "3") choices = "4";
       if (choices !== "auto" && !/^[4-6]$/.test(choices)) choices = "auto";
-      var say = String(raw.say || "full");
+      var say = String(raw.say || "mix");
       if (say !== "first" && say !== "last" && say !== "nick" && say !== "mix") say = "full";
       var pool = String(raw.pool || "cars");
       if (pool !== "family" && pool !== "both") pool = "cars";
@@ -4754,6 +4840,7 @@
         choices: choices,
         say: say,
         celebration: raw.celebration !== false,
+        harder: raw.harder !== false,
         pool: pool
       };
     }
@@ -4783,6 +4870,8 @@
       if (c && document.activeElement !== c) c.value = nameSettings.choices;
       if (s && document.activeElement !== s) s.value = nameSettings.say;
       if (e) e.checked = nameSettings.celebration !== false;
+      var hd = document.getElementById("name-set-harder");
+      if (hd) hd.checked = nameSettings.harder !== false;
     }
 
     function bindNameGameUi() {
@@ -4790,10 +4879,11 @@
         saveNameSettings({
           choices: (document.getElementById("name-set-choices") || {}).value,
           say: (document.getElementById("name-set-say") || {}).value,
-          celebration: !!(document.getElementById("name-set-cele") || {}).checked
+          celebration: !!(document.getElementById("name-set-cele") || {}).checked,
+          harder: !!(document.getElementById("name-set-harder") || {}).checked
         });
       }
-      ["name-set-choices", "name-set-say", "name-set-cele"].forEach(function (id) {
+      ["name-set-choices", "name-set-say", "name-set-cele", "name-set-harder"].forEach(function (id) {
         var el = document.getElementById(id);
         if (el) el.addEventListener("change", read);
       });
@@ -4979,6 +5069,14 @@
         profilesState = { activeId: "theo", profiles: [theo] };
       }
       seedHarperIfNeeded();
+      // v31: Mix becomes the default Say option; switch existing players over once.
+      try {
+        if (localStorage.getItem("theo-car-match-say-mix-v31") !== "1") {
+          (profilesState.profiles || []).forEach(function (p) { p.nameSettings = normalizeNameSettings(Object.assign({}, p.nameSettings || {}, { say: "mix" })); });
+          nameSettings = normalizeNameSettings(Object.assign({}, nameSettings, { say: "mix" }));
+          localStorage.setItem("theo-car-match-say-mix-v31", "1");
+        }
+      } catch (e) {}
       applyProfileSettings(activeProfile(), false);
       saveProfilesStore();
     }
@@ -5091,6 +5189,7 @@
     }
 
     var picOpenFor = "";
+    var picWho = ""; // step 2 of the picture picker: a family person's id, or "cars"
     function profilePicTools(p) {
       var wrap = document.createElement("div");
       var tools = document.createElement("div");
@@ -5099,7 +5198,7 @@
       open.type = "button";
       open.className = "btn-mini";
       open.textContent = picOpenFor === p.id ? "Close pictures" : "Picture from the game";
-      open.addEventListener("click", function () { picOpenFor = picOpenFor === p.id ? "" : p.id; renderPlayersSettings(); });
+      open.addEventListener("click", function () { picOpenFor = picOpenFor === p.id ? "" : p.id; picWho = ""; renderPlayersSettings(); });
       tools.appendChild(open);
       if (p.pic) {
         var nudge = function (label, aria, fn) {
@@ -5139,33 +5238,72 @@
         b.setAttribute("aria-label", label);
         b.setAttribute("aria-pressed", p.pic && p.pic.kind === kind && p.pic.ref === ref ? "true" : "false");
         paint(b);
-        b.addEventListener("click", function () { picOpenFor = ""; setProfileStyle(p.id, { pic: { kind: kind, ref: ref } }); });
+        b.addEventListener("click", function () { picOpenFor = ""; picWho = ""; setProfileStyle(p.id, { pic: { kind: kind, ref: ref } }); });
         grid.appendChild(b);
       }
-      if (photosAvailable()) {
-        familyPeople.forEach(function (fp) {
-          var files = [];
-          if (fp.realFace) files.push(fp.realFace);
-          fp.photos.forEach(function (f) { if (files.indexOf(f) === -1) files.push(f); });
-          files.forEach(function (f) {
-            add("photo", f, "Photo of " + fp.name, function (b) {
-              var im = document.createElement("img");
-              im.alt = "";
-              im.loading = "lazy";
-              b.appendChild(im);
-              photoUrlFor(f).then(function (u) { if (u) im.src = u; });
-            });
-          });
-        });
+      function photoThumb(b, f) {
+        var im = document.createElement("img");
+        im.alt = "";
+        im.loading = "lazy";
+        b.appendChild(im);
+        photoUrlFor(f).then(function (u) { if (u) im.src = u; });
       }
-      allCars().forEach(function (car) {
-        add("car", car.id, car.name || "Car", function (b) {
-          var entry = customMedia[car.id] || {};
-          var src = entry.thumbUrl || entry.imageUrl;
-          if (src) { var im = document.createElement("img"); im.alt = ""; im.src = src; b.appendChild(im); }
-          else { var w = document.createElement("span"); w.className = "face-pic-svg"; w.style.background = car.light || "#E3F2FD"; w.innerHTML = defaultArt(car); b.appendChild(w); }
+      function carThumb(b, car) {
+        var entry = customMedia[car.id] || {};
+        var src = entry.thumbUrl || entry.imageUrl;
+        if (src) { var im = document.createElement("img"); im.alt = ""; im.src = src; b.appendChild(im); }
+        else { var w = document.createElement("span"); w.className = "face-pic-svg"; w.style.background = car.light || "#E3F2FD"; w.innerHTML = defaultArt(car); b.appendChild(w); }
+      }
+      var people = photosAvailable() ? familyPeople.filter(function (fp) { return fp.realFace || fp.photos.length; }) : [];
+      var who = picWho === "cars" ? null : people.filter(function (fp) { return fp.id === picWho; })[0];
+      if (picWho !== "cars" && !who) {
+        // Step 1: pick a name (or Cars).
+        var names = document.createElement("div");
+        names.className = "pic-names";
+        function nameBtn(label, paint, pick) {
+          var b = document.createElement("button");
+          b.type = "button";
+          b.className = "pic-name";
+          var face = document.createElement("span");
+          face.className = "pic-name-face";
+          paint(face);
+          var lab = document.createElement("span");
+          lab.textContent = label;
+          b.appendChild(face);
+          b.appendChild(lab);
+          b.addEventListener("click", function () { picWho = pick; renderPlayersSettings(); });
+          names.appendChild(b);
+        }
+        people.forEach(function (fp) {
+          nameBtn(fp.name, function (face) { photoThumb(face, fp.realFace || fp.photos[0]); }, fp.id);
         });
-      });
+        var firstCar = (document.querySelector("#hero-cars .is-favourite") && carById(document.querySelector("#hero-cars .is-favourite").getAttribute("data-car-id"))) || allCars()[0];
+        nameBtn("Cars", function (face) { if (firstCar) carThumb(face, firstCar); }, "cars");
+        wrap.appendChild(names);
+        return wrap;
+      }
+      // Step 2: only that person's photos (or the cars), with a back arrow to the names.
+      var head = document.createElement("div");
+      head.className = "pic-step-head";
+      var back = document.createElement("button");
+      back.type = "button";
+      back.className = "btn-mini";
+      back.textContent = "← Names";
+      back.setAttribute("aria-label", "Back to names");
+      back.addEventListener("click", function () { picWho = ""; renderPlayersSettings(); });
+      var title = document.createElement("strong");
+      title.textContent = who ? who.name : "Cars";
+      head.appendChild(back);
+      head.appendChild(title);
+      wrap.appendChild(head);
+      if (who) {
+        var files = [];
+        if (who.realFace) files.push(who.realFace);
+        who.photos.forEach(function (f) { if (files.indexOf(f) === -1) files.push(f); });
+        files.forEach(function (f) { add("photo", f, "Photo of " + who.name, function (b) { photoThumb(b, f); }); });
+      } else {
+        allCars().forEach(function (car) { add("car", car.id, car.name || "Car", function (b) { carThumb(b, car); }); });
+      }
       wrap.appendChild(grid);
       return wrap;
     }
@@ -5262,6 +5400,18 @@
       });
     }
 
+    // "Harper's Car Match", "James' Car Match".
+    function possessive(name) {
+      name = String(name || "").trim() || "Theo";
+      return /s$/i.test(name) ? name + "'" : name + "'s";
+    }
+    function paintProfileTitles(p) {
+      var nm = (p && p.name) || "Theo";
+      var t = possessive(nm) + " Car Match";
+      ["start-title", "hud-title"].forEach(function (id) { var el = document.getElementById(id); if (el && el.textContent !== t) el.textContent = t; });
+      var f = document.getElementById("start-for");
+      if (f) f.textContent = "For " + nm;
+    }
     function updatePlayerUi() {
       var picker = document.getElementById("player-picker");
       var splash = document.getElementById("start-splash") || document.querySelector("#start-screen .splash");
@@ -5272,6 +5422,7 @@
       var onStart = document.getElementById("start-screen") && !document.getElementById("start-screen").hidden;
       if (face && p) paintProfileFace(face, p);
       if (name && p) name.textContent = p.name;
+      paintProfileTitles(p);
       var showPicker = onStart && shouldShowPicker();
       if (picker) picker.hidden = !showPicker;
       if (splash) splash.hidden = !!showPicker;
@@ -5380,8 +5531,31 @@
       return opts;
     }
 
+    // Family people: Full / First / Last / Nickname from Settings > Photos; a blank part falls
+    // back to the nickname, then the first name. Mix only picks parts that are filled in.
+    function familySayOption(item, mode) {
+      var p = familyPeople.filter(function (x) { return x.id === item.person; })[0] || {};
+      var first = String(p.first || "").trim(), last = String(p.last || "").trim(), nick = String(p.nick || "").trim();
+      var fallback = nick || first || item.say || item.name;
+      var full = [first, last].filter(Boolean).join(" ");
+      var parts = { full: full, first: first, last: last, nick: nick };
+      if (mode === "mix") {
+        var seen = {}, opts = [];
+        ["full", "first", "last", "nick"].forEach(function (m) {
+          var t = parts[m];
+          if (!t || seen[t.toLowerCase()]) return;
+          seen[t.toLowerCase()] = true;
+          opts.push({ mode: m, text: t });
+        });
+        if (!opts.length) return { mode: "nick", text: fallback };
+        return opts[Math.floor(Math.random() * opts.length)];
+      }
+      var t = parts[mode] || fallback;
+      return { mode: parts[mode] ? mode : "nick", text: t };
+    }
     function chooseNameSayOption(car, mode) {
-      mode = mode || (nameSettings.say || "full");
+      mode = mode || (nameSettings.say || "mix");
+      if (car && car.family) return familySayOption(car, mode);
       var fullText = spokenNameGameFull(car);
       var core = coreFullName(car);
       if (mode === "mix") {
@@ -5408,7 +5582,8 @@
       if (!car) return;
       nameState.promptCount = (nameState.promptCount || 0) + 1;
       if (car.family) {
-        var where = "Where's " + (car.say || car.name) + "?";
+        var fp = (nameState.sayPick && nameState.target && nameState.target.id === car.id) ? nameState.sayPick : chooseNameSayOption(car);
+        var where = "Where's " + fp.text + "?";
         lastNamePrompt = { id: car.id, mode: "family", text: where, usedClip: false };
         speak(where);
         return;
@@ -5520,7 +5695,12 @@
     function pickNameRound() {
       var pool = nameGamePool();
       if (!pool.length) return null;
-      var count = Math.min(nameChoiceCount(pool.length), pool.length);
+      // "Get harder as you go": one more tile every 2 rounds (4,4,5,5,6,6), never past 6 or the
+      // number of different cars / people there are. Only changes between rounds.
+      var start = nameChoiceCount(pool.length);
+      var count = start;
+      if (nameSettings.harder !== false && start < 6) count = Math.min(6, start + Math.floor(Math.max(0, (nameState.round || 1) - 1) / 2));
+      count = Math.min(count, pool.length);
       var targetPool = pool.slice();
       if (nameState.lastTargetId && targetPool.length > 1) {
         targetPool = targetPool.filter(function (c) { return (c.person || c.id) !== nameState.lastTargetId; });
@@ -6299,6 +6479,8 @@
 
     function closeSettings() {
       lockParent();
+      picOpenFor = "";
+      picWho = "";
       stopRecording().then(function () {
         photoManage.picking = false;
         document.getElementById("settings-screen").hidden = true;
@@ -6377,7 +6559,8 @@
     });
     document.getElementById("voice-test-btn").addEventListener("click", function () {
       unlockMedia();
-      speak("Hello Theo! Let's match the cars!");
+      var vp = activeProfile();
+      speak("Hello " + ((vp && vp.name) || "Theo") + "! Let's match the cars!");
     });
     bindSyncUi();
     bindSettingsTabs();
@@ -6747,7 +6930,8 @@
       familyPeople = [];
       ((manifest && manifest.people) || []).forEach(function (p) {
         if (!p || !p.id) return;
-        var person = { id: String(p.id), name: String(p.name || p.id), say: String(p.say || p.name || p.id), face: "", realFace: "", photos: [], solo: [], looks: (p.looks && typeof p.looks === "object") ? p.looks : {} };
+        var person = { id: String(p.id), name: String(p.name || p.id), say: String(p.say || p.name || p.id),
+          first: String(p.first || ""), last: String(p.last || ""), nick: String(p.nick || ""), face: "", realFace: "", photos: [], solo: [], looks: (p.looks && typeof p.looks === "object") ? p.looks : {} };
         (Array.isArray(p.solo) ? p.solo : []).forEach(function (f) { if (have[f]) person.solo.push(f); });
         if (p.face && have[p.face]) { person.face = p.face; person.realFace = p.face; }
         (p.photos || []).forEach(function (f) { if (have[f]) person.photos.push(f); });
@@ -7134,6 +7318,13 @@
         var ids = reviewLiveShown().filter(function (x) { return x.by !== "parent"; }).map(function (x) { return x.asset; });
         if (ids.length) reviewAct("keep", ids, ids.length + " photo" + (ids.length === 1 ? "" : "s") + " confirmed.");
       });
+      var pns = document.getElementById("pn-save");
+      if (pns) pns.addEventListener("click", function () {
+        var pid = photoManage.person;
+        if (!pid) return;
+        var body = { person: pid, first: document.getElementById("pn-first").value, last: document.getElementById("pn-last").value, nick: document.getElementById("pn-nick").value };
+        photoEdit("person", body, "Names saved for every device.");
+      });
       var rf = document.getElementById("photo-review-filter");
       if (rf) rf.addEventListener("change", function () { reviewState.filter = rf.value; renderReview(); });
     }
@@ -7378,6 +7569,13 @@
         sel.dataset.sig = familyPeople.map(function (p) { return p.id + p.photos.length; }).join(",");
       }
       sel.value = photoManage.person;
+      var np = familyPeople.filter(function (x) { return x.id === photoManage.person; })[0];
+      if (np) {
+        [["pn-first", np.first], ["pn-last", np.last], ["pn-nick", np.nick]].forEach(function (f) {
+          var el = document.getElementById(f[0]);
+          if (el && document.activeElement !== el) el.value = f[1] || "";
+        });
+      }
       var person = familyPeople.filter(function (p) { return p.id === photoManage.person; })[0];
       hold.innerHTML = "";
       hold.classList.toggle("is-picking", !!photoManage.picking);
@@ -7446,7 +7644,16 @@
       person.photos.forEach(function (f) { tile(f, false); });
     }
 
+    // Art inside the MATCH / NAME cards: the same car twice (a pair) and a car asking "?".
+    function paintStartArt() {
+      var all = allCars();
+      var fav = findHeroCar(HERO_SLOTS[0], {}) || builtinCar("rosie") || all[0];
+      var mater = findHeroCar(HERO_SLOTS[1], {}) || builtinCar("tugger") || all[1] || all[0];
+      document.querySelectorAll('.mini-art[data-art="match"]').forEach(function (h) { if (fav) fillArt(h, fav); });
+      document.querySelectorAll('.mini-art[data-art="name"]').forEach(function (h) { if (mater) fillArt(h, mater); });
+    }
     function paintHero() {
+      paintStartArt();
       var hold = document.getElementById("hero-cars");
       if (!hold) return;
       hold.innerHTML = "";
@@ -8997,7 +9204,8 @@
       pullPhotos: pullPhotos,
       loadFamilyLocal: loadFamilyLocal,
       startPhotoMatch: startPhotoMatch,
-      getFamily: function () { return familyPeople.map(function (p) { return { id: p.id, name: p.name, say: p.say, face: !!p.face, photos: p.photos.length }; }); },
+      getFamily: function () { return familyPeople.map(function (p) { return { id: p.id, name: p.name, say: p.say, first: p.first, last: p.last, nick: p.nick, face: !!p.face, photos: p.photos.length }; }); },
+      familySayOption: familySayOption,
       getFamilyFiles: function () { return familyPeople.map(function (p) { return { id: p.id, photos: p.photos.slice() }; }); },
       getPhotoSettings: function () { return JSON.parse(JSON.stringify(photoSettings)); },
       setPhotoSettings: savePhotoSettings,

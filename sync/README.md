@@ -149,3 +149,11 @@ The PHOTOS game and Family in the Name Game use pictures from Immich on this PC.
 - Entering the parent PIN once (keypad pop-up) unlocks parent actions until 30 seconds of idle,
   leaving Settings, pressing Home or tapping Lock. The server issues a short-lived token
   (`POST /api/parent/unlock`, header `X-Parent-Token`, 2 min sliding / 30 min max).
+
+## v31: names for family people
+
+- Each person in `data\photo-people.json` can have `first`, `last` and `nick`. They're edited in
+  Settings > Photos (parent PIN) and reach every device with the next sync. Defaults: first name
+  from the Immich name, nickname = the display name when different (Nanna, Grandad), last blank.
+- The photo Name Game says Full / First / Last / Nickname / Mix like the car game; a blank part
+  falls back to the nickname, then the first name.
