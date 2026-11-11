@@ -1829,9 +1829,11 @@
     .b-tab[aria-selected="true"] { background: #FFB300; color: #fff; box-shadow: 0 5px 0 #E65100; text-shadow: 0 2px 0 rgba(0,0,0,0.15); }
     .b-tab:active { transform: translateY(3px); }
     .b-grid { width: 100%; flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 1fr; gap: clamp(10px, 2vmin, 20px); padding: 4px 2px 8px; }
-    .b-grid-road .b-tile:last-child { grid-column: 1 / -1; width: calc((100% - clamp(10px, 2vmin, 20px)) / 2); justify-self: center; }
     .b-tile, .b-extra { appearance: none; border: 0; font-family: inherit; background: #fff; border-radius: 24px; box-shadow: 0 6px 0 rgba(26,35,126,0.28), 0 10px 18px rgba(0,0,0,0.14); padding: 8px 6px 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 0; min-width: 0; }
-    .b-tile:active, .b-extra:active { transform: translateY(4px); box-shadow: 0 2px 0 rgba(26,35,126,0.28); }
+    /* v40: one quick tap every time. Build buttons use a pointer tap (bTap): no browser panning on the tile, the inner art never takes the touch, and pressing doesn't move the tile out from under a finger. */
+    .b-tile, .b-extra, .b-blob, .b-tab, .b-done, .b-go, .b-go-hero, .b-garage-link { touch-action: none; -webkit-user-select: none; user-select: none; }
+    .b-tile *, .b-extra *, .b-blob *, .b-tab *, .b-done *, .b-go * { pointer-events: none; }
+    .b-tile.b-press, .b-extra.b-press { box-shadow: 0 2px 0 rgba(26,35,126,0.28), 0 4px 10px rgba(0,0,0,0.12); filter: brightness(0.96); }
     .b-tile:focus, .b-extra:focus, .b-blob:focus, .b-spare:focus, .b-tab:focus { outline: 5px solid var(--focus); outline-offset: 3px; }
     .b-tile.picked, .b-extra.picked { outline: 5px solid var(--focus); outline-offset: 3px; box-shadow: 0 6px 0 #F9A825, 0 10px 18px rgba(0,0,0,0.14); }
     .b-tile .b-art { flex: 1 1 auto; width: 100%; min-height: 0; display: flex; align-items: center; justify-content: center; }
@@ -1863,6 +1865,7 @@
     .b-hero .bv-slot > :nth-child(2) { animation: b-slot 1.4s ease-in-out infinite; }
     @keyframes b-slot { 0%, 100% { stroke: #455A64; } 50% { stroke: #FF9800; } }
     .bv-part.pop, .bv-extra.pop { animation: b-pop 0.45s cubic-bezier(.3,1.6,.5,1); }
+    .bv-extra.pop { transform-box: fill-box; transform-origin: 50% 50%; }
     @keyframes b-pop { 0% { transform: scale(0.2); } 60% { transform: scale(1.18); } 100% { transform: scale(1); } }
     .bv-extra { transform-box: fill-box; transform-origin: 50% 100%; }
     .b-spares { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: clamp(18px, 5vw, 40px); min-height: clamp(100px, 16vh, 150px); padding: 10px 0; }
@@ -1873,15 +1876,22 @@
     .b-spare svg { width: 100%; height: 100%; pointer-events: none; }
     .b-spare.dragging { opacity: 0.25; }
     .b-ghost { position: fixed !important; z-index: 50; pointer-events: none; transform: scale(1.1); }
-    .b4-hero { height: clamp(120px, 27vh, 340px); }
-    .b-extras { display: grid; grid-template-columns: repeat(auto-fill, minmax(clamp(98px, 27vw, 150px), 1fr)); grid-auto-rows: clamp(104px, 15vh, 156px); align-content: start; gap: clamp(10px, 2vmin, 18px); width: min(100%, 940px); flex: 1 1 auto; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; touch-action: pan-y; padding: 8px 8px 14px; border-radius: 24px; }
-    .b-extra { position: relative; min-height: 0; transition: background 0.15s; }
+    /* v40 (t209u): the tiles always get room for 2 full rows; the preview gives way first (down to 84px). */
+    .b4-hero { height: clamp(110px, 26vh, 360px); flex: 0 1 auto; min-height: 84px; }
+    .b-extras { --xrow: clamp(100px, 13.5vh, 160px); --xgap: clamp(12px, 2.2vmin, 22px); display: grid; grid-template-columns: repeat(auto-fill, minmax(clamp(100px, 28vw, 156px), 1fr)); grid-auto-rows: var(--xrow); align-content: start; gap: var(--xgap); width: min(100%, 940px); flex: 1 1 0; min-height: calc(2 * var(--xrow) + var(--xgap) + 30px); overflow-y: auto; -webkit-overflow-scrolling: touch; touch-action: pan-y; padding: 14px 12px 16px; border-radius: 24px; }
+    @media (orientation: portrait) and (max-height: 720px) {
+      .bstep[data-step="4"] .b-title { font-size: 22px; padding: 3px 16px 5px; }
+      .bstep[data-step="4"] .b-done { min-height: 72px; margin-top: 10px; }
+    }
+    .b-extra { position: relative; min-height: 0; transition: background 0.15s; border: 5px solid transparent; }
     .b-extra .b-art { width: 100%; flex: 1 1 auto; min-height: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
     .b-extra .b-lbl { font-size: clamp(14px, 2.4vmin, 22px); pointer-events: none; }
-    .b-extra .b-tick { position: absolute; top: 5px; right: 5px; width: 34px; height: 34px; border-radius: 50%; background: #34C759; color: #fff; border: 3px solid #fff; font-size: 20px; font-weight: 900; line-height: 1; display: none; align-items: center; justify-content: center; box-shadow: 0 3px 0 #1E8E3E; }
-    .b-extra.on { background: #E8F8EC; box-shadow: 0 6px 0 #34C759, 0 10px 18px rgba(0,0,0,0.14); }
+    .b-extra .b-tick { position: absolute; top: -10px; right: -10px; width: 44px; height: 44px; font-size: 26px !important; border-radius: 50%; background: #34C759; color: #fff; border: 3px solid #fff; font-size: 20px; font-weight: 900; line-height: 1; display: none; align-items: center; justify-content: center; box-shadow: 0 3px 0 #1E8E3E; }
+    .b-extra.on { background: #E8F8EC; border-color: #34C759; box-shadow: 0 6px 0 #1E8E3E, 0 0 0 4px rgba(52,199,89,0.35), 0 10px 18px rgba(0,0,0,0.14); }
+    .b-extra.just { animation: b-tilepop 0.32s cubic-bezier(.3,1.6,.5,1); }
+    @keyframes b-tilepop { 0% { transform: scale(0.9); } 60% { transform: scale(1.06); } 100% { transform: scale(1); } }
     .b-extra.on .b-tick { display: flex; animation: b-pop 0.35s ease-out; }
-    .b-done { flex: 0 0 auto; font-size: clamp(30px, 5.4vmin, 50px); min-width: 220px; min-height: 76px; margin-bottom: calc(var(--safe-b) + 6px); background: #34C759; box-shadow: 0 6px 0 #1E8E3E; }
+    .b-done { flex: 0 0 auto; font-size: clamp(30px, 5.4vmin, 50px); min-width: 240px; min-height: 80px; margin-top: clamp(12px, 2.4vh, 26px); margin-bottom: calc(var(--safe-b) + 8px); background: #34C759; box-shadow: 0 6px 0 #1E8E3E; }
     .b-done:focus { outline: 5px solid var(--focus); outline-offset: 3px; }
     .b-done-arrow { font-size: 0.8em; }
     .b-go-hero .bv-spray circle { animation: b-flash 0.5s steps(2, jump-none) infinite; }
@@ -1955,7 +1965,7 @@
       .build-screen .bstep[data-step="4"] { grid-template-columns: 40% 1fr; grid-template-rows: auto 1fr auto; }
       .bstep[data-step="4"] .b4-hero { grid-column: 1; grid-row: 2; width: 100%; height: 100%; max-height: 52vh; }
       .bstep[data-step="4"] .b-done { grid-column: 1; grid-row: 3; min-height: 56px; font-size: 26px; min-width: 180px; margin-bottom: calc(var(--safe-b) + 4px); }
-      .bstep[data-step="4"] .b-extras { grid-column: 2; grid-row: 2 / 4; height: 100%; align-self: stretch; grid-auto-rows: 100px; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); }
+      .bstep[data-step="4"] .b-extras { grid-column: 2; grid-row: 2 / 4; height: 100%; align-self: stretch; grid-auto-rows: 100px; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); min-height: 0; flex: initial; }
       .bstep[data-step="5"] .b-cap { grid-column: 1 / -1; margin: 0 170px; font-size: 22px; padding: 4px 16px 6px; }
       .bstep[data-step="garage"] { display: flex !important; }
       .bstep[data-step="garage"] .b-title { margin: 0 170px; }
@@ -2663,7 +2673,7 @@
     var BLOB_FETCH_MS = 20000;
     var bootStartedAt = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
     var keyChangeOpen = false;
-    var APP_VERSION = "39";
+    var APP_VERSION = "40";
     var MATCH_PAIR_CAP = 6;
     var NAME_ROUNDS = 6;
     var THUMB_MAX = 256;
@@ -7650,14 +7660,20 @@
       bigbucket: { name: "Big bucket", slot: "tool" },
       claw: { name: "Claw", slot: "tool" },
       breaker: { name: "Jackhammer", slot: "tool" },
-      pallet: { name: "Boxes", slot: "load" }
+      pallet: { name: "Boxes", slot: "load" },
+      bin: { name: "Wheelie bin" },
+      amber: { name: "Warning lights" },
+      recycle: { name: "Recycling sign" },
+      arm: { name: "Side arm" },
+      bags: { name: "Bin bags", slot: "load" }
     };
     // In-group extras are drawn by the vehicle itself (they move with an arm, tray or forks).
     var BV_INNER_EXTRAS = { dirt: 1, bigbucket: 1, claw: 1, breaker: 1, pallet: 1 };
-    var BV_EXTRA_ORDER = ["stripes", "flames", "stars", "mudflaps", "plate", "sign", "towbar", "bikerack", "bullbar", "spotlights", "snorkel", "dog", "roofbox", "surfboard", "lights", "siren", "beacon", "flag", "cones", "hosereel", "ladder", "cannon", "spoiler", "horn"];
+    var BV_EXTRA_ORDER = ["stripes", "flames", "stars", "mudflaps", "plate", "sign", "towbar", "bikerack", "bullbar", "spotlights", "snorkel", "dog", "roofbox", "surfboard", "lights", "siren", "beacon", "flag", "cones", "hosereel", "ladder", "cannon", "spoiler", "recycle", "arm", "bags", "bin", "amber", "horn"];
 
     function bvExtraName(name, def) {
       var info = BV_EXTRA_INFO[name];
+      if (def && def.xname && def.xname[name]) return def.xname[name];
       if (!info) return name;
       return (def && def.group === "cons" && info.cons) || info.name;
     }
@@ -7701,6 +7717,11 @@
         case "hosereel": return bvHoseReel(v[0], v[1], v[2]);
         case "cannon": return bvCannon(v[0], v[1]);
         case "cones": return bvCones(v[0], v[1], v[2]);
+        case "bin": return bvWheelieBin(v[0], v[1], v[2]);
+        case "amber": return bvAmberBar(v[0], v[1]);
+        case "recycle": return bvRecycle(v[0], v[1], v[2]);
+        case "arm": return bvSideArm(v[0], v[1]);
+        case "bags": return bvBinBags(v[0], v[1]);
       }
       return "";
     }
@@ -7763,6 +7784,11 @@
         case "claw": return vb + '<g transform="translate(46 2) scale(1.15)">' + bvClaw(0, 0) + '</g></svg>';
         case "breaker": return vb + '<g transform="translate(45 0) scale(1.1)">' + bvBreaker(0, 2) + '</g></svg>';
         case "pallet": return vb + '<g transform="translate(-4 -118) scale(1.15)">' + bvPallet() + '</g></svg>';
+        case "bin": return vb + bvWheelieBin(45, 56, 1.1) + '</svg>';
+        case "amber": return vb + '<g transform="translate(45 36) scale(1.3) translate(-45 -30)">' + bvAmberBar(45, 36) + '</g></svg>';
+        case "recycle": return vb + bvRecycle(45, 30, 24) + '</svg>';
+        case "arm": return vb + '<g transform="translate(16 -6) scale(0.7)">' + bvSideArm(40, 16) + '</g></svg>';
+        case "bags": return vb + '<g transform="translate(45 30) scale(0.85) translate(-9 2)">' + bvBinBags(24, 14) + '</g></svg>';
       }
       return vb + '</svg>';
     }
@@ -7788,6 +7814,48 @@
         '<rect x="12" y="146" width="40" height="26" rx="1.5" fill="#D7A86E" stroke="#8D6E4C" stroke-width="1.2"/><path d="M12 152 H52 M32 146 V152" stroke="#B5844A" stroke-width="2"/>' +
         '<rect x="17" y="124" width="30" height="22" rx="1.5" fill="#C8955A" stroke="#8D6E4C" stroke-width="1.2"/><path d="M17 130 H47 M32 124 V130" stroke="#A7743C" stroke-width="2"/>' +
         '<path d="M22 162 l4 -4 l4 4 M26 158 v8" stroke="#5D3A1E" stroke-width="1.4" fill="none"/>';
+    }
+
+    // v40: rubbish truck extras (original, generic drawings).
+    function bvWheelieBin(x, y, s) {
+      s = s || 1;
+      return '<g transform="translate(' + x + ' ' + y + ') scale(' + s + ')">' +
+        '<path d="M-15 -42 L15 -42 L13 -4 L-13 -4 Z" fill="#2E7D32" stroke="#1B4D1F" stroke-width="1.3" stroke-linejoin="round"/>' +
+        '<path d="M-17 -48 H17 C18 -48 19 -47 18 -45 L17 -42 H-17 L-18 -45 C-19 -47 -18 -48 -17 -48 Z" fill="#43A047" stroke="#1B4D1F" stroke-width="1.2"/>' +
+        '<rect x="-14" y="-52" width="10" height="4" rx="1.5" fill="#1B4D1F"/>' +
+        '<path d="M-9 -34 V-12 M0 -34 V-12 M9 -34 V-12" stroke="#1B4D1F" stroke-opacity="0.35" stroke-width="1.6"/>' +
+        '<rect x="-8" y="-30" width="16" height="9" rx="1.5" fill="#FFEB3B" stroke="#1B4D1F" stroke-width="0.8"/>' +
+        '<circle cx="-9" cy="-3" r="4" fill="#1A1D21"/><circle cx="9" cy="-3" r="4" fill="#1A1D21"/><circle cx="-9" cy="-3" r="1.5" fill="#9AA3AB"/><circle cx="9" cy="-3" r="1.5" fill="#9AA3AB"/></g>';
+    }
+    function bvAmberBar(x, y) {
+      return '<g transform="translate(' + (x - 34) + ' ' + (y - 12) + ')"><rect x="0" y="0" width="68" height="12" rx="4" fill="#1A1D21"/>' +
+        '<rect x="4" y="2" width="18" height="8" rx="2.5" fill="#FFA000"/><rect x="25" y="2" width="18" height="8" rx="2.5" fill="#FFA000"/><rect x="46" y="2" width="18" height="8" rx="2.5" fill="#FFA000"/>' +
+        '<rect class="bv-flash" x="4" y="2" width="18" height="8" rx="2.5" fill="#FFE082"/><rect class="bv-glow2" x="25" y="2" width="18" height="8" rx="2.5" fill="#FFE082"/><rect class="bv-flash" x="46" y="2" width="18" height="8" rx="2.5" fill="#FFE082"/>' +
+        '<circle class="bv-flash" cx="34" cy="2" r="22" fill="#FFB300" opacity="0.18"/></g>';
+    }
+    function bvRecycle(cx, cy, r) {
+      r = r || 26;
+      var k = r / 26;
+      return '<g transform="translate(' + cx + ' ' + cy + ') scale(' + k + ')"><circle r="26" fill="#2E7D32" stroke="#fff" stroke-width="3"/>' +
+        '<g fill="none" stroke="#fff" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round">' +
+        '<path d="M-4 -13 L4 -13 L11 -1"/><path d="M13 5 L8 13 L-6 13"/><path d="M-12 7 L-16 0 L-10 -10"/></g>' +
+        '<g fill="#fff"><path d="M14 -7 L13 3 L5 -2 Z"/><path d="M-8 18 L-11 9 L-2 9 Z"/><path d="M-14 -14 L-5 -10 L-14 -4 Z"/></g></g>';
+    }
+    function bvSideArm(x, y) {
+      return '<g transform="translate(' + x + ' ' + y + ')"><rect x="-14" y="0" width="28" height="18" rx="3" fill="#5A626A" stroke="#15171A" stroke-width="1.2"/>' +
+        '<path d="M-6 16 L-10 58 L2 60 L6 16 Z" fill="#FFB300" stroke="#8D5A00" stroke-width="1.3"/>' +
+        '<rect x="-18" y="56" width="32" height="10" rx="2.5" fill="#5A626A" stroke="#15171A" stroke-width="1.2"/>' +
+        '<path d="M-16 64 C-26 70 -26 82 -18 88 L-14 84 C-18 80 -18 72 -12 68 Z" fill="#8A939C" stroke="#15171A" stroke-width="1.2"/>' +
+        '<path d="M12 64 C22 70 22 82 14 88 L10 84 C14 80 14 72 8 68 Z" fill="#8A939C" stroke="#15171A" stroke-width="1.2"/>' +
+        '<circle cx="0" cy="9" r="4" fill="#C5CAD0" stroke="#15171A" stroke-width="1"/><circle cx="-2" cy="60" r="3.4" fill="#C5CAD0" stroke="#15171A" stroke-width="1"/></g>';
+    }
+    function bvBinBags(x, y) {
+      return '<g transform="translate(' + x + ' ' + y + ')">' +
+        '<path d="M-22 12 C-26 0 -18 -10 -8 -8 C-6 -14 2 -14 2 -8 C10 -12 16 -4 12 12 Z" fill="#1A1D21" stroke="#000" stroke-width="1"/>' +
+        '<path d="M2 12 C0 -2 10 -12 20 -8 C22 -14 30 -14 30 -8 C40 -10 44 2 38 12 Z" fill="#263238" stroke="#000" stroke-width="1"/>' +
+        '<path d="M-8 -8 L-6 -16 L-2 -9" fill="none" stroke="#455A64" stroke-width="2" stroke-linecap="round"/>' +
+        '<path d="M20 -8 L22 -17 L26 -9" fill="none" stroke="#546E7A" stroke-width="2" stroke-linecap="round"/>' +
+        '<path d="M-16 2 C-12 -2 -8 -2 -4 0 M10 2 C16 -2 22 -2 28 0" stroke="#fff" stroke-opacity="0.25" stroke-width="2" fill="none"/></g>';
     }
 
     function bvMotion() {
@@ -7926,6 +7994,38 @@
             '<rect x="92" y="64" width="16" height="26" rx="3" fill="url(#' + id + '-paint)" stroke="#333" stroke-width="0.8"/>' +
             X + P[0] + P[1] + P[2];
           return s;
+        } },
+      { id: "rubbish", name: "Rubbish truck", say: "rubbish truck", group: "road", extras: ["bin", "beacon", "amber", "recycle", "plate", "dog", "arm", "bags", "stripes", "horn"],
+        // v40: generic rear-loader rubbish truck: cab-over cab, compactor body, rear hopper with bin lifter; 4 wheels each side (steer axle + 3 rear).
+        parts: [{ t: "wheel", cx: 98, cy: 170, r: 28 }, { t: "wheel", cx: 286, cy: 170, r: 28 }, { t: "wheel", cx: 346, cy: 170, r: 28 }, { t: "wheel", cx: 406, cy: 170, r: 28 }],
+        xname: { stripes: "Stripes" }, xclip: { stripes: "stripes-plain" },
+        xa: { bin: [494, 170, 1], beacon: [118, 46], amber: [298, 32], recycle: [300, 82, 30], plate: [44, 170], dog: [114, 110, 0.95], arm: [204, 94], bags: [468, 40], stripes: [156, 444, 136], horn: [62, 16] },
+        draw: function (id, P, X, E) {
+          var cab = "M30 176 L30 152 C25 148 23 140 27 130 L33 72 C35 60 45 52 62 50 L150 46 L150 176 L134 176 A36 36 0 0 0 62 176 Z";
+          var body = "M150 176 L150 50 C150 38 160 32 176 32 L424 32 C438 32 446 42 446 56 L446 176 L442 176 A36 36 0 0 0 406 140 L286 140 A36 36 0 0 0 250 176 Z";
+          var hopper = "M446 40 L474 50 C486 55 492 66 492 80 L492 168 C492 174 488 176 482 176 L446 176 Z";
+          return bvShadow(262, 206, 236) +
+            '<rect x="140" y="158" width="312" height="14" rx="3" fill="#2A2E33"/>' +
+            bvPaint(id, cab) + bvPaint(id, body) + bvPaint(id, hopper) +
+            '<path d="M200 38 V136 M250 36 V136 M300 36 V136 M350 36 V136 M400 36 V136" stroke="#1A1D21" stroke-opacity="0.18" stroke-width="2"/>' +
+            '<path d="M156 118 H442" stroke="#fff" stroke-opacity="0.2" stroke-width="6"/>' +
+            '<path d="M446 40 V176" stroke="#1A1D21" stroke-opacity="0.55" stroke-width="2.5"/>' +
+            '<path d="M452 116 L486 110 C488 110 489 112 489 114 L489 156 L452 160 Z" fill="#1A1D21" opacity="0.85"/>' +
+            '<path d="M456 150 L486 146" stroke="#5A626A" stroke-width="3"/>' +
+            '<rect x="478" y="160" width="18" height="14" rx="2" fill="#3A3F44" stroke="#15171A" stroke-width="1"/>' +
+            '<g stroke="#1A1D21" stroke-width="5"><path d="M452 172 l8 -8 M466 172 l8 -8 M480 172 l8 -8" stroke="#FFB300"/></g>' +
+            '<rect x="486" y="88" width="6" height="18" rx="1.5" fill="#C62828"/><rect x="486" y="70" width="6" height="12" rx="1.5" fill="#FFA000"/>' +
+            '<rect x="200" y="148" width="10" height="6" rx="1.5" fill="#FFA000"/><rect x="380" y="128" width="10" height="6" rx="1.5" fill="#FFA000"/>' +
+            '<path d="M84 54 L82 176" fill="none" stroke="#2A2A2A" stroke-opacity="0.4" stroke-width="1.3"/>' + bvHandle(118, 120) +
+            bvGlass("M36 120 L40 78 C42 66 50 60 64 58 L78 57 L74 120 Z", id) + bvShine("M44 92 L54 68 L70 66 L60 100 Z") +
+            bvGlass("M90 58 L142 54 L142 112 L90 112 Z", id) + bvShine("M96 72 L108 60 L130 58 L118 84 Z") +
+            '<rect x="26" y="126" width="26" height="22" rx="1.5" fill="#1A1D21"/><path d="M29 130 H49 M29 135 H49 M29 140 H49 M29 145 H49" stroke="#8A939C" stroke-width="1.2"/>' +
+            '<rect x="24" y="150" width="20" height="10" rx="2" fill="#F4FAFF" stroke="#9AA3AB" stroke-width="0.8"/>' +
+            '<rect x="18" y="160" width="52" height="16" rx="3" fill="url(#' + id + '-bump)"/>' +
+            '<rect x="88" y="150" width="30" height="5" rx="1.5" fill="#3A3F44"/><rect x="92" y="138" width="24" height="4" rx="1.5" fill="#3A3F44"/>' +
+            '<path d="M40 86 L24 74" stroke="#2A2E33" stroke-width="3" stroke-linecap="round"/>' +
+            '<rect x="10" y="62" width="15" height="26" rx="3" fill="url(#' + id + '-paint)" stroke="#222" stroke-width="1"/><rect x="12" y="65" width="11" height="12" rx="1.4" fill="#A8C4D2" opacity="0.85"/>' +
+            X + P[0] + P[1] + P[2] + P[3];
         } },
       { id: "excavator", name: "Excavator", say: "excavator", group: "cons", extras: ["beacon", "lights", "horn", "flag", "stripes", "cones", "bigbucket", "claw", "breaker"], partWord: "tracks",
         parts: [{ t: "track", x: 176, y: 134, w: 240, h: 46, back: true }, { t: "track", x: 150, y: 150, w: 256, h: 48 }],
@@ -8137,6 +8237,53 @@
     var build = { step: 0, steps: [1, 2, 3, 4, 5], kind: "", color: "", parts: [], extras: [], tab: "road", timers: [], busy: false, lastSimple: "", drag: null, gen: 0 };
 
     function buildEl(id) { return document.getElementById(id); }
+    // v40: one quick tap, the same every time. A tap is a pointerdown + pointerup on the same tile without moving
+    // far (generous for little fingers). Inside a scrolling grid a vertical drag scrolls the grid instead.
+    // Repeat taps on the same tile within 250 ms are ignored, so a bouncy double tap doesn't undo itself.
+    // Keyboard and switch access still work through click (detail 0).
+    var B_TAP_SLOP = 26, B_TAP_DEBOUNCE = 250;
+    function bTap(el, fn, scroller) {
+      if (!el) return;
+      var st = null, lastFire = 0, tapAt = 0;
+      function fire(e) {
+        var now = Date.now();
+        if (now - lastFire < B_TAP_DEBOUNCE) return;
+        lastFire = now;
+        fn(e);
+      }
+      function end() { st = null; el.classList.remove("b-press"); }
+      if (window.PointerEvent) {
+        el.addEventListener("pointerdown", function (e) {
+          if (e.button !== undefined && e.button !== 0) return;
+          st = { id: e.pointerId, x: e.clientX, y: e.clientY, sy: scroller ? scroller.scrollTop : 0, moved: false };
+          try { el.setPointerCapture(e.pointerId); } catch (err) {}
+          el.classList.add("b-press");
+        });
+        el.addEventListener("pointermove", function (e) {
+          if (!st || e.pointerId !== st.id) return;
+          var dx = e.clientX - st.x, dy = e.clientY - st.y;
+          if (scroller) {
+            if (!st.moved && Math.abs(dy) > B_TAP_SLOP) { st.moved = true; el.classList.remove("b-press"); }
+            if (st.moved) scroller.scrollTop = st.sy - dy;
+          } else if (!st.moved && dx * dx + dy * dy > 4 * B_TAP_SLOP * B_TAP_SLOP) {
+            st.moved = true; el.classList.remove("b-press");
+          }
+        });
+        el.addEventListener("pointerup", function (e) {
+          if (!st || e.pointerId !== st.id) return;
+          var moved = st.moved;
+          end();
+          if (!moved) { tapAt = Date.now(); fire(e); }
+        });
+        el.addEventListener("pointercancel", end);
+        el.addEventListener("lostpointercapture", function () { if (st) end(); });
+      }
+      el.addEventListener("click", function (e) {
+        if (Date.now() - tapAt < 800) return;
+        if (!window.PointerEvent || e.detail === 0) fire(e);
+      });
+      el.addEventListener("contextmenu", function (e) { e.preventDefault(); });
+    }
     // v36: Build speaks with pre-recorded natural-voice clips (sounds/build/, Piper "Alba" voice, CC BY 4.0, see sounds/build/NOTES.md).
     // Each part of a line is a clip; a part with no clip (a new player's name) or a clip that fails falls back to the device voice.
     var BUILD_VOICE_DIR = SOUND_DIR + "build/";
@@ -8366,7 +8513,7 @@
         b.setAttribute("data-kind", k.id);
         b.setAttribute("aria-label", k.name);
         b.innerHTML = '<span class="b-art">' + bvSvg(k.id, { color: k.group === "cons" ? "yellow" : "grey", extras: bvDefaultExtras(k.id) }) + '</span><span class="b-lbl">' + k.name + '</span>';
-        b.addEventListener("click", function () { pickBuildKind(k.id, b); });
+        bTap(b, function () { pickBuildKind(k.id, b); });
         grid.appendChild(b);
       });
       var gl = buildEl("b-garage-link");
@@ -8404,7 +8551,7 @@
         b.type = "button";
         b.className = "b-blob " + c.id;
         b.setAttribute("aria-label", c.name);
-        b.addEventListener("click", function () { pickBuildColour(c.id, b); });
+        bTap(b, function () { pickBuildColour(c.id, b); });
         row.appendChild(b);
       });
       buildSay([bvLine("pick-colour", "Pick a colour!")]);
@@ -8600,7 +8747,7 @@
         b.setAttribute("aria-label", bvExtraName(x, def));
         b.setAttribute("aria-pressed", "false");
         b.innerHTML = '<span class="b-art">' + bvExtraIcon(x, def) + '</span><span class="b-lbl">' + bvExtraName(x, def) + '</span><span class="b-tick" aria-hidden="true">&#10003;</span>';
-        b.addEventListener("click", function () { toggleBuildExtra(x); });
+        bTap(b, function () { toggleBuildExtra(x); }, grid);
         grid.appendChild(b);
       });
       syncBuildExtraTiles();
@@ -8643,9 +8790,12 @@
       build.extras = bvCleanExtras(def, next);
       renderBuildExtrasHero(x);
       syncBuildExtraTiles();
+      var tile = document.querySelector('#b4-grid .b-extra[data-x="' + x + '"]');
+      if (tile) { tile.classList.remove("just"); void tile.offsetWidth; tile.classList.add("just"); }
       buildSay([x === "horn" ? bvLine("beep-beep", "Beep beep!") : bvLine("x-" + bvExtraClip(x, def), bvExtraName(x, def) + "!")]);
     }
     function bvExtraClip(x, def) {
+      if (def && def.xclip && def.xclip[x]) return def.xclip[x];
       return x === "lights" && def.group === "cons" ? "worklights" : x === "stripes" && def.group === "cons" ? "stripes-plain" : x;
     }
     function buildExtrasDone() {
@@ -8733,12 +8883,12 @@
     function bindBuildUi() {
       var bb = buildEl("build-btn");
       if (bb) bb.addEventListener("click", function () { unlockMedia(); startBuild(); });
-      buildEl("b-tab-road").addEventListener("click", function () { setBuildTab("road"); });
-      buildEl("b-tab-cons").addEventListener("click", function () { setBuildTab("cons"); });
-      buildEl("b5-go").addEventListener("click", buildGo);
-      buildEl("b5-hero").addEventListener("click", buildGo);
+      bTap(buildEl("b-tab-road"), function () { setBuildTab("road"); });
+      bTap(buildEl("b-tab-cons"), function () { setBuildTab("cons"); });
+      bTap(buildEl("b5-go"), buildGo);
+      bTap(buildEl("b5-hero"), buildGo);
       buildEl("bg-again").addEventListener("click", function () { startBuild(); });
-      buildEl("b4-done").addEventListener("click", buildExtrasDone);
+      bTap(buildEl("b4-done"), buildExtrasDone);
       var gl = buildEl("b-garage-link");
       if (gl) gl.addEventListener("click", function () { if (!build.busy) showGarage(false); });
       var art = document.querySelector('#build-btn [data-art="build"]');

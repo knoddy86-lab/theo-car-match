@@ -56,3 +56,5 @@ choppy. For other players the game says the name (a clip for Jayden, otherwise t
 | `built-<colour>-<vehicle>` | "built a <colour> <vehicle>!" (put after a name) |
 
 All of these are listed in `sw.js` (`BUILD_VOICE`) so they are cached for offline play.
+
+v40: added the rubbish truck clips (v-rubbish, x-bin, x-amber "Warning lights!", x-recycle, x-arm, x-bags, built-*-rubbish, s-theo/s-harper-*-rubbish). Same en_GB-alba-medium Piper voice and processing, checked with Whisper.
