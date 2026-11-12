@@ -1,6 +1,6 @@
 /* Theo's Car Match service worker — cache-first so the game opens offline
    even when the home computer is unreachable (mobile data). Never caches /api. */
-var CACHE = "theo-car-match-v45";
+var CACHE = "theo-car-match-v46";
 var CORE = [
   "./",
   "./index.html",
@@ -113,8 +113,10 @@ var GAME_VOICE = ["uncle-ashley", "aunty-ashleigh", "wheres-uncle-ashley", "wher
   "wheres-harper", "wheres-jason", "wheres-jay-den", "wheres-josh", "wheres-kelly", "wheres-lindsay",
   "wheres-marissa", "wheres-mitch", "wheres-nanna", "wheres-theo"
 ];
+// v46: Name game "Find X, then Y", "Who's missing?", "Look carefully!", "Super fast!" (Alba)
+GAME_VOICE = GAME_VOICE.concat(["find", "then", "whos-missing", "look-carefully", "super-fast"]);
 OPTIONAL = OPTIONAL.concat(GAME_VOICE.map(function (k) { return "./sounds/voice/" + k + ".mp3"; }));
-OPTIONAL = OPTIONAL.concat(["uncle-ashley", "aunty-ashleigh", "wheres-uncle-ashley", "wheres-aunty-ashleigh", "berry", "moss", "dart", "rosie", "racer", "officer", "dot"].map(function (k) { return "./sounds/classic/" + k + ".mp3"; }));
+OPTIONAL = OPTIONAL.concat(["uncle-ashley", "aunty-ashleigh", "wheres-uncle-ashley", "wheres-aunty-ashleigh", "berry", "moss", "dart", "rosie", "racer", "officer", "dot", "find", "then", "whos-missing", "look-carefully", "super-fast"].map(function (k) { return "./sounds/classic/" + k + ".mp3"; }));
 
 function addBestEffort(cache, urls) {
   return Promise.all(urls.map(function (u) {

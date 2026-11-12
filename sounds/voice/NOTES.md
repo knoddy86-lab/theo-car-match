@@ -51,3 +51,5 @@ uses the device voice.
 v41: added uncle-ashley, aunty-ashleigh, wheres-uncle-ashley, wheres-aunty-ashleigh (same Alba voice and processing).
 
 v45: every clip in the app was loudness-matched to about -16 LUFS integrated with true peak at or below -1.5 dBTP (gain plus a gentle peak limiter, re-encoded at the same sample rate and bitrate; content, length and licence unchanged). Before, levels ranged from about -23 to -15 LUFS.
+
+v46: added find, then, whos-missing, look-carefully, super-fast for the Name game harder tricks ("Find X, then Y", Who's missing, mini timer cheer). Same Alba voice (en_GB-alba-medium, CC BY 4.0) and checks, loudness-matched to -16 LUFS / -1.5 dBTP.

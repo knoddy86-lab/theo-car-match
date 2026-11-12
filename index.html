@@ -499,6 +499,38 @@
       flex: 0 0 auto;
     }
     .btn-say-again svg { width: 1.35em; height: 1.35em; flex: 0 0 auto; }
+    /* v46: Name game harder tricks */
+    #name-say-btn { max-width: 94vw; box-sizing: border-box; }
+    #name-say-text { overflow: hidden; min-width: 0; line-height: 1.12; text-align: center; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+    #name-say-btn.is-long { font-size: clamp(18px, 4vmin, 32px); padding-left: 0.6em; padding-right: 0.6em; }
+    #name-board { position: relative; }
+    #name-timer { position: relative; flex: 0 0 auto; align-self: center; width: min(72vw, 440px); height: 14px; margin: 0 auto 6px; border-radius: 999px; background: rgba(255,255,255,0.75); box-shadow: inset 0 1px 3px rgba(0,0,0,0.15); }
+    #name-timer[hidden] { display: none; }
+    #name-timer .nt-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; border-radius: 999px; background: linear-gradient(90deg, #81D4FA, #A5D6A7); }
+    #name-timer.is-full .nt-fill { background: #CFD8DC; }
+    #name-timer .nt-star { position: absolute; right: -6px; top: 50%; transform: translateY(-50%) scale(0.9); font-size: 22px; line-height: 1; transition: transform 0.3s; }
+    #name-timer.is-full .nt-star { opacity: 0.35; }
+    #name-timer.is-beat { box-shadow: 0 0 0 4px #FFD54F; }
+    #name-timer.is-beat .nt-star { transform: translateY(-50%) scale(1.6) rotate(20deg); }
+    .name-choice .nm-cover { position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(160deg, #64B5F6, #1E88E5); color: #fff; font-weight: 900; font-size: calc(var(--card, 160px) * 0.42); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.35s; pointer-events: none; z-index: 2; }
+    .name-choice.is-covered .nm-cover { opacity: 1; }
+    .name-choice.nm-slot { background: rgba(255,255,255,0.55); box-shadow: none; outline: 5px dashed #90A4AE; outline-offset: -8px; }
+    .name-choice .nm-q { font-weight: 900; color: #78909C; font-size: calc(var(--card, 160px) * 0.5); line-height: 1; }
+    .name-choice.nm-seen { pointer-events: none; }
+    .name-choice.nm-done { box-shadow: 0 0 0 7px #66BB6A, 0 10px 24px rgba(0,0,0,0.18); pointer-events: none; }
+    .name-choice.nm-done::after { content: "✓"; position: absolute; right: 6px; top: 4px; width: 1.4em; height: 1.4em; border-radius: 50%; background: #43A047; color: #fff; font-weight: 900; font-size: calc(var(--card, 160px) * 0.16); display: flex; align-items: center; justify-content: center; z-index: 3; }
+    .name-choice.nm-wiggle { animation: nm-wiggle 0.5s ease-in-out; }
+    @keyframes nm-wiggle { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-7deg); } 75% { transform: rotate(7deg); } }
+    #name-strip { position: absolute; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.45); border-radius: 26px; z-index: 3; }
+    #name-strip.is-bottom { left: 8px; right: 8px; bottom: 6px; flex-direction: row; }
+    #name-strip.is-right { top: 4px; bottom: 6px; right: 6px; flex-direction: column; }
+    #name-strip .name-choice { animation: nm-pop 0.35s ease-out both; }
+    @keyframes nm-pop { 0% { transform: scale(0.3); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+    .name-tricks-note { margin: 4px 0 8px; font-size: 14px; color: #455A64; }
+    #name-look-list .diff-row select { min-width: 120px; }
+    @media (prefers-reduced-motion: reduce) {
+      .name-choice.nm-wiggle, #name-strip .name-choice { animation: none; }
+    }
     .btn-say-again:active { transform: translateY(4px); box-shadow: 0 2px 0 #0D47A1, 0 6px 12px rgba(0,0,0,0.16); }
     .name-choices {
       display: grid;
@@ -2186,8 +2218,9 @@
       </div>
       <button type="button" class="btn-say-again" id="name-say-btn" aria-label="Say it again">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1-3.29-2.5-4.03v8.05c1.5-.74 2.5-2.26 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
-        Say it again
+        <span id="name-say-text">Say it again</span>
       </button>
+      <div id="name-timer" hidden aria-hidden="true"><div class="nt-fill"></div><span class="nt-star">⭐</span></div>
       <div class="board" id="name-board">
         <div class="name-choices" id="name-grid" role="group" aria-label="Cars"></div>
       </div>
@@ -2468,6 +2501,33 @@
                 <option value="5">5</option>
                 <option value="6">6</option>
               </select>
+            </div>
+            <h3>Harder tricks</h3>
+            <p class="name-tricks-note" id="name-tricks-note">With Get harder on, these come in one at a time: round 2 look-alikes and new photos, round 3 the timer, round 4 two in a row, round 5 who's missing. With it off, look-alikes, photos and the timer are on every round, two in a row is round 3 and who's missing is round 5.</p>
+            <div class="diff-row">
+              <label for="name-tr-alike">Look-alikes on the same board (same look-alike group, else same last name; never two names that sound the same)</label>
+              <input id="name-tr-alike" type="checkbox" checked>
+            </div>
+            <div class="diff-row">
+              <label for="name-tr-photos">Different photo each round (approved photos only)</label>
+              <input id="name-tr-photos" type="checkbox" checked>
+            </div>
+            <div class="diff-row">
+              <label for="name-tr-two">Two in a row ("Find Mum, then Theo")</label>
+              <input id="name-tr-two" type="checkbox" checked>
+            </div>
+            <div class="diff-row">
+              <label for="name-tr-missing">Who's missing? (look, they hide, one goes)</label>
+              <input id="name-tr-missing" type="checkbox" checked>
+            </div>
+            <div class="diff-row">
+              <label for="name-tr-timer">Mini timer (no penalty, extra cheer if beaten)</label>
+              <input id="name-tr-timer" type="checkbox" checked>
+            </div>
+            <div id="name-look-wrap">
+              <h3>Look-alike groups</h3>
+              <p class="name-tricks-note">Put brothers, sisters, cousins or kids of a similar age in the same group so they share a board. People left on None are grouped by last name.</p>
+              <div id="name-look-list"></div>
             </div>
             <div class="diff-row">
               <label for="name-set-say">Say</label>
@@ -2799,7 +2859,7 @@
       var list = document.querySelectorAll(".voice-style-select");
       for (var i = 0; i < list.length; i++) list[i].value = voiceStyle(list[i].getAttribute("data-part"));
     }
-    var VOICE_CLIPS = {"ashleigh": 1, "ashley": 1, "berry": 1, "caitlyn": 1, "cars-or-photos": 1, "cruise": 1, "dart": 1, "delilah": 1, "do": 1, "doc": 1, "dot": 1, "fillmore": 1, "flo": 1, "francesco": 1, "grandad": 1, "guido": 1, "gwee-doh": 1, "hank": 1, "harper": 1, "hello": 1, "hello-ashleigh": 1, "hello-ashley": 1, "hello-caitlyn": 1, "hello-delilah": 1, "hello-grandad": 1, "hello-harper": 1, "hello-jason": 1, "hello-jay-den": 1, "hello-josh": 1, "hello-kelly": 1, "hello-lindsay": 1, "hello-marissa": 1, "hello-mitch": 1, "hello-nanna": 1, "hello-theo": 1, "inside": 1, "jason": 1, "jay-den": 1, "josh": 1, "kelly": 1, "laney": 1, "lets-match-the-cars": 1, "lets-match-the-family": 1, "lightning": 1, "lightning-mcqueen": 1, "lindsay": 1, "luigi": 1, "mack": 1, "marissa": 1, "mater": 1, "mcqueen": 1, "mitch": 1, "moss": 1, "nanna": 1, "nick": 1, "officer": 1, "officer-dot": 1, "pip": 1, "racer": 1, "ramone": 1, "rosie": 1, "rosie-racer": 1, "ryan": 1, "sal": 1, "sally": 1, "sarge": 1, "sheriff": 1, "shields": 1, "skye": 1, "sunny": 1, "theo": 1, "tugger": 1, "wheres": 1, "wheres-ashleigh": 1, "wheres-ashley": 1, "wheres-caitlyn": 1, "wheres-delilah": 1, "wheres-grandad": 1, "wheres-harper": 1, "wheres-jason": 1, "wheres-jay-den": 1, "wheres-josh": 1, "wheres-kelly": 1, "wheres-lindsay": 1, "wheres-marissa": 1, "wheres-mitch": 1, "wheres-nanna": 1, "wheres-theo": 1, "uncle-ashley": 1, "aunty-ashleigh": 1, "wheres-uncle-ashley": 1, "wheres-aunty-ashleigh": 1};
+    var VOICE_CLIPS = {"find": 1, "then": 1, "whos-missing": 1, "look-carefully": 1, "super-fast": 1, "ashleigh": 1, "ashley": 1, "berry": 1, "caitlyn": 1, "cars-or-photos": 1, "cruise": 1, "dart": 1, "delilah": 1, "do": 1, "doc": 1, "dot": 1, "fillmore": 1, "flo": 1, "francesco": 1, "grandad": 1, "guido": 1, "gwee-doh": 1, "hank": 1, "harper": 1, "hello": 1, "hello-ashleigh": 1, "hello-ashley": 1, "hello-caitlyn": 1, "hello-delilah": 1, "hello-grandad": 1, "hello-harper": 1, "hello-jason": 1, "hello-jay-den": 1, "hello-josh": 1, "hello-kelly": 1, "hello-lindsay": 1, "hello-marissa": 1, "hello-mitch": 1, "hello-nanna": 1, "hello-theo": 1, "inside": 1, "jason": 1, "jay-den": 1, "josh": 1, "kelly": 1, "laney": 1, "lets-match-the-cars": 1, "lets-match-the-family": 1, "lightning": 1, "lightning-mcqueen": 1, "lindsay": 1, "luigi": 1, "mack": 1, "marissa": 1, "mater": 1, "mcqueen": 1, "mitch": 1, "moss": 1, "nanna": 1, "nick": 1, "officer": 1, "officer-dot": 1, "pip": 1, "racer": 1, "ramone": 1, "rosie": 1, "rosie-racer": 1, "ryan": 1, "sal": 1, "sally": 1, "sarge": 1, "sheriff": 1, "shields": 1, "skye": 1, "sunny": 1, "theo": 1, "tugger": 1, "wheres": 1, "wheres-ashleigh": 1, "wheres-ashley": 1, "wheres-caitlyn": 1, "wheres-delilah": 1, "wheres-grandad": 1, "wheres-harper": 1, "wheres-jason": 1, "wheres-jay-den": 1, "wheres-josh": 1, "wheres-kelly": 1, "wheres-lindsay": 1, "wheres-marissa": 1, "wheres-mitch": 1, "wheres-nanna": 1, "wheres-theo": 1, "uncle-ashley": 1, "aunty-ashleigh": 1, "wheres-uncle-ashley": 1, "wheres-aunty-ashleigh": 1};
     var REV_CLIPS = [
       "01-idle-blip.mp3",
       "02-idle-blip-high.mp3",
@@ -2858,7 +2918,7 @@
     var BLOB_FETCH_MS = 20000;
     var bootStartedAt = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
     var keyChangeOpen = false;
-    var APP_VERSION = "45";
+    var APP_VERSION = "46";
     var MATCH_PAIR_CAP = 6;
     var NAME_ROUNDS = 6;
     var THUMB_MAX = 256;
@@ -2878,7 +2938,8 @@
     var photoUrls = {};
     var photoDbPromise = null;
     var lastFamilyFiles = {};
-    var nameState = { active: false, round: 0, target: null, choices: [], locked: false, lastTargetId: "", remaining: [], repeatTimer: null, pool: "cars", lastFiles: {} };
+    var nameState = { active: false, round: 0, target: null, choices: [], locked: false, lastTargetId: "", remaining: [], repeatTimer: null, pool: "cars", lastFiles: {},
+      photoSeen: {}, tricks: null, two: null, twoSay: null, twoStep: 0, missing: false, strip: [], stripBox: null, timers: [], timer: null, forceTricks: null };
     var updateBannerShown = false;
     var outboxCount = 0;
     var syncNotice = "";
@@ -4685,6 +4746,7 @@
       if (name === "photos") { renderPhotoPeople(); renderPhotoManage(); loadReview(); }
       if (name === "build") { hideGarageConfirm(); updateBuildSettingsUi(); }
       if (name === "shadow") updateShadowSettingsUi();
+      if (name === "names") renderNameLookGroups();
     }
 
     function bindSettingsTabs() {
@@ -5297,6 +5359,8 @@
 
     function stopNameGame(keepScreens) {
       stopNameRepeat();
+      nameState.roundGen = (nameState.roundGen || 0) + 1;
+      clearNameRoundExtras();
       nameState.active = false;
       nameState.locked = false;
       hideNameWin();
@@ -5603,8 +5667,24 @@
         celebration: raw.celebration !== false,
         harder: raw.harder !== false,
         maxChoices: maxChoices,
-        pool: pool
+        pool: pool,
+        tricks: normalizeNameTricks(raw.tricks),
+        lookGroups: normalizeLookGroups(raw.lookGroups)
       };
+    }
+    // v46: Name game "harder" tricks (each can be turned off) and look-alike groups (person id -> group)
+    function normalizeNameTricks(raw) {
+      raw = raw && typeof raw === "object" ? raw : {};
+      return { alike: raw.alike !== false, photos: raw.photos !== false, two: raw.two !== false, missing: raw.missing !== false, timer: raw.timer !== false };
+    }
+    function normalizeLookGroups(raw) {
+      var out = {};
+      if (!raw || typeof raw !== "object") return out;
+      Object.keys(raw).slice(0, 300).forEach(function (k) {
+        var v = String(raw[k] || "");
+        if (/^[1-6]$/.test(v)) out[String(k).slice(0, 80)] = v;
+      });
+      return out;
     }
 
     function loadNameSettings() {
@@ -5646,6 +5726,60 @@
         }
         if (document.activeElement !== mx) mx.value = String(nameSettings.maxChoices || 6);
       }
+      var tr = nameSettings.tricks || {};
+      ["alike", "photos", "two", "missing", "timer"].forEach(function (k) {
+        var el = document.getElementById("name-tr-" + k);
+        if (el) el.checked = tr[k] !== false;
+      });
+      renderNameLookGroups();
+    }
+
+    var nameLookSig = "";
+    function renderNameLookGroups() {
+      var list = document.getElementById("name-look-list");
+      if (!list) return;
+      var people = (typeof photosAllowedHere === "function" && photosAllowedHere()) ? familyPeople.slice() : [];
+      people.sort(function (a, b) { return String(a.name).localeCompare(String(b.name)); });
+      var sig = people.map(function (p) { return p.id; }).join("|");
+      var groups = nameSettings.lookGroups || {};
+      if (sig !== nameLookSig || !list.firstChild) {
+        nameLookSig = sig;
+        list.innerHTML = "";
+        if (!people.length) {
+          var none = document.createElement("p");
+          none.className = "name-tricks-note";
+          none.textContent = "Family photos aren't on this device yet, so look-alikes use car types.";
+          list.appendChild(none);
+          return;
+        }
+        people.forEach(function (p, i) {
+          var row = document.createElement("div");
+          row.className = "diff-row";
+          var lab = document.createElement("label");
+          lab.htmlFor = "name-look-" + i;
+          lab.textContent = p.name;
+          var sel = document.createElement("select");
+          sel.id = "name-look-" + i;
+          sel.dataset.person = p.id;
+          [["", "None"], ["1", "Group 1"], ["2", "Group 2"], ["3", "Group 3"], ["4", "Group 4"], ["5", "Group 5"], ["6", "Group 6"]].forEach(function (o) {
+            var op = document.createElement("option");
+            op.value = o[0];
+            op.textContent = o[1];
+            sel.appendChild(op);
+          });
+          sel.addEventListener("change", function () {
+            var g = Object.assign({}, nameSettings.lookGroups || {});
+            if (sel.value) g[p.id] = sel.value; else delete g[p.id];
+            saveNameSettings({ lookGroups: g });
+          });
+          row.appendChild(lab);
+          row.appendChild(sel);
+          list.appendChild(row);
+        });
+      }
+      Array.prototype.forEach.call(list.querySelectorAll("select[data-person]"), function (sel) {
+        if (document.activeElement !== sel) sel.value = groups[sel.dataset.person] || "";
+      });
     }
 
     function bindNameGameUi() {
@@ -5655,10 +5789,17 @@
           say: (document.getElementById("name-set-say") || {}).value,
           celebration: !!(document.getElementById("name-set-cele") || {}).checked,
           harder: !!(document.getElementById("name-set-harder") || {}).checked,
-          maxChoices: clampInt((document.getElementById("name-set-max") || {}).value, 4, 6, 6)
+          maxChoices: clampInt((document.getElementById("name-set-max") || {}).value, 4, 6, 6),
+          tricks: {
+            alike: !!(document.getElementById("name-tr-alike") || {}).checked,
+            photos: !!(document.getElementById("name-tr-photos") || {}).checked,
+            two: !!(document.getElementById("name-tr-two") || {}).checked,
+            missing: !!(document.getElementById("name-tr-missing") || {}).checked,
+            timer: !!(document.getElementById("name-tr-timer") || {}).checked
+          }
         });
       }
-      ["name-set-choices", "name-set-say", "name-set-cele", "name-set-harder", "name-set-max"].forEach(function (id) {
+      ["name-set-choices", "name-set-say", "name-set-cele", "name-set-harder", "name-set-max", "name-tr-alike", "name-tr-photos", "name-tr-two", "name-tr-missing", "name-tr-timer"].forEach(function (id) {
         var el = document.getElementById(id);
         if (el) el.addEventListener("change", read);
       });
@@ -6376,6 +6517,7 @@
         var fp = (nameState.sayPick && nameState.target && nameState.target.id === car.id) ? nameState.sayPick : chooseNameSayOption(car);
         var where = "Where's " + fp.text + "?";
         lastNamePrompt = { id: car.id, mode: "family", text: where, usedClip: false };
+        setNamePromptText("Where's " + nameWritten(car, fp) + "?");
         speak(where, voiceStyle("name"));
         return;
       }
@@ -6383,6 +6525,7 @@
         ? nameState.sayPick
         : chooseNameSayOption(car);
       lastNamePrompt = { id: car.id, mode: pick.mode, text: pick.text, usedClip: pick.mode === "full" };
+      setNamePromptText(nameWritten(car, pick));
       var nst = voiceStyle("name");
       if (pick.mode === "full") {
         playSources(soundSourcesFor(car, nst), pick.text, nst);
@@ -6457,6 +6600,9 @@
       if (!n) n = (nameState.choices && nameState.choices.length) || 1;
       var w = board.clientWidth;
       var h = board.clientHeight;
+      if (nameState.stripBox) {
+        if (nameState.stripBox.side === "bottom") h -= nameState.stripBox.size; else w -= nameState.stripBox.size;
+      }
       var maxCols = n <= 3 ? n : (n <= 4 ? 2 : 3);
       var best = null;
       var cols, rows, gap, card;
@@ -6554,8 +6700,55 @@
       return { say: best.say, others: best.ok.slice(0, count - 1) };
     }
 
+    // v46: which harder tricks this round uses. "Get harder" brings them in one at a time.
+    function nameTricksFor(round) {
+      var t = nameSettings.tricks || {};
+      var r = round || 1;
+      var h = nameSettings.harder !== false;
+      var out = {
+        photos: t.photos !== false && (!h || r >= 2),
+        alike: t.alike !== false && (!h || r >= 2),
+        timer: t.timer !== false && (!h || r >= 3),
+        two: false,
+        missing: false
+      };
+      var special = h ? ({ 4: "two", 5: "missing", 6: "either" })[r] : ({ 3: "two", 5: "missing" })[r];
+      if (special === "either") {
+        var opts = [];
+        if (t.two !== false) opts.push("two");
+        if (t.missing !== false) opts.push("missing");
+        special = opts.length ? opts[Math.floor(Math.random() * opts.length)] : "";
+      }
+      if (special === "two" && t.two !== false) out.two = true;
+      if (special === "missing" && t.missing !== false) out.missing = true;
+      if (out.missing) out.timer = false;
+      return out;
+    }
+    function personOf(item) {
+      if (!item || !item.person) return null;
+      for (var i = 0; i < familyPeople.length; i++) if (familyPeople[i].id === item.person) return familyPeople[i];
+      return null;
+    }
+    // Look-alikes: the same look-alike group (Settings > Names), else the same last name
+    // (brothers, sisters, cousins); for cars the same type (car / truck / ...).
+    function nameAlike(a, b) {
+      if (!a || !b || !!a.family !== !!b.family) return false;
+      if (a.family) {
+        var g = nameSettings.lookGroups || {};
+        var ga = g[a.person] || "", gb = g[b.person] || "";
+        if (ga || gb) return !!ga && ga === gb;
+        var pa = personOf(a), pb = personOf(b);
+        var la = pa ? String(pa.last || "").trim().toLowerCase() : "";
+        var lb = pb ? String(pb.last || "").trim().toLowerCase() : "";
+        return !!la && la === lb;
+      }
+      var ta = String(a.typeName || a.kind || "").toLowerCase(), tb = String(b.typeName || b.kind || "").toLowerCase();
+      return !!ta && ta === tb;
+    }
+
     function pickNameRound(poolOverride) {
-      var pool = poolOverride || nameGamePool();
+      var tricks = Object.assign(nameTricksFor(nameState.round), nameState.forceTricks || {});
+      var pool = poolOverride || nameGamePool(tricks);
       if (!pool.length) return null;
       // "Get harder as you go": one more tile every 2 correct answers, from the chosen start
       // count up to Max cards (default 6), never past the number of different cars / people.
@@ -6566,7 +6759,9 @@
         count = Math.min(maxTiles, start + Math.floor(Math.max(0, (nameState.round || 1) - 1) / 2));
       }
       count = Math.min(count, pool.length);
-      if (nameState.lastCount && count > nameState.lastCount) showNameMoreCards();
+      if (tricks.missing) count = Math.max(3, Math.min(count, 5, pool.length));
+      if (tricks.missing && pool.length < 3) tricks.missing = false;
+      if (nameState.lastCount && count > nameState.lastCount && !tricks.missing) showNameMoreCards();
       nameState.lastCount = count;
       var targetPool = pool.slice();
       if (nameState.lastTargetId && targetPool.length > 1) {
@@ -6575,21 +6770,269 @@
       }
       var target = shuffle(targetPool)[0];
       var others = shuffle(pool.filter(function (c) { return c.id !== target.id && (!c.person || c.person !== target.person); }));
+      if (tricks.alike) {
+        others = others.filter(function (c) { return nameAlike(target, c); }).concat(others.filter(function (c) { return !nameAlike(target, c); }));
+      }
       var board = nameBoardFor(target, others, count);
-      var choices = shuffle([target].concat(board.others));
-      return { target: target, choices: choices, sayPick: board.say };
+      var out = { target: target, sayPick: board.say, tricks: tricks };
+      if (tricks.missing) {
+        // Who's missing: faces (not photos) are easiest to remember
+        var asFace = function (c) {
+          var pp = c.family ? personOf(c) : null;
+          return (pp && pp.face) ? familyItem(pp, pp.face, "face") : c;
+        };
+        out.target = asFace(target);
+        var shown = [out.target].concat(board.others.map(asFace));
+        var shownIds = shown.map(function (c) { return c.person || c.id; });
+        var spare = shuffle(pool.filter(function (c) { return shownIds.indexOf(c.person || c.id) === -1 && !nameSoundsLike(board.say.text, c); })).map(asFace);
+        if (spare.length < 2) spare = spare.concat(shuffle(board.others.map(asFace)));
+        out.choices = shuffle(shown);
+        out.missing = true;
+        out.strip = shuffle([out.target].concat(spare.slice(0, 2)));
+        return out;
+      }
+      out.choices = shuffle([target].concat(board.others));
+      if (tricks.two && board.others.length >= 2) {
+        // Two in a row: the second one must not sound like anything else on the board either
+        var onBoard = [target].concat(board.others);
+        for (var i = 0; i < board.others.length; i++) {
+          var c2 = board.others[i];
+          var say2 = chooseNameSayOption(c2);
+          var clash = onBoard.some(function (x) { return x.id !== c2.id && nameSoundsLike(say2.text, x); });
+          if (!clash && nameSayKey(say2.text) !== nameSayKey(board.say.text)) { out.two = c2; out.twoSay = say2; break; }
+        }
+      }
+      if (!out.two) tricks.two = false;
+      return out;
+    }
+
+    // ---- v46: voice parts for the Name game, in the Name voice (Classic or Alba) ----
+    var NAME_CLIP_TEXT = { find: "Find", then: "then", "whos-missing": "Who's missing?", "look-carefully": "Look carefully!", "super-fast": "Super fast!" };
+    function nameClipPart(k) {
+      var src = voiceStyle("name") === "classic" ? SOUND_DIR + "classic/" + k + ".mp3" : VOICE_DIR + k + ".mp3";
+      return { src: src, k: k, t: NAME_CLIP_TEXT[k] || k };
+    }
+    function nameSayPart(item, pick) {
+      var st = voiceStyle("name");
+      pick = pick || chooseNameSayOption(item);
+      var text = pick.text;
+      if (!item.family && pick.mode === "full") {
+        var srcs = soundSourcesFor(item, st);
+        if (srcs.length) return { src: srcs[0], k: "name", t: text };
+      }
+      var k = voiceKey(text);
+      if (st === "classic") {
+        if (CLASSIC_LINE_CLIPS[k]) return { src: SOUND_DIR + "classic/" + k + ".mp3", k: k, t: text };
+        if (CLASSIC_FULL_CLIPS[k]) return { src: SOUND_DIR + CLASSIC_FULL_CLIPS[k] + ".mp3", k: k, t: text };
+        return { k: "", t: text };
+      }
+      var vk = voiceClipKey(text);
+      return vk ? { src: VOICE_DIR + vk + ".mp3", k: vk, t: text } : { k: "", t: text };
+    }
+    // Written names on the button use the real spelling (not the "Say it like" sound-spelling).
+    function nameWritten(item, pick) {
+      if (!pick) return "";
+      if (pick.display) return pick.display;
+      if (item && !item.family) {
+        try {
+          var core = coreFullName(item);
+          var t = pick.mode === "first" ? firstWord(core) : pick.mode === "last" ? lastWord(core) : pick.mode === "nick" ? (cardNickname(item) || core) : core;
+          if (t) return t;
+        } catch (e) {}
+      }
+      return pick.text;
+    }
+    function setNamePromptText(text) {
+      var el = document.getElementById("name-say-text");
+      if (el) el.textContent = text || "Say it again";
+      var btn = document.getElementById("name-say-btn");
+      if (btn) btn.classList.toggle("is-long", !!text && text.length > 16);
+    }
+    function nameLater(fn, ms) {
+      var r = nameState.roundGen;
+      var t = setTimeout(function () { if (nameState.active && r === nameState.roundGen) fn(); }, ms);
+      nameState.timers.push(t);
+      return t;
+    }
+    function clearNameRoundExtras() {
+      (nameState.timers || []).forEach(function (t) { clearTimeout(t); });
+      nameState.timers = [];
+      stopNameTimer(true);
+      var strip = document.getElementById("name-strip");
+      if (strip && strip.parentNode) strip.parentNode.removeChild(strip);
+      nameState.stripBox = null;
+      nameState.strip = [];
+      var board = document.getElementById("name-board");
+      if (board) { board.style.paddingBottom = ""; board.style.paddingRight = ""; }
+    }
+    // What the "Say it again" button (and the start of a round) says right now.
+    function playCurrentNamePrompt() {
+      if (nameState.missing) {
+        if (nameState.strip && nameState.strip.length) { setNamePromptText("Who's missing?"); voiceSay([nameClipPart("whos-missing")]); }
+        else { setNamePromptText("Look carefully!"); voiceSay([nameClipPart("look-carefully")]); }
+        nameState.promptCount = (nameState.promptCount || 0) + 1;
+        return;
+      }
+      if (nameState.two && nameState.twoStep === 0) {
+        var a = nameState.sayPick, b = nameState.twoSay;
+        nameState.promptCount = (nameState.promptCount || 0) + 1;
+        setNamePromptText("Find " + nameWritten(nameState.target, a) + ", then " + nameWritten(nameState.two, b));
+        lastNamePrompt = { id: nameState.target.id, mode: "two", text: "Find " + a.text + ", then " + b.text, usedClip: true };
+        voiceSay([nameClipPart("find"), nameSayPart(nameState.target, a), nameClipPart("then"), nameSayPart(nameState.two, b)]);
+        return;
+      }
+      if (nameState.two && nameState.twoStep === 1) {
+        nameState.promptCount = (nameState.promptCount || 0) + 1;
+        setNamePromptText("Now " + nameWritten(nameState.two, nameState.twoSay));
+        lastNamePrompt = { id: nameState.target.id, mode: "two-2", text: nameState.twoSay.text, usedClip: true };
+        voiceSay([nameSayPart(nameState.target, nameState.twoSay)]);
+        return;
+      }
+      if (nameState.target) playNameGamePrompt(nameState.target);
+    }
+
+    // ---- v46: mini timer — a slow bar, no penalty; beat it for an extra cheer ----
+    function nameTimerMs() {
+      var n = (nameState.choices || []).length || 4;
+      return 7000 + n * 1200 + (nameState.two ? 4000 : 0);
+    }
+    function startNameTimer() {
+      var el = document.getElementById("name-timer");
+      if (!el || !nameState.tricks || !nameState.tricks.timer) return;
+      var fill = el.querySelector(".nt-fill");
+      var ms = nameTimerMs();
+      el.classList.remove("is-full", "is-beat");
+      fill.style.transition = "none";
+      fill.style.width = "0%";
+      void fill.offsetWidth;
+      fill.style.transition = "width " + ms + "ms linear";
+      fill.style.width = "100%";
+      nameState.timer = { start: Date.now(), ms: ms, done: false };
+      nameLater(function () {
+        if (nameState.timer) nameState.timer.done = true;
+        el.classList.add("is-full");
+      }, ms);
+    }
+    function stopNameTimer(hide) {
+      var el = document.getElementById("name-timer");
+      var beat = !!(nameState.timer && !nameState.timer.done && Date.now() - nameState.timer.start < nameState.timer.ms);
+      if (el) {
+        var fill = el.querySelector(".nt-fill");
+        if (fill) {
+          var w = getComputedStyle(fill).width;
+          fill.style.transition = "none";
+          fill.style.width = hide ? "0%" : w;
+        }
+        if (hide) { el.hidden = true; el.classList.remove("is-full", "is-beat"); }
+      }
+      nameState.timer = null;
+      return beat;
+    }
+
+    // ---- v46: Who's missing — look, cover, one goes, uncover, pick who's gone ----
+    function runNameMissing(round) {
+      nameState.locked = true;
+      setNamePromptText("Look carefully!");
+      voiceSay([nameClipPart("look-carefully")]);
+      var cards = nameCards();
+      cards.forEach(function (b) {
+        b.classList.add("nm-seen");
+        b.tabIndex = -1;
+        var cv = document.createElement("div");
+        cv.className = "nm-cover";
+        cv.textContent = "?";
+        b.appendChild(cv);
+      });
+      var lookMs = (nameState.forceFast ? 600 : 2600 + cards.length * 450);
+      nameLater(function () {
+        nameCards().forEach(function (b) { b.classList.add("is-covered"); });
+        nameLater(function () {
+          var slot = nameCards().filter(function (b) { return b.dataset.carId === round.target.id; })[0];
+          if (slot) {
+            slot.innerHTML = '<span class="nm-q">?</span><div class="nm-cover">?</div>';
+            slot.classList.remove("has-photo", "is-family");
+            slot.classList.add("nm-slot", "is-covered");
+            slot.setAttribute("aria-label", "Missing");
+          }
+          nameLater(function () {
+            nameCards().forEach(function (b) { b.classList.remove("is-covered"); });
+            nameLater(function () { showNameStrip(round); }, 450);
+          }, 450);
+        }, 900);
+      }, lookMs);
+    }
+    function showNameStrip(round) {
+      var board = document.getElementById("name-board");
+      if (!board) return;
+      var w = board.clientWidth, h = board.clientHeight;
+      var side = w > h * 1.25 ? "right" : "bottom";
+      var gap = Math.max(8, Math.min(18, Math.round(Math.min(w, h) * 0.025)));
+      var cs = side === "bottom"
+        ? Math.min(Math.floor((w - 16 - gap * 4) / 3), Math.floor(h * 0.3))
+        : Math.min(Math.floor((h - 10 - gap * 4) / 3), Math.floor(w * 0.24));
+      cs = Math.max(64, cs);
+      var size = cs + gap * 2;
+      var strip = document.createElement("div");
+      strip.id = "name-strip";
+      strip.className = side === "bottom" ? "is-bottom" : "is-right";
+      strip.setAttribute("role", "group");
+      strip.setAttribute("aria-label", "Who's missing?");
+      strip.style.gap = gap + "px";
+      if (side === "bottom") strip.style.height = size + "px"; else strip.style.width = size + "px";
+      nameState.strip = round.strip.slice();
+      nameState.remaining = round.strip.slice();
+      round.strip.forEach(function (car, i) {
+        var btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "name-choice nm-strip-choice";
+        btn.dataset.carId = car.id;
+        btn.setAttribute("aria-label", (car.family ? "Person " : "Car ") + (i + 1));
+        btn.style.setProperty("--card", cs + "px");
+        btn.style.animationDelay = (i * 0.12) + "s";
+        fillArt(btn, car);
+        btn.addEventListener("click", function () { onNameChoice(car.id, btn); });
+        strip.appendChild(btn);
+      });
+      nameState.stripBox = { side: side, size: size + 6 };
+      if (side === "bottom") board.style.paddingBottom = (size + 12) + "px"; else board.style.paddingRight = (size + 12) + "px";
+      board.appendChild(strip);
+      layoutNameGrid();
+      nameState.locked = false;
+      setNamePromptText("Who's missing?");
+      voiceSay([nameClipPart("whos-missing")]);
+      nameState.promptCount = (nameState.promptCount || 0) + 1;
+    }
+    function nameTargetButton() {
+      var sel = nameState.missing ? "#name-strip .name-choice" : "#name-grid .name-choice";
+      return Array.prototype.slice.call(document.querySelectorAll(sel)).filter(function (el) { return nameState.target && el.dataset.carId === nameState.target.id && nameChoicePresent(el); })[0];
     }
 
     function renderNameRound(round) {
       var grid = document.getElementById("name-grid");
+      nameState.roundGen = (nameState.roundGen || 0) + 1;
+      clearNameRoundExtras();
       grid.innerHTML = "";
+      nameState.tricks = round.tricks || { alike: false, photos: false, two: false, missing: false, timer: false };
+      nameState.two = round.two || null;
+      nameState.twoSay = round.twoSay || null;
+      nameState.twoStep = 0;
+      nameState.missing = !!round.missing;
       nameState.choices = round.choices;
-      nameState.remaining = round.choices.slice();
+      nameState.remaining = round.missing ? [] : round.choices.slice();
       nameState.target = round.target;
       nameState.lastTargetId = round.target.person || round.target.id;
-      (round.choices || []).forEach(function (c) { if (c.family && c.person) nameState.lastFiles[c.person] = c.file; });
+      (round.choices || []).concat(round.strip || []).forEach(function (c) {
+        if (c.family && c.person) {
+          nameState.lastFiles[c.person] = c.file;
+          var seen = nameState.photoSeen[c.person] || (nameState.photoSeen[c.person] = {});
+          seen[c.file] = true;
+        }
+      });
       nameState.sayPick = round.sayPick || chooseNameSayOption(round.target);
       nameState.locked = false;
+      var tEl = document.getElementById("name-timer");
+      if (tEl) tEl.hidden = !nameState.tricks.timer;
+      setNamePromptText(round.missing ? "Look carefully!" : "");
       round.choices.forEach(function (car, index) {
         var btn = document.createElement("button");
         btn.type = "button";
@@ -6603,14 +7046,17 @@
       });
       updateNameRoundLabel();
       nameState.locked = true;
+      var gen = nameState.roundGen;
       requestAnimationFrame(function () {
         layoutNameGrid();
         playDriveIn(nameCards(), function () {
-          if (!nameState.active) return;
+          if (!nameState.active || gen !== nameState.roundGen) return;
+          if (round.missing) { runNameMissing(round); return; }
           nameState.locked = false;
           var first = nameCards()[0];
           if (first) first.focus();
-          playNameGamePrompt(round.target);
+          playCurrentNamePrompt();
+          startNameTimer();
         });
       });
     }
@@ -6643,14 +7089,40 @@
     function celebrateNameCorrect(btn) {
       nameState.locked = true;
       stopNameRepeat();
+      var beat = stopNameTimer(false);
+      if (nameState.missing && nameState.target) {
+        // the missing one comes back into its gap
+        var slot = nameCards().filter(function (b) { return b.dataset.carId === nameState.target.id; })[0];
+        if (slot) {
+          slot.classList.remove("nm-slot", "is-covered");
+          fillArt(slot, nameState.target);
+          slot.classList.add("is-correct");
+          if (!reduced) startMatchBurst([slot]);
+        }
+      }
       if (btn) btn.classList.add("is-correct");
       if (!reduced && btn) startMatchBurst([btn]);
+      nameState.lastBeat = beat;
+      if (beat) {
+        var tEl = document.getElementById("name-timer");
+        if (tEl) tEl.classList.add("is-beat");
+        nameState.beatCount = (nameState.beatCount || 0) + 1;
+        if (!reduced && btn) setTimeout(function () { if (nameState.active) startMatchBurst([btn]); }, 350);
+        var r = nameState.roundGen;
+        playHooray().then(function () {
+          if (!nameState.active || r !== nameState.roundGen) return;
+          voiceSay([nameClipPart("super-fast")]);
+          nameLater(function () { advanceNameRound(); }, 1300);
+        });
+        return;
+      }
       playHooray();
       setTimeout(function () { advanceNameRound(); }, 1100);
     }
 
     function finishNameGame() {
       stopNameRepeat();
+      stopNameTimer(true);
       nameState.active = false;
       nameState.locked = true;
       if (nameSettings.celebration === false) {
@@ -6679,7 +7151,27 @@
       if (!nameState.active || nameState.locked) return;
       if (!document.getElementById("name-win-overlay").hidden) return;
       if (!document.getElementById("settings-screen").hidden) return;
+      if (nameState.missing && !(btn && btn.classList.contains("nm-strip-choice"))) return;
       stopNameRepeat();
+      if (nameState.two && nameState.twoStep === 0) {
+        if (id === nameState.target.id) {
+          // first of two found: tick it, then ask for the second
+          nameState.twoStep = 1;
+          if (btn) { btn.classList.add("is-correct", "nm-done"); btn.tabIndex = -1; }
+          nameState.remaining = (nameState.remaining || []).filter(function (c) { return c.id !== id; });
+          nameState.firstOfTwo = nameState.target;
+          nameState.target = nameState.two;
+          nameState.sayPick = nameState.twoSay;
+          playCurrentNamePrompt();
+          return;
+        }
+        if (id === nameState.two.id) {
+          // right one, wrong order: a gentle wiggle and say it again, no fart
+          if (btn) { btn.classList.remove("nm-wiggle"); void btn.offsetWidth; btn.classList.add("nm-wiggle"); }
+          playCurrentNamePrompt();
+          return;
+        }
+      }
       if (nameState.target && id === nameState.target.id) {
         celebrateNameCorrect(btn);
         return;
@@ -6702,8 +7194,7 @@
         function afterFunny() {
           if (!nameState.active) return;
           if (onlyTarget) {
-            var targetBtn = nameCards().filter(function (el) { return el.dataset.carId === nameState.target.id && nameChoicePresent(el); })[0];
-            celebrateNameCorrect(targetBtn);
+            celebrateNameCorrect(nameTargetButton());
             return;
           }
           nameState.locked = false;
@@ -10272,7 +10763,7 @@
     });
     document.getElementById("name-say-btn").addEventListener("click", function () {
       unlockMedia();
-      if (nameState.target) playNameGamePrompt(nameState.target);
+      playCurrentNamePrompt();
     });
 
     window.addEventListener("resize", function () { setVH(); layoutGrid(); layoutNameGrid(); resizeFx(); });
@@ -10597,31 +11088,42 @@
     }
     // Photo Name Game: one tile per person. Each person shows their face card or a photo where
     // they're the only face, never a look that's already on the board (no near-identical tiles).
-    function nameFileFor(p, boardLooks) {
+    function nameFileFor(p, boardLooks, rotate) {
       var opts = [];
       if (p.face) opts.push({ file: p.face, kind: "face" });
       (p.solo || []).forEach(function (f) { if (p.photos.indexOf(f) !== -1 && f !== p.face) opts.push({ file: f, kind: "photo" }); });
       var ok = opts.filter(function (o) { return o.kind === "face" || !boardLooks[lookOf(p, o.file)]; });
       if (!ok.length) ok = opts.slice(0, 1);
       if (!ok.length) return null;
-      var fresh = ok.filter(function (o) { return o.file !== nameState.lastFiles[p.id]; });
+      var last = nameState.lastFiles[p.id];
+      var fresh = ok.filter(function (o) { return o.file !== last; });
+      if (rotate) {
+        // v46 "Different photos each round": work through every approved photo (and the face card)
+        // before any repeats; the cycle restarts once they have all been shown.
+        var seen = nameState.photoSeen[p.id] || {};
+        var unseen = fresh.filter(function (o) { return !seen[o.file]; });
+        if (!unseen.length) {
+          var all = opts.filter(function (o) { return !seen[o.file]; });
+          if (!all.length) nameState.photoSeen[p.id] = {};
+        } else fresh = unseen;
+      }
       var pick = shuffle((fresh.length ? fresh : ok).slice())[0];
       return pick;
     }
-    function familyNamePool() {
+    function familyNamePool(rotate) {
       var boardLooks = {};
       var out = [];
       shuffle(activeFamily().slice()).forEach(function (p) {
-        var o = nameFileFor(p, boardLooks);
+        var o = nameFileFor(p, boardLooks, rotate);
         if (!o) return;
         if (o.kind === "photo") boardLooks[lookOf(p, o.file)] = true;
         out.push(familyItem(p, o.file, o.kind));
       });
       return out;
     }
-    function nameGamePool() {
+    function nameGamePool(tricks) {
       if (nameFamilyMode()) {
-        var fam = familyNamePool();
+        var fam = familyNamePool(!!(tricks && tricks.photos));
         if (fam.length >= 2) return fam;
       }
       return allCars().slice();
@@ -12817,6 +13319,9 @@
       goHomeFromAnywhere: goHomeFromAnywhere,
       getNameState: function () { return { active: nameState.active, round: nameState.round, target: nameState.target && nameState.target.id, remaining: (nameState.remaining || []).map(function (c) { return c.id; }), locked: nameState.locked, lastTargetId: nameState.lastTargetId, promptCount: nameState.promptCount || 0, repeatTimer: nameState.repeatTimer, sayPick: nameState.sayPick ? { mode: nameState.sayPick.mode, text: nameState.sayPick.text } : null }; },
       getNameSettings: function () { return JSON.parse(JSON.stringify(nameSettings)); },
+      setNameSettings: function (patch) { saveNameSettings(patch); },
+      startChosen: startChosen,
+      stopNameGame: function () { stopNameGame(); goHome(); },
       setNameSettings: saveNameSettings,
       uniqueNameSayOptions: uniqueNameSayOptions,
       chooseNameSayOption: chooseNameSayOption,
@@ -12827,6 +13332,15 @@
       cardNickname: cardNickname,
       spokenNameGameText: spokenNameGameText,
       playNameGamePrompt: playNameGamePrompt,
+      setNameForceTricks: function (t, fast) { nameState.forceTricks = t || null; nameState.forceFast = !!fast; },
+      nameTricksFor: nameTricksFor,
+      nameAlike: function (a, b) { return nameAlike(carById(a) || familyIndex[a], carById(b) || familyIndex[b]); },
+      getNameTricks: function () {
+        return { tricks: nameState.tricks, two: nameState.two && nameState.two.id, twoSay: nameState.twoSay && nameState.twoSay.text, twoStep: nameState.twoStep,
+          missing: nameState.missing, strip: (nameState.strip || []).map(function (c) { return c.id; }), choices: (nameState.choices || []).map(function (c) { return c.id; }),
+          files: (nameState.choices || []).map(function (c) { return c.file || ""; }), timer: nameState.timer ? { ms: nameState.timer.ms, done: nameState.timer.done } : null,
+          lastBeat: !!nameState.lastBeat, beatCount: nameState.beatCount || 0, prompt: (document.getElementById("name-say-text") || {}).textContent, roundGen: nameState.roundGen };
+      },
       getLastNamePrompt: function () { return lastNamePrompt ? { id: lastNamePrompt.id, mode: lastNamePrompt.mode, text: lastNamePrompt.text, usedClip: lastNamePrompt.usedClip } : null; },
       nameChoiceCount: nameChoiceCount,
       onNameChoice: onNameChoice,
