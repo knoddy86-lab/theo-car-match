@@ -1864,6 +1864,39 @@
       .start-actions.four .gc-art { height: min(30vh, calc((100vw - 180px) * 0.1875)); width: auto; }
       .start-actions.four .gc-label { font-size: clamp(18px, 6.4vh, 36px); }
     }
+    /* ---- v47: five game cards (adds SHAPES): portrait 3 + 2, landscape one row of 5 ---- */
+    .gc-shapes { background: linear-gradient(180deg, #4DB6AC, #00897B); box-shadow: 0 8px 0 #00695C, 0 14px 26px rgba(0,0,0,0.2); }
+    .gc-shapes:active { box-shadow: 0 2px 0 #00695C, 0 6px 12px rgba(0,0,0,0.2); }
+    .gc-shapes .gc-shapes-art { position: absolute; inset: 6% 4%; width: 92%; height: 88%; }
+    .start-actions.four.five { grid-template-columns: repeat(5, minmax(0, 1fr)); width: min(1240px, 100%); }
+    .start-actions.four.five .gc-label { font-size: clamp(16px, 3.6vmin, 40px); }
+    @media (orientation: portrait) {
+      .start-actions.four.five { grid-template-columns: repeat(6, minmax(0, 1fr)); width: min(100%, 760px); gap: clamp(12px, 2.6vw, 26px); }
+      .start-actions.four.five .game-card { grid-column: span 2; }
+      .start-actions.four.five .game-card:nth-child(4) { grid-column: 2 / span 2; }
+      .start-actions.four.five .game-card:nth-child(5) { grid-column: 4 / span 2; }
+      .start-actions.four.five .gc-label { font-size: clamp(16px, 4.6vw, 40px); }
+    }
+    @media (max-width: 600px) and (orientation: portrait) {
+      .start-actions.four.five { width: 100%; gap: 12px 10px; }
+      .start-actions.four.five .gc-art { aspect-ratio: 4 / 3.2; }
+      .start-actions.four.five .game-card { padding: 7px 6px 8px; }
+      .start-actions.four.five .gc-label { font-size: clamp(15px, 4.6vw, 22px); letter-spacing: 0; }
+    }
+    @media (max-height: 520px) and (orientation: landscape) {
+      .start-actions.four.five { width: auto; grid-template-columns: repeat(5, auto); gap: 12px; }
+      .start-actions.four.five .gc-art { height: min(28vh, calc((100vw - 200px) * 0.15)); width: auto; }
+      .start-actions.four.five .gc-label { font-size: clamp(16px, 5.6vh, 30px); }
+    }
+    @media (orientation: landscape) and (min-height: 521px) {
+      .start-actions.four.five { width: min(1120px, 94vw); flex: 0 0 auto; }
+    }
+    .sh-sil.shp svg { filter: none; }
+    .sh-sil.shp { opacity: 1; }
+    .sh-art.shp svg { overflow: visible; }
+    .sh-piece.shp-asked { animation: shp-bob 1.1s ease-in-out infinite; }
+    @keyframes shp-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+    @media (prefers-reduced-motion: reduce) { .sh-piece.shp-asked { animation: none; box-shadow: 0 0 0 5px #FFD54F; } }
     .gc-shadow { background: linear-gradient(180deg, #F06292, #D81B60); box-shadow: 0 8px 0 #AD1457, 0 14px 26px rgba(0,0,0,0.2); }
     .gc-shadow:active { box-shadow: 0 2px 0 #AD1457, 0 6px 12px rgba(0,0,0,0.2); }
     .gc-shadow .sh-art-sil, .gc-shadow .sh-art-car { position: absolute; bottom: 8%; width: 56%; height: 70%; display: flex; align-items: flex-end; justify-content: center; }
@@ -2137,7 +2170,7 @@
           <p class="for-theo" id="start-for">For Theo</p>
         </div>
         <div class="hero-cars" id="hero-cars"></div>
-        <div class="start-actions four" id="start-actions">
+        <div class="start-actions four five" id="start-actions">
           <button type="button" class="game-card gc-match" id="play-btn" aria-label="Match Game">
             <span class="gc-art" aria-hidden="true">
               <span class="mini-card mc-a"><span class="mini-art" data-art="match"></span></span>
@@ -2174,6 +2207,17 @@
               <span class="sh-art-car"><span class="mini-art" data-art="shadow"></span></span>
             </span>
             <span class="gc-label">SHADOW</span>
+          </button>
+          <button type="button" class="game-card gc-shapes" id="shapes-btn" aria-label="Shapes Game">
+            <span class="gc-art" aria-hidden="true">
+              <svg class="gc-shapes-art" viewBox="0 0 160 120" aria-hidden="true">
+                <rect x="14" y="62" width="44" height="44" rx="4" fill="#FDD835" stroke="#F57F17" stroke-width="3"/>
+                <polygon points="80,14 112,70 48,70" fill="#E53935" stroke="#B71C1C" stroke-width="3" stroke-linejoin="round"/>
+                <circle cx="126" cy="84" r="22" fill="#1E88E5" stroke="#0D47A1" stroke-width="3"/>
+                <ellipse cx="84" cy="96" rx="20" ry="12" fill="none" stroke="#fff" stroke-width="3" stroke-dasharray="6 4"/>
+              </svg>
+            </span>
+            <span class="gc-label">SHAPES</span>
           </button>
         </div>
         <div class="mode-picker" id="mode-picker" hidden>
@@ -2353,6 +2397,7 @@
           <button type="button" role="tab" id="tab-names" aria-controls="pane-names" aria-selected="false">Names</button>
           <button type="button" role="tab" id="tab-build" aria-controls="pane-build" aria-selected="false">Build</button>
           <button type="button" role="tab" id="tab-shadow" aria-controls="pane-shadow" aria-selected="false">Shadow</button>
+          <button type="button" role="tab" id="tab-shapes" aria-controls="pane-shapes" aria-selected="false">Shapes</button>
           <button type="button" role="tab" id="tab-photos" aria-controls="pane-photos" aria-selected="false" hidden>Photos<span class="count-badge" id="tab-photos-badge" hidden>0</span></button>
           <button type="button" role="tab" id="tab-players" aria-controls="pane-players" aria-selected="false">Players</button>
           <button type="button" role="tab" id="tab-family" aria-controls="pane-family" aria-selected="false">Connection</button>
@@ -2500,6 +2545,8 @@
                 <option value="4">4</option>
                 <option value="5">5</option>
                 <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
               </select>
             </div>
             <h3>Harder tricks</h3>
@@ -2645,6 +2692,40 @@
             <div class="diff-row">
               <label for="voice-style-shadow">Shadow voice</label>
               <select id="voice-style-shadow" class="voice-style-select" data-part="shadow" aria-label="Shadow voice"><option value="alba">Alba</option><option value="classic">Classic</option></select>
+            </div>
+          </div>
+        </div>
+        <div id="pane-shapes" class="settings-pane" role="tabpanel" aria-labelledby="tab-shapes" hidden>
+          <p class="settings-lead">Shapes game: drag each bright shape onto its outline. Starts with square, triangle, rectangle, circle and oval; harder boards add star, heart, diamond, semicircle, crescent, arrow, cross, pentagon, hexagon and octagon.</p>
+          <p class="device-only-note">This device only — not synced.</p>
+          <div class="diff-custom" id="shapes-options">
+            <h3>Shapes game</h3>
+            <div class="diff-row">
+              <label for="sp-set-level">Difficulty (Easy: starts with 3 of the 5 basic shapes, one new shape each board. Medium: starts with 4, then look-alikes together and smaller outlines. Hard: starts with 5, two more each board, new shapes sooner, turned and smaller outlines, look-alikes together and spare outlines)</label>
+              <select id="sp-set-level" aria-label="Shapes difficulty">
+                <option value="easy">Easy</option>
+                <option value="medium">Medium</option>
+                <option value="hard">Hard</option>
+              </select>
+            </div>
+            <div class="diff-row">
+              <label for="sp-set-harder">Get harder as you go (more shapes and new kinds of shape after each board, up to the max)</label>
+              <input id="sp-set-harder" type="checkbox" checked>
+            </div>
+            <div class="diff-row">
+              <label for="sp-set-max">Most shapes on a board</label>
+              <select id="sp-set-max" aria-label="Most shapes">
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+              </select>
+            </div>
+            <div class="diff-row">
+              <label for="voice-style-shapes">Shapes voice</label>
+              <select id="voice-style-shapes" class="voice-style-select" data-part="shapes" aria-label="Shapes voice"><option value="alba">Alba</option><option value="classic">Classic</option></select>
             </div>
           </div>
         </div>
@@ -2842,7 +2923,7 @@
     // v39: per-device voice for each part of the game. Classic = the pre-v37 voice (Sound of Text car-name clips
     // and the device voice); Alba = the natural recorded clips.
     var VOICE_STYLE_KEY = "theo-car-match-voice-styles";
-    var VOICE_STYLE_DEFAULTS = { name: "classic", match: "alba", build: "alba", shadow: "alba" };
+    var VOICE_STYLE_DEFAULTS = { name: "classic", match: "alba", build: "alba", shadow: "alba", shapes: "alba" };
     var voiceStyles = Object.assign({}, VOICE_STYLE_DEFAULTS);
     try {
       var vsRaw = JSON.parse(localStorage.getItem(VOICE_STYLE_KEY) || "{}") || {};
@@ -2918,7 +2999,7 @@
     var BLOB_FETCH_MS = 20000;
     var bootStartedAt = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
     var keyChangeOpen = false;
-    var APP_VERSION = "46";
+    var APP_VERSION = "47";
     var MATCH_PAIR_CAP = 6;
     var NAME_ROUNDS = 6;
     var THUMB_MAX = 256;
@@ -2927,7 +3008,7 @@
     var speakTimer = null;
     var padsRunning = false;
     var NAME_SETTINGS_KEY = "theo-car-match-name-game";
-    var nameSettings = { choices: "auto", say: "full", celebration: true, harder: true, maxChoices: 6, pool: "cars" };
+    var nameSettings = { choices: "5", say: "full", celebration: true, harder: true, maxChoices: 8, pool: "cars" };
     var matchMode = "cars";
     var playGen = 0;
     var pendingFamilyDeck = null;
@@ -4732,6 +4813,7 @@
         { tab: "tab-names", pane: "pane-names" },
         { tab: "tab-build", pane: "pane-build" },
         { tab: "tab-shadow", pane: "pane-shadow" },
+        { tab: "tab-shapes", pane: "pane-shapes" },
         { tab: "tab-photos", pane: "pane-photos" },
         { tab: "tab-players", pane: "pane-players" },
         { tab: "tab-family", pane: "pane-family" }
@@ -4746,11 +4828,12 @@
       if (name === "photos") { renderPhotoPeople(); renderPhotoManage(); loadReview(); }
       if (name === "build") { hideGarageConfirm(); updateBuildSettingsUi(); }
       if (name === "shadow") updateShadowSettingsUi();
+      if (name === "shapes") updateShapeSettingsUi();
       if (name === "names") renderNameLookGroups();
     }
 
     function bindSettingsTabs() {
-      ["cars", "difficulty", "names", "build", "shadow", "photos", "players", "family"].forEach(function (name) {
+      ["cars", "difficulty", "names", "build", "shadow", "shapes", "photos", "players", "family"].forEach(function (name) {
         var tb = document.getElementById("tab-" + name);
         if (tb) tb.addEventListener("click", function () { showSettingsTab(name); });
       });
@@ -5257,7 +5340,7 @@
           (document.activeElement === ct ? pt : ct).focus();
           return;
         }
-        var sl = ["play-btn", "names-btn", "build-btn", "shadow-btn"].map(function (id) { return document.getElementById(id); }).filter(Boolean);
+        var sl = ["play-btn", "names-btn", "build-btn", "shadow-btn", "shapes-btn"].map(function (id) { return document.getElementById(id); }).filter(Boolean);
         var si = sl.indexOf(document.activeElement);
         si = si === -1 ? 0 : (si + (dx || dy) + sl.length) % sl.length;
         sl[si].focus();
@@ -5651,6 +5734,12 @@
 
     function normalizeNameSettings(raw) {
       raw = raw && typeof raw === "object" ? raw : {};
+      // v47: hardest by default (Lindsay: "all of them" except Match). A device still on the old
+      // defaults (Auto start, max 6, Get harder on) moves to start 5 / max 8; a choice someone made is kept.
+      if (raw.v !== 47) {
+        var oldDefault = (!raw.choices || raw.choices === "auto") && (raw.maxChoices == null || String(raw.maxChoices) === "6") && raw.harder !== false;
+        if (oldDefault) raw = Object.assign({}, raw, { choices: "5", maxChoices: 8, harder: true });
+      }
       var choices = String(raw.choices || "auto");
       if (choices === "2" || choices === "3") choices = "4";
       if (choices !== "auto" && !/^[4-6]$/.test(choices)) choices = "auto";
@@ -5659,9 +5748,10 @@
       var pool = String(raw.pool || "cars");
       if (pool !== "family" && pool !== "both") pool = "cars";
       var startHint = choices === "auto" ? 4 : clampInt(choices, 4, 6, 4);
-      var maxChoices = clampInt(raw.maxChoices, 4, 6, 6);
+      var maxChoices = clampInt(raw.maxChoices, 4, 8, 8);
       if (maxChoices < startHint) maxChoices = startHint;
       return {
+        v: 47,
         choices: choices,
         say: say,
         celebration: raw.celebration !== false,
@@ -5721,7 +5811,7 @@
         var startHint = nameSettings.choices === "auto" ? 4 : clampInt(nameSettings.choices, 4, 6, 4);
         var opts = mx.options;
         for (var i = 0; i < opts.length; i++) {
-          var v = clampInt(opts[i].value, 4, 6, 4);
+          var v = clampInt(opts[i].value, 4, 8, 4);
           opts[i].disabled = v < startHint;
         }
         if (document.activeElement !== mx) mx.value = String(nameSettings.maxChoices || 6);
@@ -5789,7 +5879,7 @@
           say: (document.getElementById("name-set-say") || {}).value,
           celebration: !!(document.getElementById("name-set-cele") || {}).checked,
           harder: !!(document.getElementById("name-set-harder") || {}).checked,
-          maxChoices: clampInt((document.getElementById("name-set-max") || {}).value, 4, 6, 6),
+          maxChoices: clampInt((document.getElementById("name-set-max") || {}).value, 4, 8, 8),
           tricks: {
             alike: !!(document.getElementById("name-tr-alike") || {}).checked,
             photos: !!(document.getElementById("name-tr-photos") || {}).checked,
@@ -5836,7 +5926,10 @@
         pic: sanitizePic(raw.pic),
         buildSteps: raw.buildSteps === "simple" ? "simple" : "full",
         buildExtras: raw.buildExtras === "1" || raw.buildExtras === "3" ? raw.buildExtras : "any",
-        buildStyle: raw.buildStyle === "drag" ? "drag" : "tap"
+        // v47: Extra (drag the body, roof and all the wheels; extras stay tap buttons) is the default.
+        // Profiles from before v47 move to it once; a choice made after that is kept.
+        buildStyle: (raw.buildV === 47 ? raw.buildStyle !== "tap" : true) ? "drag" : "tap",
+        buildV: 47
       };
     }
     // Profile picture from the library (per device). Only a reference is kept; the picture itself
@@ -6753,7 +6846,7 @@
       // "Get harder as you go": one more tile every 2 correct answers, from the chosen start
       // count up to Max cards (default 6), never past the number of different cars / people.
       var start = nameChoiceCount(pool.length);
-      var maxTiles = Math.max(start, clampInt(nameSettings.maxChoices, start, 6, 6));
+      var maxTiles = Math.max(start, clampInt(nameSettings.maxChoices, start, 8, 8));
       var count = start;
       if (nameSettings.harder !== false && start < maxTiles) {
         count = Math.min(maxTiles, start + Math.floor(Math.max(0, (nameState.round || 1) - 1) / 2));
@@ -9919,20 +10012,27 @@
     // (same rules as Drag build: a real drag of 30px+, an 80px snap zone, a tap only wiggles and says the name).
     var SHADOW_KEY = "theo-car-match-shadow";
     var SHADOW_SIL_PREFIX = "theo-car-match-shadow-sil:";
-    var shadowSettings = { start: 2, harder: true, max: 6, pool: "mix", level: "medium" };
+    var shadowSettings = { start: 4, harder: true, max: 8, pool: "mix", level: "hard" };
     try {
       var shRaw = JSON.parse(localStorage.getItem(SHADOW_KEY) || "{}") || {};
       shadowSettings = normalizeShadowSettings(shRaw);
     } catch (e) {}
     function normalizeShadowSettings(raw) {
       raw = raw && typeof raw === "object" ? raw : {};
+      // v47: Hard by default (Lindsay: "Default shadow difficulty to hard"). Settings never changed from the
+      // old defaults (Medium, start 2, max 6, Get harder on, cars + garage) move to Hard / start 4 / max 8.
+      if (raw.v !== 47) {
+        var oldDef = (!raw.level || raw.level === "medium") && (raw.start == null || String(raw.start) === "2") &&
+          (raw.max == null || String(raw.max) === "6") && raw.harder !== false && raw.pool !== "cars";
+        if (oldDef) raw = Object.assign({}, raw, { level: "hard", start: 4, max: 8, harder: true });
+      }
       // v43: up to 8 shadows (Lindsay: "ability to have more shadows"); default max 6.
       var st = Math.max(2, Math.min(4, parseInt(raw.start, 10) || 2));
-      var mx = Math.max(2, Math.min(8, parseInt(raw.max, 10) || 6));
+      var mx = Math.max(2, Math.min(8, parseInt(raw.max, 10) || 8));
       if (st > mx) st = mx;
       // v45: Easy / Medium / Hard (Lindsay: "make the shadow game harder"); default Medium.
       var lv = raw.level === "easy" || raw.level === "hard" ? raw.level : "medium";
-      return { start: st, harder: raw.harder !== false, max: mx, pool: raw.pool === "cars" ? "cars" : "mix", level: lv };
+      return { v: 47, start: st, harder: raw.harder !== false, max: mx, pool: raw.pool === "cars" ? "cars" : "mix", level: lv };
     }
     function saveShadowSettings(next) {
       shadowSettings = normalizeShadowSettings(next);
@@ -9952,6 +10052,135 @@
     }
     var shg = { gen: 0, n: 2, items: [], placed: 0, busy: false, timers: [], last: {}, boards: 0, sayLog: [] };
     function shEl(id) { return document.getElementById(id); }
+    // ---- v47: Shapes game (same play as Shadow: drag each bright shape onto its outline) ----
+    // Original simple vector shapes, drawn here (viewBox 0 0 100 100).
+    var SHAPE_ORDER = ["square", "triangle", "rectangle", "circle", "oval", "star", "heart", "diamond", "semicircle", "crescent", "arrow", "cross", "pentagon", "hexagon", "octagon"];
+    var SHAPE_BASE = 5;
+    var SHAPE_DEFS = {
+      square: { el: '<rect x="13" y="13" width="74" height="74" rx="4"/>', rot: [] },
+      triangle: { el: '<polygon points="50,8 94,88 6,88"/>', rot: [180, 90] },
+      rectangle: { el: '<rect x="3" y="27" width="94" height="46" rx="3"/>', rot: [90] },
+      circle: { el: '<circle cx="50" cy="50" r="42"/>', rot: [] },
+      oval: { el: '<ellipse cx="50" cy="50" rx="47" ry="29"/>', rot: [90] },
+      star: { el: '<polygon points="50,7 61.2,38.6 94.7,39.5 68.1,59.9 77.6,92 50,73 22.4,92 31.9,59.9 5.3,39.5 38.8,38.6"/>', rot: [180] },
+      heart: { el: '<path d="M50 90C22 68 6 50 6 32C6 17 17 8 30 8C40 8 46 14 50 22C54 14 60 8 70 8C83 8 94 17 94 32C94 50 78 68 50 90Z"/>', rot: [-25, 25] },
+      diamond: { el: '<polygon points="50,3 83,50 50,97 17,50"/>', rot: [90] },
+      semicircle: { el: '<path d="M5 72A45 45 0 0 1 95 72Z"/>', rot: [90, 180, 270] },
+      crescent: { el: '<path d="M49.3 8.3A42 42 0 1 0 78.5 74A36 36 0 1 1 49.3 8.3Z"/>', rot: [90, 180] },
+      arrow: { el: '<polygon points="5,37 55,37 55,14 95,50 55,86 55,63 5,63"/>', rot: [90, 180, 270] },
+      cross: { el: '<polygon points="36,6 64,6 64,36 94,36 94,64 64,64 64,94 36,94 36,64 6,64 6,36 36,36"/>', rot: [45] },
+      pentagon: { el: '<polygon points="50,7 94.7,39.5 77.6,92 22.4,92 5.3,39.5"/>', rot: [180] },
+      hexagon: { el: '<polygon points="50,4 89.8,27 89.8,73 50,96 10.2,73 10.2,27"/>', rot: [30] },
+      octagon: { el: '<polygon points="32.4,7.5 67.6,7.5 92.5,32.4 92.5,67.6 67.6,92.5 32.4,92.5 7.5,67.6 7.5,32.4"/>', rot: [] }
+    };
+    // Look-alike families, used together on Hard (square vs rectangle, circle vs oval ...)
+    var SHAPE_ALIKE = [["square", "rectangle", "diamond"], ["circle", "oval", "semicircle", "crescent"], ["pentagon", "hexagon", "octagon"], ["triangle", "arrow"], ["star", "cross", "heart"]];
+    var SHAPE_COLOURS = [["#E53935", "#B71C1C"], ["#1E88E5", "#0D47A1"], ["#43A047", "#1B5E20"], ["#FDD835", "#F57F17"], ["#8E24AA", "#4A148C"], ["#FB8C00", "#E65100"], ["#EC407A", "#AD1457"], ["#00ACC1", "#006064"]];
+    function shapeName(k) { return k.charAt(0).toUpperCase() + k.slice(1); }
+    function shapeSvg(it, outline) {
+      var d = SHAPE_DEFS[it.key] || SHAPE_DEFS.circle;
+      if (outline) {
+        return '<svg class="shp-svg shp-out" viewBox="-6 -6 112 112" aria-hidden="true"><g fill="rgba(255,255,255,0.55)" stroke="#37474F" stroke-width="5" stroke-dasharray="11 7" stroke-linejoin="round" stroke-linecap="round">' + d.el + '</g></svg>';
+      }
+      var c = it.col || SHAPE_COLOURS[0];
+      return '<svg class="shp-svg" viewBox="-6 -6 112 112" aria-hidden="true"><g fill="' + c[0] + '" stroke="' + c[1] + '" stroke-width="4" stroke-linejoin="round">' + d.el + '</g>' +
+        '<g fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="5" stroke-linecap="round" transform="translate(50 50) scale(0.62) translate(-50 -50)" stroke-dasharray="26 400">' + d.el + '</g></svg>';
+    }
+    var SHAPES_KEY = "theo-car-match-shapes";
+    var shapeSettings = normalizeShapeSettings({});
+    try { shapeSettings = normalizeShapeSettings(JSON.parse(localStorage.getItem(SHAPES_KEY) || "{}") || {}); } catch (e) {}
+    function normalizeShapeSettings(raw) {
+      raw = raw && typeof raw === "object" ? raw : {};
+      var lv = raw.level === "easy" || raw.level === "medium" ? raw.level : "hard";
+      var mx = Math.max(3, Math.min(8, parseInt(raw.max, 10) || 8));
+      return { level: lv, harder: raw.harder !== false, max: mx };
+    }
+    function saveShapeSettings(next) {
+      shapeSettings = normalizeShapeSettings(next);
+      try { localStorage.setItem(SHAPES_KEY, JSON.stringify(shapeSettings)); } catch (e) {}
+      updateShapeSettingsUi();
+    }
+    function updateShapeSettingsUi() {
+      var lv = document.getElementById("sp-set-level"), h = document.getElementById("sp-set-harder"), m = document.getElementById("sp-set-max");
+      if (lv) lv.value = shapeSettings.level;
+      if (h) h.checked = shapeSettings.harder !== false;
+      if (m) m.value = String(shapeSettings.max);
+    }
+    function bindShapeUi() {
+      var b = document.getElementById("shapes-btn");
+      if (b) b.addEventListener("click", function () { unlockMedia(); startShadow("shapes"); });
+      ["sp-set-level", "sp-set-harder", "sp-set-max"].forEach(function (id) {
+        var el = document.getElementById(id);
+        if (el) el.addEventListener("change", function () {
+          saveShapeSettings({ level: document.getElementById("sp-set-level").value, harder: document.getElementById("sp-set-harder").checked, max: document.getElementById("sp-set-max").value });
+        });
+      });
+      updateShapeSettingsUi();
+    }
+    // How many different shapes are in play: the 5 basics first, then more as the boards go by.
+    function shapePoolSize(boards) {
+      var lv = shapeSettings.level, grow = shapeSettings.harder !== false;
+      var n;
+      if (lv === "easy") n = SHAPE_BASE + (grow ? boards : 0);
+      else if (lv === "medium") n = grow ? 7 + boards * 2 : 9;
+      else n = grow ? 9 + boards * 2 : SHAPE_ORDER.length;
+      return Math.max(SHAPE_BASE, Math.min(SHAPE_ORDER.length, n));
+    }
+    function shapeAlikeOf(k) {
+      for (var i = 0; i < SHAPE_ALIKE.length; i++) if (SHAPE_ALIKE[i].indexOf(k) !== -1) return SHAPE_ALIKE[i];
+      return [k];
+    }
+    function shapesPick(n) {
+      var size = shapePoolSize(shg.boards), prev = shg.boards > 0 ? shapePoolSize(shg.boards - 1) : SHAPE_BASE;
+      var pool = SHAPE_ORDER.slice(0, size);
+      n = Math.min(n, pool.length);
+      var pick = [];
+      function add(k) { if (pick.length < n && pick.indexOf(k) === -1 && pool.indexOf(k) !== -1) pick.push(k); }
+      // shapes that just joined always show up first
+      shuffle(SHAPE_ORDER.slice(prev, size)).slice(0, Math.ceil(n / 2)).forEach(add);
+      var fresh = shuffle(pool.filter(function (k) { return !shg.last["s:" + k]; })).concat(shuffle(pool.filter(function (k) { return shg.last["s:" + k]; })));
+      if (shg.tricks && shg.tricks.alike) {
+        // look-alikes together: add each picked shape's partners
+        if (!pick.length) add(fresh.filter(function (k) { return shapeAlikeOf(k).length > 1; })[0] || fresh[0]);
+        var i = 0;
+        while (pick.length < n && i < pick.length) {
+          shuffle(shapeAlikeOf(pick[i]).slice()).forEach(add);
+          i++;
+          if (i >= pick.length && pick.length < n) {
+            var nx = fresh.filter(function (k) { return pick.indexOf(k) === -1 && shapeAlikeOf(k).some(function (o) { return o !== k && pool.indexOf(o) !== -1 && pick.indexOf(o) === -1; }); })[0];
+            if (nx) add(nx); else break;
+          }
+        }
+      }
+      fresh.forEach(add);
+      var cols = shuffle(SHAPE_COLOURS.slice());
+      function item(k, i) { return { id: "s:" + k, type: "shape", key: k, shape: "shape:" + k, name: shapeName(k), col: cols[i % cols.length] }; }
+      var items = shuffle(pick).map(item);
+      var spare = shuffle(pool.filter(function (k) { return pick.indexOf(k) === -1; })).map(function (k, i) { return item(k, i + items.length); });
+      return { pick: items, spare: spare };
+    }
+    function shapeLine(k, t) {
+      if (voiceStyle("shapes") === "classic") return { src: SOUND_DIR + "classic/" + k + ".mp3", k: k, t: t };
+      var ak = k === "shp-try" ? "sh-try" : k === "shp-done" ? "sh-done" : k;
+      return { src: BUILD_VOICE_DIR + ak + ".mp3", k: ak, t: t };
+    }
+    var SHAPE_LINES = { "sh-intro": ["shp-intro", "Put each shape in its place!"], "sh-more": ["shp-more", "More shapes!"], "sh-find": ["shp-find", "Find where they go!"], "sh-try": ["shp-try", "Try again!"], "sh-done": ["shp-done", "You did it!"] };
+    function shapeAsk(it, keep) {
+      if (!it) return;
+      shLog("ask:" + it.key);
+      shg.asked = it.id;
+      shg.items.forEach(function (o) { if (o.piece) o.piece.classList.toggle("shp-asked", o === it); });
+      voiceSay([shapeLine("shp-q-" + it.key, "Where does the " + it.key + " go?")], !!keep);
+    }
+    function shapeAskNext(ms) {
+      var g = shg.gen;
+      shLater(function () {
+        if (g !== shg.gen || shg.busy || !shadowOpen()) return;
+        var left = shg.items.filter(function (o) { return !o.done; });
+        if (left.length) shapeAsk(left[Math.floor(Math.random() * left.length)]);
+      }, ms);
+    }
+    function shSet() { return shg.mode === "shapes" ? shapeSettings : shadowSettings; }
     function shadowOpen() { var s = shEl("shadow-screen"); return !!(s && !s.hidden); }
     function shLater(fn, ms) {
       var g = shg.gen;
@@ -9961,6 +10190,10 @@
     }
     // ---- v45: Shadow difficulty ----
     function shStartCount() {
+      if (shg.mode === "shapes") {
+        var slv = shapeSettings.level;
+        return Math.min(slv === "easy" ? 3 : slv === "medium" ? 4 : 5, shapeSettings.max);
+      }
       var st = shadowSettings.start, lv = shadowSettings.level;
       if (lv === "medium") st = Math.max(st, 3);
       if (lv === "hard") st = Math.max(st, 4);
@@ -9969,14 +10202,14 @@
     // Tricks unlock board by board (with Get harder on): 1 look-alike cars, 2 flipped / tilted shadows,
     // 3 shadows a different size, 4 a spare shadow with no car (5+ on Hard: two spares). Easy: none.
     function shStage() {
-      var lv = shadowSettings.level;
+      var S = shSet(), lv = S.level;
       if (lv === "easy") return 0;
       var base = lv === "hard" ? 2 : 0;
-      var grow = shadowSettings.harder !== false ? shg.boards : (lv === "hard" ? 2 : 1);
+      var grow = S.harder !== false ? shg.boards : (lv === "hard" ? 2 : 1);
       return Math.min(6, base + 1 + grow);
     }
     function shTricks() {
-      var s = shStage(), lv = shadowSettings.level;
+      var s = shStage(), lv = shSet().level;
       return { alike: s >= 1, flip: s >= 2, size: s >= 3, decoys: s >= 4 ? ((lv === "hard" && s >= 5) ? 2 : 1) : 0 };
     }
     function shFamily(it) {
@@ -9987,6 +10220,7 @@
     function shLog(x) { shg.sayLog.push(x); if (shg.sayLog.length > 60) shg.sayLog.shift(); }
     function shSay(key, text) {
       shLog("line:" + key);
+      if (shg.mode === "shapes" && SHAPE_LINES[key]) { voiceSay([shapeLine(SHAPE_LINES[key][0], SHAPE_LINES[key][1])]); return; }
       voiceSay([bvLine(key, text)], false, voiceStyle("shadow") === "classic");
     }
     function shPhotoSrc(car) {
@@ -10020,6 +10254,7 @@
       return { cards: cards, garage: garage };
     }
     function shadowPick(n) {
+      if (shg.mode === "shapes") return shapesPick(n);
       var c = shadowCandidates();
       function fresh(list) {
         var a = shuffle(list.filter(function (it) { return !shg.last[it.id]; }));
@@ -10103,6 +10338,7 @@
       });
     }
     function shArtHtml(it, sil) {
+      if (it.type === "shape") return shapeSvg(it, sil);
       if (it.type === "garage") return bvSvg(it.g.k, { color: it.g.c, extras: it.g.xs, wide: true });
       if (it.src) {
         if (sil) return it.silUrl ? '<img class="sh-img" alt="" draggable="false" src="' + it.silUrl + '">' : '<img class="sh-img sh-css" alt="" draggable="false" src="' + it.src + '">';
@@ -10113,6 +10349,7 @@
     function shSayName(it) {
       var st = voiceStyle("shadow");
       shLog("name:" + it.id);
+      if (it.type === "shape") { voiceSay([shapeLine("shp-" + it.key, it.name + "!")]); return; }
       if (it.type === "garage") {
         var def = bvKind(it.g.k);
         voiceSay([bvLine("v-" + def.id, def.say + "!")], false, st === "classic");
@@ -10136,7 +10373,18 @@
         } catch (e) { a.muted = false; }
       });
     }
-    function startShadow() {
+    function startShadow(mode) {
+      shg.mode = mode === "shapes" ? "shapes" : "shadow";
+      var scr = shEl("shadow-screen");
+      if (scr) {
+        scr.classList.toggle("is-shapes", shg.mode === "shapes");
+        scr.setAttribute("aria-label", shg.mode === "shapes" ? "Shapes game" : "Shadow game");
+      }
+      var ttl = shEl("sh-title");
+      if (ttl) ttl.textContent = shg.mode === "shapes" ? "Put each shape in its place" : "Put each car on its shadow";
+      var shb = shEl("sh-board"), sht = shEl("sh-tray");
+      if (shb) shb.setAttribute("aria-label", shg.mode === "shapes" ? "Outlines" : "Shadows");
+      if (sht) sht.setAttribute("aria-label", shg.mode === "shapes" ? "Shapes to drag" : "Cars to drag");
       shPrimeSfx();
       shg.gen++;
       shg.timers.forEach(function (t) { clearTimeout(t); });
@@ -10203,6 +10451,7 @@
         if (first) shSay("sh-intro", "Put each car on its shadow!");
         else if (shg.grew) shSay("sh-more", "More shadows!");
         else shSay("sh-find", "Find the shadow!");
+        if (shg.mode === "shapes") shapeAskNext(first ? 2700 : 1800);
       });
     }
     function shLayout(n, tn) {
@@ -10250,6 +10499,20 @@
         slot.setAttribute("aria-label", "Shadow");
         // v45 tricks: some shadows mirrored and tilted, some drawn smaller (the car shows normally once placed)
         var tw = [];
+        if (it.type === "shape") {
+          // v47 Shapes: Hard turns some outlines round and draws some smaller (they stay that way once filled)
+          var rots = (SHAPE_DEFS[it.key] || {}).rot || [];
+          var rot = 0, scl = 1;
+          if (flipLeft > 0 && rots.length && Math.random() < 0.7) { flipLeft--; rot = rots[Math.floor(Math.random() * rots.length)]; }
+          if (sizeLeft > 0 && Math.random() < 0.5) { sizeLeft--; scl = 0.7; }
+          it.tw = [];
+          it.rot = rot; it.scl = scl;
+          slot.setAttribute("aria-label", "Outline");
+          slot.innerHTML = '<span class="sh-art sh-sil shp"' + ((rot || scl !== 1) ? ' style="transform: rotate(' + rot + 'deg) scale(' + scl + ')"' : '') + '>' + shArtHtml(it, true) + '</span>';
+          board.appendChild(slot);
+          it.slot = slot;
+          return;
+        }
         if (flipLeft > 0 && Math.random() < 0.6) { flipLeft--; tw.push("sh-tw-flip"); if (Math.random() < 0.5) tw.push(Math.random() < 0.5 ? "sh-tw-tl" : "sh-tw-tr"); }
         if (sizeLeft > 0 && Math.random() < 0.5) { sizeLeft--; tw.push("sh-tw-small"); }
         it.tw = tw;
@@ -10264,13 +10527,14 @@
         b.className = "sh-piece";
         b.setAttribute("data-sh", it.id);
         b.setAttribute("aria-label", it.name || "Car");
+        if (it.type === "shape") b.classList.add("shp-piece");
         b.innerHTML = '<span class="sh-art">' + shArtHtml(it, false) + '</span>';
         tray.appendChild(b);
         it.piece = b;
         bDrag(b, {
           busy: function () { return shg.busy || it.done; },
           scroller: function () { return null; },
-          onTap: function () { if (!it.done) shSayName(it); },
+          onTap: function () { if (!it.done) { if (it.type === "shape") shapeAsk(it); else shSayName(it); } },
           onKey: function () { if (!it.done && !shg.busy) shadowPlace(it); },
           ghost: function () {
             var r = it.slot.querySelector(".sh-art").getBoundingClientRect();
@@ -10316,8 +10580,9 @@
       var slot = it.slot;
       slot.classList.add("done");
       var art = slot.querySelector(".sh-art");
-      art.className = "sh-art";
+      art.className = "sh-art" + (it.type === "shape" ? " shp" : "");
       art.innerHTML = shArtHtml(it, false);
+      it.piece.classList.remove("shp-asked");
       var tag = document.createElement("span");
       tag.className = "sh-name";
       tag.textContent = it.name || "";
@@ -10327,6 +10592,7 @@
       var pips = shEl("sh-pips");
       if (pips && pips.children[shg.placed - 1]) pips.children[shg.placed - 1].classList.add("done");
       shSayName(it);
+      if (it.type === "shape" && shg.placed < shg.items.length) shapeAskNext(1500);
       if (shg.placed >= shg.items.length) {
         shg.busy = true;
         shg.boards++;
@@ -10347,7 +10613,8 @@
         shLater(function () {
           stopConfetti();
           var before = shg.n;
-          if (shadowSettings.harder !== false) shg.n = Math.min(shadowSettings.max, shg.n + (shadowSettings.level === "hard" ? 2 : 1));
+          var S = shSet();
+          if (S.harder !== false) shg.n = Math.min(S.max, shg.n + (S.level === "hard" ? 2 : 1));
           shg.grew = shg.n > before;
           shadowBoard(false);
         }, 4800);
@@ -10744,6 +11011,7 @@
     bindPinPad();
     bindBuildUi();
     bindShadowUi();
+    bindShapeUi();
     document.getElementById("next-btn").addEventListener("click", onNext);
     document.getElementById("match-home-btn").addEventListener("click", function () { goHome(); });
     document.getElementById("name-home-btn").addEventListener("click", function () { goHome(); });
@@ -13377,6 +13645,13 @@
       startBuild: startBuild,
       startShadow: startShadow,
       shadowSettings: function (v) { if (v) saveShadowSettings(Object.assign({}, shadowSettings, v)); return Object.assign({}, shadowSettings); },
+      shapeSettings: function (v) { if (v) saveShapeSettings(Object.assign({}, shapeSettings, v)); return Object.assign({}, shapeSettings); },
+      shapesState: function () {
+        return { mode: shg.mode, poolSize: shapePoolSize(shg.boards), tricks: shg.tricks, decoys: (shg.decoys || []).map(function (d) { return d.id; }), asked: shg.asked || "",
+          items: shg.items.map(function (it) { return { id: it.id, key: it.key, rot: it.rot || 0, scl: it.scl || 1, done: !!it.done }; }) };
+      },
+      startShapes: function () { startShadow("shapes"); },
+      profileBuild: function () { var p = activeProfile(); return p ? { buildStyle: p.buildStyle, buildV: p.buildV } : null; },
       shadowState: function () {
         return { open: shadowOpen(), n: shg.n, boards: shg.boards, placed: shg.placed, busy: shg.busy, wrong: shg.wrong || 0, sayLog: shg.sayLog.slice(),
           items: shg.items.map(function (it) { return { id: it.id, type: it.type, name: it.name, done: !!it.done, photo: !!it.src, sil: it.silUrl ? "canvas" : (it.src ? "css" : "svg") }; }) };

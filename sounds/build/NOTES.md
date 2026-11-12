@@ -66,3 +66,5 @@ v43: x-exhaust "Exhaust pipe!" (new Exhaust pipe extra). Same Alba voice and pro
 v44: n-7 "Seven!", n-8 "Eight!", all-wheels "All the wheels are on!", other-side "And the other side!", and add-roller re-made as "Add the roller and wheels!" (wheels on both sides). Same Alba voice (Piper en_GB-alba-medium, CC BY 4.0) and processing, checked with Whisper (5 of 5 exact).
 
 v45: every clip in the app was loudness-matched to about -16 LUFS integrated with true peak at or below -1.5 dBTP (gain plus a gentle peak limiter, re-encoded at the same sample rate and bitrate; content, length and licence unchanged). Before, levels ranged from about -23 to -15 LUFS.
+
+v47: Shapes game clips shp-* (15 shape names, "Where does the ... go?" for each, intro, "More shapes!", "Find where they go!"). Same Alba voice (en_GB-alba-medium, CC BY 4.0), Whisper-checked, loudness-matched to -16 LUFS / -1.5 dBTP.

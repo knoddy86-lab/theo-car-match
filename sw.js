@@ -1,6 +1,6 @@
 /* Theo's Car Match service worker — cache-first so the game opens offline
    even when the home computer is unreachable (mobile data). Never caches /api. */
-var CACHE = "theo-car-match-v46";
+var CACHE = "theo-car-match-v47";
 var CORE = [
   "./",
   "./index.html",
@@ -98,6 +98,9 @@ var BUILD_VOICE = ["n-7", "n-8", "all-wheels", "other-side", "x-exhaust", "sh-in
   "s-harper-purple-backhoe", "built-purple-forklift", "s-theo-purple-forklift", "s-harper-purple-forklift",
   "built-purple-loader", "s-theo-purple-loader", "s-harper-purple-loader"
 ];
+// v47: Shapes game voice (Alba) + Classic clips
+BUILD_VOICE = BUILD_VOICE.concat(["shp-square", "shp-q-square", "shp-triangle", "shp-q-triangle", "shp-rectangle", "shp-q-rectangle", "shp-circle", "shp-q-circle", "shp-oval", "shp-q-oval", "shp-star", "shp-q-star", "shp-heart", "shp-q-heart", "shp-diamond", "shp-q-diamond", "shp-semicircle", "shp-q-semicircle", "shp-crescent", "shp-q-crescent", "shp-arrow", "shp-q-arrow", "shp-cross", "shp-q-cross", "shp-pentagon", "shp-q-pentagon", "shp-hexagon", "shp-q-hexagon", "shp-octagon", "shp-q-octagon", "shp-intro", "shp-more", "shp-find"]);
+OPTIONAL = OPTIONAL.concat(["shp-square", "shp-q-square", "shp-triangle", "shp-q-triangle", "shp-rectangle", "shp-q-rectangle", "shp-circle", "shp-q-circle", "shp-oval", "shp-q-oval", "shp-star", "shp-q-star", "shp-heart", "shp-q-heart", "shp-diamond", "shp-q-diamond", "shp-semicircle", "shp-q-semicircle", "shp-crescent", "shp-q-crescent", "shp-arrow", "shp-q-arrow", "shp-cross", "shp-q-cross", "shp-pentagon", "shp-q-pentagon", "shp-hexagon", "shp-q-hexagon", "shp-octagon", "shp-q-octagon", "shp-intro", "shp-more", "shp-find", "shp-try", "shp-done"].map(function (k) { return "./sounds/classic/" + k + ".mp3"; }));
 OPTIONAL = OPTIONAL.concat(BUILD_VOICE.map(function (k) { return "./sounds/build/" + k + ".mp3"; }));
 // v37: the rest of the game speaks with the same natural voice clips (see sounds/voice/NOTES.md), cached for offline play.
 var GAME_VOICE = ["uncle-ashley", "aunty-ashleigh", "wheres-uncle-ashley", "wheres-aunty-ashleigh", 
