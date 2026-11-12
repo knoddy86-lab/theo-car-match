@@ -49,3 +49,5 @@ Family members' own recordings on a card still play first. The offline single HT
 uses the device voice.
 
 v41: added uncle-ashley, aunty-ashleigh, wheres-uncle-ashley, wheres-aunty-ashleigh (same Alba voice and processing).
+
+v45: every clip in the app was loudness-matched to about -16 LUFS integrated with true peak at or below -1.5 dBTP (gain plus a gentle peak limiter, re-encoded at the same sample rate and bitrate; content, length and licence unchanged). Before, levels ranged from about -23 to -15 LUFS.

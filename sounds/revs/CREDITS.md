@@ -23,3 +23,5 @@ Clips were trimmed to the best 2–4 second rev, faded in and out, loudness-norm
 
 Real recordings used: all 12 files above.
 Synthesized: none.
+
+v45: every clip in the app was loudness-matched to about -16 LUFS integrated with true peak at or below -1.5 dBTP (gain plus a gentle peak limiter, re-encoded at the same sample rate and bitrate; content, length and licence unchanged). Before, levels ranged from about -23 to -15 LUFS.

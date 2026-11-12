@@ -1852,6 +1852,15 @@
     /* solid dark shape: alpha >= 0.2 becomes fully dark (glass, shine and gaps don't show through), the faint ground shadow drops out */
     .sh-sil svg, .sh-sil img.sh-css { filter: brightness(0); filter: url(#sh-solid); }
     .sh-sil { opacity: 0.74; }
+    /* v45 tricks */
+    .sh-art.sh-tw-flip { transform: scaleX(-1); }
+    .sh-art.sh-tw-flip.sh-tw-tl { transform: scaleX(-1) rotate(-9deg); }
+    .sh-art.sh-tw-flip.sh-tw-tr { transform: scaleX(-1) rotate(9deg); }
+    .sh-art.sh-tw-small { transform: scale(0.72); }
+    .sh-art.sh-tw-flip.sh-tw-small { transform: scaleX(-1) scale(0.72); }
+    .sh-art.sh-tw-flip.sh-tw-tl.sh-tw-small { transform: scaleX(-1) rotate(-9deg) scale(0.72); }
+    .sh-art.sh-tw-flip.sh-tw-tr.sh-tw-small { transform: scaleX(-1) rotate(9deg) scale(0.72); }
+    .sh-slot.sh-decoy-gone { opacity: 0.25; transition: opacity 0.5s; }
     .sh-slot.done .sh-art { opacity: 1; animation: sh-pop 0.42s cubic-bezier(.3,1.6,.5,1); }
     @keyframes sh-pop { 0% { transform: scale(0.82); } 60% { transform: scale(1.1); } 100% { transform: scale(1); } }
     .sh-slot .sh-name { position: absolute; left: 50%; bottom: 4px; transform: translateX(-50%); background: #34C759; color: #fff; font-weight: 800; font-size: clamp(14px, 2.6vmin, 24px); border-radius: 999px; padding: 2px 12px; white-space: nowrap; max-width: 96%; overflow: hidden; text-overflow: ellipsis; box-shadow: 0 3px 0 #1E8E3E; }
@@ -2535,7 +2544,15 @@
           <div class="diff-custom" id="shadow-options">
             <h3>Shadow game</h3>
             <div class="diff-row">
-              <label for="sh-set-start">Shadows to start with</label>
+              <label for="sh-set-level">Difficulty (Easy: plain shadows. Medium: starts at 3, then look-alike cars, flipped and smaller shadows, and a spare shadow with no car. Hard: starts at 4, two more each board, all the tricks sooner)</label>
+              <select id="sh-set-level" aria-label="Shadow difficulty">
+                <option value="easy">Easy</option>
+                <option value="medium">Medium</option>
+                <option value="hard">Hard</option>
+              </select>
+            </div>
+            <div class="diff-row">
+              <label for="sh-set-start">Shadows to start with (Easy; Medium starts at 3 or more, Hard at 4 or more)</label>
               <select id="sh-set-start" aria-label="Shadows to start with">
                 <option value="2">2</option>
                 <option value="3">3</option>
@@ -2841,7 +2858,7 @@
     var BLOB_FETCH_MS = 20000;
     var bootStartedAt = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
     var keyChangeOpen = false;
-    var APP_VERSION = "44";
+    var APP_VERSION = "45";
     var MATCH_PAIR_CAP = 6;
     var NAME_ROUNDS = 6;
     var THUMB_MAX = 256;
@@ -4065,10 +4082,16 @@
 
     // v41: a few Classic lines have their own recorded clip (same Sound of Text voice as the old car names);
     // anything else uses the device voice as before.
-    var CLASSIC_LINE_CLIPS = { "uncle-ashley": 1, "aunty-ashleigh": 1, "wheres-uncle-ashley": 1, "wheres-aunty-ashleigh": 1 };
+    // v45: the Name game says car names as first / last / nickname too; those (and Berry, Moss, Dart, which never had
+    // a Classic clip) used the device voice, which is much quieter on iPhone/iPad. They now have their own clip.
+    var CLASSIC_LINE_CLIPS = { "uncle-ashley": 1, "aunty-ashleigh": 1, "wheres-uncle-ashley": 1, "wheres-aunty-ashleigh": 1,
+      "berry": 1, "moss": 1, "dart": 1, "rosie": 1, "racer": 1, "officer": 1, "dot": 1 };
+    var CLASSIC_FULL_CLIPS = { "rosie-racer": "rosie", "tugger": "tugger", "skye": "skye", "pip": "pip", "sunny": "sunny", "hank": "hank", "officer-dot": "officer" };
     function classicSpeakText(text) {
       var k = voiceKey(text);
-      if (!CLASSIC_LINE_CLIPS[k]) { deviceSpeakText(text); return; }
+      // v45: a built-in car's full name also uses its recorded Classic clip instead of the quieter device voice
+      var full = CLASSIC_FULL_CLIPS[k];
+      if (!CLASSIC_LINE_CLIPS[k] && !full) { deviceSpeakText(text); return; }
       var token = playToken;
       var a = getSharedAudio();
       customAudioEl = a;
@@ -4076,7 +4099,7 @@
       function fail() { if (failed) return; failed = true; a.removeEventListener("error", fail); if (token === playToken) deviceSpeakText(text); }
       a.addEventListener("error", fail);
       try {
-        var src = SOUND_DIR + "classic/" + k + ".mp3";
+        var src = CLASSIC_LINE_CLIPS[k] ? SOUND_DIR + "classic/" + k + ".mp3" : SOUND_DIR + full + ".mp3";
         a.muted = false;
         a.setAttribute("data-src", src);
         a.src = src;
@@ -9405,7 +9428,7 @@
     // (same rules as Drag build: a real drag of 30px+, an 80px snap zone, a tap only wiggles and says the name).
     var SHADOW_KEY = "theo-car-match-shadow";
     var SHADOW_SIL_PREFIX = "theo-car-match-shadow-sil:";
-    var shadowSettings = { start: 2, harder: true, max: 6, pool: "mix" };
+    var shadowSettings = { start: 2, harder: true, max: 6, pool: "mix", level: "medium" };
     try {
       var shRaw = JSON.parse(localStorage.getItem(SHADOW_KEY) || "{}") || {};
       shadowSettings = normalizeShadowSettings(shRaw);
@@ -9416,7 +9439,9 @@
       var st = Math.max(2, Math.min(4, parseInt(raw.start, 10) || 2));
       var mx = Math.max(2, Math.min(8, parseInt(raw.max, 10) || 6));
       if (st > mx) st = mx;
-      return { start: st, harder: raw.harder !== false, max: mx, pool: raw.pool === "cars" ? "cars" : "mix" };
+      // v45: Easy / Medium / Hard (Lindsay: "make the shadow game harder"); default Medium.
+      var lv = raw.level === "easy" || raw.level === "hard" ? raw.level : "medium";
+      return { start: st, harder: raw.harder !== false, max: mx, pool: raw.pool === "cars" ? "cars" : "mix", level: lv };
     }
     function saveShadowSettings(next) {
       shadowSettings = normalizeShadowSettings(next);
@@ -9429,6 +9454,8 @@
       if (h) h.checked = shadowSettings.harder !== false;
       if (m) m.value = String(shadowSettings.max);
       if (pl) pl.value = shadowSettings.pool;
+      var lvEl = document.getElementById("sh-set-level");
+      if (lvEl) lvEl.value = shadowSettings.level;
       var row = document.getElementById("sh-set-max-row");
       if (row) row.hidden = shadowSettings.harder === false;
     }
@@ -9440,6 +9467,31 @@
       var t = setTimeout(function () { if (g === shg.gen) fn(); }, ms);
       shg.timers.push(t);
       return t;
+    }
+    // ---- v45: Shadow difficulty ----
+    function shStartCount() {
+      var st = shadowSettings.start, lv = shadowSettings.level;
+      if (lv === "medium") st = Math.max(st, 3);
+      if (lv === "hard") st = Math.max(st, 4);
+      return Math.min(st, shadowSettings.max);
+    }
+    // Tricks unlock board by board (with Get harder on): 1 look-alike cars, 2 flipped / tilted shadows,
+    // 3 shadows a different size, 4 a spare shadow with no car (5+ on Hard: two spares). Easy: none.
+    function shStage() {
+      var lv = shadowSettings.level;
+      if (lv === "easy") return 0;
+      var base = lv === "hard" ? 2 : 0;
+      var grow = shadowSettings.harder !== false ? shg.boards : (lv === "hard" ? 2 : 1);
+      return Math.min(6, base + 1 + grow);
+    }
+    function shTricks() {
+      var s = shStage(), lv = shadowSettings.level;
+      return { alike: s >= 1, flip: s >= 2, size: s >= 3, decoys: s >= 4 ? ((lv === "hard" && s >= 5) ? 2 : 1) : 0 };
+    }
+    function shFamily(it) {
+      if (it.type === "garage") return "g:" + (bvKind(it.g.k).group || "road");
+      var k = it.car && it.car.kind;
+      return (k === "tow" || k === "forklift") ? "work" : "car";
     }
     function shLog(x) { shg.sayLog.push(x); if (shg.sayLog.length > 60) shg.sayLog.shift(); }
     function shSay(key, text) {
@@ -9484,6 +9536,16 @@
         return a.concat(b);
       }
       var cards = fresh(c.cards), garage = fresh(c.garage);
+      if (shg.tricks && shg.tricks.alike) {
+        // look-alikes: fill the board from one family (all cars, or all diggers...) as far as it goes
+        var all = cards.concat(garage), fam = {};
+        all.forEach(function (it) { var f = shFamily(it); (fam[f] = fam[f] || []).push(it); });
+        var big = Object.keys(fam).sort(function (a, b) { return fam[b].length - fam[a].length; })[0];
+        var first = big ? fam[big] : [];
+        var rest = shuffle(all.filter(function (it) { return first.indexOf(it) === -1; }));
+        var ordered = first.concat(rest);
+        return { pick: shuffle(ordered.slice(0, n)), spare: ordered.slice(n) };
+      }
       var g = Math.min(garage.length, Math.max(garage.length ? 1 : 0, Math.floor(n / 2)));
       if (cards.length < n - g) g = Math.min(garage.length, n - cards.length);
       var pick = garage.slice(0, g).concat(cards.slice(0, n - g));
@@ -9596,7 +9658,7 @@
       shEl("shadow-screen").hidden = false;
       updatePlayerUi();
       updateHomeBtn();
-      shg.n = shadowSettings.start;
+      shg.n = shStartCount();
       shg.boards = 0;
       shg.last = {};
       shadowBoard(true);
@@ -9614,6 +9676,7 @@
       var gen = ++shg.gen;
       shg.busy = true;
       var want = shg.n;
+      shg.tricks = shTricks();
       var res = shadowPick(want);
       var pick = res.pick, spare = res.spare;
       // Photo cards need their silhouette made first; a photo that can't make one is swapped out.
@@ -9635,6 +9698,12 @@
       ready().then(function () {
         if (gen !== shg.gen || !shadowOpen()) return;
         shg.items = pick;
+        // decoy shadows: shapes with no car in the tray (never a photo, never a shape already on the board)
+        var usedShape = {};
+        pick.forEach(function (it) { usedShape[it.shape] = true; });
+        var nd = Math.min(shg.tricks.decoys, Math.max(0, 10 - pick.length));
+        shg.decoys = spare.filter(function (it) { return !usedShape[it.shape] && !(it.type === "card" && it.src); }).slice(0, nd)
+          .map(function (it) { return Object.assign({}, it, { id: "d:" + it.id, decoy: true }); });
         shg.last = {};
         pick.forEach(function (it) { shg.last[it.id] = true; });
         shg.placed = 0;
@@ -9645,14 +9714,16 @@
         else shSay("sh-find", "Find the shadow!");
       });
     }
-    function shLayout(n) {
+    function shLayout(n, tn) {
+      // n = shadows on the board (cars + spare shadows), tn = cars in the tray
+      tn = tn || n;
       var land = innerWidth > innerHeight;
       var cols, tcols;
       // v43: up to 8. Landscape: one row up to 5, then two rows. Portrait phones: 2 columns. iPad portrait: 2-3 columns.
-      if (land) { cols = n <= 5 ? n : Math.ceil(n / 2); tcols = n; }
-      else { cols = n <= 2 ? 1 : 2; tcols = n <= 3 ? n : Math.ceil(n / 2); }
-      if (!land && innerWidth >= 700) { cols = n <= 4 ? 2 : 3; tcols = n <= 3 ? n : Math.ceil(n / 2); }
-      var trows = Math.ceil(n / tcols);
+      if (land) { cols = n <= 5 ? n : Math.ceil(n / 2); tcols = tn; }
+      else { cols = n <= 2 ? 1 : n <= 8 ? 2 : 3; tcols = tn <= 3 ? tn : Math.ceil(tn / 2); }
+      if (!land && innerWidth >= 700) { cols = n <= 4 ? 2 : 3; tcols = tn <= 3 ? tn : Math.ceil(tn / 2); }
+      var trows = Math.ceil(tn / tcols);
       var trayh;
       if (land) trayh = Math.round(Math.min(innerHeight * (n >= 6 ? 0.26 : 0.3), 170));
       else trayh = Math.round(Math.min(innerHeight * (trows > 1 ? 0.3 : 0.19), trows > 1 ? 330 : 190));
@@ -9661,9 +9732,12 @@
     function renderShadowBoard() {
       var board = shEl("sh-board"), tray = shEl("sh-tray");
       var items = shg.items, n = items.length;
-      var L = shLayout(n);
+      var decoys = shg.decoys || [];
+      var slots = shuffle(items.concat(decoys));
+      var L = shLayout(slots.length, n);
+      var tr = shg.tricks || {};
       // v43: lots of shadows on a short phone: drop the title line to give the shadows room (the voice says it).
-      shEl("shadow-screen").classList.toggle("sh-many", n >= 6 && innerHeight < 760 && innerWidth < innerHeight);
+      shEl("shadow-screen").classList.toggle("sh-many", slots.length >= 6 && innerHeight < 760 && innerWidth < innerHeight);
       board.style.setProperty("--cols", L.cols);
       tray.style.setProperty("--tcols", L.tcols);
       tray.style.setProperty("--trayh", L.trayh + "px");
@@ -9677,12 +9751,18 @@
         var tries = 0;
         while (tries++ < 6 && order.every(function (v, i) { return v === i; })) order = shuffle(order);
       }
-      items.forEach(function (it, i) {
+      var flipLeft = tr.flip ? Math.max(1, Math.round(slots.length / 2)) : 0, sizeLeft = tr.size ? Math.max(1, Math.round(slots.length / 3)) : 0;
+      slots.forEach(function (it, i) {
         var slot = document.createElement("div");
-        slot.className = "sh-slot";
+        slot.className = "sh-slot" + (it.decoy ? " sh-decoy" : "");
         slot.setAttribute("data-sh", it.id);
         slot.setAttribute("aria-label", "Shadow");
-        slot.innerHTML = '<span class="sh-art sh-sil">' + shArtHtml(it, true) + '</span>';
+        // v45 tricks: some shadows mirrored and tilted, some drawn smaller (the car shows normally once placed)
+        var tw = [];
+        if (flipLeft > 0 && Math.random() < 0.6) { flipLeft--; tw.push("sh-tw-flip"); if (Math.random() < 0.5) tw.push(Math.random() < 0.5 ? "sh-tw-tl" : "sh-tw-tr"); }
+        if (sizeLeft > 0 && Math.random() < 0.5) { sizeLeft--; tw.push("sh-tw-small"); }
+        it.tw = tw;
+        slot.innerHTML = '<span class="sh-art sh-sil ' + tw.join(" ") + '">' + shArtHtml(it, true) + '</span>';
         board.appendChild(slot);
         it.slot = slot;
       });
@@ -9720,7 +9800,7 @@
     function shadowDrop(it, x, y) {
       if (shg.busy || it.done) return false;
       var best = null, bestD = 1e9;
-      shg.items.forEach(function (o) {
+      shg.items.concat(shg.decoys || []).forEach(function (o) {
         if (o.done) return;
         var r = o.slot.getBoundingClientRect();
         var d = shRectDist(r, x, y);
@@ -9745,7 +9825,7 @@
       var slot = it.slot;
       slot.classList.add("done");
       var art = slot.querySelector(".sh-art");
-      art.classList.remove("sh-sil");
+      art.className = "sh-art";
       art.innerHTML = shArtHtml(it, false);
       var tag = document.createElement("span");
       tag.className = "sh-name";
@@ -9759,6 +9839,7 @@
       if (shg.placed >= shg.items.length) {
         shg.busy = true;
         shg.boards++;
+        (shg.decoys || []).forEach(function (d) { if (d.slot) d.slot.classList.add("sh-decoy-gone"); });
         // v43: the Match game's hooray cheer + confetti when every shadow is filled, then "You did it!".
         shLater(function () {
           shLog("cheer");
@@ -9775,7 +9856,7 @@
         shLater(function () {
           stopConfetti();
           var before = shg.n;
-          if (shadowSettings.harder !== false && shg.n < shadowSettings.max) shg.n++;
+          if (shadowSettings.harder !== false) shg.n = Math.min(shadowSettings.max, shg.n + (shadowSettings.level === "hard" ? 2 : 1));
           shg.grew = shg.n > before;
           shadowBoard(false);
         }, 4800);
@@ -9792,7 +9873,7 @@
     function bindShadowUi() {
       var sb = shEl("shadow-btn");
       if (sb) sb.addEventListener("click", function () { unlockMedia(); startShadow(); });
-      ["sh-set-start", "sh-set-harder", "sh-set-max", "sh-set-pool"].forEach(function (id) {
+      ["sh-set-start", "sh-set-harder", "sh-set-max", "sh-set-pool", "sh-set-level"].forEach(function (id) {
         var el = shEl(id);
         if (!el) return;
         el.addEventListener("change", function () {
@@ -9800,7 +9881,8 @@
             start: shEl("sh-set-start").value,
             harder: shEl("sh-set-harder").checked,
             max: shEl("sh-set-max").value,
-            pool: shEl("sh-set-pool").value
+            pool: shEl("sh-set-pool").value,
+            level: shEl("sh-set-level").value
           });
         });
       });
@@ -9808,7 +9890,7 @@
       paintShadowStartArt();
       window.addEventListener("resize", function () {
         if (!shadowOpen() || !shg.items.length) return;
-        var L = shLayout(shg.items.length);
+        var L = shLayout(shg.items.length + (shg.decoys || []).length, shg.items.length);
         shEl("sh-board").style.setProperty("--cols", L.cols);
         shEl("sh-tray").style.setProperty("--tcols", L.tcols);
         shEl("sh-tray").style.setProperty("--trayh", L.trayh + "px");
@@ -12787,7 +12869,8 @@
       },
       shadowSilhouetteOf: function (src) { return shadowSilhouette({ car: { id: "test-" + Math.random().toString(36).slice(2) }, src: src }); },
       bvSvg: function (k, o) { return bvSvg(k, o || {}); },
-      shadowTestBoard: function (n) { shg.n = Math.max(2, Math.min(8, n | 0)); shg.grew = false; shadowBoard(false); },
+      shadowTestBoard: function (n, boards) { shg.n = Math.max(2, Math.min(8, n | 0)); if (boards != null) shg.boards = boards; shg.grew = false; shadowBoard(false); },
+      shadowTricks: function () { return Object.assign({ stage: shStage(), start: shStartCount(), decoys: (shg.decoys || []).length, twists: shg.items.concat(shg.decoys || []).map(function (it) { return (it.tw || []).join("+"); }) }, shg.tricks || {}); },
       shadowCandidates: function () { var c = shadowCandidates(); return { cards: c.cards.map(function (x) { return x.id; }), garage: c.garage.map(function (x) { return x.id; }) }; },
       stopBuild: stopBuild,
       buildGo: buildGo,

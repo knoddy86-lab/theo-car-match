@@ -13,3 +13,5 @@ Clips were faded, loudness-normalised to about −19 LUFS (the shortest clip is 
 | `03-squeaky.mp3` | Short squeaky fart | ~1.5s | Short Squeaky Fart | BipolarBad | https://freesound.org/people/BipolarBad/sounds/759915/ | CC0 1.0 |
 
 v43: the Shadow game uses the same three clips when a car is dropped on the wrong shadow (fart, then Alba's "Try again!"). Dropping in empty space just floats back with "Try again!". Other games are unchanged. Same files, already in the offline cache (`sw.js`).
+
+v45: every clip in the app was loudness-matched to about -16 LUFS integrated with true peak at or below -1.5 dBTP (gain plus a gentle peak limiter, re-encoded at the same sample rate and bitrate; content, length and licence unchanged). Before, levels ranged from about -23 to -15 LUFS.

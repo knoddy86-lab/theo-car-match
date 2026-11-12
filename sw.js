@@ -1,6 +1,6 @@
 /* Theo's Car Match service worker — cache-first so the game opens offline
    even when the home computer is unreachable (mobile data). Never caches /api. */
-var CACHE = "theo-car-match-v44";
+var CACHE = "theo-car-match-v45";
 var CORE = [
   "./",
   "./index.html",
@@ -114,7 +114,7 @@ var GAME_VOICE = ["uncle-ashley", "aunty-ashleigh", "wheres-uncle-ashley", "wher
   "wheres-marissa", "wheres-mitch", "wheres-nanna", "wheres-theo"
 ];
 OPTIONAL = OPTIONAL.concat(GAME_VOICE.map(function (k) { return "./sounds/voice/" + k + ".mp3"; }));
-OPTIONAL = OPTIONAL.concat(["uncle-ashley", "aunty-ashleigh", "wheres-uncle-ashley", "wheres-aunty-ashleigh"].map(function (k) { return "./sounds/classic/" + k + ".mp3"; }));
+OPTIONAL = OPTIONAL.concat(["uncle-ashley", "aunty-ashleigh", "wheres-uncle-ashley", "wheres-aunty-ashleigh", "berry", "moss", "dart", "rosie", "racer", "officer", "dot"].map(function (k) { return "./sounds/classic/" + k + ".mp3"; }));
 
 function addBestEffort(cache, urls) {
   return Promise.all(urls.map(function (u) {

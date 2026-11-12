@@ -64,3 +64,5 @@ v42: Shadow game lines: sh-intro "Put each car on its shadow!", sh-try "Try agai
 v43: x-exhaust "Exhaust pipe!" (new Exhaust pipe extra). Same Alba voice and processing, checked with Whisper (exact).
 
 v44: n-7 "Seven!", n-8 "Eight!", all-wheels "All the wheels are on!", other-side "And the other side!", and add-roller re-made as "Add the roller and wheels!" (wheels on both sides). Same Alba voice (Piper en_GB-alba-medium, CC BY 4.0) and processing, checked with Whisper (5 of 5 exact).
+
+v45: every clip in the app was loudness-matched to about -16 LUFS integrated with true peak at or below -1.5 dBTP (gain plus a gentle peak limiter, re-encoded at the same sample rate and bitrate; content, length and licence unchanged). Before, levels ranged from about -23 to -15 LUFS.
