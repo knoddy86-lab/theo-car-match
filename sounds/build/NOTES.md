@@ -62,3 +62,5 @@ v40: added the rubbish truck clips (v-rubbish, x-bin, x-amber "Warning lights!",
 v42: Shadow game lines: sh-intro "Put each car on its shadow!", sh-try "Try again!", sh-done "You did it!", sh-more "More shadows!", sh-find "Find the shadow!". Same Alba voice and processing, checked with Whisper (5 of 5 exact).
 
 v43: x-exhaust "Exhaust pipe!" (new Exhaust pipe extra). Same Alba voice and processing, checked with Whisper (exact).
+
+v44: n-7 "Seven!", n-8 "Eight!", all-wheels "All the wheels are on!", other-side "And the other side!", and add-roller re-made as "Add the roller and wheels!" (wheels on both sides). Same Alba voice (Piper en_GB-alba-medium, CC BY 4.0) and processing, checked with Whisper (5 of 5 exact).

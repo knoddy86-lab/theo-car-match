@@ -1,6 +1,6 @@
 /* Theo's Car Match service worker — cache-first so the game opens offline
    even when the home computer is unreachable (mobile data). Never caches /api. */
-var CACHE = "theo-car-match-v43";
+var CACHE = "theo-car-match-v44";
 var CORE = [
   "./",
   "./index.html",
@@ -41,7 +41,7 @@ var OPTIONAL = [
   "./sounds/fart/03-squeaky.mp3"
 ];
 // v36: Build a car voice clips (natural voice, see sounds/build/NOTES.md), cached for offline play.
-var BUILD_VOICE = ["x-exhaust", "sh-intro", "sh-try", "sh-done", "sh-more", "sh-find", "dg-parts", "dg-extras", "dg-extra", "p-body", "p-roof", "p-top", "v-rubbish", "x-bin", "x-amber", "x-recycle", "x-arm", "x-bags", "built-red-rubbish", "s-theo-red-rubbish", "s-harper-red-rubbish", "built-blue-rubbish", "s-theo-blue-rubbish", "s-harper-blue-rubbish", "built-yellow-rubbish", "s-theo-yellow-rubbish", "s-harper-yellow-rubbish", "built-green-rubbish", "s-theo-green-rubbish", "s-harper-green-rubbish", "built-orange-rubbish", "s-theo-orange-rubbish", "s-harper-orange-rubbish", "built-purple-rubbish", "s-theo-purple-rubbish", "s-harper-purple-rubbish", 
+var BUILD_VOICE = ["n-7", "n-8", "all-wheels", "other-side", "x-exhaust", "sh-intro", "sh-try", "sh-done", "sh-more", "sh-find", "dg-parts", "dg-extras", "dg-extra", "p-body", "p-roof", "p-top", "v-rubbish", "x-bin", "x-amber", "x-recycle", "x-arm", "x-bags", "built-red-rubbish", "s-theo-red-rubbish", "s-harper-red-rubbish", "built-blue-rubbish", "s-theo-blue-rubbish", "s-harper-blue-rubbish", "built-yellow-rubbish", "s-theo-yellow-rubbish", "s-harper-yellow-rubbish", "built-green-rubbish", "s-theo-green-rubbish", "s-harper-green-rubbish", "built-orange-rubbish", "s-theo-orange-rubbish", "s-harper-orange-rubbish", "built-purple-rubbish", "s-theo-purple-rubbish", "s-harper-purple-rubbish", 
   "what-build", "road", "construction", "pick-colour", "add-wheels", "add-tracks", "add-roller",
   "pick-extras", "pick-extra", "ready-go", "vroom", "beep-beep", "great-building", "n-1", "n-2", "n-3",
   "n-4", "n-5", "n-6", "c-red", "c-blue", "c-yellow", "c-green", "c-orange", "c-purple", "v-car", "v-ute",

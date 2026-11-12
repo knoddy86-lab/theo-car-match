@@ -1923,6 +1923,19 @@
     .b-blob.green { background: #43A047; } .b-blob.orange { background: #FB8C00; } .b-blob.purple { background: #8E24AA; }
     .b-count { position: absolute; left: 0; top: 0; width: clamp(70px, 11vmin, 104px); aspect-ratio: 1 / 1; border-radius: 50%; background: #FFD54F; border: 6px solid #fff; box-shadow: 0 6px 0 #F9A825, 0 12px 18px rgba(0,0,0,0.16); color: #D32F2F; font-weight: 900; font-size: clamp(34px, 6vmin, 52px); display: flex; align-items: center; justify-content: center; z-index: 3; }
     .b-count[hidden] { display: none; }
+    /* v44: wheels on both sides */
+    .b-hero.b3-two { height: clamp(260px, 46vh, 640px); }
+    .b-sides { position: absolute; inset: 0; display: flex; flex-direction: column; gap: 2%; }
+    .b-side { position: relative; flex: 1 1 0; min-height: 0; }
+    .b-side > svg { width: 100%; height: 100%; overflow: visible; }
+    .b-far > svg { transform: scaleX(-1); }
+    .b-side-turn { position: absolute; right: 2%; top: 0; font-size: clamp(22px, 4.4vmin, 40px); line-height: 1; color: #fff; background: rgba(0,0,0,0.22); border-radius: 50%; width: 1.4em; height: 1.4em; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+    .b-count b { font-weight: 900; }
+    .b-count small { opacity: 0.75; }
+    .b3-two .b-count { top: calc(50% - clamp(35px, 5.5vmin, 52px)); }
+    .b-count.b-count-done { background: #34C759; color: #fff; box-shadow: 0 6px 0 #1E9E45, 0 12px 18px rgba(0,0,0,0.16); }
+    .b-spares.b-spares-many { gap: clamp(10px, 2.6vw, 22px); }
+    .b-spares.b-spares-many .b-spare { width: clamp(66px, 12.5vmin, 128px); }
     .b-count small { font-size: 0.6em; }
     .b-count.pop { animation: b-pop 0.45s ease-out; }
     .b-hero .bv-slot { cursor: pointer; }
@@ -1960,11 +1973,7 @@
     .b-ghost-back { transition: left 0.3s ease, top 0.3s ease, width 0.3s ease, height 0.3s ease, opacity 0.3s ease; }
     body.b-dragging, body.b-dragging * { cursor: grabbing; }
     .b-extras.b-drag { grid-auto-flow: column; grid-template-rows: repeat(2, var(--xrow)); grid-auto-columns: clamp(104px, 29vw, 156px); grid-template-columns: none; overflow-x: auto; overflow-y: hidden; overscroll-behavior: contain; touch-action: none; }
-    .b4-hero { height: clamp(110px, 26vh, 360px); flex: 0 1 auto; min-height: 84px; }
-    .b4-hero.b-dragoff { touch-action: none; -webkit-user-select: none; user-select: none; }
-    .b-extra.b-tapx { border-style: dashed; border-color: #C5CAE9; }
-    .b-extra.b-tapx.on { border-style: solid; border-color: #34C759; }
-    .b-extra .b-tapx-badge { position: absolute; left: 6px; top: 6px; font-size: 12px; font-weight: 800; color: #fff; background: #7986CB; border-radius: 999px; padding: 1px 7px; pointer-events: none; }
+    .b4-hero { height: clamp(110px, 26vh, 360px); flex: 0 1 auto; min-height: 84px; transform: translateZ(0); isolation: isolate; }
     .b-extras { --xrow: clamp(100px, 13.5vh, 160px); --xgap: clamp(12px, 2.2vmin, 22px); display: grid; grid-template-columns: repeat(auto-fill, minmax(clamp(100px, 28vw, 156px), 1fr)); grid-auto-rows: var(--xrow); align-content: start; gap: var(--xgap); width: min(100%, 940px); flex: 1 1 0; min-height: calc(2 * var(--xrow) + var(--xgap) + 30px); overflow-y: auto; -webkit-overflow-scrolling: touch; touch-action: pan-y; padding: 14px 12px 16px; border-radius: 24px; }
     @media (orientation: portrait) and (max-height: 720px) {
       .bstep[data-step="4"] .b-title { font-size: 22px; padding: 3px 16px 5px; }
@@ -2049,6 +2058,10 @@
       .b-paints { gap: 12px; }
       .b-blob { width: clamp(64px, 20vh, 100px); }
       .b-spares { min-height: 0; }
+      .build-screen .bstep[data-step="3"] { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); }
+      .b-spares.b-spares-many { gap: 8px 12px; }
+      .b-spares.b-spares-many .b-spare { width: clamp(60px, 17vh, 96px); }
+      .b-hero.b3-two { height: 80vh; }
       .build-screen .bstep[data-step="4"] { grid-template-columns: 40% 1fr; grid-template-rows: auto 1fr auto; }
       .bstep[data-step="4"] .b4-hero { grid-column: 1; grid-row: 2; width: 100%; height: 100%; max-height: 52vh; }
       .bstep[data-step="4"] .b-done { grid-column: 1; grid-row: 3; min-height: 56px; font-size: 26px; min-width: 180px; margin-bottom: calc(var(--safe-b) + 4px); }
@@ -2480,7 +2493,7 @@
               </select>
             </div>
             <div class="diff-row">
-              <label for="build-style">Build style (Simple: drag the wheels on, tap extras on and off; Extra: drag the body, roof, wheels and parts like buckets and exhausts on, drag a part off to remove it)</label>
+              <label for="build-style">Build style (Simple: drag all the wheels on; Extra: drag the body, roof and all the wheels on). Extras are tap buttons in both.</label>
               <select id="build-style" aria-label="Build style">
                 <option value="tap">Simple</option>
                 <option value="drag">Extra</option>
@@ -2828,7 +2841,7 @@
     var BLOB_FETCH_MS = 20000;
     var bootStartedAt = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
     var keyChangeOpen = false;
-    var APP_VERSION = "43";
+    var APP_VERSION = "44";
     var MATCH_PAIR_CAP = 6;
     var NAME_ROUNDS = 6;
     var THUMB_MAX = 256;
@@ -8510,7 +8523,7 @@
     // ---- v35: Build a car game ----
     var BUILD_GARAGE_PREFIX = "theo-car-match-garage:";
     var BUILD_GARAGE_MAX = 36;
-    var NUMBER_WORDS = ["zero", "one", "two", "three", "four", "five", "six"];
+    var NUMBER_WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight"];
     var build = { step: 0, steps: [1, 2, 3, 4, 5], kind: "", color: "", parts: [], extras: [], tab: "road", timers: [], busy: false, lastSimple: "", drag: null, gen: 0 };
 
     function buildEl(id) { return document.getElementById(id); }
@@ -8702,7 +8715,7 @@
     }
     function buildPartsTitle(def) {
       if (def.id === "excavator") return "Add the tracks";
-      if (def.id === "roller") return "Add the roller and wheel";
+      if (def.id === "roller") return "Add the roller and wheels";
       return "Add the wheels";
     }
 
@@ -8760,6 +8773,8 @@
       document.body.classList.remove("garage-on");
     }
     function buildGoStep(n) {
+      endBuildDrag();
+      clearBuildGhosts();
       build.step = n;
       build.busy = false;
       if (n === 1) renderBuildPick();
@@ -8865,20 +8880,61 @@
     }
 
     // Step 3: wheels / tracks / roller
+    // v44: every wheel is shown and fitted. The vehicle is drawn twice: this side, and below (beside it in
+    // landscape) the other side, mirrored like walking round it. Each wheel spot on either side is its own
+    // slot, so a car fits 4 wheels, a truck 6, the rubbish truck 8. Tracks are already both sides in the
+    // picture, and the roller's drum spans the whole width, so those are not doubled.
+    function buildSlotsFor(def) {
+      var slots = def.parts.map(function (pt, i) { return { p: i, side: 0 }; });
+      var hasWheels = def.parts.some(function (pt) { return pt.t === "wheel"; });
+      if (hasWheels) def.parts.forEach(function (pt, i) { if (pt.t === "wheel") slots.push({ p: i, side: 1 }); });
+      return slots;
+    }
+    function buildSlotOf(i, side) {
+      for (var k = 0; k < build.slots.length; k++) if (build.slots[k].p === i && build.slots[k].side === side) return k;
+      return -1;
+    }
+    function buildTwoSides() { return (build.slots || []).some(function (sl) { return sl.side === 1; }); }
     function renderBuildParts() {
       var def = bvKind(build.kind);
-      build.parts = def.parts.map(function () { return false; });
+      build.slots = buildSlotsFor(def);
+      build.saidOther = false;
+      build.parts = build.slots.map(function () { return false; });
       buildEl("b3-title").textContent = buildPartsTitle(def);
       renderBuildPartsHero(-1);
       renderBuildSpares();
-      var cb = buildEl("b3-count");
-      cb.textContent = "";
-      cb.hidden = true;
+      renderBuildCount(false);
       buildSay([bvLine(buildPartsKey(def), buildPartsTitle(def) + "!")]);
     }
+    function renderBuildCount(pop) {
+      var cb = buildEl("b3-count");
+      var n = build.parts.filter(Boolean).length, total = build.parts.length;
+      cb.hidden = false;
+      cb.innerHTML = '<b>' + n + '</b><small>/' + total + '</small>';
+      cb.setAttribute("aria-label", n + " of " + total);
+      cb.classList.toggle("b-count-done", n === total);
+      if (pop) { cb.classList.remove("pop"); void cb.offsetWidth; cb.classList.add("pop"); }
+    }
     function renderBuildPartsHero(popIndex) {
+      var def = bvKind(build.kind);
       var hero = buildEl("b3-car");
-      hero.innerHTML = bvSvg(build.kind, { color: build.color, parts: build.parts, extras: build.extras });
+      var two = buildTwoSides();
+      var near = def.parts.map(function (pt, i) { return !!build.parts[buildSlotOf(i, 0)]; });
+      var nearSvg = bvSvg(build.kind, { color: build.color, parts: near, extras: build.extras })
+        .replace(/data-part="(\d+)"/g, function (m, i) { return 'data-part="' + buildSlotOf(+i, 0) + '"'; });
+      if (!two) {
+        hero.parentNode.classList.remove("b3-two");
+        hero.innerHTML = nearSvg;
+      } else {
+        var far = def.parts.map(function (pt, i) { return !!build.parts[buildSlotOf(i, pt.t === "wheel" ? 1 : 0)]; });
+        // no writing on the mirrored side (it would read backwards)
+        var farX = build.extras.filter(function (x) { return ["plate", "sign", "recycle", "stars"].indexOf(x) === -1; });
+        var farSvg = bvSvg(build.kind, { color: build.color, parts: far, extras: farX })
+          .replace(/data-part="(\d+)"/g, function (m, i) { var pt = def.parts[+i]; return pt.t === "wheel" ? 'data-part="' + buildSlotOf(+i, 1) + '"' : 'data-shared="' + i + '"'; });
+        hero.parentNode.classList.add("b3-two");
+        hero.innerHTML = '<div class="b-sides"><div class="b-side b-near">' + nearSvg + '</div>' +
+          '<div class="b-side b-far"><span class="b-side-turn" aria-hidden="true">&#8635;</span>' + farSvg + '</div></div>';
+      }
       // v41: tapping an empty slot no longer drops a wheel in; wheels go on only by dragging.
       if (popIndex >= 0) {
         var on = hero.querySelector('.bv-part[data-part="' + popIndex + '"]');
@@ -8898,38 +8954,42 @@
       var def = bvKind(build.kind);
       var tray = buildEl("b3-spares");
       tray.innerHTML = "";
-      def.parts.forEach(function (pt, i) {
-        if (build.parts[i]) return;
+      var left = 0;
+      build.slots.forEach(function (sl, k) {
+        if (build.parts[k]) return;
+        left++;
+        var pt = def.parts[sl.p];
         var b = document.createElement("button");
         b.type = "button";
         b.className = "b-spare b-spare-" + pt.t;
-        b.setAttribute("data-part", String(i));
+        b.setAttribute("data-part", String(k));
         b.setAttribute("aria-label", pt.t === "track" ? "Track" : pt.t === "drum" ? "Roller" : "Wheel");
         b.innerHTML = sparePartSvg(pt);
-        bindSpare(b, i);
+        bindSpare(b, k);
         tray.appendChild(b);
       });
+      tray.classList.toggle("b-spares-many", left > 4);
     }
     function nearestEmptySlot(type, x, y) {
       var def = bvKind(build.kind);
       var best = -1, bestD = Infinity;
       var hero = buildEl("b3-car");
-      def.parts.forEach(function (pt, i) {
-        if (build.parts[i]) return;
-        if (type && pt.t !== type) return;
-        var g = hero.querySelector('.bv-part[data-part="' + i + '"]');
+      build.slots.forEach(function (sl, k) {
+        if (build.parts[k]) return;
+        if (type && def.parts[sl.p].t !== type) return;
+        var g = hero.querySelector('.bv-part[data-part="' + k + '"]');
         if (!g) return;
         var r = g.getBoundingClientRect();
         var cx = r.left + r.width / 2, cy = r.top + r.height / 2;
         var d = (cx - x) * (cx - x) + (cy - y) * (cy - y);
-        if (d < bestD) { bestD = d; best = i; }
+        if (d < bestD) { bestD = d; best = k; }
       });
       if (best === -1 && type) return nearestEmptySlot("", x, y);
       return best;
     }
     function bindSpare(btn, partIndex) {
       btn.addEventListener("pointerdown", function (e) {
-        if (build.busy) return;
+        if (build.busy || build.drag) return;
         if (e.button !== undefined && e.button !== 0) return;
         build.drag = { btn: btn, part: partIndex, x0: e.clientX, y0: e.clientY, ghost: null, id: e.pointerId, max: 0 };
         try { btn.setPointerCapture(e.pointerId); } catch (err) {}
@@ -8966,7 +9026,7 @@
         if (gh) d.ghost = null;
         endBuildDrag();
         var def = bvKind(build.kind);
-        var type = def.parts[partIndex].t;
+        var type = def.parts[build.slots[partIndex].p].t;
         var slot = (!cancelled && dragged) ? nearestEmptySlot(type, e.clientX, e.clientY) : -1;
         if (slot !== -1 && !bvdNear(bvSlotRect(slot), e.clientX, e.clientY)) slot = -1;
         if (slot !== -1) {
@@ -8979,6 +9039,7 @@
       }
       btn.addEventListener("pointerup", function (e) { finish(e, false); });
       btn.addEventListener("pointercancel", function (e) { finish(e, true); });
+      btn.addEventListener("lostpointercapture", function (e) { var d = build.drag; if (d && d.btn === btn && d.id === e.pointerId) finish(e, true); });
       btn.addEventListener("click", function (e) {
         // Keyboard / switch / game controller activation (no pointer events).
         if (e.detail === 0) placeBuildPart(partIndex);
@@ -9016,19 +9077,21 @@
       build.parts[i] = true;
       renderBuildPartsHero(i);
       renderBuildSpares();
-      var n = build.parts.filter(Boolean).length;
-      var cb = buildEl("b3-count");
-      cb.hidden = false;
-      cb.innerHTML = n + "<small>!</small>";
-      cb.classList.remove("pop");
-      void cb.offsetWidth;
-      cb.classList.add("pop");
+      renderBuildCount(true);
+      var n = build.parts.filter(Boolean).length, total = build.parts.length;
+      var def = bvKind(build.kind);
       var line = [bvLine("n-" + n, (NUMBER_WORDS[n] || String(n)) + "!")];
-      if (n === build.parts.length) line.push(bvLine("great-building", "Great building!", 250));
+      if (n === total) line.push(def.parts.some(function (pt) { return pt.t === "wheel"; }) ? bvLine("all-wheels", "All the wheels are on!", 250) : bvLine("great-building", "Great building!", 250));
+      else if (buildTwoSides()) {
+        // this side finished first: point at the other side once
+        var nearLeft = build.slots.some(function (sl, k) { return sl.side === 0 && !build.parts[k]; });
+        var farDone = build.slots.some(function (sl, k) { return sl.side === 1 && build.parts[k]; });
+        if (!nearLeft && !farDone && !build.saidOther) { build.saidOther = true; line.push(bvLine("other-side", "And the other side!", 200)); }
+      }
       buildSay(line);
-      if (n === build.parts.length) {
+      if (n === total) {
         build.busy = true;
-        buildLater(function () { buildNext(); }, 2600);
+        buildLater(function () { buildNext(); }, 2800);
       }
     }
 
@@ -9113,7 +9176,9 @@
         { id: "top", name: bvdTopName(def), clip: [g.y0 - 40, g.cut], vb: [g.x0, g.y0, g.x1 - g.x0, g.cut - g.y0], line: def.group === "cons" ? "p-top" : "p-roof" }
       ];
       build.parts = [false, false];
+      build.slots = [];
       buildEl("b3-title").textContent = "Drag the parts on";
+      buildEl("b3-hero").classList.remove("b3-two");
       var cb = buildEl("b3-count");
       cb.textContent = "";
       cb.hidden = true;
@@ -9242,17 +9307,6 @@
       var r = bvdExtraBox(x);
       return bvdScreenRect(svg, r.x, r.y, r.w, r.h);
     }
-    function dropBuildExtra(x) {
-      if (build.busy || build.step !== 4) return false;
-      if (build.extras.indexOf(x) !== -1) {
-        renderBuildExtrasHero(x);
-        buildSay([x === "horn" ? bvLine("beep-beep", "Beep beep!") : bvLine("x-" + bvExtraClip(x, bvKind(build.kind)), bvExtraName(x, bvKind(build.kind)) + "!")]);
-        return true;
-      }
-      toggleBuildExtra(x);
-      return build.extras.indexOf(x) !== -1;
-    }
-
     // One drag helper for Drag build: a short press without moving is a tap (debounced like bTap);
     // moving starts a drag at once (no hold needed). Inside a scrolling strip, moving along the strip scrolls it instead.
     function bDrag(el, o) {
@@ -9286,6 +9340,7 @@
       }
       el.addEventListener("pointerdown", function (e) {
         if (e.button !== undefined && e.button !== 0) return;
+        if (st) return; // v44: a second finger never takes over (its ghost used to be left behind)
         if (o.busy ? o.busy() : build.busy) return;
         var sc = o.scroller && o.scroller();
         st = { id: e.pointerId, x: e.clientX, y: e.clientY, mode: "", sc: sc, sl: sc ? sc.scrollLeft : 0, stp: sc ? sc.scrollTop : 0 };
@@ -9331,6 +9386,11 @@
       });
       el.addEventListener("pointercancel", function () {
         if (st && st.ghost) { st.keepGhost = true; floatBack(st.ghost); }
+        cleanup();
+      });
+      el.addEventListener("lostpointercapture", function (e) {
+        if (!st || e.pointerId !== st.id) return;
+        if (st.ghost) { st.keepGhost = true; floatBack(st.ghost); }
         cleanup();
       });
       el.addEventListener("click", function (e) {
@@ -9756,21 +9816,26 @@
     }
 
     // Step 4: extras (v36: several, toggled on and off, then Done)
+    // v44: extras are tap-on / tap-off picture tiles in BOTH build styles (Lindsay: "just click the button").
+    // Build state (build.extras) is the only source of truth: the vehicle is redrawn from it in one place,
+    // at most once per frame, with any running pop animation cancelled first, so fast tapping can never
+    // leave a part drawn that is no longer on (the v43 glitch).
     function renderBuildExtras() {
       var def = bvKind(build.kind);
       build.extras = bvCleanExtras(def, build.extras);
+      build.xTapAt = {};
       var lim = buildExtrasLimit();
-      // v43: Extra style drags the physical parts (buckets, exhausts, lights, ladders...) onto the vehicle;
-      // paint and sign extras stay tap-on / tap-off tiles at the end of the strip. Simple style: all tap tiles.
-      var dragOn = buildDragMode();
-      buildEl("b4-title").textContent = dragOn ? (lim === 1 ? "Drag on an extra" : "Drag on extras") : lim === 1 ? "Pick an extra" : lim === 3 ? "Pick up to 3 extras" : "Add extras";
+      buildEl("b4-title").textContent = lim === 1 ? "Pick an extra" : lim === 3 ? "Pick up to 3 extras" : "Add extras";
+      clearBuildGhosts();
+      var hero = buildEl("b4-hero");
+      hero.classList.remove("b-dragoff");
+      hero.removeAttribute("data-shown");
       renderBuildExtrasHero("");
       var grid = buildEl("b4-grid");
       grid.innerHTML = "";
       grid.scrollTop = 0;
       grid.scrollLeft = 0;
-      grid.classList.toggle("b-drag", dragOn);
-      var tapTiles = [];
+      grid.classList.remove("b-drag");
       def.extras.forEach(function (x) {
         var b = document.createElement("button");
         b.type = "button";
@@ -9779,102 +9844,62 @@
         b.setAttribute("aria-label", bvExtraName(x, def));
         b.setAttribute("aria-pressed", "false");
         b.innerHTML = '<span class="b-art">' + bvExtraIcon(x, def) + '</span><span class="b-lbl">' + bvExtraName(x, def) + '</span><span class="b-tick" aria-hidden="true">&#10003;</span>';
-        var tapOnly = dragOn && BV_TAP_EXTRAS[x];
-        if (tapOnly) { b.classList.add("b-tapx"); b.insertAdjacentHTML("beforeend", '<span class="b-tapx-badge" aria-hidden="true">tap</span>'); }
-        if (dragOn && !tapOnly) bDrag(b, {
-          scroller: function () { return grid; },
-          // a tap on a part that is already on takes it off again; otherwise it wiggles and says its name
-          onTap: function () { if (build.extras.indexOf(x) !== -1) { toggleBuildExtra(x); return; } buildSay([x === "horn" ? bvLine("beep-beep", "Beep beep!") : bvLine("x-" + bvExtraClip(x, def), bvExtraName(x, def) + "!")]); },
-          onKey: function () { toggleBuildExtra(x); },
-          ghost: function () { return { html: bvExtraIcon(x, def), rect: null }; },
-          onDrop: function (px, py) { return bvdNear(bvdExtraTargetRect(x), px, py) && dropBuildExtra(x); }
-        });
-        else bTap(b, function () { toggleBuildExtra(x); }, grid);
-        if (tapOnly) tapTiles.push(b); else grid.appendChild(b);
+        bTap(b, function () { toggleBuildExtra(x); }, grid);
+        grid.appendChild(b);
       });
-      tapTiles.forEach(function (b) { grid.appendChild(b); });
-      bindHeroDragOff(dragOn);
       syncBuildExtraTiles();
-      if (dragOn) buildSay([lim === 1 ? bvLine("dg-extra", "Drag on an extra!") : bvLine("dg-extras", "Drag on some extras!")]);
-      else buildSay([lim === 1 ? bvLine("pick-extra", "Pick something extra!") : bvLine("pick-extras", "Pick some extras!")]);
-    }
-    // v43: in Extra style these stay tap tiles (paint, decals, signs, the horn sound).
-    var BV_TAP_EXTRAS = { stripes: 1, flames: 1, stars: 1, plate: 1, sign: 1, recycle: 1, horn: 1 };
-    // v43: drag a part off the vehicle to take it off (Extra style). The part under the finger is found
-    // from each part's spot on the drawing; a real drag (30px+) that ends away from its spot removes it.
-    function heroExtraAt(px, py) {
-      var best = null, area = Infinity;
-      build.extras.forEach(function (x) {
-        if (BV_TAP_EXTRAS[x]) return;
-        var r = bvdExtraTargetRect(x);
-        if (!r) return;
-        // closest spot first (0 when the finger is on it), then the smaller part; up to 12px away counts
-        var dx = px < r.left ? r.left - px : px > r.left + r.width ? px - r.left - r.width : 0;
-        var dy = py < r.top ? r.top - py : py > r.top + r.height ? py - r.top - r.height : 0;
-        var d = Math.sqrt(dx * dx + dy * dy);
-        if (d > 12) return;
-        var score = d * 100000 + r.width * r.height;
-        if (score < area) { best = x; area = score; }
-      });
-      return best;
-    }
-    function bindHeroDragOff(on) {
-      var hero = buildEl("b4-hero");
-      hero.classList.toggle("b-dragoff", !!on);
-      if (hero.dataset.dragoff) return;
-      hero.dataset.dragoff = "1";
-      var st = null;
-      hero.addEventListener("pointerdown", function (e) {
-        if (!hero.classList.contains("b-dragoff") || build.busy || build.step !== 4) return;
-        var x = heroExtraAt(e.clientX, e.clientY);
-        if (!x) return;
-        st = { x: x, id: e.pointerId, x0: e.clientX, y0: e.clientY, max: 0, ghost: null };
-        try { hero.setPointerCapture(e.pointerId); } catch (err) {}
-      });
-      hero.addEventListener("pointermove", function (e) {
-        if (!st || e.pointerId !== st.id) return;
-        e.preventDefault();
-        var dx = e.clientX - st.x0, dy = e.clientY - st.y0, dd = dx * dx + dy * dy;
-        if (dd > st.max) st.max = dd;
-        if (!st.ghost && dd > 144) {
-          var r = bvdExtraTargetRect(st.x);
-          var w = Math.max(56, Math.min(180, r ? r.width : 80)), h = Math.max(44, Math.min(140, r ? r.height : 60));
-          var g = document.createElement("div");
-          g.className = "b-ghost b-drag-ghost";
-          g.innerHTML = bvExtraIcon(st.x, bvKind(build.kind));
-          g.style.width = w + "px"; g.style.height = h + "px";
-          document.body.appendChild(g);
-          st.ghost = g; st.w = w; st.h = h;
-          var ex = hero.querySelectorAll('.bv-extra[data-x="' + st.x + '"]');
-          for (var i = 0; i < ex.length; i++) ex[i].style.opacity = "0.25";
-          document.body.classList.add("b-dragging");
-        }
-        if (st.ghost) { st.ghost.style.left = (e.clientX - st.w / 2) + "px"; st.ghost.style.top = (e.clientY - st.h / 2) + "px"; }
-      });
-      function end(e, cancelled) {
-        if (!st || (e && e.pointerId !== st.id)) return;
-        var s0 = st; st = null;
-        document.body.classList.remove("b-dragging");
-        if (s0.ghost && s0.ghost.parentNode) s0.ghost.parentNode.removeChild(s0.ghost);
-        var off = !cancelled && s0.ghost && s0.max >= B_DRAG_MIN * B_DRAG_MIN && !bvdNear(bvdExtraTargetRect(s0.x), e.clientX, e.clientY);
-        if (off) { buildLog("dragoff:" + s0.x); toggleBuildExtra(s0.x); return; }
-        renderBuildExtrasHero("");
-        if (!s0.ghost && !cancelled) {
-          var def = bvKind(build.kind);
-          buildSay([s0.x === "horn" ? bvLine("beep-beep", "Beep beep!") : bvLine("x-" + bvExtraClip(s0.x, def), bvExtraName(s0.x, def) + "!")]);
-        }
-      }
-      hero.addEventListener("pointerup", function (e) { end(e, false); });
-      hero.addEventListener("pointercancel", function (e) { end(e, true); });
+      buildSay([lim === 1 ? bvLine("pick-extra", "Pick something extra!") : bvLine("pick-extras", "Pick some extras!")]);
     }
     function buildLog(t) { buildSayLog.push(t); if (buildSayLog.length > 60) buildSayLog.shift(); }
+    // Any drag ghost left in the page (e.g. a second finger landing mid-drag) is swept away.
+    function clearBuildGhosts() {
+      var g = document.querySelectorAll("body > .b-ghost, body > .b-drag-ghost");
+      for (var i = 0; i < g.length; i++) if (g[i].parentNode) g[i].parentNode.removeChild(g[i]);
+      document.body.classList.remove("b-dragging");
+    }
+    function buildExtrasKey(list) { return list.slice().sort().join(","); }
+    // Draw the vehicle from build.extras. Idempotent: drawing the same state twice changes nothing.
     function renderBuildExtrasHero(popX) {
       var hero = buildEl("b4-hero");
-      hero.innerHTML = bvSvg(build.kind, { color: build.color, extras: build.extras });
-      if (popX) {
+      if (!hero) return;
+      if (hero.getAnimations) { try { hero.getAnimations({ subtree: true }).forEach(function (an) { an.cancel(); }); } catch (e) {} }
+      var key = build.kind + "|" + build.color + "|" + buildExtrasKey(build.extras);
+      var wrap = document.createElement("div");
+      wrap.innerHTML = bvSvg(build.kind, { color: build.color, extras: build.extras });
+      var svg = wrap.firstChild;
+      // replaceChildren drops every old node (no half-removed layers); fall back for older Safari
+      if (hero.replaceChildren) hero.replaceChildren(svg);
+      else { while (hero.firstChild) hero.removeChild(hero.firstChild); hero.appendChild(svg); }
+      hero.setAttribute("data-shown", key);
+      if (popX && build.extras.indexOf(popX) !== -1) {
         var ex = hero.querySelectorAll('.bv-extra[data-x="' + popX + '"]');
         for (var i = 0; i < ex.length; i++) ex[i].classList.add("pop");
       }
+    }
+    var buildXFrame = 0, buildXPop = "";
+    function scheduleBuildExtrasRender(popX) {
+      buildXPop = popX || "";
+      if (buildXFrame) return;
+      var raf = window.requestAnimationFrame || function (f) { return setTimeout(f, 16); };
+      buildXFrame = raf(function () {
+        buildXFrame = 0;
+        if (build.step !== 4) return;
+        renderBuildExtrasHero(buildXPop);
+        buildXPop = "";
+        syncBuildExtraTiles();
+        verifyBuildExtrasDom();
+      });
+    }
+    // Belt and braces: if what is drawn ever differs from the state, redraw it.
+    function verifyBuildExtrasDom() {
+      var hero = buildEl("b4-hero");
+      if (!hero || build.step !== 4) return true;
+      var seen = {}, list = hero.querySelectorAll(".bv-extra[data-x]");
+      for (var i = 0; i < list.length; i++) seen[list[i].getAttribute("data-x")] = 1;
+      var want = bvCleanExtras(bvKind(build.kind), build.extras);
+      var ok = Object.keys(seen).sort().join(",") === want.slice().sort().join(",") && hero.querySelectorAll("svg.bv-svg").length === 1;
+      if (!ok) { buildLog("x-redraw"); renderBuildExtrasHero(""); syncBuildExtraTiles(); }
+      return ok;
     }
     function syncBuildExtraTiles() {
       var all = document.querySelectorAll("#b4-grid .b-extra");
@@ -9884,27 +9909,33 @@
         all[j].setAttribute("aria-pressed", on ? "true" : "false");
       }
     }
+    var B_XTAP_GAP = 280;
     function toggleBuildExtra(x) {
       if (build.busy || build.step !== 4) return;
       var def = bvKind(build.kind);
       if (def.extras.indexOf(x) === -1) return;
+      // the same tile tapped again within 280ms is a bounce, not a new tap
+      var now = Date.now();
+      build.xTapAt = build.xTapAt || {};
+      if (build.xTapAt[x] && now - build.xTapAt[x] < B_XTAP_GAP) return;
+      build.xTapAt[x] = now;
       var at = build.extras.indexOf(x);
       if (at !== -1) {
-        build.extras.splice(at, 1);
-        renderBuildExtrasHero("");
+        build.extras = build.extras.filter(function (y) { return y !== x; });
         syncBuildExtraTiles();
+        scheduleBuildExtrasRender("");
         stopSpeechAndAudio();
         return;
       }
       // Extras that share a spot replace each other; a limit drops the oldest pick.
       var slot = bvExtraSlot(def, x);
-      var next = build.extras.filter(function (y) { return !slot || bvExtraSlot(def, y) !== slot; });
+      var next = build.extras.filter(function (y) { return y !== x && (!slot || bvExtraSlot(def, y) !== slot); });
       var lim = buildExtrasLimit();
       while (lim && next.length >= lim) next.shift();
       next.push(x);
       build.extras = bvCleanExtras(def, next);
-      renderBuildExtrasHero(x);
       syncBuildExtraTiles();
+      scheduleBuildExtrasRender(x);
       var tile = document.querySelector('#b4-grid .b-extra[data-x="' + x + '"]');
       if (tile) { tile.classList.remove("just"); void tile.offsetWidth; tile.classList.add("just"); }
       buildSay([x === "horn" ? bvLine("beep-beep", "Beep beep!") : bvLine("x-" + bvExtraClip(x, def), bvExtraName(x, def) + "!")]);
@@ -12761,13 +12792,14 @@
       stopBuild: stopBuild,
       buildGo: buildGo,
       placeBuildPart: placeBuildPart,
+      buildTestStep: function (n) { buildGoStep(n); },
       pickBuildKind: pickBuildKind,
       pickBuildColour: pickBuildColour,
       showGarage: showGarage,
       loadGarage: loadGarage,
       bvSvg: bvSvg,
       buildKinds: function () { return BV_KINDS.map(function (k) { return { id: k.id, name: k.name, group: k.group, parts: k.parts.length, extras: k.extras.slice() }; }); },
-      getBuildState: function () { return { dragWheels: !!build.dragWheels, step: build.step, steps: build.steps.slice(), kind: build.kind, color: build.color, parts: build.parts.slice(), extras: build.extras.slice(), tab: build.tab, busy: build.busy }; },
+      getBuildState: function () { return { slots: (build.slots || []).map(function (sl) { return sl.p + ":" + sl.side; }), dragWheels: !!build.dragWheels, step: build.step, steps: build.steps.slice(), kind: build.kind, color: build.color, parts: build.parts.slice(), extras: build.extras.slice(), tab: build.tab, busy: build.busy }; },
       toggleBuildExtra: toggleBuildExtra,
       bvKind: bvKind,
       buildExtrasDone: buildExtrasDone,
