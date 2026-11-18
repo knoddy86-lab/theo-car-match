@@ -3093,7 +3093,7 @@
     var BLOB_FETCH_MS = 20000;
     var bootStartedAt = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
     var keyChangeOpen = false;
-    var APP_VERSION = "48";
+    var APP_VERSION = "49";
     var MATCH_PAIR_CAP = 6;
     var NAME_ROUNDS = 6;
     var THUMB_MAX = 256;
@@ -10748,9 +10748,12 @@
     try { numberSettings = normalizeNumberSettings(JSON.parse(localStorage.getItem(NUMBERS_KEY) || "{}") || {}); } catch (e) {}
     function normalizeNumberSettings(raw) {
       raw = raw && typeof raw === "object" ? raw : {};
-      var lv = raw.level === "easy" || raw.level === "medium" ? raw.level : "hard";
+      // v49: Easy by default (Lindsay: "Start that one on easy"). Settings saved before v49 (no marker) only
+      // ever held the old Hard default unless someone changed them, so they move to Easy once; a choice made after that is kept.
+      var lv = raw.level === "hard" || raw.level === "medium" ? raw.level : "easy";
+      if (raw.v !== 49 && raw.level === "hard") lv = "easy";
       var up = parseInt(raw.upto, 10);
-      return { level: lv, upto: up === 5 || up === 10 ? up : 20 };
+      return { v: 49, level: lv, upto: up === 5 || up === 10 ? up : 20 };
     }
     function saveNumberSettings(next) {
       numberSettings = normalizeNumberSettings(next);
