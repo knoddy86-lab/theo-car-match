@@ -1897,6 +1897,61 @@
     .sh-piece.shp-asked { animation: shp-bob 1.1s ease-in-out infinite; }
     @keyframes shp-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
     @media (prefers-reduced-motion: reduce) { .sh-piece.shp-asked { animation: none; box-shadow: 0 0 0 5px #FFD54F; } }
+    /* ---- v48: six game cards (adds NUMBERS): portrait 3 + 3, landscape one row of 6 ---- */
+    .gc-numbers { background: linear-gradient(180deg, #BA68C8, #8E24AA); box-shadow: 0 8px 0 #6A1B9A, 0 14px 26px rgba(0,0,0,0.2); }
+    .gc-numbers:active { box-shadow: 0 2px 0 #6A1B9A, 0 6px 12px rgba(0,0,0,0.2); }
+    .gc-numbers .gc-numbers-art { position: absolute; inset: 6% 4%; width: 92%; height: 88%; }
+    .start-actions.four.six { grid-template-columns: repeat(6, minmax(0, 1fr)); width: min(1320px, 100%); }
+    .start-actions.four.six .gc-label { font-size: clamp(15px, 3vmin, 36px); }
+    @media (orientation: portrait) {
+      .start-actions.four.six { grid-template-columns: repeat(6, minmax(0, 1fr)); width: min(100%, 760px); gap: clamp(12px, 2.6vw, 26px); }
+      .start-actions.four.six .game-card { grid-column: span 2; }
+      .start-actions.four.six .gc-label { font-size: clamp(16px, 4.6vw, 40px); }
+    }
+    @media (max-width: 600px) and (orientation: portrait) {
+      .start-actions.four.six { width: 100%; gap: 12px 10px; }
+      .start-actions.four.six .gc-art { aspect-ratio: 4 / 3.2; }
+      .start-actions.four.six .game-card { padding: 7px 6px 8px; }
+      .start-actions.four.six .gc-label { font-size: clamp(14px, 4.4vw, 22px); letter-spacing: 0; }
+    }
+    @media (max-height: 520px) and (orientation: landscape) {
+      .start-actions.four.six { width: auto; grid-template-columns: repeat(6, auto); gap: 10px; }
+      .start-actions.four.six .gc-art { height: min(26vh, calc((100vw - 240px) * 0.11)); width: auto; }
+      .start-actions.four.six .gc-label { font-size: clamp(14px, 5vh, 26px); }
+    }
+    @media (orientation: landscape) and (min-height: 521px) {
+      .start-actions.four.six { width: min(1180px, 96vw); flex: 0 0 auto; }
+    }
+    /* ---- v48: Numbers game (Shadow play with number shadows and 0-9 tiles) ---- */
+    .shadow-screen.is-numbers .sh-board, .shadow-screen.is-numbers .sh-title.sh-hide-n { display: none; }
+    .shadow-screen:not(.is-numbers) .nm-stage, .shadow-screen:not(.is-numbers) .nm-corner { display: none !important; }
+    .nm-stage { flex: 1 1 auto; min-height: 0; width: min(1100px, 100%); display: flex; flex-direction: column; align-items: center; gap: clamp(6px, 1.6vh, 18px); overflow: hidden; }
+    .nm-stage[hidden] { display: none !important; }
+    .nm-shadow { flex: 0 0 auto; display: flex; gap: clamp(8px, 2vmin, 20px); justify-content: center; padding: 4px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    .nm-box { height: 100%; aspect-ratio: 3 / 4; border-radius: 22px; background: rgba(255,255,255,0.38); border: 4px dashed rgba(255,255,255,0.9); display: flex; align-items: center; justify-content: center; position: relative; transition: background 0.2s, border-color 0.2s; }
+    .nm-box.next { background: rgba(255,249,196,0.85); border-color: #FFB300; animation: nm-glow 1.1s ease-in-out infinite; }
+    .nm-box.done { background: rgba(232,248,236,0.92); border: 4px solid #34C759; }
+    .nm-box.done .nm-gl { animation: sh-pop 0.42s cubic-bezier(.3,1.6,.5,1); }
+    @keyframes nm-glow { 0%, 100% { box-shadow: 0 0 0 0 rgba(255,179,0,0.0); } 50% { box-shadow: 0 0 0 8px rgba(255,179,0,0.55); } }
+    .nm-gl { font-weight: 900; line-height: 1; font-size: calc(var(--bh, 160px) * 0.78); font-family: "Arial Rounded MT Bold", "Helvetica Neue", Arial, system-ui, sans-serif; pointer-events: none; display: block; }
+    .nm-box:not(.done) .nm-gl { color: rgb(30, 34, 52); opacity: 0.74; }
+    .nm-cars { flex: 0 1 auto; min-height: 0; display: grid; grid-template-columns: repeat(var(--ccols, 5), minmax(0, 1fr)); grid-auto-rows: minmax(0, 1fr); gap: clamp(2px, 0.8vmin, 8px); width: min(100%, calc(var(--ccols, 5) * 150px)); height: calc(var(--crows, 2) * 96px); max-height: 100%; cursor: pointer; padding: 0 6px; }
+    .nm-stage.nm-side { flex-direction: row; align-items: center; justify-content: center; gap: clamp(16px, 4vw, 40px); }
+    .nm-stage.nm-side .nm-cars { flex: 1 1 auto; height: 100%; max-height: none; width: auto; max-width: calc(var(--ccols, 5) * 130px); align-content: center; }
+    .nm-car { min-width: 0; min-height: 0; display: flex; align-items: center; justify-content: center; }
+    .nm-car svg { width: 100%; height: 100%; display: block; overflow: visible; }
+    .nm-cars.go .nm-car { animation: nm-drive 1.25s ease-in forwards; animation-delay: calc(var(--i, 0) * 70ms); }
+    @keyframes nm-drive { 0% { transform: translateX(0); } 14% { transform: translateX(-10px); } 100% { transform: translateX(125vw); } }
+    @keyframes nm-fade { to { opacity: 0; } }
+    @media (prefers-reduced-motion: reduce) { .nm-cars.go .nm-car { animation: nm-fade 0.6s forwards; animation-delay: 0s; } .nm-box.next { animation: none; box-shadow: 0 0 0 6px #FFD54F; } }
+    .nm-corner { position: absolute; top: calc(var(--safe-t) + 10px); right: calc(var(--safe-r) + 10px); z-index: 8; width: clamp(64px, 13vmin, 110px); height: clamp(64px, 13vmin, 110px); border-radius: 50%; border: 0; background: #fff; color: #8E24AA; font-family: "Arial Rounded MT Bold", "Helvetica Neue", Arial, system-ui, sans-serif; font-weight: 900; font-size: clamp(30px, 6.4vmin, 56px); line-height: 1; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 0 rgba(0,0,0,0.12), 0 8px 16px rgba(0,0,0,0.16); }
+    .nm-corner[hidden] { display: none !important; }
+    .sh-piece.nm-tile { font-family: "Arial Rounded MT Bold", "Helvetica Neue", Arial, system-ui, sans-serif; font-weight: 900; font-size: var(--tfs, 48px); line-height: 1; padding: 0; }
+    .sh-piece.nm-tile.dragging { opacity: 0.08; }
+    .sh-piece.nm-tile.nm-pop { animation: nm-tilepop 0.5s cubic-bezier(.3,1.6,.5,1); }
+    @keyframes nm-tilepop { 0% { transform: scale(0.3); opacity: 0.2; } 70% { transform: scale(1.12); opacity: 1; } 100% { transform: scale(1); } }
+    .b-drag-ghost.nm-ghost { display: flex; align-items: center; justify-content: center; font-family: "Arial Rounded MT Bold", "Helvetica Neue", Arial, system-ui, sans-serif; font-weight: 900; line-height: 1; }
+    .b-drag-ghost.nm-ghost .nm-gl { opacity: 1; }
     .gc-shadow { background: linear-gradient(180deg, #F06292, #D81B60); box-shadow: 0 8px 0 #AD1457, 0 14px 26px rgba(0,0,0,0.2); }
     .gc-shadow:active { box-shadow: 0 2px 0 #AD1457, 0 6px 12px rgba(0,0,0,0.2); }
     .gc-shadow .sh-art-sil, .gc-shadow .sh-art-car { position: absolute; bottom: 8%; width: 56%; height: 70%; display: flex; align-items: flex-end; justify-content: center; }
@@ -2170,7 +2225,7 @@
           <p class="for-theo" id="start-for">For Theo</p>
         </div>
         <div class="hero-cars" id="hero-cars"></div>
-        <div class="start-actions four five" id="start-actions">
+        <div class="start-actions four six" id="start-actions">
           <button type="button" class="game-card gc-match" id="play-btn" aria-label="Match Game">
             <span class="gc-art" aria-hidden="true">
               <span class="mini-card mc-a"><span class="mini-art" data-art="match"></span></span>
@@ -2218,6 +2273,15 @@
               </svg>
             </span>
             <span class="gc-label">SHAPES</span>
+          </button>
+          <button type="button" class="game-card gc-numbers" id="numbers-btn" aria-label="Numbers Game">
+            <span class="gc-art" aria-hidden="true">
+              <svg class="gc-numbers-art" viewBox="0 0 160 120" aria-hidden="true">
+                <text x="12" y="104" font-family="Arial Rounded MT Bold, Helvetica Neue, Arial, sans-serif" font-weight="900" font-size="98" fill="#FFEE58" stroke="#F57F17" stroke-width="3" stroke-linejoin="round">1</text>
+                <text x="86" y="104" font-family="Arial Rounded MT Bold, Helvetica Neue, Arial, sans-serif" font-weight="900" font-size="98" fill="rgba(255,255,255,0.35)" stroke="#fff" stroke-width="3" stroke-dasharray="7 5" stroke-linejoin="round">2</text>
+              </svg>
+            </span>
+            <span class="gc-label">NUMBERS</span>
           </button>
         </div>
         <div class="mode-picker" id="mode-picker" hidden>
@@ -2276,6 +2340,8 @@
       <div class="b-pips" id="sh-pips" hidden></div>
       <div class="b-title sh-title" id="sh-title">Put each car on its shadow</div>
       <div class="sh-board" id="sh-board" role="group" aria-label="Shadows"></div>
+      <button type="button" class="nm-corner" id="nm-corner" hidden aria-label="The number"></button>
+      <div class="nm-stage" id="nm-stage" hidden role="group" aria-label="Number shadow and cars"></div>
       <div class="sh-tray" id="sh-tray" role="group" aria-label="Cars to drag"></div>
     </section>
     <section id="build-screen" class="screen build-screen" hidden aria-label="Build a car">
@@ -2398,6 +2464,7 @@
           <button type="button" role="tab" id="tab-build" aria-controls="pane-build" aria-selected="false">Build</button>
           <button type="button" role="tab" id="tab-shadow" aria-controls="pane-shadow" aria-selected="false">Shadow</button>
           <button type="button" role="tab" id="tab-shapes" aria-controls="pane-shapes" aria-selected="false">Shapes</button>
+          <button type="button" role="tab" id="tab-numbers" aria-controls="pane-numbers" aria-selected="false">Numbers</button>
           <button type="button" role="tab" id="tab-photos" aria-controls="pane-photos" aria-selected="false" hidden>Photos<span class="count-badge" id="tab-photos-badge" hidden>0</span></button>
           <button type="button" role="tab" id="tab-players" aria-controls="pane-players" aria-selected="false">Players</button>
           <button type="button" role="tab" id="tab-family" aria-controls="pane-family" aria-selected="false">Connection</button>
@@ -2729,6 +2796,33 @@
             </div>
           </div>
         </div>
+        <div id="pane-numbers" class="settings-pane" role="tabpanel" aria-labelledby="tab-numbers" hidden>
+          <p class="settings-lead">Numbers game: a number's shadow appears and the number is said. Drag the 0-9 tiles into the shadow (two tiles for 10 to 20: tens first, then ones). That many little cars sit below and drive off when it's right.</p>
+          <p class="device-only-note">This device only — not synced.</p>
+          <div class="diff-custom" id="numbers-options">
+            <h3>Numbers game</h3>
+            <div class="diff-row">
+              <label for="nm-set-level">Difficulty (Easy: 1 to 20 in order, the number shown in the corner and the next box glows. Medium: 1 to 20 in order, no corner number. Hard: random numbers, no hints)</label>
+              <select id="nm-set-level" aria-label="Numbers difficulty">
+                <option value="easy">Easy</option>
+                <option value="medium">Medium</option>
+                <option value="hard">Hard</option>
+              </select>
+            </div>
+            <div class="diff-row">
+              <label for="nm-set-upto">Numbers go up to</label>
+              <select id="nm-set-upto" aria-label="Highest number">
+                <option value="5">5</option>
+                <option value="10">10</option>
+                <option value="20">20</option>
+              </select>
+            </div>
+            <div class="diff-row">
+              <label for="voice-style-numbers">Numbers voice</label>
+              <select id="voice-style-numbers" class="voice-style-select" data-part="numbers" aria-label="Numbers voice"><option value="alba">Alba</option><option value="classic">Classic</option></select>
+            </div>
+          </div>
+        </div>
         <div id="pane-photos" class="settings-pane" role="tabpanel" aria-labelledby="tab-photos" hidden>
           <p class="settings-lead">Family photos for Match and Name games (choose Photos after tapping MATCH or NAME). They come from the home computer and are only kept on your home devices.</p>
           <p class="device-only-note">Changes here ask for the parent PIN once, then stay unlocked until you leave Settings or stop for 30 seconds.</p>
@@ -2923,7 +3017,7 @@
     // v39: per-device voice for each part of the game. Classic = the pre-v37 voice (Sound of Text car-name clips
     // and the device voice); Alba = the natural recorded clips.
     var VOICE_STYLE_KEY = "theo-car-match-voice-styles";
-    var VOICE_STYLE_DEFAULTS = { name: "classic", match: "alba", build: "alba", shadow: "alba", shapes: "alba" };
+    var VOICE_STYLE_DEFAULTS = { name: "classic", match: "alba", build: "alba", shadow: "alba", shapes: "alba", numbers: "alba" };
     var voiceStyles = Object.assign({}, VOICE_STYLE_DEFAULTS);
     try {
       var vsRaw = JSON.parse(localStorage.getItem(VOICE_STYLE_KEY) || "{}") || {};
@@ -2999,7 +3093,7 @@
     var BLOB_FETCH_MS = 20000;
     var bootStartedAt = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
     var keyChangeOpen = false;
-    var APP_VERSION = "47";
+    var APP_VERSION = "48";
     var MATCH_PAIR_CAP = 6;
     var NAME_ROUNDS = 6;
     var THUMB_MAX = 256;
@@ -4814,6 +4908,7 @@
         { tab: "tab-build", pane: "pane-build" },
         { tab: "tab-shadow", pane: "pane-shadow" },
         { tab: "tab-shapes", pane: "pane-shapes" },
+        { tab: "tab-numbers", pane: "pane-numbers" },
         { tab: "tab-photos", pane: "pane-photos" },
         { tab: "tab-players", pane: "pane-players" },
         { tab: "tab-family", pane: "pane-family" }
@@ -4829,11 +4924,12 @@
       if (name === "build") { hideGarageConfirm(); updateBuildSettingsUi(); }
       if (name === "shadow") updateShadowSettingsUi();
       if (name === "shapes") updateShapeSettingsUi();
+      if (name === "numbers") updateNumberSettingsUi();
       if (name === "names") renderNameLookGroups();
     }
 
     function bindSettingsTabs() {
-      ["cars", "difficulty", "names", "build", "shadow", "shapes", "photos", "players", "family"].forEach(function (name) {
+      ["cars", "difficulty", "names", "build", "shadow", "shapes", "numbers", "photos", "players", "family"].forEach(function (name) {
         var tb = document.getElementById("tab-" + name);
         if (tb) tb.addEventListener("click", function () { showSettingsTab(name); });
       });
@@ -5340,7 +5436,7 @@
           (document.activeElement === ct ? pt : ct).focus();
           return;
         }
-        var sl = ["play-btn", "names-btn", "build-btn", "shadow-btn", "shapes-btn"].map(function (id) { return document.getElementById(id); }).filter(Boolean);
+        var sl = ["play-btn", "names-btn", "build-btn", "shadow-btn", "shapes-btn", "numbers-btn"].map(function (id) { return document.getElementById(id); }).filter(Boolean);
         var si = sl.indexOf(document.activeElement);
         si = si === -1 ? 0 : (si + (dx || dy) + sl.length) % sl.length;
         sl[si].focus();
@@ -10374,17 +10470,26 @@
       });
     }
     function startShadow(mode) {
-      shg.mode = mode === "shapes" ? "shapes" : "shadow";
+      shg.mode = mode === "shapes" ? "shapes" : mode === "numbers" ? "numbers" : "shadow";
+      var isNum = shg.mode === "numbers";
       var scr = shEl("shadow-screen");
       if (scr) {
         scr.classList.toggle("is-shapes", shg.mode === "shapes");
-        scr.setAttribute("aria-label", shg.mode === "shapes" ? "Shapes game" : "Shadow game");
+        scr.classList.toggle("is-numbers", isNum);
+        if (!isNum) scr.classList.remove("sh-many");
+        scr.setAttribute("aria-label", shg.mode === "shapes" ? "Shapes game" : isNum ? "Numbers game" : "Shadow game");
       }
       var ttl = shEl("sh-title");
-      if (ttl) ttl.textContent = shg.mode === "shapes" ? "Put each shape in its place" : "Put each car on its shadow";
+      if (ttl) { ttl.textContent = shg.mode === "shapes" ? "Put each shape in its place" : isNum ? "Put the number in its shadow" : "Put each car on its shadow"; ttl.classList.remove("sh-hide-n"); }
       var shb = shEl("sh-board"), sht = shEl("sh-tray");
       if (shb) shb.setAttribute("aria-label", shg.mode === "shapes" ? "Outlines" : "Shadows");
-      if (sht) sht.setAttribute("aria-label", shg.mode === "shapes" ? "Shapes to drag" : "Cars to drag");
+      if (sht) {
+        sht.setAttribute("aria-label", shg.mode === "shapes" ? "Shapes to drag" : isNum ? "Number tiles to drag" : "Cars to drag");
+        sht.style.removeProperty("--tfs");
+      }
+      var nms = shEl("nm-stage"), nmc = shEl("nm-corner");
+      if (nms) { nms.hidden = !isNum; if (!isNum) nms.innerHTML = ""; }
+      if (nmc && !isNum) nmc.hidden = true;
       shPrimeSfx();
       shg.gen++;
       shg.timers.forEach(function (t) { clearTimeout(t); });
@@ -10397,9 +10502,10 @@
       shEl("shadow-screen").hidden = false;
       updatePlayerUi();
       updateHomeBtn();
-      shg.n = shStartCount();
       shg.boards = 0;
       shg.last = {};
+      if (isNum) { shg.n = 0; shg.wrong = 0; numbersStart(); return; }
+      shg.n = shStartCount();
       shadowBoard(true);
     }
     function stopShadow() {
@@ -10619,6 +10725,263 @@
           shadowBoard(false);
         }, 4800);
       }
+    }
+    // ---- v48: Numbers game (same drag play as Shadow: a number's shadow, 0-9 tiles to drag in) ----
+    // Data-driven symbol set. A later Letters set (A-Z) is one more entry here: its own tiles, targets
+    // (glyph list, clip name, spoken text, optional count of cars) and tile clips; the play code reads only the set.
+    var NUM_WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen", "twenty"];
+    function numCap(w) { return w.charAt(0).toUpperCase() + w.slice(1); }
+    var SYMBOL_SETS = {
+      numbers: {
+        id: "numbers", part: "numbers", title: "Put the number in its shadow", tray: "Number tiles",
+        tiles: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"],
+        targets: function (upto) {
+          var out = [];
+          for (var i = 1; i <= Math.min(20, upto || 20); i++) out.push({ id: "n:" + i, glyphs: String(i).split(""), clip: "num-" + i, say: numCap(NUM_WORDS[i]) + "!", count: i });
+          return out;
+        },
+        tileLine: function (g) { return { clip: "num-" + g, text: numCap(NUM_WORDS[+g]) + "!" }; }
+      }
+    };
+    var NUMBERS_KEY = "theo-car-match-numbers";
+    var numberSettings = normalizeNumberSettings({});
+    try { numberSettings = normalizeNumberSettings(JSON.parse(localStorage.getItem(NUMBERS_KEY) || "{}") || {}); } catch (e) {}
+    function normalizeNumberSettings(raw) {
+      raw = raw && typeof raw === "object" ? raw : {};
+      var lv = raw.level === "easy" || raw.level === "medium" ? raw.level : "hard";
+      var up = parseInt(raw.upto, 10);
+      return { level: lv, upto: up === 5 || up === 10 ? up : 20 };
+    }
+    function saveNumberSettings(next) {
+      numberSettings = normalizeNumberSettings(next);
+      try { localStorage.setItem(NUMBERS_KEY, JSON.stringify(numberSettings)); } catch (e) {}
+      updateNumberSettingsUi();
+    }
+    function updateNumberSettingsUi() {
+      var lv = document.getElementById("nm-set-level"), up = document.getElementById("nm-set-upto");
+      if (lv) lv.value = numberSettings.level;
+      if (up) up.value = String(numberSettings.upto);
+    }
+    function bindNumberUi() {
+      var b = document.getElementById("numbers-btn");
+      if (b) b.addEventListener("click", function () { unlockMedia(); startShadow("numbers"); });
+      ["nm-set-level", "nm-set-upto"].forEach(function (id) {
+        var el = document.getElementById(id);
+        if (el) el.addEventListener("change", function () {
+          saveNumberSettings({ level: document.getElementById("nm-set-level").value, upto: document.getElementById("nm-set-upto").value });
+        });
+      });
+      window.addEventListener("resize", function () { if (shg.mode === "numbers" && shadowOpen() && shg.nm && shg.nm.target) numbersLayout(); });
+      updateNumberSettingsUi();
+    }
+    function numLine(clip, text) {
+      if (voiceStyle("numbers") === "classic") return { src: SOUND_DIR + "classic/" + clip + ".mp3", k: clip, t: text };
+      return { src: BUILD_VOICE_DIR + clip + ".mp3", k: clip, t: text };
+    }
+    function numSay(clip, text) {
+      shLog("say:" + clip);
+      voiceSay([numLine(clip, text)]);
+    }
+    var NUM_TILE_COLS = ["#E53935", "#1E88E5", "#2E9E44", "#F57C00", "#8E24AA", "#00ACC1", "#EC407A", "#6D4C41", "#3949AB", "#00897B"];
+    function numColour(g) { return [NUM_TILE_COLS[(+g) % NUM_TILE_COLS.length]]; }
+    var NUM_CAR_PATH = '<path d="M6 40 C6 33 10 30 16 29 L26 27 C31 16 38 11 50 11 L64 11 C73 12 78 19 81 27 L86 29 C91 31 92 35 92 40 L92 45 C92 47 91 48 89 48 L9 48 C7 48 6 47 6 45 Z"/>';
+    function numCarSvg(col) {
+      return '<svg viewBox="0 0 98 58" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><g fill="' + col[0] + '" stroke="' + col[1] + '" stroke-width="3" stroke-linejoin="round">' + NUM_CAR_PATH + '</g>' +
+        '<path d="M33 27 C36 19 41 15 50 15 L62 15 C69 16 73 21 75 27 Z" fill="#E3F2FD" stroke="' + col[1] + '" stroke-width="2.5" stroke-linejoin="round"/>' +
+        '<line x1="53" y1="15" x2="53" y2="27" stroke="' + col[1] + '" stroke-width="2.5"/>' +
+        '<circle cx="26" cy="48" r="9" fill="#37474F"/><circle cx="26" cy="48" r="3.6" fill="#CFD8DC"/><circle cx="72" cy="48" r="9" fill="#37474F"/><circle cx="72" cy="48" r="3.6" fill="#CFD8DC"/></svg>';
+    }
+    function numbersPickTarget() {
+      var list = SYMBOL_SETS.numbers.targets(numberSettings.upto), nm = shg.nm;
+      if (nm.force) { var f = list.filter(function (t) { return t.id === nm.force; })[0]; nm.force = ""; if (f) { nm.idx = list.indexOf(f); return f; } }
+      if (numberSettings.level === "hard") {
+        var opts = list.filter(function (t) { return t.id !== nm.lastId; });
+        if (!opts.length) opts = list;
+        return opts[Math.floor(Math.random() * opts.length)];
+      }
+      nm.idx = (nm.idx + 1) % list.length;
+      return list[nm.idx];
+    }
+    function numbersStart() {
+      var pips = shEl("sh-pips");
+      if (pips) { pips.hidden = true; pips.innerHTML = ""; }
+      shg.items = [];
+      shg.decoys = [];
+      shg.nm = { idx: -1, lastId: "", target: null, filled: 0, boxes: [], tiles: {}, set: SYMBOL_SETS.numbers };
+      numbersBoard(true);
+    }
+    function numbersBoard(first) {
+      var gen = ++shg.gen;
+      var nm = shg.nm;
+      shg.busy = false;
+      shg.placed = 0;
+      nm.target = numbersPickTarget();
+      nm.lastId = nm.target.id;
+      nm.filled = 0;
+      renderNumbersBoard();
+      var t = nm.target;
+      shLater(function () { if (gen === shg.gen && shadowOpen() && !shg.busy) numSay(t.clip, t.say); }, first ? 700 : 450);
+    }
+    function numbersLayout() {
+      var nm = shg.nm, t = nm.target;
+      var land = innerWidth > innerHeight;
+      var tcols = innerWidth >= 700 || land ? 10 : 5, rows = tcols === 5 ? 2 : 1;
+      var trayh = rows === 2 ? Math.round(Math.max(140, Math.min(innerHeight * 0.27, 240))) : Math.round(Math.max(84, Math.min(innerHeight * (land ? 0.27 : 0.18), 140)));
+      var tray = shEl("sh-tray");
+      tray.style.setProperty("--tcols", tcols);
+      tray.style.setProperty("--trayh", trayh + "px");
+      var th = (trayh - 28 - (rows - 1) * 12) / rows, tw = (Math.min(1100, innerWidth) - 28 - (tcols - 1) * 12) / tcols;
+      tray.style.setProperty("--tfs", Math.floor(Math.min(th, tw) * 0.68) + "px");
+      // short landscape phones: shadow on the left, cars on the right (rows of 5), so 20 cars stay a decent size
+      var side = land && innerHeight < 600;
+      var stageEl = shEl("nm-stage");
+      if (stageEl) stageEl.classList.toggle("nm-side", side);
+      var bh = Math.round(Math.max(80, Math.min(innerHeight * (side ? 0.42 : land ? 0.3 : 0.22), 230)));
+      var row = shEl("nm-shadow");
+      if (row) { row.style.height = bh + "px"; row.style.setProperty("--bh", bh + "px"); }
+      var cars = shEl("nm-cars");
+      if (cars && t) {
+        var n = t.count, wide = land && !side && n > 10;
+        var cols = n <= 5 ? n : (wide ? 10 : 5);
+        cars.style.setProperty("--ccols", cols);
+        cars.style.setProperty("--crows", Math.ceil(n / cols));
+      }
+      var scr = shEl("shadow-screen");
+      scr.classList.toggle("sh-many", innerHeight < 760 && !land);
+      var ttl = shEl("sh-title");
+      if (ttl) ttl.classList.toggle("sh-hide-n", innerHeight < 760 || land);
+    }
+    function renderNumbersBoard() {
+      var nm = shg.nm, t = nm.target, set = nm.set, easy = numberSettings.level === "easy";
+      var stage = shEl("nm-stage"), tray = shEl("sh-tray"), corner = shEl("nm-corner");
+      var word = t.say.replace(/!/g, "");
+      corner.hidden = !easy;
+      corner.textContent = t.glyphs.join("");
+      corner.setAttribute("aria-label", "The number is " + word);
+      corner.onclick = function () { if (!shg.busy) numSay(t.clip, t.say); };
+      stage.hidden = false;
+      stage.innerHTML = "";
+      var say = function () { if (!shg.busy) numSay(t.clip, t.say); };
+      var row = document.createElement("div");
+      row.className = "nm-shadow";
+      row.id = "nm-shadow";
+      row.setAttribute("role", "group");
+      row.setAttribute("aria-label", "Shadow of " + word);
+      nm.boxes = t.glyphs.map(function (g, i) {
+        var b = document.createElement("div");
+        b.className = "nm-box";
+        b.setAttribute("data-i", String(i));
+        b.setAttribute("data-g", g);
+        b.innerHTML = '<span class="nm-gl">' + g + '</span>';
+        row.appendChild(b);
+        return b;
+      });
+      row.addEventListener("click", say);
+      stage.appendChild(row);
+      if (t.count) {
+        var cars = document.createElement("div");
+        cars.className = "nm-cars";
+        cars.id = "nm-cars";
+        cars.setAttribute("role", "img");
+        cars.setAttribute("aria-label", t.count + (t.count === 1 ? " car" : " cars"));
+        var cols = shuffle(SHAPE_COLOURS.slice());
+        for (var i = 0; i < t.count; i++) {
+          var c = document.createElement("span");
+          c.className = "nm-car";
+          c.style.setProperty("--i", String(i));
+          c.innerHTML = numCarSvg(cols[i % cols.length]);
+          cars.appendChild(c);
+        }
+        cars.addEventListener("click", say);
+        stage.appendChild(cars);
+      }
+      tray.innerHTML = "";
+      nm.tiles = {};
+      set.tiles.forEach(function (g) {
+        var b = document.createElement("button");
+        b.type = "button";
+        b.className = "sh-piece nm-tile";
+        b.setAttribute("data-g", g);
+        b.setAttribute("aria-label", NUM_WORDS[+g]);
+        b.style.color = numColour(g)[0];
+        b.textContent = g;
+        tray.appendChild(b);
+        nm.tiles[g] = b;
+        bDrag(b, {
+          busy: function () { return shg.busy; },
+          scroller: function () { return null; },
+          onTap: function () { var l = set.tileLine(g); shLog("tile:" + g); numSay(l.clip, l.text); },
+          onKey: function () { numbersKey(g); },
+          ghost: function () {
+            var r = (nm.boxes[0] || b).getBoundingClientRect();
+            var h = Math.max(70, Math.min(r.height * 0.8, 170)), w = h * 0.75;
+            return { html: '<span class="nm-gl" style="color:' + numColour(g)[0] + ';font-size:' + Math.round(h * 0.82) + 'px">' + g + '</span>', rect: { width: w, height: h } };
+          },
+          ghostClass: "sh-ghost nm-ghost",
+          onDrop: function (x, y) { return numbersDrop(g, x, y); }
+        });
+      });
+      numbersMarkNext();
+      numbersLayout();
+    }
+    function numbersMarkNext() {
+      var nm = shg.nm, easy = numberSettings.level === "easy";
+      nm.boxes.forEach(function (b, i) { b.classList.toggle("next", easy && !b.classList.contains("done") && i === nm.filled); });
+    }
+    function numbersWrong(inZone) {
+      var nm = shg.nm, t = nm.target;
+      shg.wrong = (shg.wrong || 0) + 1;
+      shLog("num-wrong");
+      if (inZone && nm.boxes[nm.filled]) bWiggle(nm.boxes[nm.filled]);
+      numSay(t.clip, t.say);
+    }
+    function numbersKey(g) {
+      var nm = shg.nm;
+      if (shg.busy || !nm || !nm.target) return;
+      if (g === nm.target.glyphs[nm.filled]) numbersPlace(g); else numbersWrong(false);
+    }
+    function numbersDrop(g, x, y) {
+      var nm = shg.nm;
+      if (shg.busy || !nm || !nm.target) return false;
+      var near = 1e9;
+      nm.boxes.forEach(function (b) { near = Math.min(near, shRectDist(b.getBoundingClientRect(), x, y)); });
+      var inZone = near <= B_DROP_SLOP;
+      if (inZone && g === nm.target.glyphs[nm.filled]) { numbersPlace(g); return true; }
+      numbersWrong(inZone);
+      return false;
+    }
+    function numbersPlace(g) {
+      var nm = shg.nm, t = nm.target, set = nm.set;
+      var box = nm.boxes[nm.filled];
+      box.classList.add("done");
+      box.classList.remove("next");
+      var gl = box.querySelector(".nm-gl");
+      if (gl) gl.style.color = numColour(g)[0];
+      nm.filled++;
+      shLog("place:" + g);
+      var tile = nm.tiles[g];
+      if (tile) { tile.classList.remove("nm-pop"); void tile.offsetWidth; tile.classList.add("nm-pop"); }
+      if (nm.filled < t.glyphs.length) {
+        numbersMarkNext();
+        var l = set.tileLine(g);
+        numSay(l.clip, l.text);
+        return;
+      }
+      shg.busy = true;
+      shg.placed = 1;
+      shg.boards++;
+      // the number again, then the cars drive off and the usual hooray + confetti
+      numSay(t.clip, t.say);
+      shLater(function () { var cars = shEl("nm-cars"); if (cars) { shLog("cars-go"); cars.classList.add("go"); } }, 600);
+      shLater(function () {
+        shLog("cheer");
+        var keep = difficulty.hooray;
+        difficulty.hooray = true;
+        playHooray();
+        difficulty.hooray = keep;
+        startConfetti();
+      }, 900);
+      shLater(function () { stopConfetti(); numbersBoard(false); }, 4800);
     }
     function paintShadowStartArt() {
       var car = (typeof builtinCar === "function" && builtinCar("skye")) || allCars()[2] || allCars()[0];
@@ -11012,6 +11375,7 @@
     bindBuildUi();
     bindShadowUi();
     bindShapeUi();
+    bindNumberUi();
     document.getElementById("next-btn").addEventListener("click", onNext);
     document.getElementById("match-home-btn").addEventListener("click", function () { goHome(); });
     document.getElementById("name-home-btn").addEventListener("click", function () { goHome(); });
@@ -13651,6 +14015,18 @@
           items: shg.items.map(function (it) { return { id: it.id, key: it.key, rot: it.rot || 0, scl: it.scl || 1, done: !!it.done }; }) };
       },
       startShapes: function () { startShadow("shapes"); },
+      startNumbers: function () { startShadow("numbers"); },
+      numberSettings: function (v) { if (v) saveNumberSettings(Object.assign({}, numberSettings, v)); return Object.assign({}, numberSettings); },
+      numbersState: function () {
+        var nm = shg.nm || {}, t = nm.target || {};
+        return { mode: shg.mode, open: shadowOpen(), busy: shg.busy, boards: shg.boards, wrong: shg.wrong || 0, level: numberSettings.level, upto: numberSettings.upto,
+          target: t.id || "", glyphs: (t.glyphs || []).slice(), count: t.count || 0, filled: nm.filled || 0, sayLog: shg.sayLog.slice(),
+          cars: document.querySelectorAll("#nm-cars .nm-car").length, tiles: document.querySelectorAll("#sh-tray .nm-tile").length,
+          cornerShown: !!(shEl("nm-corner") && !shEl("nm-corner").hidden), cornerText: (shEl("nm-corner") || {}).textContent || "",
+          nextBox: nm.boxes ? nm.boxes.map(function (b) { return b.classList.contains("next"); }) : [], doneBoxes: nm.boxes ? nm.boxes.map(function (b) { return b.classList.contains("done"); }) : [] };
+      },
+      numberSets: function () { return Object.keys(SYMBOL_SETS); },
+      numbersJump: function (n) { if (shg.nm) { shg.nm.force = "n:" + n; stopConfetti(); numbersBoard(false); } },
       profileBuild: function () { var p = activeProfile(); return p ? { buildStyle: p.buildStyle, buildV: p.buildV } : null; },
       shadowState: function () {
         return { open: shadowOpen(), n: shg.n, boards: shg.boards, placed: shg.placed, busy: shg.busy, wrong: shg.wrong || 0, sayLog: shg.sayLog.slice(),
