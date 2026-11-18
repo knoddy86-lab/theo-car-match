@@ -15,3 +15,5 @@ Clips were trimmed to a short cheer, faded in and out, loudness-normalised to ab
 | `05-hooray.mp3` | Voice saying “Hooray!” | ~1.2s | Hooray! (FOLEY) | miatoyan | https://freesound.org/people/miatoyan/sounds/734186/ | CC0 1.0 |
 
 v45: every clip in the app was loudness-matched to about -16 LUFS integrated with true peak at or below -1.5 dBTP (gain plus a gentle peak limiter, re-encoded at the same sample rate and bitrate; content, length and licence unchanged). Before, levels ranged from about -23 to -15 LUFS.
+
+v50: the Numbers game also plays extra kids "yay" clips and its own fart clips from `sounds/numbers/` (see `sounds/numbers/CREDITS.md`). The clips in this folder are unchanged.

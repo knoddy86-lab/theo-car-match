@@ -1934,7 +1934,8 @@
     .nm-box.done .nm-gl { animation: sh-pop 0.42s cubic-bezier(.3,1.6,.5,1); }
     @keyframes nm-glow { 0%, 100% { box-shadow: 0 0 0 0 rgba(255,179,0,0.0); } 50% { box-shadow: 0 0 0 8px rgba(255,179,0,0.55); } }
     .nm-gl { font-weight: 900; line-height: 1; font-size: calc(var(--bh, 160px) * 0.78); font-family: "Arial Rounded MT Bold", "Helvetica Neue", Arial, system-ui, sans-serif; pointer-events: none; display: block; }
-    .nm-box:not(.done) .nm-gl { color: rgb(30, 34, 52); opacity: 0.74; }
+    .nm-box:not(.done) .nm-gl { color: rgb(30, 34, 52); opacity: 0.74; transition: opacity 0.7s ease; }
+    .nm-box:not(.done) .nm-gl.nm-fade { opacity: 0; }
     .nm-cars { flex: 0 1 auto; min-height: 0; display: grid; grid-template-columns: repeat(var(--ccols, 5), minmax(0, 1fr)); grid-auto-rows: minmax(0, 1fr); gap: clamp(2px, 0.8vmin, 8px); width: min(100%, calc(var(--ccols, 5) * 150px)); height: calc(var(--crows, 2) * 96px); max-height: 100%; cursor: pointer; padding: 0 6px; }
     .nm-stage.nm-side { flex-direction: row; align-items: center; justify-content: center; gap: clamp(16px, 4vw, 40px); }
     .nm-stage.nm-side .nm-cars { flex: 1 1 auto; height: 100%; max-height: none; width: auto; max-width: calc(var(--ccols, 5) * 130px); align-content: center; }
@@ -2797,12 +2798,12 @@
           </div>
         </div>
         <div id="pane-numbers" class="settings-pane" role="tabpanel" aria-labelledby="tab-numbers" hidden>
-          <p class="settings-lead">Numbers game: a number's shadow appears and the number is said. Drag the 0-9 tiles into the shadow (two tiles for 10 to 20: tens first, then ones). That many little cars sit below and drive off when it's right.</p>
+          <p class="settings-lead">Numbers game: a number's shadow appears and the number is said. Drag the 0-9 tiles into the shadow (two tiles for 10 to 20: tens first, then ones). That many little cars sit below and drive off when it's right, with cheers. A wrong tile plays a funny fart and the number is said again.</p>
           <p class="device-only-note">This device only — not synced.</p>
           <div class="diff-custom" id="numbers-options">
             <h3>Numbers game</h3>
             <div class="diff-row">
-              <label for="nm-set-level">Difficulty (Easy: 1 to 20 in order, the number shown in the corner and the next box glows. Medium: 1 to 20 in order, no corner number. Hard: random numbers, no hints)</label>
+              <label for="nm-set-level">Difficulty (Easy: 1 to 20 in order, the number shown in the corner, the shadow fades after 2 seconds (the empty boxes stay) and the next box glows. Medium: 1 to 20 in order, no corner number. Hard: random numbers, no hints)</label>
               <select id="nm-set-level" aria-label="Numbers difficulty">
                 <option value="easy">Easy</option>
                 <option value="medium">Medium</option>
@@ -3093,7 +3094,7 @@
     var BLOB_FETCH_MS = 20000;
     var bootStartedAt = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
     var keyChangeOpen = false;
-    var APP_VERSION = "49";
+    var APP_VERSION = "50";
     var MATCH_PAIR_CAP = 6;
     var NAME_ROUNDS = 6;
     var THUMB_MAX = 256;
@@ -5767,7 +5768,7 @@
     }
 
     function stopAllSfx() {
-      [hoorayPreloads, revPreloads, fartPreloads].forEach(function (list) {
+      [hoorayPreloads, revPreloads, fartPreloads].concat(numPoolPreloads()).forEach(function (list) {
         (list || []).forEach(function (a) { try { a.pause(); a.currentTime = 0; } catch (e) {} });
       });
       if (hoorayAudio) { try { hoorayAudio.pause(); } catch (e) {} }
@@ -10504,7 +10505,7 @@
       updateHomeBtn();
       shg.boards = 0;
       shg.last = {};
-      if (isNum) { shg.n = 0; shg.wrong = 0; numbersStart(); return; }
+      if (isNum) { numPrime(); shg.n = 0; shg.wrong = 0; numbersStart(); return; }
       shg.n = shStartCount();
       shadowBoard(true);
     }
@@ -10777,6 +10778,63 @@
       window.addEventListener("resize", function () { if (shg.mode === "numbers" && shadowOpen() && shg.nm && shg.nm.target) numbersLayout(); });
       updateNumberSettingsUi();
     }
+    // v50: Numbers game own sound pools (CC0, see sounds/numbers/CREDITS.md): kids yays after a right answer, big farts after a wrong one.
+    var NUM_POOLS = {
+      fart: { list: ["fart-1.mp3", "fart-2.mp3", "fart-3.mp3", "fart-4.mp3", "fart-5.mp3", "fart-6.mp3"], queue: [], last: "", pre: [], cur: null },
+      yay: { list: ["yay-1.mp3", "yay-2.mp3", "yay-3.mp3", "yay-4.mp3", "yay-5.mp3", "yay-6.mp3", "yay-7.mp3"], queue: [], last: "", pre: [], cur: null }
+    };
+    function numPoolPreloads() { return typeof NUM_POOLS === "object" ? [NUM_POOLS.fart.pre, NUM_POOLS.yay.pre] : []; }
+    function numPoolPreload(p) {
+      if (p.pre.length) return;
+      p.list.forEach(function (name) {
+        var a = new Audio();
+        a.preload = "auto";
+        a.src = SOUND_DIR + "numbers/" + name;
+        try { a.load(); } catch (e) {}
+        p.pre.push(a);
+      });
+    }
+    function numPoolNext(p) {
+      if (!p.queue.length) {
+        p.queue = shuffle(p.list.slice());
+        if (p.queue.length > 1 && p.last && p.queue[0] === p.last) p.queue.push(p.queue.shift());
+      }
+      p.last = p.queue.shift();
+      return p.last;
+    }
+    function numPoolStop() {
+      ["fart", "yay"].forEach(function (k) { var a = NUM_POOLS[k].cur; if (a) { try { a.pause(); a.currentTime = 0; } catch (e) {} } NUM_POOLS[k].cur = null; });
+    }
+    // Plays the next clip of a pool; resolves when it ends (or after maxMs, or if it can't play).
+    function numPoolPlay(kind, maxMs) {
+      var p = NUM_POOLS[kind];
+      numPoolPreload(p);
+      return new Promise(function (resolve) {
+        var name = numPoolNext(p);
+        shLog(kind + ":" + name);
+        var src = SOUND_DIR + "numbers/" + name;
+        var el = findPreload(p.pre, src);
+        if (!el) { el = new Audio(); el.preload = "auto"; el.src = src; }
+        p.cur = el;
+        var to = setTimeout(function () { resolve(); }, maxMs || 3200);
+        playElement(el, function () { clearTimeout(to); resolve(); });
+      });
+    }
+    // iPhone only lets an audio element play from a timer once it has been started by a tap: prime these on the NUMBERS tap.
+    function numPrime() {
+      if (shg.numPrimed) return;
+      shg.numPrimed = true;
+      numPoolPreload(NUM_POOLS.fart);
+      numPoolPreload(NUM_POOLS.yay);
+      NUM_POOLS.fart.pre.concat(NUM_POOLS.yay.pre).forEach(function (a) {
+        try {
+          a.muted = true;
+          var pr = a.play();
+          var undo = function () { try { a.pause(); a.currentTime = 0; } catch (e) {} a.muted = false; };
+          if (pr && pr.then) pr.then(undo, function () { a.muted = false; }); else undo();
+        } catch (e) { a.muted = false; }
+      });
+    }
     function numLine(clip, text) {
       if (voiceStyle("numbers") === "classic") return { src: SOUND_DIR + "classic/" + clip + ".mp3", k: clip, t: text };
       return { src: BUILD_VOICE_DIR + clip + ".mp3", k: clip, t: text };
@@ -10926,6 +10984,12 @@
       });
       numbersMarkNext();
       numbersLayout();
+      nm.faded = false;
+      // v50: with the number shown in the corner (Easy) the shadow number fades out 2 s after it appears; the empty boxes stay
+      if (easy) shLater(function () {
+        nm.faded = true;
+        nm.boxes.forEach(function (b) { var gl = b.querySelector(".nm-gl"); if (gl && !b.classList.contains("done")) gl.classList.add("nm-fade"); });
+      }, 2000);
     }
     function numbersMarkNext() {
       var nm = shg.nm, easy = numberSettings.level === "easy";
@@ -10936,7 +11000,14 @@
       shg.wrong = (shg.wrong || 0) + 1;
       shLog("num-wrong");
       if (inZone && nm.boxes[nm.filled]) bWiggle(nm.boxes[nm.filled]);
-      numSay(t.clip, t.say);
+      // v50: a big funny fart, then the number again (no penalty; the tile floats back meanwhile)
+      var tok = shg.wrongTok = (shg.wrongTok || 0) + 1;
+      var g = shg.gen;
+      stopSpeechAndAudio();
+      numPoolStop();
+      numPoolPlay("fart", 3000).then(function () {
+        if (tok === shg.wrongTok && g === shg.gen && shadowOpen() && !shg.busy && nm.target === t) numSay(t.clip, t.say);
+      });
     }
     function numbersKey(g) {
       var nm = shg.nm;
@@ -10959,7 +11030,7 @@
       box.classList.add("done");
       box.classList.remove("next");
       var gl = box.querySelector(".nm-gl");
-      if (gl) gl.style.color = numColour(g)[0];
+      if (gl) { gl.classList.remove("nm-fade"); gl.style.color = numColour(g)[0]; }
       nm.filled++;
       shLog("place:" + g);
       var tile = nm.tiles[g];
@@ -10976,15 +11047,30 @@
       // the number again, then the cars drive off and the usual hooray + confetti
       numSay(t.clip, t.say);
       shLater(function () { var cars = shEl("nm-cars"); if (cars) { shLog("cars-go"); cars.classList.add("go"); } }, 600);
+      // v50: hooray, then two random kids yays; the next number comes once they have played (at least 4.8 s after the answer)
+      var done = t;
+      var t0 = Date.now();
+      var advanced = false;
+      function advance() {
+        if (advanced || nm.target !== done) return;
+        advanced = true;
+        stopConfetti();
+        numbersBoard(false);
+      }
       shLater(function () {
         shLog("cheer");
         var keep = difficulty.hooray;
         difficulty.hooray = true;
-        playHooray();
+        var cheer = playHooray();
         difficulty.hooray = keep;
         startConfetti();
+        var g = shg.gen;
+        Promise.resolve(cheer)
+          .then(function () { return g === shg.gen ? numPoolPlay("yay", 2600) : null; })
+          .then(function () { return g === shg.gen ? numPoolPlay("yay", 2600) : null; })
+          .then(function () { if (g === shg.gen) shLater(advance, Math.max(500, 4800 - (Date.now() - t0))); });
       }, 900);
-      shLater(function () { stopConfetti(); numbersBoard(false); }, 4800);
+      shLater(advance, 11000);
     }
     function paintShadowStartArt() {
       var car = (typeof builtinCar === "function" && builtinCar("skye")) || allCars()[2] || allCars()[0];
@@ -14025,7 +14111,7 @@
         return { mode: shg.mode, open: shadowOpen(), busy: shg.busy, boards: shg.boards, wrong: shg.wrong || 0, level: numberSettings.level, upto: numberSettings.upto,
           target: t.id || "", glyphs: (t.glyphs || []).slice(), count: t.count || 0, filled: nm.filled || 0, sayLog: shg.sayLog.slice(),
           cars: document.querySelectorAll("#nm-cars .nm-car").length, tiles: document.querySelectorAll("#sh-tray .nm-tile").length,
-          cornerShown: !!(shEl("nm-corner") && !shEl("nm-corner").hidden), cornerText: (shEl("nm-corner") || {}).textContent || "",
+          faded: !!nm.faded, fadedGlyphs: document.querySelectorAll("#nm-shadow .nm-box:not(.done) .nm-gl.nm-fade").length, glyphOpacity: (function () { var e = document.querySelector("#nm-shadow .nm-box:not(.done) .nm-gl"); return e ? parseFloat(getComputedStyle(e).opacity) : -1; })(), cornerShown: !!(shEl("nm-corner") && !shEl("nm-corner").hidden), cornerText: (shEl("nm-corner") || {}).textContent || "",
           nextBox: nm.boxes ? nm.boxes.map(function (b) { return b.classList.contains("next"); }) : [], doneBoxes: nm.boxes ? nm.boxes.map(function (b) { return b.classList.contains("done"); }) : [] };
       },
       numberSets: function () { return Object.keys(SYMBOL_SETS); },
