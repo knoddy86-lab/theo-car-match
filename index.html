@@ -3094,7 +3094,7 @@
     var BLOB_FETCH_MS = 20000;
     var bootStartedAt = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
     var keyChangeOpen = false;
-    var APP_VERSION = "50";
+    var APP_VERSION = "51";
     var MATCH_PAIR_CAP = 6;
     var NAME_ROUNDS = 6;
     var THUMB_MAX = 256;
@@ -4652,7 +4652,7 @@
 
     function playFlipTick() {
       if (!audioCtx) return;
-      tone(640, audioCtx.currentTime, 0.08, "sine", 0.05);
+      tone(640, audioCtx.currentTime, 0.08, "sine", 0.35);
     }
 
 
@@ -10780,7 +10780,7 @@
     }
     // v50: Numbers game own sound pools (CC0, see sounds/numbers/CREDITS.md): kids yays after a right answer, big farts after a wrong one.
     var NUM_POOLS = {
-      fart: { list: ["fart-1.mp3", "fart-2.mp3", "fart-3.mp3", "fart-4.mp3", "fart-5.mp3", "fart-6.mp3"], queue: [], last: "", pre: [], cur: null },
+      fart: { list: ["fart-1.mp3", "fart-3.mp3", "fart-4.mp3", "fart-5.mp3", "fart-6.mp3"], queue: [], last: "", pre: [], cur: null },
       yay: { list: ["yay-1.mp3", "yay-2.mp3", "yay-3.mp3", "yay-4.mp3", "yay-5.mp3", "yay-6.mp3", "yay-7.mp3"], queue: [], last: "", pre: [], cur: null }
     };
     function numPoolPreloads() { return typeof NUM_POOLS === "object" ? [NUM_POOLS.fart.pre, NUM_POOLS.yay.pre] : []; }
