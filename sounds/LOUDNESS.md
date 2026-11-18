@@ -1,9 +1,11 @@
-# Loudness (v51)
+# Loudness (v52)
 
-Every clip in `sounds/` (voice Alba and Classic, build clips, car names, engine revs, hooray, farts, Numbers yays and farts) is held at the same level: about **-16 LUFS integrated** (measured with ffmpeg ebur128; all clips between -16.5 and -15.8 LUFS, so within +/-0.5 LU) with a **true peak at or below -1.5 dBTP** (nothing clips).
+Every clip in `sounds/` (voice Alba and Classic, build clips, car names, engine revs, hooray, farts, Numbers yays and farts) sits at the same level: about **-19.2 LUFS integrated** (ffmpeg ebur128; all clips between -19.6 and -18.8 LUFS) with a true peak at or below -4.6 dBFS, so nothing clips.
 
-- Clips that were already within +/-0.5 LU were left untouched (no re-encode).
-- Outliers were gain-adjusted (and peak-limited where needed) and re-encoded at their existing sample rate, mono and bitrate: all Numbers yays and farts, `fart/01-short`, `fart/02-fluffy`, `build/p-top`, `build/v-truck`, `voice/doc`.
-- `fart/01-short` is only 0.41 s (too short for an integrated reading); it was measured by looping it.
-- No per-sound or per-game volume multipliers exist in the code (audio elements always play at full volume; the only gain nodes are the WebAudio tone beeps). The Match card-flip tick was raised from 0.05 to 0.35 so it is no longer inaudibly quiet next to the voice clips.
-- Not controllable from here: the device voice fallback (speech synthesis) and online name clips (soundoftext), which are only used for renamed or custom names.
+Why -19: the clips the app can't control sit there. Online name clips (Sound of Text, Google en-AU / en-GB) measured -17.4 to -21.9 LUFS (mean -19.2, 14 samples, no consistent level) and the device speech voice is quiet on iPhone/iPad. Bundled clips used to be -16 (v51), which made them clearly louder than those.
+
+How: v52 lowered every bundled mp3 by exactly 3.0 dB (2 steps of the mp3 global_gain field, the same lossless method as mp3gain: no re-encode, no quality loss). The v51 files are backed up on the build box at `/workspace/audio-backup-v51-sounds`, the v50 originals at `/workspace/audio-backup-v50`.
+
+Code: audio elements never have `.volume` set (iOS ignores it anyway); the device voice utterances now set `volume = 1` explicitly; the Match card-flip tick (WebAudio) gain was lowered from 0.35 to 0.25 to follow the clips.
+
+Not levelled: Sound of Text clips (the file host sends no CORS headers, so WebAudio can't read or measure them), device speech, and any voice recordings made in the app.

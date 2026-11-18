@@ -3094,7 +3094,7 @@
     var BLOB_FETCH_MS = 20000;
     var bootStartedAt = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
     var keyChangeOpen = false;
-    var APP_VERSION = "51";
+    var APP_VERSION = "52";
     var MATCH_PAIR_CAP = 6;
     var NAME_ROUNDS = 6;
     var THUMB_MAX = 256;
@@ -4353,6 +4353,7 @@
         var u = new SpeechSynthesisUtterance(text);
         u.rate = 0.95;
         u.pitch = 1;
+        u.volume = 1; // v52: device voice always at full volume (the bundled clips are levelled to match it and the online name clips)
         speakTimer = setTimeout(function () {
           speakTimer = null;
           if (token !== speakToken) return;
@@ -4652,7 +4653,7 @@
 
     function playFlipTick() {
       if (!audioCtx) return;
-      tone(640, audioCtx.currentTime, 0.08, "sine", 0.35);
+      tone(640, audioCtx.currentTime, 0.08, "sine", 0.25);
     }
 
 
@@ -9347,6 +9348,7 @@
           var u = new SpeechSynthesisUtterance(text);
           u.rate = 0.95;
           u.pitch = 1;
+          u.volume = 1;
           if (!voicesCache.length) refreshVoices();
           var voice = chosenVoice();
           u.lang = (voice && voice.lang) || "en-AU";

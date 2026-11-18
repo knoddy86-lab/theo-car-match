@@ -2,7 +2,7 @@
 
 v50. These clips play only in the Numbers game: a random kids "yay" cheer or two after each correct number, and a big funny fart (then the number is said again) after a wrong pick. All are **real recordings** from [Freesound](https://freesound.org/), licensed **CC0 1.0** (Creative Commons Zero, public domain dedication). Each sound's licence was checked on its own Freesound page (it links `creativecommons.org/publicdomain/zero/1.0`) and the search was filtered to CC0 only.
 
-Clips were trimmed (silence removed, long ones cut and faded out), loudness-normalised in v51 to the same level as every other clip in the app (-16 LUFS, true peak at or below -1.5 dBTP) and encoded as mono MP3, 44.1 kHz, 64 kbit/s. They rotate randomly without repeating until all have played.
+Clips were trimmed (silence removed, long ones cut and faded out), loudness-normalised in v51 to the same level as every other clip in the app (-19 LUFS since v52, true peak at or below -4.5 dBTP) and encoded as mono MP3, 44.1 kHz, 64 kbit/s. They rotate randomly without repeating until all have played.
 
 ## Fart clips (wrong pick)
 
