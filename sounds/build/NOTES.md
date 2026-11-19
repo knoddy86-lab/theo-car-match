@@ -70,3 +70,5 @@ v45: every clip in the app was loudness-matched to about -16 LUFS integrated wit
 v47: Shapes game clips shp-* (15 shape names, "Where does the ... go?" for each, intro, "More shapes!", "Find where they go!"). Same Alba voice (en_GB-alba-medium, CC BY 4.0), Whisper-checked, loudness-matched to -16 LUFS / -1.5 dBTP.
 v48: Numbers game clips num-0 to num-20 (the number words zero to twenty, nothing else). Same Alba voice (en_GB-alba-medium, CC BY 4.0), Whisper-checked (21 of 21 exact), loudness-matched to -16 LUFS / -1.5 dBTP.
 
+
+v53: Letters game clips let-a to let-z (the 26 letter names, nothing else). Same Alba voice (en_GB-alba-medium, CC BY 4.0, Edinburgh CSTR), checked with Whisper using carrier phrases (bare letters are not reliably recognised in isolation), levelled to about -19.2 LUFS / -4.6 dBFS peak.

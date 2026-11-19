@@ -1,4 +1,4 @@
-# Loudness (v52)
+# Loudness (v53)
 
 Every clip in `sounds/` (voice Alba and Classic, build clips, car names, engine revs, hooray, farts, Numbers yays and farts) sits at the same level: about **-19.2 LUFS integrated** (ffmpeg ebur128; all clips between -19.6 and -18.8 LUFS) with a true peak at or below -4.6 dBFS, so nothing clips.
 
@@ -9,3 +9,5 @@ How: v52 lowered every bundled mp3 by exactly 3.0 dB (2 steps of the mp3 global_
 Code: audio elements never have `.volume` set (iOS ignores it anyway); the device voice utterances now set `volume = 1` explicitly; the Match card-flip tick (WebAudio) gain was lowered from 0.35 to 0.25 to follow the clips.
 
 Not levelled: Sound of Text clips (the file host sends no CORS headers, so WebAudio can't read or measure them), device speech, and any voice recordings made in the app.
+
+v53: the 26 Alba letter clips (build/let-*), the 26 Classic letter clips and 24 Classic Cars-character name clips (classic/) were made at the same level (-19.2 LUFS, peak at or below -4.6 dBFS). Classic names are now bundled and play first; Sound of Text and the device voice remain only as fallbacks for names typed later.

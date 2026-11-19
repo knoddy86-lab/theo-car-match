@@ -1,6 +1,6 @@
 /* Theo's Car Match service worker — cache-first so the game opens offline
    even when the home computer is unreachable (mobile data). Never caches /api. */
-var CACHE = "theo-car-match-v52";
+var CACHE = "theo-car-match-v53";
 var CORE = [
   "./",
   "./index.html",
@@ -106,6 +106,10 @@ BUILD_VOICE = BUILD_VOICE.concat(["num-0","num-1","num-2","num-3","num-4","num-5
 OPTIONAL = OPTIONAL.concat(["num-0","num-1","num-2","num-3","num-4","num-5","num-6","num-7","num-8","num-9","num-10","num-11","num-12","num-13","num-14","num-15","num-16","num-17","num-18","num-19","num-20"].map(function (k) { return "./sounds/classic/" + k + ".mp3"; }));
 // v50: Numbers game kids yays and big farts (CC0, see sounds/numbers/CREDITS.md)
 OPTIONAL = OPTIONAL.concat(["fart-1", "fart-3", "fart-4", "fart-5", "fart-6", "yay-1", "yay-2", "yay-3", "yay-4", "yay-5", "yay-6", "yay-7"].map(function (k) { return "./sounds/numbers/" + k + ".mp3"; }));
+// v53: Letters game clips (Alba in build/, Classic in classic/) and bundled Classic name clips
+BUILD_VOICE = BUILD_VOICE.concat(["let-a","let-b","let-c","let-d","let-e","let-f","let-g","let-h","let-i","let-j","let-k","let-l","let-m","let-n","let-o","let-p","let-q","let-r","let-s","let-t","let-u","let-v","let-w","let-x","let-y","let-z"]);
+OPTIONAL = OPTIONAL.concat(["let-a","let-b","let-c","let-d","let-e","let-f","let-g","let-h","let-i","let-j","let-k","let-l","let-m","let-n","let-o","let-p","let-q","let-r","let-s","let-t","let-u","let-v","let-w","let-x","let-y","let-z"].map(function (k) { return "./sounds/classic/" + k + ".mp3"; }));
+OPTIONAL = OPTIONAL.concat(["cruise","do","doc","fillmore","flo","francesco","guido","gwee-doh","inside","laney","lightning-mcqueen","lightning","luigi","mack","mater","mcqueen","nick","ramone","ryan","sal","sally","sarge","sheriff","shields"].map(function (k) { return "./sounds/classic/" + k + ".mp3"; }));
 OPTIONAL = OPTIONAL.concat(BUILD_VOICE.map(function (k) { return "./sounds/build/" + k + ".mp3"; }));
 // v37: the rest of the game speaks with the same natural voice clips (see sounds/voice/NOTES.md), cached for offline play.
 var GAME_VOICE = ["uncle-ashley", "aunty-ashleigh", "wheres-uncle-ashley", "wheres-aunty-ashleigh", 

@@ -1922,6 +1922,31 @@
     @media (orientation: landscape) and (min-height: 521px) {
       .start-actions.four.six { width: min(1180px, 96vw); flex: 0 0 auto; }
     }
+    /* ---- v53: seven game cards (adds LETTERS): portrait 3 + 3 + 1 centred, landscape one row of 7 ---- */
+    .gc-letters { background: linear-gradient(180deg, #F48FB1, #D81B60); box-shadow: 0 8px 0 #AD1457, 0 14px 26px rgba(0,0,0,0.2); }
+    .gc-letters:active { box-shadow: 0 2px 0 #AD1457, 0 6px 12px rgba(0,0,0,0.2); }
+    .gc-letters .gc-letters-art { position: absolute; inset: 6% 4%; width: 92%; height: 88%; }
+    .start-actions.four.six.seven { grid-template-columns: repeat(7, minmax(0, 1fr)); width: min(1400px, 100%); }
+    .start-actions.four.six.seven .gc-label { font-size: clamp(13px, 2.6vmin, 32px); }
+    @media (orientation: portrait) {
+      .start-actions.four.six.seven { grid-template-columns: repeat(6, minmax(0, 1fr)); width: min(100%, 760px); }
+      .start-actions.four.six.seven .game-card { grid-column: span 2; }
+      .start-actions.four.six.seven .game-card:nth-child(7) { grid-column: 3 / span 2; }
+      .start-actions.four.six.seven .gc-label { font-size: clamp(16px, 4.6vw, 40px); }
+    }
+    @media (max-width: 600px) and (orientation: portrait) {
+      .start-actions.four.six.seven .gc-label { font-size: clamp(14px, 4.4vw, 22px); }
+    }
+    @media (max-height: 520px) and (orientation: landscape) {
+      .start-actions.four.six.seven { width: auto; grid-template-columns: repeat(7, auto); gap: 8px; }
+      .start-actions.four.six.seven .gc-art { height: min(24vh, calc((100vw - 270px) * 0.1)); width: auto; }
+      .start-actions.four.six.seven .gc-label { font-size: clamp(12px, 4.4vh, 22px); }
+    }
+    @media (orientation: landscape) and (min-height: 521px) {
+      .start-actions.four.six.seven { width: min(1260px, 97vw); flex: 0 0 auto; }
+    }
+    /* ---- v53: Letters game (same screen as Numbers: one letter shadow, a few big tiles, no cars) ---- */
+    .shadow-screen.is-letters .nm-stage { justify-content: center; }
     /* ---- v48: Numbers game (Shadow play with number shadows and 0-9 tiles) ---- */
     .shadow-screen.is-numbers .sh-board, .shadow-screen.is-numbers .sh-title.sh-hide-n { display: none; }
     .shadow-screen:not(.is-numbers) .nm-stage, .shadow-screen:not(.is-numbers) .nm-corner { display: none !important; }
@@ -2226,7 +2251,7 @@
           <p class="for-theo" id="start-for">For Theo</p>
         </div>
         <div class="hero-cars" id="hero-cars"></div>
-        <div class="start-actions four six" id="start-actions">
+        <div class="start-actions four six seven" id="start-actions">
           <button type="button" class="game-card gc-match" id="play-btn" aria-label="Match Game">
             <span class="gc-art" aria-hidden="true">
               <span class="mini-card mc-a"><span class="mini-art" data-art="match"></span></span>
@@ -2283,6 +2308,15 @@
               </svg>
             </span>
             <span class="gc-label">NUMBERS</span>
+          </button>
+          <button type="button" class="game-card gc-letters" id="letters-btn" aria-label="Letters Game">
+            <span class="gc-art" aria-hidden="true">
+              <svg class="gc-letters-art" viewBox="0 0 160 120" aria-hidden="true">
+                <text x="10" y="104" font-family="Arial Rounded MT Bold, Helvetica Neue, Arial, sans-serif" font-weight="900" font-size="98" fill="#FFEE58" stroke="#F57F17" stroke-width="3" stroke-linejoin="round">A</text>
+                <text x="84" y="104" font-family="Arial Rounded MT Bold, Helvetica Neue, Arial, sans-serif" font-weight="900" font-size="98" fill="rgba(255,255,255,0.35)" stroke="#fff" stroke-width="3" stroke-dasharray="7 5" stroke-linejoin="round">B</text>
+              </svg>
+            </span>
+            <span class="gc-label">LETTERS</span>
           </button>
         </div>
         <div class="mode-picker" id="mode-picker" hidden>
@@ -2466,6 +2500,7 @@
           <button type="button" role="tab" id="tab-shadow" aria-controls="pane-shadow" aria-selected="false">Shadow</button>
           <button type="button" role="tab" id="tab-shapes" aria-controls="pane-shapes" aria-selected="false">Shapes</button>
           <button type="button" role="tab" id="tab-numbers" aria-controls="pane-numbers" aria-selected="false">Numbers</button>
+          <button type="button" role="tab" id="tab-letters" aria-controls="pane-letters" aria-selected="false">Letters</button>
           <button type="button" role="tab" id="tab-photos" aria-controls="pane-photos" aria-selected="false" hidden>Photos<span class="count-badge" id="tab-photos-badge" hidden>0</span></button>
           <button type="button" role="tab" id="tab-players" aria-controls="pane-players" aria-selected="false">Players</button>
           <button type="button" role="tab" id="tab-family" aria-controls="pane-family" aria-selected="false">Connection</button>
@@ -2824,6 +2859,32 @@
             </div>
           </div>
         </div>
+        <div id="pane-letters" class="settings-pane" role="tabpanel" aria-labelledby="tab-letters" hidden>
+          <p class="settings-lead">Letters game: a letter's shadow appears and the letter is said. Drag the matching letter tile into the shadow. A few big tiles at a time (4 on Easy, 6 on Medium, 8 on Hard). A right answer gets cheers; a wrong tile plays a funny fart and the letter is said again.</p>
+          <p class="device-only-note">This device only — not synced.</p>
+          <div class="diff-custom" id="letters-options">
+            <h3>Letters game</h3>
+            <div class="diff-row">
+              <label for="lt-set-level">Difficulty (Easy: A to Z in order, the letter shown in the corner, the shadow fades after 2 seconds (the empty box stays), the box glows and 4 tiles with no look-alikes. Medium: A to Z in order, no corner letter, 6 tiles. Hard: random letters, no hints, 8 tiles including look-alikes)</label>
+              <select id="lt-set-level" aria-label="Letters difficulty">
+                <option value="easy">Easy</option>
+                <option value="medium">Medium</option>
+                <option value="hard">Hard</option>
+              </select>
+            </div>
+            <div class="diff-row">
+              <label for="lt-set-case">Letters shown as</label>
+              <select id="lt-set-case" aria-label="Letter case">
+                <option value="upper">Capital letters (A B C)</option>
+                <option value="lower">Small letters (a b c)</option>
+              </select>
+            </div>
+            <div class="diff-row">
+              <label for="voice-style-letters">Letters voice</label>
+              <select id="voice-style-letters" class="voice-style-select" data-part="letters" aria-label="Letters voice"><option value="alba">Alba</option><option value="classic">Classic</option></select>
+            </div>
+          </div>
+        </div>
         <div id="pane-photos" class="settings-pane" role="tabpanel" aria-labelledby="tab-photos" hidden>
           <p class="settings-lead">Family photos for Match and Name games (choose Photos after tapping MATCH or NAME). They come from the home computer and are only kept on your home devices.</p>
           <p class="device-only-note">Changes here ask for the parent PIN once, then stay unlocked until you leave Settings or stop for 30 seconds.</p>
@@ -3018,7 +3079,7 @@
     // v39: per-device voice for each part of the game. Classic = the pre-v37 voice (Sound of Text car-name clips
     // and the device voice); Alba = the natural recorded clips.
     var VOICE_STYLE_KEY = "theo-car-match-voice-styles";
-    var VOICE_STYLE_DEFAULTS = { name: "classic", match: "alba", build: "alba", shadow: "alba", shapes: "alba", numbers: "alba" };
+    var VOICE_STYLE_DEFAULTS = { name: "classic", match: "alba", build: "alba", shadow: "alba", shapes: "alba", numbers: "alba", letters: "alba" };
     var voiceStyles = Object.assign({}, VOICE_STYLE_DEFAULTS);
     try {
       var vsRaw = JSON.parse(localStorage.getItem(VOICE_STYLE_KEY) || "{}") || {};
@@ -3094,7 +3155,7 @@
     var BLOB_FETCH_MS = 20000;
     var bootStartedAt = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
     var keyChangeOpen = false;
-    var APP_VERSION = "52";
+    var APP_VERSION = "53";
     var MATCH_PAIR_CAP = 6;
     var NAME_ROUNDS = 6;
     var THUMB_MAX = 256;
@@ -4322,7 +4383,9 @@
     // v45: the Name game says car names as first / last / nickname too; those (and Berry, Moss, Dart, which never had
     // a Classic clip) used the device voice, which is much quieter on iPhone/iPad. They now have their own clip.
     var CLASSIC_LINE_CLIPS = { "uncle-ashley": 1, "aunty-ashleigh": 1, "wheres-uncle-ashley": 1, "wheres-aunty-ashleigh": 1,
-      "berry": 1, "moss": 1, "dart": 1, "rosie": 1, "racer": 1, "officer": 1, "dot": 1 };
+      "berry": 1, "moss": 1, "dart": 1, "rosie": 1, "racer": 1, "officer": 1, "dot": 1,
+      // v53: renamed/typed car names, now bundled and levelled (they used to come from Sound of Text at play time)
+      "cruise": 1, "do": 1, "doc": 1, "fillmore": 1, "flo": 1, "francesco": 1, "guido": 1, "gwee-doh": 1, "inside": 1, "laney": 1, "lightning-mcqueen": 1, "lightning": 1, "luigi": 1, "mack": 1, "mater": 1, "mcqueen": 1, "nick": 1, "ramone": 1, "ryan": 1, "sal": 1, "sally": 1, "sarge": 1, "sheriff": 1, "shields": 1 };
     var CLASSIC_FULL_CLIPS = { "rosie-racer": "rosie", "tugger": "tugger", "skye": "skye", "pip": "pip", "sunny": "sunny", "hank": "hank", "officer-dot": "officer" };
     function classicSpeakText(text) {
       var k = voiceKey(text);
@@ -4417,6 +4480,8 @@
       var text = spokenLine(car);
       var out = [];
       if (CLASSIC_CAR_CLIPS[car.id] && !car.custom && !customName(car) && !customSayLike(car)) out.push(SOUND_DIR + car.id + ".mp3");
+      // v53: a bundled, levelled clip for this exact name comes first; the online clip stays as a fallback for names typed later
+      if (!out.length && CLASSIC_LINE_CLIPS[voiceKey(text)]) out.push(SOUND_DIR + "classic/" + voiceKey(text) + ".mp3");
       if (entry.autoSrc && entry.autoText === text) out.push(entry.autoSrc);
       return out;
     }
@@ -4608,6 +4673,7 @@
         if (voiceStyle("name") !== "classic" && voiceStyle("match") !== "classic") return;
         var text = spokenLine(live);
         if (!text || (entry.autoSrc && entry.autoText === text)) return;
+        if (CLASSIC_LINE_CLIPS[voiceKey(text)]) return; // v53: bundled clip exists, no online fetch needed
         if (!window.fetch) return;
         fetchNameClip(text).then(function (src) {
           var cur = carById(live.id);
@@ -4911,6 +4977,7 @@
         { tab: "tab-shadow", pane: "pane-shadow" },
         { tab: "tab-shapes", pane: "pane-shapes" },
         { tab: "tab-numbers", pane: "pane-numbers" },
+        { tab: "tab-letters", pane: "pane-letters" },
         { tab: "tab-photos", pane: "pane-photos" },
         { tab: "tab-players", pane: "pane-players" },
         { tab: "tab-family", pane: "pane-family" }
@@ -4927,11 +4994,12 @@
       if (name === "shadow") updateShadowSettingsUi();
       if (name === "shapes") updateShapeSettingsUi();
       if (name === "numbers") updateNumberSettingsUi();
+      if (name === "letters") updateLetterSettingsUi();
       if (name === "names") renderNameLookGroups();
     }
 
     function bindSettingsTabs() {
-      ["cars", "difficulty", "names", "build", "shadow", "shapes", "numbers", "photos", "players", "family"].forEach(function (name) {
+      ["cars", "difficulty", "names", "build", "shadow", "shapes", "numbers", "letters", "photos", "players", "family"].forEach(function (name) {
         var tb = document.getElementById("tab-" + name);
         if (tb) tb.addEventListener("click", function () { showSettingsTab(name); });
       });
@@ -5438,7 +5506,7 @@
           (document.activeElement === ct ? pt : ct).focus();
           return;
         }
-        var sl = ["play-btn", "names-btn", "build-btn", "shadow-btn", "shapes-btn", "numbers-btn"].map(function (id) { return document.getElementById(id); }).filter(Boolean);
+        var sl = ["play-btn", "names-btn", "build-btn", "shadow-btn", "shapes-btn", "numbers-btn", "letters-btn"].map(function (id) { return document.getElementById(id); }).filter(Boolean);
         var si = sl.indexOf(document.activeElement);
         si = si === -1 ? 0 : (si + (dx || dy) + sl.length) % sl.length;
         sl[si].focus();
@@ -10473,21 +10541,23 @@
       });
     }
     function startShadow(mode) {
-      shg.mode = mode === "shapes" ? "shapes" : mode === "numbers" ? "numbers" : "shadow";
-      var isNum = shg.mode === "numbers";
+      shg.mode = mode === "shapes" ? "shapes" : mode === "numbers" ? "numbers" : mode === "letters" ? "letters" : "shadow";
+      var isNum = shg.mode === "numbers" || shg.mode === "letters"; // the symbol games (numbers, letters) share one screen and code
+      var isLet = shg.mode === "letters";
       var scr = shEl("shadow-screen");
       if (scr) {
         scr.classList.toggle("is-shapes", shg.mode === "shapes");
         scr.classList.toggle("is-numbers", isNum);
+        scr.classList.toggle("is-letters", isLet);
         if (!isNum) scr.classList.remove("sh-many");
-        scr.setAttribute("aria-label", shg.mode === "shapes" ? "Shapes game" : isNum ? "Numbers game" : "Shadow game");
+        scr.setAttribute("aria-label", shg.mode === "shapes" ? "Shapes game" : isLet ? "Letters game" : isNum ? "Numbers game" : "Shadow game");
       }
       var ttl = shEl("sh-title");
-      if (ttl) { ttl.textContent = shg.mode === "shapes" ? "Put each shape in its place" : isNum ? "Put the number in its shadow" : "Put each car on its shadow"; ttl.classList.remove("sh-hide-n"); }
+      if (ttl) { ttl.textContent = shg.mode === "shapes" ? "Put each shape in its place" : isLet ? "Put the letter in its shadow" : isNum ? "Put the number in its shadow" : "Put each car on its shadow"; ttl.classList.remove("sh-hide-n"); }
       var shb = shEl("sh-board"), sht = shEl("sh-tray");
       if (shb) shb.setAttribute("aria-label", shg.mode === "shapes" ? "Outlines" : "Shadows");
       if (sht) {
-        sht.setAttribute("aria-label", shg.mode === "shapes" ? "Shapes to drag" : isNum ? "Number tiles to drag" : "Cars to drag");
+        sht.setAttribute("aria-label", shg.mode === "shapes" ? "Shapes to drag" : isLet ? "Letter tiles to drag" : isNum ? "Number tiles to drag" : "Cars to drag");
         sht.style.removeProperty("--tfs");
       }
       var nms = shEl("nm-stage"), nmc = shEl("nm-corner");
@@ -10734,6 +10804,10 @@
     // (glyph list, clip name, spoken text, optional count of cars) and tile clips; the play code reads only the set.
     var NUM_WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen", "twenty"];
     function numCap(w) { return w.charAt(0).toUpperCase() + w.slice(1); }
+    var LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+    var LETTER_SAY = { A: "Ay", B: "Bee", C: "See", D: "Dee", E: "Ee", F: "Eff", G: "Gee", H: "Aitch", I: "Eye", J: "Jay", K: "Kay", L: "El", M: "Em", N: "En", O: "Oh", P: "Pee", Q: "Cue", R: "Ar", S: "Ess", T: "Tee", U: "You", V: "Vee", W: "Double you", X: "Ex", Y: "Why", Z: "Zed" };
+    // look-alike letters (kept out of Easy boards, mixed in on Hard)
+    var LETTER_LIKE = { B: ["D", "P", "R"], D: ["B", "O", "P"], E: ["F"], F: ["E", "P"], G: ["C", "O", "Q"], C: ["G", "O"], H: ["N", "M"], I: ["L", "J"], J: ["I", "U"], L: ["I"], M: ["N", "W", "H"], N: ["M", "H", "Z"], O: ["Q", "C", "D", "G"], P: ["B", "R", "D", "F"], Q: ["O", "G"], R: ["P", "B"], S: ["Z"], U: ["V", "J"], V: ["U", "W", "Y"], W: ["M", "V"], X: ["K", "Y"], Y: ["V", "X"], Z: ["S", "N"], K: ["X"], T: ["I", "L"] };
     var SYMBOL_SETS = {
       numbers: {
         id: "numbers", part: "numbers", title: "Put the number in its shadow", tray: "Number tiles",
@@ -10743,7 +10817,37 @@
           for (var i = 1; i <= Math.min(20, upto || 20); i++) out.push({ id: "n:" + i, glyphs: String(i).split(""), clip: "num-" + i, say: numCap(NUM_WORDS[i]) + "!", count: i });
           return out;
         },
-        tileLine: function (g) { return { clip: "num-" + g, text: numCap(NUM_WORDS[+g]) + "!" }; }
+        tileLine: function (g) { return { clip: "num-" + g, text: numCap(NUM_WORDS[+g]) + "!" }; },
+        noun: "number",
+        word: function (t) { return t.say.replace(/!/g, ""); },
+        disp: function (g) { return g; },
+        tileLabel: function (g) { return NUM_WORDS[+g]; },
+        colour: function (g) { return numColour(g); }
+      },
+      // v53: Letters A-Z. Spoken as letter names (Zed for Z); one box per letter, a few big tiles per board.
+      letters: {
+        id: "letters", part: "letters", title: "Put the letter in its shadow", tray: "Letter tiles",
+        tiles: LETTERS,
+        targets: function () {
+          return LETTERS.map(function (L) { return { id: "l:" + L, glyphs: [L], clip: "let-" + L.toLowerCase(), say: LETTER_SAY[L] + "!" }; });
+        },
+        tileLine: function (g) { return { clip: "let-" + g.toLowerCase(), text: LETTER_SAY[g] + "!" }; },
+        noun: "letter",
+        word: function (t) { return t.glyphs[0]; },
+        disp: function (g) { return letterSettings.case === "lower" ? g.toLowerCase() : g; },
+        tileLabel: function (g) { return g; },
+        colour: function (g) { return [NUM_TILE_COLS[(g.charCodeAt(0) - 65) % NUM_TILE_COLS.length]]; },
+        // the target plus decoys: 4 on Easy (no look-alikes), 6 on Medium, 8 on Hard (look-alikes included), in a random order
+        boardTiles: function (t, level) {
+          var want = level === "easy" ? 4 : level === "medium" ? 6 : 8, tg = t.glyphs[0], like = LETTER_LIKE[tg] || [];
+          var pool = LETTERS.filter(function (L) { return L !== tg; });
+          var safe = pool.filter(function (L) { return like.indexOf(L) === -1 && (LETTER_LIKE[L] || []).indexOf(tg) === -1; });
+          var picks = [];
+          if (level === "hard") picks = shuffle(like.slice()).slice(0, 2);
+          var rest = shuffle((level === "hard" ? pool : safe).filter(function (L) { return picks.indexOf(L) === -1; }));
+          while (picks.length < want - 1 && rest.length) picks.push(rest.shift());
+          return shuffle([tg].concat(picks));
+        }
       }
     };
     var NUMBERS_KEY = "theo-car-match-numbers";
@@ -10758,6 +10862,26 @@
       var up = parseInt(raw.upto, 10);
       return { v: 49, level: lv, upto: up === 5 || up === 10 ? up : 20 };
     }
+    // v53: Letters settings (Easy by default like Numbers; capital letters by default)
+    var LETTERS_KEY = "theo-car-match-letters";
+    var letterSettings = normalizeLetterSettings({});
+    try { letterSettings = normalizeLetterSettings(JSON.parse(localStorage.getItem(LETTERS_KEY) || "{}") || {}); } catch (e) {}
+    function normalizeLetterSettings(raw) {
+      raw = raw && typeof raw === "object" ? raw : {};
+      return { v: 53, level: raw.level === "hard" || raw.level === "medium" ? raw.level : "easy", case: raw.case === "lower" ? "lower" : "upper" };
+    }
+    function saveLetterSettings(next) {
+      letterSettings = normalizeLetterSettings(next);
+      try { localStorage.setItem(LETTERS_KEY, JSON.stringify(letterSettings)); } catch (e) {}
+      updateLetterSettingsUi();
+    }
+    function updateLetterSettingsUi() {
+      var lv = document.getElementById("lt-set-level"), cs = document.getElementById("lt-set-case");
+      if (lv) lv.value = letterSettings.level;
+      if (cs) cs.value = letterSettings.case;
+    }
+    function symSettings() { return shg.mode === "letters" ? letterSettings : numberSettings; }
+    function symSet() { return SYMBOL_SETS[shg.mode === "letters" ? "letters" : "numbers"]; }
     function saveNumberSettings(next) {
       numberSettings = normalizeNumberSettings(next);
       try { localStorage.setItem(NUMBERS_KEY, JSON.stringify(numberSettings)); } catch (e) {}
@@ -10777,7 +10901,16 @@
           saveNumberSettings({ level: document.getElementById("nm-set-level").value, upto: document.getElementById("nm-set-upto").value });
         });
       });
-      window.addEventListener("resize", function () { if (shg.mode === "numbers" && shadowOpen() && shg.nm && shg.nm.target) numbersLayout(); });
+      var lb = document.getElementById("letters-btn");
+      if (lb) lb.addEventListener("click", function () { unlockMedia(); startShadow("letters"); });
+      ["lt-set-level", "lt-set-case"].forEach(function (id) {
+        var el = document.getElementById(id);
+        if (el) el.addEventListener("change", function () {
+          saveLetterSettings({ level: document.getElementById("lt-set-level").value, case: document.getElementById("lt-set-case").value });
+        });
+      });
+      updateLetterSettingsUi();
+      window.addEventListener("resize", function () { if ((shg.mode === "numbers" || shg.mode === "letters") && shadowOpen() && shg.nm && shg.nm.target) numbersLayout(); });
       updateNumberSettingsUi();
     }
     // v50: Numbers game own sound pools (CC0, see sounds/numbers/CREDITS.md): kids yays after a right answer, big farts after a wrong one.
@@ -10838,7 +10971,7 @@
       });
     }
     function numLine(clip, text) {
-      if (voiceStyle("numbers") === "classic") return { src: SOUND_DIR + "classic/" + clip + ".mp3", k: clip, t: text };
+      if (voiceStyle(shg.mode === "letters" ? "letters" : "numbers") === "classic") return { src: SOUND_DIR + "classic/" + clip + ".mp3", k: clip, t: text };
       return { src: BUILD_VOICE_DIR + clip + ".mp3", k: clip, t: text };
     }
     function numSay(clip, text) {
@@ -10855,9 +10988,9 @@
         '<circle cx="26" cy="48" r="9" fill="#37474F"/><circle cx="26" cy="48" r="3.6" fill="#CFD8DC"/><circle cx="72" cy="48" r="9" fill="#37474F"/><circle cx="72" cy="48" r="3.6" fill="#CFD8DC"/></svg>';
     }
     function numbersPickTarget() {
-      var list = SYMBOL_SETS.numbers.targets(numberSettings.upto), nm = shg.nm;
+      var nm = shg.nm, list = nm.set.targets(numberSettings.upto);
       if (nm.force) { var f = list.filter(function (t) { return t.id === nm.force; })[0]; nm.force = ""; if (f) { nm.idx = list.indexOf(f); return f; } }
-      if (numberSettings.level === "hard") {
+      if (symSettings().level === "hard") {
         var opts = list.filter(function (t) { return t.id !== nm.lastId; });
         if (!opts.length) opts = list;
         return opts[Math.floor(Math.random() * opts.length)];
@@ -10870,7 +11003,7 @@
       if (pips) { pips.hidden = true; pips.innerHTML = ""; }
       shg.items = [];
       shg.decoys = [];
-      shg.nm = { idx: -1, lastId: "", target: null, filled: 0, boxes: [], tiles: {}, set: SYMBOL_SETS.numbers };
+      shg.nm = { idx: -1, lastId: "", target: null, filled: 0, boxes: [], tiles: {}, set: symSet() };
       numbersBoard(true);
     }
     function numbersBoard(first) {
@@ -10888,18 +11021,24 @@
     function numbersLayout() {
       var nm = shg.nm, t = nm.target;
       var land = innerWidth > innerHeight;
-      var tcols = innerWidth >= 700 || land ? 10 : 5, rows = tcols === 5 ? 2 : 1;
-      var trayh = rows === 2 ? Math.round(Math.max(140, Math.min(innerHeight * 0.27, 240))) : Math.round(Math.max(84, Math.min(innerHeight * (land ? 0.27 : 0.18), 140)));
       var tray = shEl("sh-tray");
+      var isL = nm.set && nm.set.id === "letters", nt = tray.children.length || 10;
+      var tcols = innerWidth >= 700 || land ? 10 : 5, rows = tcols === 5 ? 2 : 1;
+      if (isL) { // a few big tiles: one row when there is room (landscape, or 4 on a tablet), otherwise two rows
+        var one = land || (nt <= 4 && innerWidth >= 700);
+        tcols = one ? nt : Math.ceil(nt / 2); rows = one ? 1 : 2;
+      }
+      var trayh = rows === 2 ? Math.round(Math.max(140, Math.min(innerHeight * (isL ? 0.3 : 0.27), isL ? 280 : 240))) : Math.round(Math.max(84, Math.min(innerHeight * (land ? 0.27 : 0.18), 140)));
       tray.style.setProperty("--tcols", tcols);
       tray.style.setProperty("--trayh", trayh + "px");
       var th = (trayh - 28 - (rows - 1) * 12) / rows, tw = (Math.min(1100, innerWidth) - 28 - (tcols - 1) * 12) / tcols;
       tray.style.setProperty("--tfs", Math.floor(Math.min(th, tw) * 0.68) + "px");
       // short landscape phones: shadow on the left, cars on the right (rows of 5), so 20 cars stay a decent size
-      var side = land && innerHeight < 600;
+      var side = land && innerHeight < 600 && !isL;
       var stageEl = shEl("nm-stage");
       if (stageEl) stageEl.classList.toggle("nm-side", side);
       var bh = Math.round(Math.max(80, Math.min(innerHeight * (side ? 0.42 : land ? 0.3 : 0.22), 230)));
+      if (isL) bh = Math.round(Math.max(110, Math.min(innerHeight * (land ? 0.42 : 0.34), 340)));
       var row = shEl("nm-shadow");
       if (row) { row.style.height = bh + "px"; row.style.setProperty("--bh", bh + "px"); }
       var cars = shEl("nm-cars");
@@ -10915,12 +11054,12 @@
       if (ttl) ttl.classList.toggle("sh-hide-n", innerHeight < 760 || land);
     }
     function renderNumbersBoard() {
-      var nm = shg.nm, t = nm.target, set = nm.set, easy = numberSettings.level === "easy";
+      var nm = shg.nm, t = nm.target, set = nm.set, easy = symSettings().level === "easy";
       var stage = shEl("nm-stage"), tray = shEl("sh-tray"), corner = shEl("nm-corner");
-      var word = t.say.replace(/!/g, "");
+      var word = set.word(t);
       corner.hidden = !easy;
-      corner.textContent = t.glyphs.join("");
-      corner.setAttribute("aria-label", "The number is " + word);
+      corner.textContent = t.glyphs.map(set.disp).join("");
+      corner.setAttribute("aria-label", "The " + set.noun + " is " + word);
       corner.onclick = function () { if (!shg.busy) numSay(t.clip, t.say); };
       stage.hidden = false;
       stage.innerHTML = "";
@@ -10935,7 +11074,7 @@
         b.className = "nm-box";
         b.setAttribute("data-i", String(i));
         b.setAttribute("data-g", g);
-        b.innerHTML = '<span class="nm-gl">' + g + '</span>';
+        b.innerHTML = '<span class="nm-gl">' + set.disp(g) + '</span>';
         row.appendChild(b);
         return b;
       });
@@ -10960,14 +11099,14 @@
       }
       tray.innerHTML = "";
       nm.tiles = {};
-      set.tiles.forEach(function (g) {
+      (set.boardTiles ? set.boardTiles(t, symSettings().level) : set.tiles).forEach(function (g) {
         var b = document.createElement("button");
         b.type = "button";
         b.className = "sh-piece nm-tile";
         b.setAttribute("data-g", g);
-        b.setAttribute("aria-label", NUM_WORDS[+g]);
-        b.style.color = numColour(g)[0];
-        b.textContent = g;
+        b.setAttribute("aria-label", set.tileLabel(g));
+        b.style.color = set.colour(g)[0];
+        b.textContent = set.disp(g);
         tray.appendChild(b);
         nm.tiles[g] = b;
         bDrag(b, {
@@ -10978,7 +11117,7 @@
           ghost: function () {
             var r = (nm.boxes[0] || b).getBoundingClientRect();
             var h = Math.max(70, Math.min(r.height * 0.8, 170)), w = h * 0.75;
-            return { html: '<span class="nm-gl" style="color:' + numColour(g)[0] + ';font-size:' + Math.round(h * 0.82) + 'px">' + g + '</span>', rect: { width: w, height: h } };
+            return { html: '<span class="nm-gl" style="color:' + set.colour(g)[0] + ';font-size:' + Math.round(h * 0.82) + 'px">' + set.disp(g) + '</span>', rect: { width: w, height: h } };
           },
           ghostClass: "sh-ghost nm-ghost",
           onDrop: function (x, y) { return numbersDrop(g, x, y); }
@@ -10994,7 +11133,7 @@
       }, 2000);
     }
     function numbersMarkNext() {
-      var nm = shg.nm, easy = numberSettings.level === "easy";
+      var nm = shg.nm, easy = symSettings().level === "easy";
       nm.boxes.forEach(function (b, i) { b.classList.toggle("next", easy && !b.classList.contains("done") && i === nm.filled); });
     }
     function numbersWrong(inZone) {
@@ -11032,7 +11171,7 @@
       box.classList.add("done");
       box.classList.remove("next");
       var gl = box.querySelector(".nm-gl");
-      if (gl) { gl.classList.remove("nm-fade"); gl.style.color = numColour(g)[0]; }
+      if (gl) { gl.classList.remove("nm-fade"); gl.style.color = set.colour(g)[0]; }
       nm.filled++;
       shLog("place:" + g);
       var tile = nm.tiles[g];
@@ -14107,17 +14246,19 @@
       },
       startShapes: function () { startShadow("shapes"); },
       startNumbers: function () { startShadow("numbers"); },
+      startLetters: function () { startShadow("letters"); },
+      letterSettings: function (v) { if (v) saveLetterSettings(Object.assign({}, letterSettings, v)); return Object.assign({}, letterSettings); },
       numberSettings: function (v) { if (v) saveNumberSettings(Object.assign({}, numberSettings, v)); return Object.assign({}, numberSettings); },
       numbersState: function () {
         var nm = shg.nm || {}, t = nm.target || {};
-        return { mode: shg.mode, open: shadowOpen(), busy: shg.busy, boards: shg.boards, wrong: shg.wrong || 0, level: numberSettings.level, upto: numberSettings.upto,
+        return { mode: shg.mode, open: shadowOpen(), busy: shg.busy, boards: shg.boards, wrong: shg.wrong || 0, level: symSettings().level, upto: numberSettings.upto, caseMode: letterSettings.case, tileGlyphs: Array.prototype.map.call(document.querySelectorAll("#sh-tray .nm-tile"), function (e) { return e.getAttribute("data-g"); }), boxText: Array.prototype.map.call(document.querySelectorAll("#nm-shadow .nm-gl"), function (e) { return e.textContent; }), corner: (shEl("nm-corner") || {}).textContent || "",
           target: t.id || "", glyphs: (t.glyphs || []).slice(), count: t.count || 0, filled: nm.filled || 0, sayLog: shg.sayLog.slice(),
           cars: document.querySelectorAll("#nm-cars .nm-car").length, tiles: document.querySelectorAll("#sh-tray .nm-tile").length,
           faded: !!nm.faded, fadedGlyphs: document.querySelectorAll("#nm-shadow .nm-box:not(.done) .nm-gl.nm-fade").length, glyphOpacity: (function () { var e = document.querySelector("#nm-shadow .nm-box:not(.done) .nm-gl"); return e ? parseFloat(getComputedStyle(e).opacity) : -1; })(), cornerShown: !!(shEl("nm-corner") && !shEl("nm-corner").hidden), cornerText: (shEl("nm-corner") || {}).textContent || "",
           nextBox: nm.boxes ? nm.boxes.map(function (b) { return b.classList.contains("next"); }) : [], doneBoxes: nm.boxes ? nm.boxes.map(function (b) { return b.classList.contains("done"); }) : [] };
       },
       numberSets: function () { return Object.keys(SYMBOL_SETS); },
-      numbersJump: function (n) { if (shg.nm) { shg.nm.force = "n:" + n; stopConfetti(); numbersBoard(false); } },
+      numbersJump: function (n) { if (shg.nm) { shg.nm.force = (shg.mode === "letters" ? "l:" : "n:") + n; stopConfetti(); numbersBoard(false); } },
       profileBuild: function () { var p = activeProfile(); return p ? { buildStyle: p.buildStyle, buildV: p.buildV } : null; },
       shadowState: function () {
         return { open: shadowOpen(), n: shg.n, boards: shg.boards, placed: shg.placed, busy: shg.busy, wrong: shg.wrong || 0, sayLog: shg.sayLog.slice(),
