@@ -1,6 +1,6 @@
 /* Theo's Car Match service worker — cache-first so the game opens offline
    even when the home computer is unreachable (mobile data). Never caches /api. */
-var CACHE = "theo-car-match-v54";
+var CACHE = "theo-car-match-v55";
 var CORE = [
   "./",
   "./index.html",
@@ -94,6 +94,7 @@ OPTIONAL = OPTIONAL.concat(GAME_VOICE.map(function (k) { return "./sounds/voice/
 OPTIONAL = OPTIONAL.concat(["berry", "moss", "dart", "rosie", "racer", "officer", "dot", "find", "then", "whos-missing", "look-carefully", "super-fast"].map(function (k) { return "./sounds/classic/" + k + ".mp3"; }));
 
 // v54: family-name clips are not in the GitHub Pages build; the full build adds them at stage time (tools/make-full-build.py).
+// v55: Parent Settings tabs wrap inside the panel at every width (tablet and desktop), like iPhone
 var FAMILY_CLIPS = /*FAMILY_CLIPS_BEGIN*/{ voice: [], classic: [], build: [] }/*FAMILY_CLIPS_END*/;
 OPTIONAL = OPTIONAL.concat(FAMILY_CLIPS.voice.map(function (k) { return "./sounds/voice/" + k + ".mp3"; }), FAMILY_CLIPS.classic.map(function (k) { return "./sounds/classic/" + k + ".mp3"; }), FAMILY_CLIPS.build.map(function (k) { return "./sounds/build/" + k + ".mp3"; }));
 

@@ -1614,11 +1614,13 @@
 
     .settings-tabs {
       display: flex;
+      flex-wrap: wrap;
       gap: 6px;
       margin: 0 0 12px;
     }
     .settings-tabs button {
-      flex: 1 1 0;
+      flex: 1 1 auto;
+      min-width: 0;
       min-height: 44px;
       font-family: inherit;
       font-weight: 800;
@@ -1639,6 +1641,12 @@
     .settings-tabs button[hidden] { display: none; }
     .settings-tabs button { white-space: nowrap; }
     @media (min-width: 601px) and (max-width: 900px) { .settings-tabs button { font-size: 14px; padding: 6px 4px; } }
+    /* v55: tabs wrap onto rows inside the panel at every width (tablet, desktop), as on iPhone */
+    @media (min-width: 601px) and (max-width: 800px) { .settings-tabs { gap: 4px; } .settings-tabs button { font-size: 13px; padding: 6px 2px; } }
+    .settings-panel { box-sizing: border-box; max-width: 100%; }
+    .settings-row > * { min-width: 0; }
+    .settings-meta { min-width: 0; }
+    .settings-panel input[type="text"], .settings-panel input[type="search"], .settings-panel input:not([type]), .settings-panel textarea, .settings-panel select { max-width: 100%; box-sizing: border-box; }
     .garage-count { margin: 0 0 10px; font-weight: 700; color: #37474F; }
     .garage-done { margin: 10px 0 0; font-weight: 800; color: #2E7D32; }
     .garage-done[hidden] { display: none; }
@@ -3167,7 +3175,7 @@
     var BLOB_FETCH_MS = 20000;
     var bootStartedAt = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
     var keyChangeOpen = false;
-    var APP_VERSION = "54";
+    var APP_VERSION = "55";
     var MATCH_PAIR_CAP = 6;
     var NAME_ROUNDS = 6;
     var THUMB_MAX = 256;
