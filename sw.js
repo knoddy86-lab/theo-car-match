@@ -1,6 +1,6 @@
 /* Theo's Car Match service worker — cache-first so the game opens offline
    even when the home computer is unreachable (mobile data). Never caches /api. */
-var CACHE = "theo-car-match-v53";
+var CACHE = "theo-car-match-v54";
 var CORE = [
   "./",
   "./index.html",
@@ -41,62 +41,29 @@ var OPTIONAL = [
   "./sounds/fart/03-squeaky.mp3"
 ];
 // v36: Build a car voice clips (natural voice, see sounds/build/NOTES.md), cached for offline play.
-var BUILD_VOICE = ["n-7", "n-8", "all-wheels", "other-side", "x-exhaust", "sh-intro", "sh-try", "sh-done", "sh-more", "sh-find", "dg-parts", "dg-extras", "dg-extra", "p-body", "p-roof", "p-top", "v-rubbish", "x-bin", "x-amber", "x-recycle", "x-arm", "x-bags", "built-red-rubbish", "s-theo-red-rubbish", "s-harper-red-rubbish", "built-blue-rubbish", "s-theo-blue-rubbish", "s-harper-blue-rubbish", "built-yellow-rubbish", "s-theo-yellow-rubbish", "s-harper-yellow-rubbish", "built-green-rubbish", "s-theo-green-rubbish", "s-harper-green-rubbish", "built-orange-rubbish", "s-theo-orange-rubbish", "s-harper-orange-rubbish", "built-purple-rubbish", "s-theo-purple-rubbish", "s-harper-purple-rubbish", 
-  "what-build", "road", "construction", "pick-colour", "add-wheels", "add-tracks", "add-roller",
+var BUILD_VOICE = ["n-7", "n-8", "all-wheels", "other-side", "x-exhaust", "sh-intro", "sh-try", "sh-done", "sh-more", "sh-find", "dg-parts", "dg-extras", "dg-extra", "p-body", "p-roof", "p-top", "v-rubbish", "x-bin", "x-amber", "x-recycle", "x-arm", "x-bags", "built-red-rubbish", "built-blue-rubbish", "built-yellow-rubbish", "built-green-rubbish", "built-orange-rubbish", "built-purple-rubbish", "what-build", "road", "construction", "pick-colour", "add-wheels", "add-tracks", "add-roller",
   "pick-extras", "pick-extra", "ready-go", "vroom", "beep-beep", "great-building", "n-1", "n-2", "n-3",
   "n-4", "n-5", "n-6", "c-red", "c-blue", "c-yellow", "c-green", "c-orange", "c-purple", "v-car", "v-ute",
   "v-truck", "v-bus", "v-fire", "v-excavator", "v-dump", "v-roller", "v-backhoe", "v-forklift", "v-loader",
   "x-spoiler", "x-lights", "x-worklights", "x-siren", "x-beacon", "x-ladder", "x-roofbox", "x-surfboard",
   "x-stripes", "x-stripes-plain", "x-flames", "x-stars", "x-plate", "x-sign", "x-dog", "x-flag",
   "x-bikerack", "x-towbar", "x-bullbar", "x-spotlights", "x-snorkel", "x-mudflaps", "x-hosereel", "x-cannon",
-  "x-cones", "x-dirt", "x-bigbucket", "x-claw", "x-breaker", "x-pallet", "name-theo", "g-theo",
-  "name-harper", "g-harper", "name-jayden", "g-jayden", "built-red-car", "s-theo-red-car",
-  "s-harper-red-car", "built-red-ute", "s-theo-red-ute", "s-harper-red-ute", "built-red-truck",
-  "s-theo-red-truck", "s-harper-red-truck", "built-red-bus", "s-theo-red-bus", "s-harper-red-bus",
-  "built-red-fire", "s-theo-red-fire", "s-harper-red-fire", "built-red-excavator", "s-theo-red-excavator",
-  "s-harper-red-excavator", "built-red-dump", "s-theo-red-dump", "s-harper-red-dump", "built-red-roller",
-  "s-theo-red-roller", "s-harper-red-roller", "built-red-backhoe", "s-theo-red-backhoe",
-  "s-harper-red-backhoe", "built-red-forklift", "s-theo-red-forklift", "s-harper-red-forklift",
-  "built-red-loader", "s-theo-red-loader", "s-harper-red-loader", "built-blue-car", "s-theo-blue-car",
-  "s-harper-blue-car", "built-blue-ute", "s-theo-blue-ute", "s-harper-blue-ute", "built-blue-truck",
-  "s-theo-blue-truck", "s-harper-blue-truck", "built-blue-bus", "s-theo-blue-bus", "s-harper-blue-bus",
-  "built-blue-fire", "s-theo-blue-fire", "s-harper-blue-fire", "built-blue-excavator",
-  "s-theo-blue-excavator", "s-harper-blue-excavator", "built-blue-dump", "s-theo-blue-dump",
-  "s-harper-blue-dump", "built-blue-roller", "s-theo-blue-roller", "s-harper-blue-roller",
-  "built-blue-backhoe", "s-theo-blue-backhoe", "s-harper-blue-backhoe", "built-blue-forklift",
-  "s-theo-blue-forklift", "s-harper-blue-forklift", "built-blue-loader", "s-theo-blue-loader",
-  "s-harper-blue-loader", "built-yellow-car", "s-theo-yellow-car", "s-harper-yellow-car", "built-yellow-ute",
-  "s-theo-yellow-ute", "s-harper-yellow-ute", "built-yellow-truck", "s-theo-yellow-truck",
-  "s-harper-yellow-truck", "built-yellow-bus", "s-theo-yellow-bus", "s-harper-yellow-bus",
-  "built-yellow-fire", "s-theo-yellow-fire", "s-harper-yellow-fire", "built-yellow-excavator",
-  "s-theo-yellow-excavator", "s-harper-yellow-excavator", "built-yellow-dump", "s-theo-yellow-dump",
-  "s-harper-yellow-dump", "built-yellow-roller", "s-theo-yellow-roller", "s-harper-yellow-roller",
-  "built-yellow-backhoe", "s-theo-yellow-backhoe", "s-harper-yellow-backhoe", "built-yellow-forklift",
-  "s-theo-yellow-forklift", "s-harper-yellow-forklift", "built-yellow-loader", "s-theo-yellow-loader",
-  "s-harper-yellow-loader", "built-green-car", "s-theo-green-car", "s-harper-green-car", "built-green-ute",
-  "s-theo-green-ute", "s-harper-green-ute", "built-green-truck", "s-theo-green-truck",
-  "s-harper-green-truck", "built-green-bus", "s-theo-green-bus", "s-harper-green-bus", "built-green-fire",
-  "s-theo-green-fire", "s-harper-green-fire", "built-green-excavator", "s-theo-green-excavator",
-  "s-harper-green-excavator", "built-green-dump", "s-theo-green-dump", "s-harper-green-dump",
-  "built-green-roller", "s-theo-green-roller", "s-harper-green-roller", "built-green-backhoe",
-  "s-theo-green-backhoe", "s-harper-green-backhoe", "built-green-forklift", "s-theo-green-forklift",
-  "s-harper-green-forklift", "built-green-loader", "s-theo-green-loader", "s-harper-green-loader",
-  "built-orange-car", "s-theo-orange-car", "s-harper-orange-car", "built-orange-ute", "s-theo-orange-ute",
-  "s-harper-orange-ute", "built-orange-truck", "s-theo-orange-truck", "s-harper-orange-truck",
-  "built-orange-bus", "s-theo-orange-bus", "s-harper-orange-bus", "built-orange-fire", "s-theo-orange-fire",
-  "s-harper-orange-fire", "built-orange-excavator", "s-theo-orange-excavator", "s-harper-orange-excavator",
-  "built-orange-dump", "s-theo-orange-dump", "s-harper-orange-dump", "built-orange-roller",
-  "s-theo-orange-roller", "s-harper-orange-roller", "built-orange-backhoe", "s-theo-orange-backhoe",
-  "s-harper-orange-backhoe", "built-orange-forklift", "s-theo-orange-forklift", "s-harper-orange-forklift",
-  "built-orange-loader", "s-theo-orange-loader", "s-harper-orange-loader", "built-purple-car",
-  "s-theo-purple-car", "s-harper-purple-car", "built-purple-ute", "s-theo-purple-ute", "s-harper-purple-ute",
-  "built-purple-truck", "s-theo-purple-truck", "s-harper-purple-truck", "built-purple-bus",
-  "s-theo-purple-bus", "s-harper-purple-bus", "built-purple-fire", "s-theo-purple-fire",
-  "s-harper-purple-fire", "built-purple-excavator", "s-theo-purple-excavator", "s-harper-purple-excavator",
-  "built-purple-dump", "s-theo-purple-dump", "s-harper-purple-dump", "built-purple-roller",
-  "s-theo-purple-roller", "s-harper-purple-roller", "built-purple-backhoe", "s-theo-purple-backhoe",
-  "s-harper-purple-backhoe", "built-purple-forklift", "s-theo-purple-forklift", "s-harper-purple-forklift",
-  "built-purple-loader", "s-theo-purple-loader", "s-harper-purple-loader"
+  "x-cones", "x-dirt", "x-bigbucket", "x-claw", "x-breaker", "x-pallet", "built-red-car", "built-red-ute", "built-red-truck",
+  "built-red-bus", "built-red-fire", "built-red-excavator", "built-red-dump", "built-red-roller",
+  "built-red-backhoe", "built-red-forklift", "built-red-loader", "built-blue-car", "built-blue-ute", "built-blue-truck",
+  "built-blue-bus", "built-blue-fire", "built-blue-excavator",
+  "built-blue-dump", "built-blue-roller", "built-blue-backhoe", "built-blue-forklift",
+  "built-blue-loader", "built-yellow-car", "built-yellow-ute",
+  "built-yellow-truck", "built-yellow-bus", "built-yellow-fire", "built-yellow-excavator",
+  "built-yellow-dump", "built-yellow-roller", "built-yellow-backhoe", "built-yellow-forklift",
+  "built-yellow-loader", "built-green-car", "built-green-ute",
+  "built-green-truck", "built-green-bus", "built-green-fire",
+  "built-green-excavator", "built-green-dump", "built-green-roller", "built-green-backhoe",
+  "built-green-forklift", "built-green-loader", "built-orange-car", "built-orange-ute", "built-orange-truck", "built-orange-bus", "built-orange-fire", "built-orange-excavator", "built-orange-dump", "built-orange-roller",
+  "built-orange-backhoe", "built-orange-forklift", "built-orange-loader", "built-purple-car",
+  "built-purple-ute", "built-purple-truck", "built-purple-bus",
+  "built-purple-fire", "built-purple-excavator", "built-purple-dump", "built-purple-roller",
+  "built-purple-backhoe", "built-purple-forklift", "built-purple-loader", 
 ];
 // v47: Shapes game voice (Alba) + Classic clips
 BUILD_VOICE = BUILD_VOICE.concat(["shp-square", "shp-q-square", "shp-triangle", "shp-q-triangle", "shp-rectangle", "shp-q-rectangle", "shp-circle", "shp-q-circle", "shp-oval", "shp-q-oval", "shp-star", "shp-q-star", "shp-heart", "shp-q-heart", "shp-diamond", "shp-q-diamond", "shp-semicircle", "shp-q-semicircle", "shp-crescent", "shp-q-crescent", "shp-arrow", "shp-q-arrow", "shp-cross", "shp-q-cross", "shp-pentagon", "shp-q-pentagon", "shp-hexagon", "shp-q-hexagon", "shp-octagon", "shp-q-octagon", "shp-intro", "shp-more", "shp-find"]);
@@ -106,29 +73,29 @@ BUILD_VOICE = BUILD_VOICE.concat(["num-0","num-1","num-2","num-3","num-4","num-5
 OPTIONAL = OPTIONAL.concat(["num-0","num-1","num-2","num-3","num-4","num-5","num-6","num-7","num-8","num-9","num-10","num-11","num-12","num-13","num-14","num-15","num-16","num-17","num-18","num-19","num-20"].map(function (k) { return "./sounds/classic/" + k + ".mp3"; }));
 // v50: Numbers game kids yays and big farts (CC0, see sounds/numbers/CREDITS.md)
 OPTIONAL = OPTIONAL.concat(["fart-1", "fart-3", "fart-4", "fart-5", "fart-6", "yay-1", "yay-2", "yay-3", "yay-4", "yay-5", "yay-6", "yay-7"].map(function (k) { return "./sounds/numbers/" + k + ".mp3"; }));
+// v54: Letters voice "Emma" (Kokoro, British), the default Letters voice
+OPTIONAL = OPTIONAL.concat("abcdefghijklmnopqrstuvwxyz".split("").map(function (c) { return "./sounds/letters-emma/let-" + c + ".mp3"; }));
 // v53: Letters game clips (Alba in build/, Classic in classic/) and bundled Classic name clips
 BUILD_VOICE = BUILD_VOICE.concat(["let-a","let-b","let-c","let-d","let-e","let-f","let-g","let-h","let-i","let-j","let-k","let-l","let-m","let-n","let-o","let-p","let-q","let-r","let-s","let-t","let-u","let-v","let-w","let-x","let-y","let-z"]);
 OPTIONAL = OPTIONAL.concat(["let-a","let-b","let-c","let-d","let-e","let-f","let-g","let-h","let-i","let-j","let-k","let-l","let-m","let-n","let-o","let-p","let-q","let-r","let-s","let-t","let-u","let-v","let-w","let-x","let-y","let-z"].map(function (k) { return "./sounds/classic/" + k + ".mp3"; }));
 OPTIONAL = OPTIONAL.concat(["cruise","do","doc","fillmore","flo","francesco","guido","gwee-doh","inside","laney","lightning-mcqueen","lightning","luigi","mack","mater","mcqueen","nick","ramone","ryan","sal","sally","sarge","sheriff","shields"].map(function (k) { return "./sounds/classic/" + k + ".mp3"; }));
 OPTIONAL = OPTIONAL.concat(BUILD_VOICE.map(function (k) { return "./sounds/build/" + k + ".mp3"; }));
 // v37: the rest of the game speaks with the same natural voice clips (see sounds/voice/NOTES.md), cached for offline play.
-var GAME_VOICE = ["uncle-ashley", "aunty-ashleigh", "wheres-uncle-ashley", "wheres-aunty-ashleigh", 
-  "ashleigh", "ashley", "berry", "caitlyn", "cars-or-photos", "cruise", "dart", "delilah", "do", "doc", "dot",
-  "fillmore", "flo", "francesco", "grandad", "guido", "gwee-doh", "hank", "harper", "hello", "hello-ashleigh",
-  "hello-ashley", "hello-caitlyn", "hello-delilah", "hello-grandad", "hello-harper", "hello-jason",
-  "hello-jay-den", "hello-josh", "hello-kelly", "hello-lindsay", "hello-marissa", "hello-mitch", "hello-nanna",
-  "hello-theo", "inside", "jason", "jay-den", "josh", "kelly", "laney", "lets-match-the-cars",
-  "lets-match-the-family", "lightning", "lightning-mcqueen", "lindsay", "luigi", "mack", "marissa", "mater",
-  "mcqueen", "mitch", "moss", "nanna", "nick", "officer", "officer-dot", "pip", "racer", "ramone", "rosie",
-  "rosie-racer", "ryan", "sal", "sally", "sarge", "sheriff", "shields", "skye", "sunny", "theo", "tugger",
-  "wheres", "wheres-ashleigh", "wheres-ashley", "wheres-caitlyn", "wheres-delilah", "wheres-grandad",
-  "wheres-harper", "wheres-jason", "wheres-jay-den", "wheres-josh", "wheres-kelly", "wheres-lindsay",
-  "wheres-marissa", "wheres-mitch", "wheres-nanna", "wheres-theo"
+var GAME_VOICE = ["berry", "cars-or-photos", "cruise", "dart", "do", "doc", "dot",
+  "fillmore", "flo", "francesco", "guido", "gwee-doh", "hank", "hello", "inside", "laney", "lets-match-the-cars",
+  "lets-match-the-family", "lightning", "lightning-mcqueen", "luigi", "mack", "mater",
+  "mcqueen", "moss", "nick", "officer", "officer-dot", "pip", "racer", "ramone", "rosie",
+  "rosie-racer", "ryan", "sal", "sally", "sarge", "sheriff", "shields", "skye", "sunny", "tugger",
+  "wheres", 
 ];
 // v46: Name game "Find X, then Y", "Who's missing?", "Look carefully!", "Super fast!" (Alba)
 GAME_VOICE = GAME_VOICE.concat(["find", "then", "whos-missing", "look-carefully", "super-fast"]);
 OPTIONAL = OPTIONAL.concat(GAME_VOICE.map(function (k) { return "./sounds/voice/" + k + ".mp3"; }));
-OPTIONAL = OPTIONAL.concat(["uncle-ashley", "aunty-ashleigh", "wheres-uncle-ashley", "wheres-aunty-ashleigh", "berry", "moss", "dart", "rosie", "racer", "officer", "dot", "find", "then", "whos-missing", "look-carefully", "super-fast"].map(function (k) { return "./sounds/classic/" + k + ".mp3"; }));
+OPTIONAL = OPTIONAL.concat(["berry", "moss", "dart", "rosie", "racer", "officer", "dot", "find", "then", "whos-missing", "look-carefully", "super-fast"].map(function (k) { return "./sounds/classic/" + k + ".mp3"; }));
+
+// v54: family-name clips are not in the GitHub Pages build; the full build adds them at stage time (tools/make-full-build.py).
+var FAMILY_CLIPS = /*FAMILY_CLIPS_BEGIN*/{ voice: [], classic: [], build: [] }/*FAMILY_CLIPS_END*/;
+OPTIONAL = OPTIONAL.concat(FAMILY_CLIPS.voice.map(function (k) { return "./sounds/voice/" + k + ".mp3"; }), FAMILY_CLIPS.classic.map(function (k) { return "./sounds/classic/" + k + ".mp3"; }), FAMILY_CLIPS.build.map(function (k) { return "./sounds/build/" + k + ".mp3"; }));
 
 function addBestEffort(cache, urls) {
   return Promise.all(urls.map(function (u) {

@@ -11,3 +11,7 @@ Code: audio elements never have `.volume` set (iOS ignores it anyway); the devic
 Not levelled: Sound of Text clips (the file host sends no CORS headers, so WebAudio can't read or measure them), device speech, and any voice recordings made in the app.
 
 v53: the 26 Alba letter clips (build/let-*), the 26 Classic letter clips and 24 Classic Cars-character name clips (classic/) were made at the same level (-19.2 LUFS, peak at or below -4.6 dBFS). Classic names are now bundled and play first; Sound of Text and the device voice remain only as fallbacks for names typed later.
+
+v54: the family-name clips were moved out of the Pages build (full build only); they keep the levels described above.
+
+v54: the 26 Letters "Emma" clips (sounds/letters-emma/) are at the same level (-19.2 LUFS, peak -4.9 dBFS or lower).

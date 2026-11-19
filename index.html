@@ -1961,6 +1961,10 @@
     .nm-gl { font-weight: 900; line-height: 1; font-size: calc(var(--bh, 160px) * 0.78); font-family: "Arial Rounded MT Bold", "Helvetica Neue", Arial, system-ui, sans-serif; pointer-events: none; display: block; }
     .nm-box:not(.done) .nm-gl { color: rgb(30, 34, 52); opacity: 0.74; transition: opacity 0.7s ease; }
     .nm-box:not(.done) .nm-gl.nm-fade { opacity: 0; }
+    /* v54: letter pair "Aa": a square box, smaller glyphs so both letters fit */
+    .shadow-screen.is-pair .nm-box { aspect-ratio: 1 / 1; max-width: 100%; }
+    .shadow-screen.is-pair .nm-gl { font-size: calc(var(--bh, 160px) * 0.52); letter-spacing: -0.02em; white-space: nowrap; }
+    .shadow-screen.is-pair .nm-corner { font-size: clamp(24px, 5.2vmin, 44px); letter-spacing: -0.02em; }
     .nm-cars { flex: 0 1 auto; min-height: 0; display: grid; grid-template-columns: repeat(var(--ccols, 5), minmax(0, 1fr)); grid-auto-rows: minmax(0, 1fr); gap: clamp(2px, 0.8vmin, 8px); width: min(100%, calc(var(--ccols, 5) * 150px)); height: calc(var(--crows, 2) * 96px); max-height: 100%; cursor: pointer; padding: 0 6px; }
     .nm-stage.nm-side { flex-direction: row; align-items: center; justify-content: center; gap: clamp(16px, 4vw, 40px); }
     .nm-stage.nm-side .nm-cars { flex: 1 1 auto; height: 100%; max-height: none; width: auto; max-width: calc(var(--ccols, 5) * 130px); align-content: center; }
@@ -2875,13 +2879,14 @@
             <div class="diff-row">
               <label for="lt-set-case">Letters shown as</label>
               <select id="lt-set-case" aria-label="Letter case">
-                <option value="upper">Capital letters (A B C)</option>
-                <option value="lower">Small letters (a b c)</option>
+                <option value="both">Capital and small together (Aa Bb Cc)</option>
+                <option value="upper">Capital letters only (A B C)</option>
+                <option value="lower">Small letters only (a b c)</option>
               </select>
             </div>
             <div class="diff-row">
               <label for="voice-style-letters">Letters voice</label>
-              <select id="voice-style-letters" class="voice-style-select" data-part="letters" aria-label="Letters voice"><option value="alba">Alba</option><option value="classic">Classic</option></select>
+              <select id="voice-style-letters" class="voice-style-select" data-part="letters" aria-label="Letters voice"><option value="emma">Emma (British, natural)</option><option value="alba">Alba (Scottish)</option><option value="classic">Classic (Australian)</option></select>
             </div>
           </div>
         </div>
@@ -3079,24 +3084,31 @@
     // v39: per-device voice for each part of the game. Classic = the pre-v37 voice (Sound of Text car-name clips
     // and the device voice); Alba = the natural recorded clips.
     var VOICE_STYLE_KEY = "theo-car-match-voice-styles";
-    var VOICE_STYLE_DEFAULTS = { name: "classic", match: "alba", build: "alba", shadow: "alba", shapes: "alba", numbers: "alba", letters: "alba" };
+    var VOICE_STYLE_DEFAULTS = { name: "classic", match: "alba", build: "alba", shadow: "alba", shapes: "alba", numbers: "alba", letters: "emma" };
     var voiceStyles = Object.assign({}, VOICE_STYLE_DEFAULTS);
     try {
       var vsRaw = JSON.parse(localStorage.getItem(VOICE_STYLE_KEY) || "{}") || {};
-      Object.keys(VOICE_STYLE_DEFAULTS).forEach(function (k) { if (vsRaw[k] === "classic" || vsRaw[k] === "alba") voiceStyles[k] = vsRaw[k]; });
+      Object.keys(VOICE_STYLE_DEFAULTS).forEach(function (k) { if (vsRaw[k] === "classic" || vsRaw[k] === "alba" || (k === "letters" && vsRaw[k] === "emma")) voiceStyles[k] = vsRaw[k]; });
+      // v54: Letters have a third voice, "Emma" (Kokoro, British), now the default. A saved Letters voice of Alba (what v53 stored for everyone) moves to Emma once; Classic stays; a choice made after that is kept.
+      if (vsRaw.lettersV !== 54 && voiceStyles.letters === "alba") voiceStyles.letters = "emma";
     } catch (e) {}
-    function voiceStyle(part) { return voiceStyles[part] === "classic" ? "classic" : "alba"; }
+    function voiceStyle(part) { return voiceStyles[part] === "classic" ? "classic" : (part === "letters" && voiceStyles[part] === "emma") ? "emma" : "alba"; }
     function setVoiceStyle(part, value) {
       if (!VOICE_STYLE_DEFAULTS[part]) return;
-      voiceStyles[part] = value === "classic" ? "classic" : "alba";
-      try { localStorage.setItem(VOICE_STYLE_KEY, JSON.stringify(voiceStyles)); } catch (e) {}
+      voiceStyles[part] = value === "classic" ? "classic" : (part === "letters" && value === "emma") ? "emma" : "alba";
+      try { localStorage.setItem(VOICE_STYLE_KEY, JSON.stringify(Object.assign({ lettersV: 54 }, voiceStyles))); } catch (e) {}
       syncVoiceStyleSelects();
     }
     function syncVoiceStyleSelects() {
       var list = document.querySelectorAll(".voice-style-select");
       for (var i = 0; i < list.length; i++) list[i].value = voiceStyle(list[i].getAttribute("data-part"));
     }
-    var VOICE_CLIPS = {"find": 1, "then": 1, "whos-missing": 1, "look-carefully": 1, "super-fast": 1, "ashleigh": 1, "ashley": 1, "berry": 1, "caitlyn": 1, "cars-or-photos": 1, "cruise": 1, "dart": 1, "delilah": 1, "do": 1, "doc": 1, "dot": 1, "fillmore": 1, "flo": 1, "francesco": 1, "grandad": 1, "guido": 1, "gwee-doh": 1, "hank": 1, "harper": 1, "hello": 1, "hello-ashleigh": 1, "hello-ashley": 1, "hello-caitlyn": 1, "hello-delilah": 1, "hello-grandad": 1, "hello-harper": 1, "hello-jason": 1, "hello-jay-den": 1, "hello-josh": 1, "hello-kelly": 1, "hello-lindsay": 1, "hello-marissa": 1, "hello-mitch": 1, "hello-nanna": 1, "hello-theo": 1, "inside": 1, "jason": 1, "jay-den": 1, "josh": 1, "kelly": 1, "laney": 1, "lets-match-the-cars": 1, "lets-match-the-family": 1, "lightning": 1, "lightning-mcqueen": 1, "lindsay": 1, "luigi": 1, "mack": 1, "marissa": 1, "mater": 1, "mcqueen": 1, "mitch": 1, "moss": 1, "nanna": 1, "nick": 1, "officer": 1, "officer-dot": 1, "pip": 1, "racer": 1, "ramone": 1, "rosie": 1, "rosie-racer": 1, "ryan": 1, "sal": 1, "sally": 1, "sarge": 1, "sheriff": 1, "shields": 1, "skye": 1, "sunny": 1, "theo": 1, "tugger": 1, "wheres": 1, "wheres-ashleigh": 1, "wheres-ashley": 1, "wheres-caitlyn": 1, "wheres-delilah": 1, "wheres-grandad": 1, "wheres-harper": 1, "wheres-jason": 1, "wheres-jay-den": 1, "wheres-josh": 1, "wheres-kelly": 1, "wheres-lindsay": 1, "wheres-marissa": 1, "wheres-mitch": 1, "wheres-nanna": 1, "wheres-theo": 1, "uncle-ashley": 1, "aunty-ashleigh": 1, "wheres-uncle-ashley": 1, "wheres-aunty-ashleigh": 1};
+    // v54: clips that say family or relative names are NOT in the GitHub Pages build. The full build (WIN11A, Desktop copy)
+    // fills this in at stage time (tools/make-full-build.py); on Pages it stays empty, so those names are said by the device voice.
+    var FAMILY_CLIPS = /*FAMILY_CLIPS_BEGIN*/{ voice: [], classic: [], buildNames: [], sentence: [] }/*FAMILY_CLIPS_END*/;
+    function familyMap(list) { var o = {}; (list || []).forEach(function (k) { o[k] = 1; }); return o; }
+    var VOICE_CLIPS = {"find": 1, "then": 1, "whos-missing": 1, "look-carefully": 1, "super-fast": 1, "berry": 1, "cars-or-photos": 1, "cruise": 1, "dart": 1, "do": 1, "doc": 1, "dot": 1, "fillmore": 1, "flo": 1, "francesco": 1, "guido": 1, "gwee-doh": 1, "hank": 1, "hello": 1, "inside": 1, "laney": 1, "lets-match-the-cars": 1, "lets-match-the-family": 1, "lightning": 1, "lightning-mcqueen": 1, "luigi": 1, "mack": 1, "mater": 1, "mcqueen": 1, "moss": 1, "nick": 1, "officer": 1, "officer-dot": 1, "pip": 1, "racer": 1, "ramone": 1, "rosie": 1, "rosie-racer": 1, "ryan": 1, "sal": 1, "sally": 1, "sarge": 1, "sheriff": 1, "shields": 1, "skye": 1, "sunny": 1, "tugger": 1, "wheres": 1};
+    FAMILY_CLIPS.voice.forEach(function (k) { VOICE_CLIPS[k] = 1; });
     var REV_CLIPS = [
       "01-idle-blip.mp3",
       "02-idle-blip-high.mp3",
@@ -3155,7 +3167,7 @@
     var BLOB_FETCH_MS = 20000;
     var bootStartedAt = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
     var keyChangeOpen = false;
-    var APP_VERSION = "53";
+    var APP_VERSION = "54";
     var MATCH_PAIR_CAP = 6;
     var NAME_ROUNDS = 6;
     var THUMB_MAX = 256;
@@ -4382,10 +4394,11 @@
     // anything else uses the device voice as before.
     // v45: the Name game says car names as first / last / nickname too; those (and Berry, Moss, Dart, which never had
     // a Classic clip) used the device voice, which is much quieter on iPhone/iPad. They now have their own clip.
-    var CLASSIC_LINE_CLIPS = { "uncle-ashley": 1, "aunty-ashleigh": 1, "wheres-uncle-ashley": 1, "wheres-aunty-ashleigh": 1,
+    var CLASSIC_LINE_CLIPS = {
       "berry": 1, "moss": 1, "dart": 1, "rosie": 1, "racer": 1, "officer": 1, "dot": 1,
       // v53: renamed/typed car names, now bundled and levelled (they used to come from Sound of Text at play time)
       "cruise": 1, "do": 1, "doc": 1, "fillmore": 1, "flo": 1, "francesco": 1, "guido": 1, "gwee-doh": 1, "inside": 1, "laney": 1, "lightning-mcqueen": 1, "lightning": 1, "luigi": 1, "mack": 1, "mater": 1, "mcqueen": 1, "nick": 1, "ramone": 1, "ryan": 1, "sal": 1, "sally": 1, "sarge": 1, "sheriff": 1, "shields": 1 };
+    FAMILY_CLIPS.classic.forEach(function (k) { CLASSIC_LINE_CLIPS[k] = 1; });
     var CLASSIC_FULL_CLIPS = { "rosie-racer": "rosie", "tugger": "tugger", "skye": "skye", "pip": "pip", "sunny": "sunny", "hank": "hank", "officer-dot": "officer" };
     function classicSpeakText(text) {
       var k = voiceKey(text);
@@ -7368,11 +7381,13 @@
         nameState.beatCount = (nameState.beatCount || 0) + 1;
         if (!reduced && btn) setTimeout(function () { if (nameState.active) startMatchBurst([btn]); }, 350);
         var r = nameState.roundGen;
-        playHooray().then(function () {
+        playHooray();
+        // v54: "Super fast!" overlaps the cheer and the next round comes 2.2 s after the answer (was cheer + line + 1.3 s)
+        nameLater(function () {
           if (!nameState.active || r !== nameState.roundGen) return;
           voiceSay([nameClipPart("super-fast")]);
-          nameLater(function () { advanceNameRound(); }, 1300);
-        });
+        }, 600);
+        nameLater(function () { advanceNameRound(); }, 2200);
         return;
       }
       playHooray();
@@ -9350,8 +9365,8 @@
     // v36: Build speaks with pre-recorded natural-voice clips (sounds/build/, Piper "Alba" voice, CC BY 4.0, see sounds/build/NOTES.md).
     // Each part of a line is a clip; a part with no clip (a new player's name) or a clip that fails falls back to the device voice.
     var BUILD_VOICE_DIR = SOUND_DIR + "build/";
-    var BUILD_SENTENCE_PLAYERS = { theo: 1, harper: 1 };
-    var BUILD_NAME_CLIPS = { theo: 1, harper: 1, jayden: 1 };
+    var BUILD_SENTENCE_PLAYERS = familyMap(FAMILY_CLIPS.sentence);
+    var BUILD_NAME_CLIPS = familyMap(FAMILY_CLIPS.buildNames);
     var buildSayLog = [];
     function bvLine(k, t, gap) { return { k: k, t: t, gap: gap || 0 }; }
     function bvNameKey(name) { return String(name || "").toLowerCase().replace(/[^a-z]/g, ""); }
@@ -10548,7 +10563,7 @@
       if (scr) {
         scr.classList.toggle("is-shapes", shg.mode === "shapes");
         scr.classList.toggle("is-numbers", isNum);
-        scr.classList.toggle("is-letters", isLet);
+        scr.classList.toggle("is-letters", isLet); if (!isLet) scr.classList.remove("is-pair");
         if (!isNum) scr.classList.remove("sh-many");
         scr.setAttribute("aria-label", shg.mode === "shapes" ? "Shapes game" : isLet ? "Letters game" : isNum ? "Numbers game" : "Shadow game");
       }
@@ -10777,18 +10792,16 @@
         shg.boards++;
         (shg.decoys || []).forEach(function (d) { if (d.slot) d.slot.classList.add("sh-decoy-gone"); });
         // v43: the Match game's hooray cheer + confetti when every shadow is filled, then "You did it!".
+        // v54: cheer + confetti start sooner and "You did it!" overlaps the cheer; next board after 2.5 s (was 4.8 s)
         shLater(function () {
           shLog("cheer");
           var keep = difficulty.hooray;
           difficulty.hooray = true;
-          var cheer = playHooray();
+          playHooray();
           difficulty.hooray = keep;
           startConfetti();
-          var g = shg.gen;
-          Promise.resolve(cheer).then(function () {
-            if (g === shg.gen && shadowOpen()) { shLog("done-line"); shSay("sh-done", "You did it!"); }
-          });
-        }, 900);
+        }, 500);
+        shLater(function () { if (shadowOpen()) { shLog("done-line"); shSay("sh-done", "You did it!"); } }, 1100);
         shLater(function () {
           stopConfetti();
           var before = shg.n;
@@ -10796,7 +10809,7 @@
           if (S.harder !== false) shg.n = Math.min(S.max, shg.n + (S.level === "hard" ? 2 : 1));
           shg.grew = shg.n > before;
           shadowBoard(false);
-        }, 4800);
+        }, 2500);
       }
     }
     // ---- v48: Numbers game (same drag play as Shadow: a number's shadow, 0-9 tiles to drag in) ----
@@ -10834,7 +10847,7 @@
         tileLine: function (g) { return { clip: "let-" + g.toLowerCase(), text: LETTER_SAY[g] + "!" }; },
         noun: "letter",
         word: function (t) { return t.glyphs[0]; },
-        disp: function (g) { return letterSettings.case === "lower" ? g.toLowerCase() : g; },
+        disp: function (g) { return letterSettings.case === "lower" ? g.toLowerCase() : letterSettings.case === "upper" ? g : g + g.toLowerCase(); },
         tileLabel: function (g) { return g; },
         colour: function (g) { return [NUM_TILE_COLS[(g.charCodeAt(0) - 65) % NUM_TILE_COLS.length]]; },
         // the target plus decoys: 4 on Easy (no look-alikes), 6 on Medium, 8 on Hard (look-alikes included), in a random order
@@ -10862,13 +10875,16 @@
       var up = parseInt(raw.upto, 10);
       return { v: 49, level: lv, upto: up === 5 || up === 10 ? up : 20 };
     }
-    // v53: Letters settings (Easy by default like Numbers; capital letters by default)
+    // v53: Letters settings (Easy by default like Numbers). v54: capital + small together ("Aa") by default; capitals only or small only stay in Settings.
     var LETTERS_KEY = "theo-car-match-letters";
     var letterSettings = normalizeLetterSettings({});
     try { letterSettings = normalizeLetterSettings(JSON.parse(localStorage.getItem(LETTERS_KEY) || "{}") || {}); } catch (e) {}
     function normalizeLetterSettings(raw) {
       raw = raw && typeof raw === "object" ? raw : {};
-      return { v: 53, level: raw.level === "hard" || raw.level === "medium" ? raw.level : "easy", case: raw.case === "lower" ? "lower" : "upper" };
+      // settings saved by v53 (no v:54 marker) held "upper" unless someone chose small letters, so they move to the pair once; a choice made after that is kept
+      var cs = raw.case === "lower" || raw.case === "upper" || raw.case === "both" ? raw.case : "both";
+      if (raw.v !== 54 && cs === "upper") cs = "both";
+      return { v: 54, level: raw.level === "hard" || raw.level === "medium" ? raw.level : "easy", case: cs };
     }
     function saveLetterSettings(next) {
       letterSettings = normalizeLetterSettings(next);
@@ -10906,7 +10922,7 @@
       ["lt-set-level", "lt-set-case"].forEach(function (id) {
         var el = document.getElementById(id);
         if (el) el.addEventListener("change", function () {
-          saveLetterSettings({ level: document.getElementById("lt-set-level").value, case: document.getElementById("lt-set-case").value });
+          saveLetterSettings({ v: 54, level: document.getElementById("lt-set-level").value, case: document.getElementById("lt-set-case").value });
         });
       });
       updateLetterSettingsUi();
@@ -10971,7 +10987,9 @@
       });
     }
     function numLine(clip, text) {
-      if (voiceStyle(shg.mode === "letters" ? "letters" : "numbers") === "classic") return { src: SOUND_DIR + "classic/" + clip + ".mp3", k: clip, t: text };
+      var vs = voiceStyle(shg.mode === "letters" ? "letters" : "numbers");
+      if (vs === "classic") return { src: SOUND_DIR + "classic/" + clip + ".mp3", k: clip, t: text };
+      if (vs === "emma") return { src: SOUND_DIR + "letters-emma/" + clip + ".mp3", k: clip, t: text };
       return { src: BUILD_VOICE_DIR + clip + ".mp3", k: clip, t: text };
     }
     function numSay(clip, text) {
@@ -11032,7 +11050,9 @@
       tray.style.setProperty("--tcols", tcols);
       tray.style.setProperty("--trayh", trayh + "px");
       var th = (trayh - 28 - (rows - 1) * 12) / rows, tw = (Math.min(1100, innerWidth) - 28 - (tcols - 1) * 12) / tcols;
-      tray.style.setProperty("--tfs", Math.floor(Math.min(th, tw) * 0.68) + "px");
+      var pair = isL && letterSettings.case === "both";
+      tray.style.setProperty("--tfs", Math.floor(Math.min(th, tw) * (pair ? 0.5 : 0.68)) + "px");
+      shEl("shadow-screen").classList.toggle("is-pair", pair);
       // short landscape phones: shadow on the left, cars on the right (rows of 5), so 20 cars stay a decent size
       var side = land && innerHeight < 600 && !isL;
       var stageEl = shEl("nm-stage");
@@ -11116,8 +11136,8 @@
           onKey: function () { numbersKey(g); },
           ghost: function () {
             var r = (nm.boxes[0] || b).getBoundingClientRect();
-            var h = Math.max(70, Math.min(r.height * 0.8, 170)), w = h * 0.75;
-            return { html: '<span class="nm-gl" style="color:' + set.colour(g)[0] + ';font-size:' + Math.round(h * 0.82) + 'px">' + set.disp(g) + '</span>', rect: { width: w, height: h } };
+            var h = Math.max(70, Math.min(r.height * 0.8, 170)), pr = set.id === "letters" && letterSettings.case === "both", w = h * (pr ? 1.15 : 0.75);
+            return { html: '<span class="nm-gl" style="color:' + set.colour(g)[0] + ';font-size:' + Math.round(h * (pr ? 0.56 : 0.82)) + 'px">' + set.disp(g) + '</span>', rect: { width: w, height: h } };
           },
           ghostClass: "sh-ghost nm-ghost",
           onDrop: function (x, y) { return numbersDrop(g, x, y); }
@@ -11185,12 +11205,11 @@
       shg.busy = true;
       shg.placed = 1;
       shg.boards++;
-      // the number again, then the cars drive off and the usual hooray + confetti
+      // v54: the number/letter again, hooray + confetti and ONE yay all overlap; the next board starts 2.4 s after the answer
+      // (v50-v53 chained hooray, two yays and the voice and waited at least 4.8 s)
       numSay(t.clip, t.say);
-      shLater(function () { var cars = shEl("nm-cars"); if (cars) { shLog("cars-go"); cars.classList.add("go"); } }, 600);
-      // v50: hooray, then two random kids yays; the next number comes once they have played (at least 4.8 s after the answer)
+      shLater(function () { var cars = shEl("nm-cars"); if (cars) { shLog("cars-go"); cars.classList.add("go"); } }, 400);
       var done = t;
-      var t0 = Date.now();
       var advanced = false;
       function advance() {
         if (advanced || nm.target !== done) return;
@@ -11202,16 +11221,12 @@
         shLog("cheer");
         var keep = difficulty.hooray;
         difficulty.hooray = true;
-        var cheer = playHooray();
+        playHooray();
         difficulty.hooray = keep;
         startConfetti();
-        var g = shg.gen;
-        Promise.resolve(cheer)
-          .then(function () { return g === shg.gen ? numPoolPlay("yay", 2600) : null; })
-          .then(function () { return g === shg.gen ? numPoolPlay("yay", 2600) : null; })
-          .then(function () { if (g === shg.gen) shLater(advance, Math.max(500, 4800 - (Date.now() - t0))); });
-      }, 900);
-      shLater(advance, 11000);
+      }, 150);
+      shLater(function () { numPoolPlay("yay", 2000); }, 350);
+      shLater(advance, 2400);
     }
     function paintShadowStartArt() {
       var car = (typeof builtinCar === "function" && builtinCar("skye")) || allCars()[2] || allCars()[0];
