@@ -3175,7 +3175,7 @@
     var BLOB_FETCH_MS = 20000;
     var bootStartedAt = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
     var keyChangeOpen = false;
-    var APP_VERSION = "55";
+    var APP_VERSION = "56";
     var MATCH_PAIR_CAP = 6;
     var NAME_ROUNDS = 6;
     var THUMB_MAX = 256;
@@ -10850,9 +10850,9 @@
         id: "letters", part: "letters", title: "Put the letter in its shadow", tray: "Letter tiles",
         tiles: LETTERS,
         targets: function () {
-          return LETTERS.map(function (L) { return { id: "l:" + L, glyphs: [L], clip: "let-" + L.toLowerCase(), say: LETTER_SAY[L] + "!" }; });
+          return LETTERS.map(function (L) { return { id: "l:" + L, glyphs: [L], clip: "let-" + L.toLowerCase(), say: LETTER_SAY[L] }; });
         },
-        tileLine: function (g) { return { clip: "let-" + g.toLowerCase(), text: LETTER_SAY[g] + "!" }; },
+        tileLine: function (g) { return { clip: "let-" + g.toLowerCase(), text: LETTER_SAY[g] }; },
         noun: "letter",
         word: function (t) { return t.glyphs[0]; },
         disp: function (g) { return letterSettings.case === "lower" ? g.toLowerCase() : letterSettings.case === "upper" ? g : g + g.toLowerCase(); },
@@ -11000,8 +11000,16 @@
       if (vs === "emma") return { src: SOUND_DIR + "letters-emma/" + clip + ".mp3", k: clip, t: text };
       return { src: BUILD_VOICE_DIR + clip + ".mp3", k: clip, t: text };
     }
+    // v56: the letter/number is announced ALONE. Before it plays, anything still sounding from the last board (a long yay, the hooray,
+    // a fart) and any queued device speech is stopped, so nothing can overlap or run into the announcement.
+    function numQuiet() {
+      numPoolStop();
+      hoorayPreloads.concat([hoorayAudio]).forEach(function (a) { if (a) { try { a.pause(); a.currentTime = 0; } catch (e) {} } });
+      try { if (window.speechSynthesis) speechSynthesis.cancel(); } catch (e) {}
+    }
     function numSay(clip, text) {
       shLog("say:" + clip);
+      numQuiet();
       voiceSay([numLine(clip, text)]);
     }
     var NUM_TILE_COLS = ["#E53935", "#1E88E5", "#2E9E44", "#F57C00", "#8E24AA", "#00ACC1", "#EC407A", "#6D4C41", "#3949AB", "#00897B"];
