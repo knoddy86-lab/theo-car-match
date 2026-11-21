@@ -34,6 +34,9 @@ os.makedirs(a.out)
 for f in files:
     shutil.copy2(os.path.join(a.repo, f), os.path.join(a.out, f))
 shutil.copytree(os.path.join(a.repo, "sounds"), os.path.join(a.out, "sounds"))
+vend = os.path.join(a.repo, "vendor")
+if os.path.isdir(vend):
+    shutil.copytree(vend, os.path.join(a.out, "vendor"))
 n = 0
 for sub in ("voice", "classic", "build"):
     for k in fam[sub]:
@@ -49,6 +52,11 @@ print("full build in", a.out, "with", n, "family clips")
 def zipdir(root, dest):
     with zipfile.ZipFile(dest, "w", zipfile.ZIP_DEFLATED) as z:
         for f in files: z.write(os.path.join(root, f), f)
+        vend = os.path.join(root, "vendor")
+        if os.path.isdir(vend):
+            for d, _, fs in os.walk(vend):
+                for f in fs:
+                    full = os.path.join(d, f); z.write(full, os.path.relpath(full, root))
         for d, _, fs in os.walk(os.path.join(root, "sounds")):
             for f in fs:
                 full = os.path.join(d, f); z.write(full, os.path.relpath(full, root))

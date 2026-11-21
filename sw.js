@@ -1,13 +1,14 @@
 /* Theo's Car Match service worker — cache-first so the game opens offline
    even when the home computer is unreachable (mobile data). Never caches /api. */
-var CACHE = "theo-car-match-v56";
+var CACHE = "theo-car-match-v57";
 var CORE = [
   "./",
   "./index.html",
   "./manifest.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
-  "./icons/apple-touch-icon.png"
+  "./icons/apple-touch-icon.png",
+  "./vendor/qrcode.js"
 ];
 var OPTIONAL = [
   "./version.json",
@@ -96,6 +97,7 @@ OPTIONAL = OPTIONAL.concat(["berry", "moss", "dart", "rosie", "racer", "officer"
 // v54: family-name clips are not in the GitHub Pages build; the full build adds them at stage time (tools/make-full-build.py).
 // v55: Parent Settings tabs wrap inside the panel at every width (tablet and desktop), like iPhone
 // v56: Letters/Numbers announcement plays alone: numQuiet() stops leftover yay/hooray/fart audio and device speech first; letter fallback text has no "!"
+// v57: Build Back on the paint step (and other Build steps), keeping chosen parts; Connection pairing QR (#pair= fragment, no query string)
 var FAMILY_CLIPS = /*FAMILY_CLIPS_BEGIN*/{ voice: [], classic: [], build: [] }/*FAMILY_CLIPS_END*/;
 OPTIONAL = OPTIONAL.concat(FAMILY_CLIPS.voice.map(function (k) { return "./sounds/voice/" + k + ".mp3"; }), FAMILY_CLIPS.classic.map(function (k) { return "./sounds/classic/" + k + ".mp3"; }), FAMILY_CLIPS.build.map(function (k) { return "./sounds/build/" + k + ".mp3"; }));
 

@@ -1609,6 +1609,21 @@
     }
     .sync-url-result.is-ok { color: #2E7D32; }
     .sync-url-result.is-error { color: #C62828; }
+    .sync-pair-box { margin: 12px 0 4px; padding: 12px; background: #F5F7FF; border-radius: 18px; text-align: center; }
+    .sync-pair-box[hidden] { display: none !important; }
+    .sync-pair-qr { display: inline-block; margin: 8px auto; padding: 10px; background: #fff; border-radius: 16px; line-height: 0; }
+    .sync-pair-qr svg { width: min(240px, 70vw); height: auto; }
+    .sync-pair-note { margin: 8px 0 0; font-size: 14px; font-weight: 700; color: #37474F; }
+    .pair-modal { position: fixed; inset: 0; z-index: 32; background: rgba(13, 40, 80, 0.55); display: flex; align-items: center; justify-content: center; padding: 16px; }
+    .pair-modal[hidden] { display: none; }
+    .pair-card { width: min(440px, 100%); background: #fff; border-radius: 24px; padding: 22px 18px 18px; color: #1A237E; box-shadow: 0 16px 40px rgba(0,0,0,0.25); text-align: center; }
+    .pair-card h2 { margin: 0 0 8px; font-size: clamp(22px, 5vmin, 32px); }
+    .pair-card p { margin: 0 0 10px; font-weight: 700; color: #37474F; }
+    .pair-card .pair-addrs { font-size: 13px; word-break: break-all; color: #455A64; }
+    .pair-card .settings-btns { justify-content: center; margin-top: 12px; }
+    .pair-card .pair-result { font-weight: 800; }
+    .pair-card .pair-result.is-ok { color: #2E7D32; }
+    .pair-card .pair-result.is-error { color: #C62828; }
     .sync-route { margin: 6px 0 0; font-size: 13px; font-weight: 700; color: #455A64; overflow-wrap: anywhere; }
     .sync-route.is-ok { color: #2E7D32; }
 
@@ -2062,8 +2077,8 @@
     .b-grid { width: 100%; flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 1fr; gap: clamp(10px, 2vmin, 20px); padding: 4px 2px 8px; }
     .b-tile, .b-extra { appearance: none; border: 0; font-family: inherit; background: #fff; border-radius: 24px; box-shadow: 0 6px 0 rgba(26,35,126,0.28), 0 10px 18px rgba(0,0,0,0.14); padding: 8px 6px 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 0; min-width: 0; }
     /* v40: one quick tap every time. Build buttons use a pointer tap (bTap): no browser panning on the tile, the inner art never takes the touch, and pressing doesn't move the tile out from under a finger. */
-    .b-tile, .b-extra, .b-blob, .b-tab, .b-done, .b-go, .b-go-hero, .b-garage-link { touch-action: none; -webkit-user-select: none; user-select: none; }
-    .b-tile *, .b-extra *, .b-blob *, .b-tab *, .b-done *, .b-go * { pointer-events: none; }
+    .b-tile, .b-extra, .b-blob, .b-tab, .b-done, .b-back, .b-go, .b-go-hero, .b-garage-link { touch-action: none; -webkit-user-select: none; user-select: none; }
+    .b-tile *, .b-extra *, .b-blob *, .b-tab *, .b-done *, .b-back *, .b-go * { pointer-events: none; }
     .b-tile.b-press, .b-extra.b-press { box-shadow: 0 2px 0 rgba(26,35,126,0.28), 0 4px 10px rgba(0,0,0,0.12); filter: brightness(0.96); }
     .b-tile:focus, .b-extra:focus, .b-blob:focus, .b-spare:focus, .b-tab:focus { outline: 5px solid var(--focus); outline-offset: 3px; }
     .b-tile.picked, .b-extra.picked { outline: 5px solid var(--focus); outline-offset: 3px; box-shadow: 0 6px 0 #F9A825, 0 10px 18px rgba(0,0,0,0.14); }
@@ -2144,7 +2159,8 @@
     .b-extras { --xrow: clamp(100px, 13.5vh, 160px); --xgap: clamp(12px, 2.2vmin, 22px); display: grid; grid-template-columns: repeat(auto-fill, minmax(clamp(100px, 28vw, 156px), 1fr)); grid-auto-rows: var(--xrow); align-content: start; gap: var(--xgap); width: min(100%, 940px); flex: 1 1 0; min-height: calc(2 * var(--xrow) + var(--xgap) + 30px); overflow-y: auto; -webkit-overflow-scrolling: touch; touch-action: pan-y; padding: 14px 12px 16px; border-radius: 24px; }
     @media (orientation: portrait) and (max-height: 720px) {
       .bstep[data-step="4"] .b-title { font-size: 22px; padding: 3px 16px 5px; }
-      .bstep[data-step="4"] .b-done { min-height: 72px; margin-top: 10px; }
+      .bstep[data-step="4"] .b-actions { margin-top: 10px; }
+      .bstep[data-step="4"] .b-done { min-height: 64px; }
     }
     .b-extra { position: relative; min-height: 0; transition: background 0.15s; border: 5px solid transparent; }
     .b-extra .b-art { width: 100%; flex: 1 1 auto; min-height: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
@@ -2154,9 +2170,17 @@
     .b-extra.just { animation: b-tilepop 0.32s cubic-bezier(.3,1.6,.5,1); }
     @keyframes b-tilepop { 0% { transform: scale(0.9); } 60% { transform: scale(1.06); } 100% { transform: scale(1); } }
     .b-extra.on .b-tick { display: flex; animation: b-pop 0.35s ease-out; }
-    .b-done { flex: 0 0 auto; font-size: clamp(30px, 5.4vmin, 50px); min-width: 240px; min-height: 80px; margin-top: clamp(12px, 2.4vh, 26px); margin-bottom: calc(var(--safe-b) + 8px); background: #34C759; box-shadow: 0 6px 0 #1E8E3E; }
-    .b-done:focus { outline: 5px solid var(--focus); outline-offset: 3px; }
+    .b-actions { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 12px; width: min(100%, 560px); flex: 0 0 auto; margin-top: clamp(8px, 1.6vh, 18px); margin-bottom: calc(var(--safe-b) + 8px); }
+    .b-actions .b-done, .b-actions .b-back { margin-top: 0; margin-bottom: 0; }
+    .b-done { flex: 1 1 auto; font-size: clamp(30px, 5.4vmin, 50px); min-width: 200px; min-height: 80px; margin-top: clamp(12px, 2.4vh, 26px); margin-bottom: calc(var(--safe-b) + 8px); background: #34C759; box-shadow: 0 6px 0 #1E8E3E; }
+    .b-done:focus, .b-back:focus { outline: 5px solid var(--focus); outline-offset: 3px; }
+    .b-done:disabled { opacity: 0.45; box-shadow: 0 6px 0 #9CCC65; }
     .b-done-arrow { font-size: 0.8em; }
+    .b-back-arrow { font-size: 0.8em; display: inline-block; transform: scaleX(-1); }
+    /* v57: Back is clearly secondary to Done, still large enough for a toddler finger */
+    .b-back { flex: 0 1 auto; font-size: clamp(22px, 4vmin, 34px); min-width: 132px; min-height: 64px; padding: 0.3em 0.9em 0.38em; background: #EEF1FF; color: #1A237E; box-shadow: 0 6px 0 #9FA8DA, 0 10px 16px rgba(0,0,0,0.12); }
+    .b-back:active { box-shadow: 0 2px 0 #9FA8DA, 0 6px 10px rgba(0,0,0,0.12); }
+    .b-back[hidden] { display: none !important; }
     .b-go-hero .bv-spray circle { animation: b-flash 0.5s steps(2, jump-none) infinite; }
     .b-go-hero.act .bv-wave { animation: b-wave 0.4s ease-in-out infinite; transform-box: fill-box; transform-origin: 0 50%; }
     @keyframes b-wave { 0%, 100% { transform: scaleX(1); } 50% { transform: scaleX(0.85) skewY(4deg); } }
@@ -2208,6 +2232,22 @@
     @media (orientation: landscape) and (min-height: 601px) {
       .b-grid { grid-template-columns: repeat(3, 1fr); }
       .b-grid-road .b-tile:last-child { grid-column: auto; width: auto; justify-self: stretch; }
+      /* v57: paint step — vehicle left, colours right, Back + Done on one row at the bottom */
+      .build-screen .bstep[data-step="2"] { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: auto minmax(0, 1fr) auto; column-gap: 16px; row-gap: 6px; width: 100%; min-height: 0; }
+      .bstep[data-step="2"] .b-title { grid-column: 1 / -1; }
+      .bstep[data-step="2"] .b-hero { grid-column: 1; grid-row: 2; width: 100%; height: 100%; min-height: 160px; align-self: stretch; }
+      .bstep[data-step="2"] .b-paints { grid-column: 2; grid-row: 2; width: 100%; align-self: center; }
+      .bstep[data-step="2"] .b-actions { grid-column: 1 / -1; grid-row: 3; margin-top: 4px; margin-bottom: calc(var(--safe-b) + 4px); }
+      .bstep[data-step="2"] .b-done { min-height: 64px; font-size: clamp(24px, 4.6vmin, 40px); }
+      .bstep[data-step="2"] .b-back { min-height: 56px; }
+      .bstep[data-step="3"] .b-actions { margin-top: 4px; margin-bottom: calc(var(--safe-b) + 4px); }
+    }
+    @media (max-height: 850px) and (orientation: portrait) {
+      .bstep[data-step="2"] .b-hero { height: clamp(96px, 20vh, 200px); }
+      .bstep[data-step="2"] .b-paints { gap: 8px; padding: 2px 0 4px; }
+      .bstep[data-step="2"] .b-actions { margin-top: 4px; margin-bottom: calc(var(--safe-b) + 4px); }
+      .bstep[data-step="2"] .b-done { min-height: 64px; font-size: 28px; }
+      .bstep[data-step="2"] .b-back { min-height: 56px; }
     }
     /* Landscape phones: title sits in the top bar; picture left, choices right. */
     @media (orientation: landscape) and (max-height: 600px) {
@@ -2224,6 +2264,11 @@
       .b-go-hero { height: 58vh; }
       .b-paints { gap: 12px; }
       .b-blob { width: clamp(64px, 20vh, 100px); }
+      .build-screen .bstep[data-step="2"] { grid-template-rows: auto 1fr auto; }
+      .bstep[data-step="2"] .b-hero { grid-column: 1; grid-row: 2; }
+      .bstep[data-step="2"] .b-paints { grid-column: 2; grid-row: 2; }
+      .bstep[data-step="2"] .b-actions { grid-column: 1 / -1; grid-row: 3; margin-bottom: calc(var(--safe-b) + 4px); }
+      .bstep[data-step="3"] .b-actions { grid-column: 1 / -1; grid-row: 3; }
       .b-spares { min-height: 0; }
       .build-screen .bstep[data-step="3"] { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); }
       .b-spares.b-spares-many { gap: 8px 12px; }
@@ -2231,7 +2276,9 @@
       .b-hero.b3-two { height: 80vh; }
       .build-screen .bstep[data-step="4"] { grid-template-columns: 40% 1fr; grid-template-rows: auto 1fr auto; }
       .bstep[data-step="4"] .b4-hero { grid-column: 1; grid-row: 2; width: 100%; height: 100%; max-height: 52vh; }
-      .bstep[data-step="4"] .b-done { grid-column: 1; grid-row: 3; min-height: 56px; font-size: 26px; min-width: 180px; margin-bottom: calc(var(--safe-b) + 4px); }
+      .bstep[data-step="4"] .b-actions { grid-column: 1; grid-row: 3; width: 100%; margin-bottom: calc(var(--safe-b) + 4px); gap: 8px; }
+      .bstep[data-step="4"] .b-done { min-height: 56px; font-size: 24px; min-width: 120px; }
+      .bstep[data-step="4"] .b-back { min-height: 52px; font-size: 20px; min-width: 96px; }
       .bstep[data-step="4"] .b-extras { grid-column: 2; grid-row: 2 / 4; height: 100%; align-self: stretch; grid-auto-rows: 100px; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); min-height: 0; flex: initial; }
       .b-piece { width: min(42vw, 400px); padding: 6px 10px 26px; }
       .b-piece > svg { max-height: 17vh; }
@@ -2406,17 +2453,27 @@
         <div class="b-title">Pick a colour</div>
         <div class="b-hero" id="b2-hero"></div>
         <div class="b-paints" id="b2-paints" role="group" aria-label="Colours"></div>
+        <div class="b-actions" id="b2-actions">
+          <button type="button" class="btn b-back" id="b2-back"><span class="b-back-arrow" aria-hidden="true">&#10148;</span> Back</button>
+          <button type="button" class="btn b-done" id="b2-done" disabled>Done <span class="b-done-arrow" aria-hidden="true">&#10148;</span></button>
+        </div>
       </div>
       <div class="bstep" data-step="3" hidden>
         <div class="b-title" id="b3-title">Add the wheels</div>
         <div class="b-hero" id="b3-hero"><div class="b-count" id="b3-count" hidden aria-live="polite"></div><div class="b-layer" id="b3-car"></div></div>
         <div class="b-spares" id="b3-spares" role="group" aria-label="Parts"></div>
+        <div class="b-actions" id="b3-actions">
+          <button type="button" class="btn b-back" id="b3-back"><span class="b-back-arrow" aria-hidden="true">&#10148;</span> Back</button>
+        </div>
       </div>
       <div class="bstep" data-step="4" hidden>
         <div class="b-title" id="b4-title">Add extras</div>
         <div class="b-hero b4-hero" id="b4-hero"></div>
         <div class="b-extras" id="b4-grid" role="group" aria-label="Extras"></div>
-        <button type="button" class="btn b-done" id="b4-done">Done <span class="b-done-arrow" aria-hidden="true">&#10148;</span></button>
+        <div class="b-actions" id="b4-actions">
+          <button type="button" class="btn b-back" id="b4-back"><span class="b-back-arrow" aria-hidden="true">&#10148;</span> Back</button>
+          <button type="button" class="btn b-done" id="b4-done">Done <span class="b-done-arrow" aria-hidden="true">&#10148;</span></button>
+        </div>
       </div>
       <div class="bstep" data-step="5" hidden>
         <div class="b-cap" id="b5-cap" aria-live="polite">Tap GO!</div>
@@ -2501,7 +2558,19 @@
         <button type="button" class="btn-mini" id="pin-cancel">Cancel</button>
       </div>
     </div>
-    <section id="settings-screen" class="screen" hidden aria-label="Parent Settings">
+        <div id="pair-modal" class="pair-modal" hidden role="dialog" aria-labelledby="pair-title" aria-modal="true">
+      <div class="pair-card">
+        <h2 id="pair-title">Connect to home sync?</h2>
+        <p>This phone will sync cards with the family computer.</p>
+        <p class="pair-addrs" id="pair-addrs"></p>
+        <div class="settings-btns" id="pair-choices">
+          <button type="button" class="btn-mini primary" id="pair-yes">Yes, connect</button>
+          <button type="button" class="btn-mini" id="pair-no">Not now</button>
+        </div>
+        <p class="pair-result" id="pair-result" hidden></p>
+      </div>
+    </div>
+<section id="settings-screen" class="screen" hidden aria-label="Parent Settings">
       <div class="settings-panel">
         <h2>Parent Settings <span class="parent-unlocked" id="parent-unlocked" hidden><span title="Unlocked">🔓 Unlocked</span> <button type="button" class="btn-mini" id="parent-lock-btn">Lock</button></span></h2>
         <div class="settings-tabs" role="tablist" aria-label="Settings sections">
@@ -2994,6 +3063,14 @@
             <input id="sync-key" type="text" autocomplete="off" spellcheck="false" autocapitalize="off" placeholder="The key shown on the family computer" aria-label="Family key">
           </div>
           <p class="sync-key-saved" id="sync-key-saved" hidden>Family key saved on this device. <button type="button" class="btn-mini" id="sync-key-change">Change</button></p>
+          <div class="settings-btns" id="sync-pair-actions">
+            <button type="button" class="btn-mini primary" id="sync-pair-btn" hidden>Pair another device</button>
+          </div>
+          <div class="sync-pair-box" id="sync-pair-box" hidden>
+            <div class="sync-pair-qr" id="sync-pair-qr" role="img" aria-label="Pairing code for another device"></div>
+            <p class="sync-pair-note">Open the camera on the new iPhone and scan this. It hides after a minute.</p>
+            <button type="button" class="btn-mini" id="sync-pair-close">Close</button>
+          </div>
           <div class="settings-btns">
             <button type="button" class="btn-mini primary" id="sync-now-btn">Card sync now</button>
             <button type="button" class="btn-mini primary" id="sync-save-btn">Save my changes to home computer</button>
@@ -3031,6 +3108,7 @@
     <canvas id="fx"></canvas>
   </div>
 
+  <script src="vendor/qrcode.js"></script>
   <script>
   (function () {
     "use strict";
@@ -3175,7 +3253,7 @@
     var BLOB_FETCH_MS = 20000;
     var bootStartedAt = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
     var keyChangeOpen = false;
-    var APP_VERSION = "56";
+    var APP_VERSION = "57";
     var MATCH_PAIR_CAP = 6;
     var NAME_ROUNDS = 6;
     var THUMB_MAX = 256;
@@ -9569,22 +9647,48 @@
       if (s) s.hidden = true;
       document.body.classList.remove("garage-on");
     }
-    function buildGoStep(n) {
+    function buildGoStep(n, keep) {
       endBuildDrag();
       clearBuildGhosts();
       build.step = n;
       build.busy = false;
-      if (n === 1) renderBuildPick();
-      else if (n === 2) renderBuildColour();
-      else if (n === 3) { build.dragWheels = false; if (buildDragMode()) renderDragParts(); else { buildEl("b3-spares").classList.remove("bvd-tray"); renderBuildParts(); } }
-      else if (n === 4) renderBuildExtras();
-      else if (n === 5) renderBuildGo();
+      if (n === 1) renderBuildPick(!!keep);
+      else if (n === 2) renderBuildColour(!!keep);
+      else if (n === 3) { if (!keep) build.dragWheels = false; if (buildDragMode()) renderDragParts(!!keep); else { buildEl("b3-spares").classList.remove("bvd-tray"); renderBuildParts(!!keep); } }
+      else if (n === 4) renderBuildExtras(!!keep);
+      else if (n === 5) renderBuildGo(!!keep);
       showBuildView(n);
+      updateBuildNav();
       if (document.activeElement && document.activeElement.blur && buildEl("build-screen").contains(document.activeElement)) document.activeElement.blur();
     }
     function buildNext() {
       var i = build.steps.indexOf(build.step);
       if (i >= 0 && i < build.steps.length - 1) buildGoStep(build.steps[i + 1]);
+    }
+    // v57: go back one Build step, keep the parts already chosen, and do not celebrate
+    function buildBack() {
+      var i = build.steps.indexOf(build.step);
+      if (i <= 0) return;
+      buildClearTimers();
+      stopSpeechAndAudio();
+      build.busy = false;
+      buildGoStep(build.steps[i - 1], true);
+    }
+    function updateBuildNav() {
+      var i = build.steps.indexOf(build.step);
+      var canBack = i > 0;
+      ["b2-back", "b3-back", "b4-back"].forEach(function (id) {
+        var b = buildEl(id);
+        if (b) b.hidden = !canBack;
+      });
+      var done = buildEl("b2-done");
+      if (done) done.disabled = !build.color;
+    }
+    function buildColourDone() {
+      if (build.step !== 2 || !build.color) return;
+      buildClearTimers();
+      build.busy = false;
+      buildNext();
     }
 
     // Step 1: pick a vehicle (Road / Construction pages)
@@ -9630,20 +9734,22 @@
     }
 
     // Step 2: colour
-    function renderBuildColour() {
+    function renderBuildColour(keep) {
       var hero = buildEl("b2-hero");
-      hero.innerHTML = '<div class="b-layer b-grey">' + bvSvg(build.kind, { color: "grey", extras: build.extras }) + '</div><div class="b-layer b-paint" id="b2-paint"></div><div class="b-splash" id="b2-splash"></div>';
+      var shown = (keep && build.color) ? build.color : "grey";
+      hero.innerHTML = '<div class="b-layer b-grey">' + bvSvg(build.kind, { color: "grey", extras: build.extras }) + '</div><div class="b-layer b-paint' + (shown !== "grey" ? " go" : "") + '" id="b2-paint">' + (shown !== "grey" ? bvSvg(build.kind, { color: shown, extras: build.extras }) : "") + '</div><div class="b-splash" id="b2-splash"></div>';
       var row = buildEl("b2-paints");
       row.innerHTML = "";
       BV_COLOURS.forEach(function (c) {
         var b = document.createElement("button");
         b.type = "button";
-        b.className = "b-blob " + c.id;
+        b.className = "b-blob " + c.id + (shown !== "grey" && c.id === shown ? " picked" : "");
         b.setAttribute("aria-label", c.name);
         bTap(b, function () { pickBuildColour(c.id, b); });
         row.appendChild(b);
       });
-      buildSay([bvLine("pick-colour", "Pick a colour!")]);
+      updateBuildNav();
+      if (!keep) buildSay([bvLine("pick-colour", "Pick a colour!")]);
     }
     function pickBuildColour(color, btn) {
       if (build.busy) return;
@@ -9672,6 +9778,7 @@
       }
       var all = document.querySelectorAll("#b2-paints .b-blob");
       for (var j = 0; j < all.length; j++) all[j].classList.toggle("picked", all[j] === btn);
+      updateBuildNav();
       buildSay([bvLine("c-" + color, color + "!")]);
       buildLater(function () { buildGoStep(3); }, 1200);
     }
@@ -9692,16 +9799,19 @@
       return -1;
     }
     function buildTwoSides() { return (build.slots || []).some(function (sl) { return sl.side === 1; }); }
-    function renderBuildParts() {
+    function renderBuildParts(keep) {
       var def = bvKind(build.kind);
-      build.slots = buildSlotsFor(def);
-      build.saidOther = false;
-      build.parts = build.slots.map(function () { return false; });
+      var fresh = buildSlotsFor(def);
+      if (!keep || !build.slots || !build.parts || build.parts.length !== fresh.length) {
+        build.slots = fresh;
+        build.saidOther = false;
+        build.parts = fresh.map(function () { return false; });
+      }
       buildEl("b3-title").textContent = buildPartsTitle(def);
       renderBuildPartsHero(-1);
       renderBuildSpares();
       renderBuildCount(false);
-      buildSay([bvLine(buildPartsKey(def), buildPartsTitle(def) + "!")]);
+      if (!keep) buildSay([bvLine(buildPartsKey(def), buildPartsTitle(def) + "!")]);
     }
     function renderBuildCount(pop) {
       var cb = buildEl("b3-count");
@@ -9965,15 +10075,17 @@
         '<rect x="' + (a + 6) + '" y="' + (cy - 13) + '" width="' + (b - a - 12) + '" height="3" rx="1.5" fill="#7A838C"/></g>';
     }
     var bvdPieces = [];
-    function renderDragParts() {
+    function renderDragParts(keep) {
       var def = bvKind(build.kind);
       var g = bvdGeom(build.kind, build.extras);
       bvdPieces = [
         { id: "body", name: "Body", clip: [g.cut, g.y1 + 20], vb: [g.x0, g.cut, g.x1 - g.x0, g.y1 - g.cut], line: "p-body" },
         { id: "top", name: bvdTopName(def), clip: [g.y0 - 40, g.cut], vb: [g.x0, g.y0, g.x1 - g.x0, g.cut - g.y0], line: def.group === "cons" ? "p-top" : "p-roof" }
       ];
-      build.parts = [false, false];
-      build.slots = [];
+      if (!keep || !build.parts || build.parts.length !== 2) {
+        build.parts = [false, false];
+        build.slots = [];
+      }
       buildEl("b3-title").textContent = "Drag the parts on";
       buildEl("b3-hero").classList.remove("b3-two");
       var cb = buildEl("b3-count");
@@ -9981,7 +10093,7 @@
       cb.hidden = true;
       renderDragHero("");
       renderDragTray();
-      buildSay([bvLine("dg-parts", "Drag the parts on!")]);
+      if (!keep) buildSay([bvLine("dg-parts", "Drag the parts on!")]);
     }
     function renderDragHero(popId) {
       var def = bvKind(build.kind);
@@ -11284,7 +11396,7 @@
     // Build state (build.extras) is the only source of truth: the vehicle is redrawn from it in one place,
     // at most once per frame, with any running pop animation cancelled first, so fast tapping can never
     // leave a part drawn that is no longer on (the v43 glitch).
-    function renderBuildExtras() {
+    function renderBuildExtras(keep) {
       var def = bvKind(build.kind);
       build.extras = bvCleanExtras(def, build.extras);
       build.xTapAt = {};
@@ -11312,7 +11424,7 @@
         grid.appendChild(b);
       });
       syncBuildExtraTiles();
-      buildSay([lim === 1 ? bvLine("pick-extra", "Pick something extra!") : bvLine("pick-extras", "Pick some extras!")]);
+      if (!keep) buildSay([lim === 1 ? bvLine("pick-extra", "Pick something extra!") : bvLine("pick-extras", "Pick some extras!")]);
     }
     function buildLog(t) { buildSayLog.push(t); if (buildSayLog.length > 60) buildSayLog.shift(); }
     // Any drag ghost left in the page (e.g. a second finger landing mid-drag) is swept away.
@@ -11414,7 +11526,7 @@
     }
 
     // Step 5: GO
-    function renderBuildGo() {
+    function renderBuildGo(keep) {
       var wrap = buildEl("b5-hero");
       wrap.className = "b-hero b-go-hero";
       wrap.innerHTML = bvSvg(build.kind, { color: build.color, extras: build.extras });
@@ -11499,6 +11611,10 @@
       bTap(buildEl("b5-hero"), buildGo);
       buildEl("bg-again").addEventListener("click", function () { startBuild(); });
       bTap(buildEl("b4-done"), buildExtrasDone);
+      bTap(buildEl("b2-back"), buildBack);
+      bTap(buildEl("b3-back"), buildBack);
+      bTap(buildEl("b4-back"), buildBack);
+      bTap(buildEl("b2-done"), buildColourDone);
       var gl = buildEl("b-garage-link");
       if (gl) gl.addEventListener("click", function () { if (!build.busy) showGarage(false); });
       var art = document.querySelector('#build-btn [data-art="build"]');
@@ -12668,9 +12784,11 @@
       var key = "", url = "";
       try {
         var u = new URL(location.href);
+        var hash = (u.hash || "").replace(/^#/, "");
+        // v57: #pair= is handled by the confirm screen, never auto-saved here
+        if (hash.indexOf("pair=") === 0 || hash === "pair" || hash.indexOf("pair&") === 0) return { key: "", url: "" };
         key = (u.searchParams.get("familyKey") || u.searchParams.get("key") || u.searchParams.get("k") || "").trim();
         url = (u.searchParams.get("syncUrl") || u.searchParams.get("server") || "").trim();
-        var hash = (u.hash || "").replace(/^#/, "");
         if (hash) {
           var hp = new URLSearchParams(hash.indexOf("=") === -1 && hash.indexOf("&") === -1 ? "familyKey=" + hash : hash);
           if (!key) key = (hp.get("familyKey") || hp.get("key") || hp.get("k") || "").trim();
@@ -12741,6 +12859,139 @@
       lastSyncError = "The family key was not accepted. Enter it again.";
       lastSyncOk = false;
       updateSyncUi();
+    }
+
+
+    var PAGES_GAME_URL = "https://knoddy86-lab.github.io/theo-car-match/";
+    var pairHideTimer = 0;
+    var pendingPair = null;
+
+    function stripPairFragment() {
+      try {
+        var u = new URL(location.href);
+        if (!(u.hash || "").replace(/^#/, "").match(/^pair(=|&|$)/)) return;
+        history.replaceState(null, "", u.pathname + u.search);
+      } catch (e) {}
+    }
+
+    // The family key lives only in the URL fragment, never the query string (so it is not sent to GitHub).
+    function encodePairLink(urls, key) {
+      var p = new URLSearchParams();
+      p.set("k", key || "");
+      (urls || []).forEach(function (u) { if (u) p.append("u", u); });
+      return PAGES_GAME_URL + "#pair=" + p.toString();
+    }
+
+    function parsePairHash(hash) {
+      var h = String(hash || "").replace(/^#/, "");
+      if (h.indexOf("pair=") !== 0 && h.indexOf("pair&") !== 0 && h !== "pair") return null;
+      var rest = h.indexOf("pair=") === 0 ? h.slice(5) : h.replace(/^pair&?/, "");
+      var p;
+      try { p = new URLSearchParams(rest); } catch (e) { return null; }
+      var key = (p.get("k") || p.get("key") || "").trim();
+      var urls = p.getAll("u").filter(Boolean);
+      if (!urls.length) {
+        if (p.get("home")) urls.push(p.get("home"));
+        if (p.get("ts")) urls.push(p.get("ts"));
+      }
+      urls = urls.map(function (u) { return normalizeSyncUrl(u); }).filter(Boolean);
+      if (!key && !urls.length) return null;
+      return { key: key, urls: urls };
+    }
+
+    function pairAddresses() {
+      var home = homeSyncBase() || DEFAULT_SYNC_URL;
+      var list = [];
+      [home, DEFAULT_SYNC_URL, TAILSCALE_SYNC_URL].forEach(function (b) {
+        b = normalizeSyncUrl(b);
+        if (b && list.indexOf(b) === -1) list.push(b);
+      });
+      return list;
+    }
+
+    function hidePairQr() {
+      if (pairHideTimer) { clearTimeout(pairHideTimer); pairHideTimer = 0; }
+      var box = document.getElementById("sync-pair-box");
+      var qr = document.getElementById("sync-pair-qr");
+      if (box) box.hidden = true;
+      if (qr) qr.innerHTML = "";
+    }
+
+    function showPairQr() {
+      if (!syncConfigured()) return false;
+      var qr = document.getElementById("sync-pair-qr");
+      var box = document.getElementById("sync-pair-box");
+      if (!qr || !box) return false;
+      if (typeof qrcode !== "function") {
+        qr.innerHTML = "<p>Can't make a code on this device.</p>";
+        box.hidden = false;
+        return false;
+      }
+      var link = encodePairLink(pairAddresses(), syncFamilyKey);
+      try {
+        var q = qrcode(0, "M");
+        q.addData(link, "Byte");
+        q.make();
+        qr.innerHTML = q.createSvgTag({ scalable: true, margin: 2 });
+        var svg = qr.querySelector("svg");
+        if (svg) { svg.setAttribute("aria-hidden", "true"); svg.removeAttribute("width"); svg.removeAttribute("height"); }
+      } catch (e) {
+        qr.innerHTML = "<p>Can't make a code on this device.</p>";
+        box.hidden = false;
+        return false;
+      }
+      box.hidden = false;
+      if (pairHideTimer) clearTimeout(pairHideTimer);
+      pairHideTimer = setTimeout(hidePairQr, 60000);
+      return true;
+    }
+
+    function closePairModal(clear) {
+      var m = document.getElementById("pair-modal");
+      if (m) m.hidden = true;
+      pendingPair = null;
+      if (clear) stripPairFragment();
+    }
+
+    function applyPendingPair() {
+      var pair = pendingPair;
+      if (!pair) return Promise.resolve(false);
+      if (pair.urls && pair.urls[0]) syncBaseOverride = pair.urls[0];
+      if (pair.key) { syncFamilyKey = pair.key; keyChangeOpen = false; }
+      persistSyncSettings();
+      updateSyncUi();
+      stripPairFragment();
+      pendingPair = null;
+      var res = document.getElementById("pair-result");
+      var choices = document.getElementById("pair-choices");
+      if (choices) choices.hidden = true;
+      if (res) { res.hidden = false; res.className = "pair-result"; res.textContent = "Checking…"; }
+      return connectSyncServer().then(function (ok) {
+        if (res) {
+          res.className = "pair-result " + (ok ? "is-ok" : "is-error");
+          var el = document.getElementById("sync-url-result");
+          res.textContent = ok ? ((el && el.textContent) || "Connected.") : ((el && el.textContent) || "Could not connect.");
+        }
+        return ok;
+      });
+    }
+
+    function showPairConfirm(pair) {
+      pendingPair = pair;
+      var m = document.getElementById("pair-modal");
+      var addrs = document.getElementById("pair-addrs");
+      var res = document.getElementById("pair-result");
+      var choices = document.getElementById("pair-choices");
+      if (addrs) addrs.textContent = (pair.urls && pair.urls.length) ? pair.urls.join("  ·  ") : "";
+      if (res) { res.hidden = true; res.textContent = ""; res.className = "pair-result"; }
+      if (choices) choices.hidden = false;
+      if (m) m.hidden = false;
+    }
+
+    function checkPairOnLoad() {
+      var pair = parsePairHash(location.hash);
+      if (!pair) return;
+      showPairConfirm(pair);
     }
 
     function syncConfigured() {
@@ -13145,6 +13396,9 @@
         if (syncNotice) { notice.hidden = false; notice.textContent = syncNotice; }
         else { notice.hidden = true; notice.textContent = ""; }
       }
+      var pairBtn = document.getElementById("sync-pair-btn");
+      if (pairBtn) pairBtn.hidden = !syncConfigured();
+      if (!syncConfigured()) hidePairQr();
       updateSyncHud();
     }
 
@@ -13939,6 +14193,14 @@
         if (!window.confirm("Throw away unsaved changes on this phone and use the home computer copy?")) return;
         discardLocalChanges();
       });
+      var pairBtn = document.getElementById("sync-pair-btn");
+      if (pairBtn) pairBtn.addEventListener("click", function () { showPairQr(); });
+      var pairClose = document.getElementById("sync-pair-close");
+      if (pairClose) pairClose.addEventListener("click", hidePairQr);
+      var pairYes = document.getElementById("pair-yes");
+      if (pairYes) pairYes.addEventListener("click", function () { applyPendingPair(); });
+      var pairNo = document.getElementById("pair-no");
+      if (pairNo) pairNo.addEventListener("click", function () { closePairModal(true); });
       readSyncSettings();
       updateSyncUi();
     }
@@ -14106,7 +14368,7 @@
         loadServerSeen().then(function () { return refreshOutboxCount(); }).then(function () {
           return dropOutboxFor(SETTINGS_ID);
         }).then(function () { return refreshOutboxCount(); }),
-        loadSyncSettings()
+        loadSyncSettings().then(function () { checkPairOnLoad(); })
       ]).then(function () {
         loadProfiles();
         paintHero();
@@ -14180,6 +14442,15 @@
       detectSync: detectSync,
       getSyncStatus: getSyncStatus,
       loadSyncSettings: loadSyncSettings,
+      encodePairLink: encodePairLink,
+      parsePairHash: parsePairHash,
+      showPairQr: showPairQr,
+      hidePairQr: hidePairQr,
+      checkPairOnLoad: checkPairOnLoad,
+      applyPendingPair: applyPendingPair,
+      closePairModal: closePairModal,
+      pairAddresses: pairAddresses,
+
       persistSyncSettings: persistSyncSettings,
       copySyncUrl: copySyncUrl,
       connectSyncServer: connectSyncServer,
@@ -14314,6 +14585,8 @@
       toggleBuildExtra: toggleBuildExtra,
       bvKind: bvKind,
       buildExtrasDone: buildExtrasDone,
+      buildBack: buildBack,
+      buildColourDone: buildColourDone,
       nameSoundKey: nameSoundKey,
       speakLine: function (t, v) { speak(t, v); },
       familySayFor: function (person, mode) { var saved = familyPeople; try { familyPeople = [Object.assign({ id: "tpx" }, person)]; return familySayOption({ person: "tpx", name: person.name }, mode).text; } finally { familyPeople = saved; } },
