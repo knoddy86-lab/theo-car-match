@@ -1,6 +1,6 @@
 /* Theo's Car Match service worker — cache-first so the game opens offline
    even when the home computer is unreachable (mobile data). Never caches /api. */
-var CACHE = "theo-car-match-v57";
+var CACHE = "theo-car-match-v58";
 var CORE = [
   "./",
   "./index.html",
@@ -98,6 +98,7 @@ OPTIONAL = OPTIONAL.concat(["berry", "moss", "dart", "rosie", "racer", "officer"
 // v55: Parent Settings tabs wrap inside the panel at every width (tablet and desktop), like iPhone
 // v56: Letters/Numbers announcement plays alone: numQuiet() stops leftover yay/hooray/fart audio and device speech first; letter fallback text has no "!"
 // v57: Build Back on the paint step (and other Build steps), keeping chosen parts; Connection pairing QR (#pair= fragment, no query string)
+// v58: paint colour taps only repaint; the step advances only when Done is pressed (no auto-advance timer)
 var FAMILY_CLIPS = /*FAMILY_CLIPS_BEGIN*/{ voice: [], classic: [], build: [] }/*FAMILY_CLIPS_END*/;
 OPTIONAL = OPTIONAL.concat(FAMILY_CLIPS.voice.map(function (k) { return "./sounds/voice/" + k + ".mp3"; }), FAMILY_CLIPS.classic.map(function (k) { return "./sounds/classic/" + k + ".mp3"; }), FAMILY_CLIPS.build.map(function (k) { return "./sounds/build/" + k + ".mp3"; }));
 

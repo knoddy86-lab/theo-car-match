@@ -3253,7 +3253,7 @@
     var BLOB_FETCH_MS = 20000;
     var bootStartedAt = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
     var keyChangeOpen = false;
-    var APP_VERSION = "57";
+    var APP_VERSION = "58";
     var MATCH_PAIR_CAP = 6;
     var NAME_ROUNDS = 6;
     var THUMB_MAX = 256;
@@ -9752,8 +9752,7 @@
       if (!keep) buildSay([bvLine("pick-colour", "Pick a colour!")]);
     }
     function pickBuildColour(color, btn) {
-      if (build.busy) return;
-      build.busy = true;
+      if (build.step !== 2) return;
       build.color = color;
       var paint = buildEl("b2-paint");
       if (paint) {
@@ -9780,7 +9779,6 @@
       for (var j = 0; j < all.length; j++) all[j].classList.toggle("picked", all[j] === btn);
       updateBuildNav();
       buildSay([bvLine("c-" + color, color + "!")]);
-      buildLater(function () { buildGoStep(3); }, 1200);
     }
 
     // Step 3: wheels / tracks / roller
