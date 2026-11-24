@@ -54,4 +54,6 @@ v45: every clip in the app was loudness-matched to about -16 LUFS integrated wit
 
 v46: added find, then, whos-missing, look-carefully, super-fast for the Name game harder tricks ("Find X, then Y", Who's missing, mini timer cheer). Same Alba voice (en_GB-alba-medium, CC BY 4.0) and checks, loudness-matched to -16 LUFS / -1.5 dBTP.
 
+v59: removed super-fast ("Super fast!" is no longer said). Added pick-both ("Pick both"), spoken at the end of the two-in-a-row prompt ("Find X, then Y. Pick both"). Same Alba voice (Piper en_GB-alba-medium, CC BY 4.0), silence trimmed with a 40 ms lead-in and 80 ms tail, levelled to -19.2 LUFS integrated, true peak -5.8 dBFS. Mono MP3, 22.05 kHz, 40 kbit/s. Not re-checked with a speech recogniser in this build (Whisper was not available).
+
 v54: the clips that say family or relative names (names, "Where's ...?", "Hello ..." and the Build game's personal lines) are no longer in this repo or on GitHub Pages; they are in the full build only (WIN11A, Desktop). See tools/FULL-BUILD.md. On Pages those names are said by the device voice.

@@ -2749,7 +2749,7 @@
             </div>
             <div class="diff-row">
               <label for="name-tr-missing">Who's missing? (look, they hide, one goes)</label>
-              <input id="name-tr-missing" type="checkbox" checked>
+              <input id="name-tr-missing" type="checkbox">
             </div>
             <div class="diff-row">
               <label for="name-tr-timer">Mini timer (no penalty, extra cheer if beaten)</label>
@@ -3193,7 +3193,7 @@
     // fills this in at stage time (tools/make-full-build.py); on Pages it stays empty, so those names are said by the device voice.
     var FAMILY_CLIPS = /*FAMILY_CLIPS_BEGIN*/{ voice: [], classic: [], buildNames: [], sentence: [] }/*FAMILY_CLIPS_END*/;
     function familyMap(list) { var o = {}; (list || []).forEach(function (k) { o[k] = 1; }); return o; }
-    var VOICE_CLIPS = {"find": 1, "then": 1, "whos-missing": 1, "look-carefully": 1, "super-fast": 1, "berry": 1, "cars-or-photos": 1, "cruise": 1, "dart": 1, "do": 1, "doc": 1, "dot": 1, "fillmore": 1, "flo": 1, "francesco": 1, "guido": 1, "gwee-doh": 1, "hank": 1, "hello": 1, "inside": 1, "laney": 1, "lets-match-the-cars": 1, "lets-match-the-family": 1, "lightning": 1, "lightning-mcqueen": 1, "luigi": 1, "mack": 1, "mater": 1, "mcqueen": 1, "moss": 1, "nick": 1, "officer": 1, "officer-dot": 1, "pip": 1, "racer": 1, "ramone": 1, "rosie": 1, "rosie-racer": 1, "ryan": 1, "sal": 1, "sally": 1, "sarge": 1, "sheriff": 1, "shields": 1, "skye": 1, "sunny": 1, "tugger": 1, "wheres": 1};
+    var VOICE_CLIPS = {"find": 1, "then": 1, "whos-missing": 1, "look-carefully": 1, "pick-both": 1, "berry": 1, "cars-or-photos": 1, "cruise": 1, "dart": 1, "do": 1, "doc": 1, "dot": 1, "fillmore": 1, "flo": 1, "francesco": 1, "guido": 1, "gwee-doh": 1, "hank": 1, "hello": 1, "inside": 1, "laney": 1, "lets-match-the-cars": 1, "lets-match-the-family": 1, "lightning": 1, "lightning-mcqueen": 1, "luigi": 1, "mack": 1, "mater": 1, "mcqueen": 1, "moss": 1, "nick": 1, "officer": 1, "officer-dot": 1, "pip": 1, "racer": 1, "ramone": 1, "rosie": 1, "rosie-racer": 1, "ryan": 1, "sal": 1, "sally": 1, "sarge": 1, "sheriff": 1, "shields": 1, "skye": 1, "sunny": 1, "tugger": 1, "wheres": 1};
     FAMILY_CLIPS.voice.forEach(function (k) { VOICE_CLIPS[k] = 1; });
     var REV_CLIPS = [
       "01-idle-blip.mp3",
@@ -3253,7 +3253,7 @@
     var BLOB_FETCH_MS = 20000;
     var bootStartedAt = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
     var keyChangeOpen = false;
-    var APP_VERSION = "58";
+    var APP_VERSION = "59";
     var MATCH_PAIR_CAP = 6;
     var NAME_ROUNDS = 6;
     var THUMB_MAX = 256;
@@ -4467,12 +4467,12 @@
       return out;
     }
 
-    function speakText(text, style) {
+    function speakText(text, style, prompt) {
       try {
         text = applySayLike(text);
         if (!text) return;
-        if (style === "classic") { classicSpeakText(text); return; }
-        voiceSay(voiceParts(text));
+        if (style === "classic") { classicSpeakText(text, !!prompt); return; }
+        voiceSay(voiceParts(text), false, false, !!prompt);
       } catch (e) {}
     }
 
@@ -4486,36 +4486,40 @@
       "cruise": 1, "do": 1, "doc": 1, "fillmore": 1, "flo": 1, "francesco": 1, "guido": 1, "gwee-doh": 1, "inside": 1, "laney": 1, "lightning-mcqueen": 1, "lightning": 1, "luigi": 1, "mack": 1, "mater": 1, "mcqueen": 1, "nick": 1, "ramone": 1, "ryan": 1, "sal": 1, "sally": 1, "sarge": 1, "sheriff": 1, "shields": 1 };
     FAMILY_CLIPS.classic.forEach(function (k) { CLASSIC_LINE_CLIPS[k] = 1; });
     var CLASSIC_FULL_CLIPS = { "rosie-racer": "rosie", "tugger": "tugger", "skye": "skye", "pip": "pip", "sunny": "sunny", "hank": "hank", "officer-dot": "officer" };
-    function classicSpeakText(text) {
+    function classicSpeakText(text, prompt) {
       var k = voiceKey(text);
       // v45: a built-in car's full name also uses its recorded Classic clip instead of the quieter device voice
       var full = CLASSIC_FULL_CLIPS[k];
-      if (!CLASSIC_LINE_CLIPS[k] && !full) { deviceSpeakText(text); return; }
+      if (!CLASSIC_LINE_CLIPS[k] && !full) { deviceSpeakText(text, prompt); return; }
       var token = playToken;
       var a = getSharedAudio();
       customAudioEl = a;
       var failed = false;
-      function fail() { if (failed) return; failed = true; a.removeEventListener("error", fail); if (token === playToken) deviceSpeakText(text); }
+      function fail() { if (failed) return; failed = true; a.removeEventListener("error", fail); if (token === playToken) deviceSpeakText(text, prompt); }
       a.addEventListener("error", fail);
       try {
         var src = CLASSIC_LINE_CLIPS[k] ? SOUND_DIR + "classic/" + k + ".mp3" : SOUND_DIR + full + ".mp3";
         a.muted = false;
         a.setAttribute("data-src", src);
         a.src = src;
+        applyPlaybackRate(a, !!prompt);
         var pr = a.play();
         if (pr && pr.then) pr.then(function () { a.removeEventListener("error", fail); failed = true; }, fail);
       } catch (e) { fail(); }
     }
     // The pre-v37 device-voice path (used by the Classic voice).
-    function deviceSpeakText(text) {
+    // v59: Name-game prompts and Match flip speech use rate 1.12. Everything else stays at 0.95.
+    function deviceSpeakText(text, prompt) {
       try {
         if (!window.speechSynthesis || !text) return;
         var token = ++speakToken;
         if (speakTimer) { clearTimeout(speakTimer); speakTimer = null; }
+        var fast = !!prompt;
         var u = new SpeechSynthesisUtterance(text);
-        u.rate = 0.95;
+        u.rate = fast ? 1.12 : 0.95;
         u.pitch = 1;
         u.volume = 1; // v52: device voice always at full volume (the bundled clips are levelled to match it and the online name clips)
+        lastTts = { text: text, rate: u.rate, pitch: u.pitch, volume: u.volume, prompt: fast };
         speakTimer = setTimeout(function () {
           speakTimer = null;
           if (token !== speakToken) return;
@@ -4530,9 +4534,29 @@
       } catch (e) {}
     }
 
-    function speak(text, style) {
+    var sayLog = [];
+    var lastTts = null;
+    var lastClipRate = null;
+    // v59: prompt clips (Name game and Match flip) play at 1.12 without changing pitch.
+    // Other sounds on this element go back to 1.0 so a hooray, fart, rev or Build line is not sped up.
+    function applyPlaybackRate(el, prompt) {
+      if (!el) return;
+      var rate = prompt ? 1.12 : 1.0;
+      try {
+        el.playbackRate = rate;
+        if (prompt) {
+          el.preservesPitch = true;
+          el.webkitPreservesPitch = true;
+        }
+      } catch (e) {}
+      lastClipRate = { playbackRate: el.playbackRate, preservesPitch: el.preservesPitch, webkitPreservesPitch: el.webkitPreservesPitch, prompt: !!prompt };
+    }
+    function speak(text, style, prompt) {
+      var fast = !!prompt;
+      sayLog.push({ path: "speak", text: String(text || ""), style: style || "", prompt: fast });
+      if (sayLog.length > 80) sayLog.shift();
       stopSpeechAndAudio();
-      speakText(text, style);
+      speakText(text, style, fast);
     }
 
 
@@ -4563,6 +4587,7 @@
             a.setAttribute("data-src", src);
             a.src = src;
           }
+          applyPlaybackRate(a, false);
           var p = a.play();
           if (p && p.then) {
             p.then(function () { a.removeEventListener("error", fail); done = true; }, fail);
@@ -4604,8 +4629,10 @@
     }
 
     function speakCar(car) {
-      var st = voiceStyle("match");
-      playSources(soundSourcesFor(car, st), spokenLine(car), st);
+      if (!car) return;
+      // v59: the same path as a Name-game photo prompt, for a car and for a photo.
+      var pick = chooseNameSayOption(car);
+      speak("Where's " + pick.text + "?", voiceStyle("name"), true);
     }
 
     function playPhrase(key, text) {
@@ -4660,6 +4687,8 @@
       el.addEventListener("error", finish);
       try {
         el.muted = false;
+        if (sharedAudio && sharedAudio !== el) { try { sharedAudio.playbackRate = 1.0; } catch (e1) {} }
+        applyPlaybackRate(el, false);
         try { el.pause(); el.currentTime = 0; } catch (e0) {}
         var p = el.play();
         if (p && p.catch) p.catch(function () { finish(); });
@@ -6030,7 +6059,12 @@
     // v46: Name game "harder" tricks (each can be turned off) and look-alike groups (person id -> group)
     function normalizeNameTricks(raw) {
       raw = raw && typeof raw === "object" ? raw : {};
-      return { alike: raw.alike !== false, photos: raw.photos !== false, two: raw.two !== false, missing: raw.missing !== false, timer: raw.timer !== false };
+      // v59: Who's missing is off unless this save explicitly turned it on.
+      // Saves from before v59 have no tricksV marker. The old code treated anything
+      // except false as on (the checkbox started checked), so those move to off once.
+      // A later save with tricksV 59 and missing: true is kept.
+      var missing = raw.tricksV === 59 && raw.missing === true;
+      return { alike: raw.alike !== false, photos: raw.photos !== false, two: raw.two !== false, missing: missing, timer: raw.timer !== false, tricksV: 59 };
     }
     function normalizeLookGroups(raw) {
       var out = {};
@@ -6150,7 +6184,8 @@
             photos: !!(document.getElementById("name-tr-photos") || {}).checked,
             two: !!(document.getElementById("name-tr-two") || {}).checked,
             missing: !!(document.getElementById("name-tr-missing") || {}).checked,
-            timer: !!(document.getElementById("name-tr-timer") || {}).checked
+            timer: !!(document.getElementById("name-tr-timer") || {}).checked,
+            tricksV: 59
           }
         });
       }
@@ -6871,25 +6906,13 @@
     function playNameGamePrompt(car) {
       if (!car) return;
       nameState.promptCount = (nameState.promptCount || 0) + 1;
-      if (car.family) {
-        var fp = (nameState.sayPick && nameState.target && nameState.target.id === car.id) ? nameState.sayPick : chooseNameSayOption(car);
-        var where = "Where's " + fp.text + "?";
-        lastNamePrompt = { id: car.id, mode: "family", text: where, usedClip: false };
-        setNamePromptText("Where's " + nameWritten(car, fp) + "?");
-        speak(where, voiceStyle("name"));
-        return;
-      }
-      var pick = (nameState.sayPick && nameState.target && nameState.target.id === car.id)
-        ? nameState.sayPick
-        : chooseNameSayOption(car);
-      lastNamePrompt = { id: car.id, mode: pick.mode, text: pick.text, usedClip: pick.mode === "full" };
-      setNamePromptText(nameWritten(car, pick));
-      var nst = voiceStyle("name");
-      if (pick.mode === "full") {
-        playSources(soundSourcesFor(car, nst), pick.text, nst);
-      } else {
-        speak(pick.text, nst);
-      }
+      // v59: cars and family photos share one path. The spoken name still follows
+      // First / Last / Nickname / Mix and "Say it like".
+      var pick = (nameState.sayPick && nameState.target && nameState.target.id === car.id) ? nameState.sayPick : chooseNameSayOption(car);
+      var where = "Where's " + pick.text + "?";
+      lastNamePrompt = { id: car.id, mode: car.family ? "family" : pick.mode, text: where, usedClip: false, path: "speak" };
+      setNamePromptText("Where's " + nameWritten(car, pick) + "?");
+      speak(where, voiceStyle("name"), true);
     }
 
     function preloadFarts() {
@@ -7074,11 +7097,11 @@
       if (special === "either") {
         var opts = [];
         if (t.two !== false) opts.push("two");
-        if (t.missing !== false) opts.push("missing");
+        if (t.missing === true) opts.push("missing");
         special = opts.length ? opts[Math.floor(Math.random() * opts.length)] : "";
       }
       if (special === "two" && t.two !== false) out.two = true;
-      if (special === "missing" && t.missing !== false) out.missing = true;
+      if (special === "missing" && t.missing === true) out.missing = true;
       if (out.missing) out.timer = false;
       return out;
     }
@@ -7165,10 +7188,14 @@
     }
 
     // ---- v46: voice parts for the Name game, in the Name voice (Classic or Alba) ----
-    var NAME_CLIP_TEXT = { find: "Find", then: "then", "whos-missing": "Who's missing?", "look-carefully": "Look carefully!", "super-fast": "Super fast!" };
+    var NAME_CLIP_TEXT = { find: "Find", then: "then", "whos-missing": "Who's missing?", "look-carefully": "Look carefully!", "pick-both": "Pick both" };
     function nameClipPart(k) {
+      var t = NAME_CLIP_TEXT[k] || k;
+      // v59: Classic has no Sound of Text file for "Pick both" (that voice isn't reproducible offline).
+      // The device voice says those words. Alba plays sounds/voice/pick-both.mp3.
+      if (k === "pick-both" && voiceStyle("name") === "classic") return { k: "", t: t };
       var src = voiceStyle("name") === "classic" ? SOUND_DIR + "classic/" + k + ".mp3" : VOICE_DIR + k + ".mp3";
-      return { src: src, k: k, t: NAME_CLIP_TEXT[k] || k };
+      return { src: src, k: k, t: t };
     }
     function nameSayPart(item, pick) {
       var st = voiceStyle("name");
@@ -7226,24 +7253,24 @@
     // What the "Say it again" button (and the start of a round) says right now.
     function playCurrentNamePrompt() {
       if (nameState.missing) {
-        if (nameState.strip && nameState.strip.length) { setNamePromptText("Who's missing?"); voiceSay([nameClipPart("whos-missing")]); }
-        else { setNamePromptText("Look carefully!"); voiceSay([nameClipPart("look-carefully")]); }
+        if (nameState.strip && nameState.strip.length) { setNamePromptText("Who's missing?"); voiceSay([nameClipPart("whos-missing")], false, false, true); }
+        else { setNamePromptText("Look carefully!"); voiceSay([nameClipPart("look-carefully")], false, false, true); }
         nameState.promptCount = (nameState.promptCount || 0) + 1;
         return;
       }
       if (nameState.two && nameState.twoStep === 0) {
         var a = nameState.sayPick, b = nameState.twoSay;
         nameState.promptCount = (nameState.promptCount || 0) + 1;
-        setNamePromptText("Find " + nameWritten(nameState.target, a) + ", then " + nameWritten(nameState.two, b));
-        lastNamePrompt = { id: nameState.target.id, mode: "two", text: "Find " + a.text + ", then " + b.text, usedClip: true };
-        voiceSay([nameClipPart("find"), nameSayPart(nameState.target, a), nameClipPart("then"), nameSayPart(nameState.two, b)]);
+        setNamePromptText("Find " + nameWritten(nameState.target, a) + ", then " + nameWritten(nameState.two, b) + ". Pick both");
+        lastNamePrompt = { id: nameState.target.id, mode: "two", text: "Find " + a.text + ", then " + b.text + ". Pick both", usedClip: true };
+        voiceSay([nameClipPart("find"), nameSayPart(nameState.target, a), nameClipPart("then"), nameSayPart(nameState.two, b), nameClipPart("pick-both")], false, false, true);
         return;
       }
       if (nameState.two && nameState.twoStep === 1) {
         nameState.promptCount = (nameState.promptCount || 0) + 1;
         setNamePromptText("Now " + nameWritten(nameState.two, nameState.twoSay));
         lastNamePrompt = { id: nameState.target.id, mode: "two-2", text: nameState.twoSay.text, usedClip: true };
-        voiceSay([nameSayPart(nameState.target, nameState.twoSay)]);
+        voiceSay([nameSayPart(nameState.target, nameState.twoSay)], false, false, true);
         return;
       }
       if (nameState.target) playNameGamePrompt(nameState.target);
@@ -7291,7 +7318,7 @@
     function runNameMissing(round) {
       nameState.locked = true;
       setNamePromptText("Look carefully!");
-      voiceSay([nameClipPart("look-carefully")]);
+      voiceSay([nameClipPart("look-carefully")], false, false, true);
       var cards = nameCards();
       cards.forEach(function (b) {
         b.classList.add("nm-seen");
@@ -7357,7 +7384,7 @@
       layoutNameGrid();
       nameState.locked = false;
       setNamePromptText("Who's missing?");
-      voiceSay([nameClipPart("whos-missing")]);
+      voiceSay([nameClipPart("whos-missing")], false, false, true);
       nameState.promptCount = (nameState.promptCount || 0) + 1;
     }
     function nameTargetButton() {
@@ -7466,14 +7493,9 @@
         if (tEl) tEl.classList.add("is-beat");
         nameState.beatCount = (nameState.beatCount || 0) + 1;
         if (!reduced && btn) setTimeout(function () { if (nameState.active) startMatchBurst([btn]); }, 350);
-        var r = nameState.roundGen;
         playHooray();
-        // v54: "Super fast!" overlaps the cheer and the next round comes 2.2 s after the answer (was cheer + line + 1.3 s)
-        nameLater(function () {
-          if (!nameState.active || r !== nameState.roundGen) return;
-          voiceSay([nameClipPart("super-fast")]);
-        }, 600);
-        nameLater(function () { advanceNameRound(); }, 2200);
+        // v59: the timer cheer is the hooray only. "Super fast!" is not said. The next round starts about 1.2 s later.
+        nameLater(function () { advanceNameRound(); }, 1200);
         return;
       }
       playHooray();
@@ -9468,13 +9490,14 @@
     function buildSay(parts, keepOthers) {
       voiceSay(parts, keepOthers, voiceStyle("build") === "classic");
     }
-    function voiceSay(parts, keepOthers, deviceOnly) {
+    function voiceSay(parts, keepOthers, deviceOnly, prompt) {
       if (keepOthers) {
         if (sharedAudio) { try { sharedAudio.pause(); } catch (e) {} }
         playToken++;
       } else stopSpeechAndAudio();
       var token = playToken;
       var i = 0;
+      var fast = !!prompt;
       buildSayLog.push(parts.map(function (p) { return deviceOnly ? ("tts:" + p.t) : (p.src ? ("voice/" + p.k) : (p.k || ("tts:" + p.t))); }).join(" + "));
       if (buildSayLog.length > 60) buildSayLog.shift();
       function next() {
@@ -9504,6 +9527,7 @@
           var src = p.src || (BUILD_VOICE_DIR + p.k + ".mp3");
           if (a.getAttribute("data-src") === src && a.src) { try { a.pause(); a.currentTime = 0; } catch (e0) {} }
           else { a.setAttribute("data-src", src); a.src = src; }
+          applyPlaybackRate(a, fast);
           var pr = a.play();
           if (pr && pr.catch) pr.catch(onErr);
         } catch (e) { onErr(e); }
@@ -9515,9 +9539,10 @@
         function fin() { if (done) return; done = true; if (token === playToken) next(); }
         try {
           var u = new SpeechSynthesisUtterance(text);
-          u.rate = 0.95;
+          u.rate = fast ? 1.12 : 0.95;
           u.pitch = 1;
           u.volume = 1;
+          lastTts = { text: text, rate: u.rate, pitch: u.pitch, volume: u.volume, prompt: fast };
           if (!voicesCache.length) refreshVoices();
           var voice = chosenVoice();
           u.lang = (voice && voice.lang) || "en-AU";
@@ -9639,6 +9664,7 @@
       buildGoStep(1);
     }
     function stopBuild() {
+      var leaving = buildOpen();
       build.gen++;
       buildClearTimers();
       build.busy = false;
@@ -9646,6 +9672,12 @@
       var s = buildEl("build-screen");
       if (s) s.hidden = true;
       document.body.classList.remove("garage-on");
+      // v59: going Home from Build (any path that stops Build because the player left)
+      // clears only this player's garage, with no confirm. "Build another" calls startBuild, not stopBuild.
+      if (leaving) {
+        clearGarages("one");
+        updateGarageSettingsUi();
+      }
     }
     function buildGoStep(n, keep) {
       endBuildDrag();
@@ -14503,7 +14535,13 @@
           files: (nameState.choices || []).map(function (c) { return c.file || ""; }), timer: nameState.timer ? { ms: nameState.timer.ms, done: nameState.timer.done } : null,
           lastBeat: !!nameState.lastBeat, beatCount: nameState.beatCount || 0, prompt: (document.getElementById("name-say-text") || {}).textContent, roundGen: nameState.roundGen };
       },
-      getLastNamePrompt: function () { return lastNamePrompt ? { id: lastNamePrompt.id, mode: lastNamePrompt.mode, text: lastNamePrompt.text, usedClip: lastNamePrompt.usedClip } : null; },
+      getLastNamePrompt: function () { return lastNamePrompt ? { id: lastNamePrompt.id, mode: lastNamePrompt.mode, text: lastNamePrompt.text, usedClip: lastNamePrompt.usedClip, path: lastNamePrompt.path || "" } : null; },
+      sayLog: function () { return sayLog.slice(); },
+      lastTts: function () { return lastTts ? { text: lastTts.text, rate: lastTts.rate, pitch: lastTts.pitch, volume: lastTts.volume, prompt: lastTts.prompt } : null; },
+      clipRate: function () {
+        var a = sharedAudio;
+        return { shared: a ? { playbackRate: a.playbackRate, preservesPitch: a.preservesPitch, webkitPreservesPitch: a.webkitPreservesPitch } : null, last: lastClipRate };
+      },
       nameChoiceCount: nameChoiceCount,
       onNameChoice: onNameChoice,
       playFart: playFart,
