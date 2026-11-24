@@ -9,4 +9,4 @@ The 26 letter-name clips `let-a.mp3` to `let-z.mp3` (British English: A, H "aitc
 - **Levelling:** gain and a gentle peak limiter to about -19.2 LUFS integrated, true peak -4.9 dBFS or lower (same target as every other clip); mono MP3 24 kHz 48 kbit/s.
 - Credit: *Voice: Kokoro-82M "bf_emma" (Apache-2.0), rendered with kokoro-onnx.*
 
-v60: `let-a.mp3` replaced with a bare letter-name take (IPA ˈeɪ, speed 0.9, no leading "an", "a", "the" or "letter"). Same Kokoro-82M bf_emma voice and Apache-2.0 licence. 40 ms lead-in, 70 ms tail, speech about 0.33 s. Levelled to -19.1 LUFS integrated, true peak -5.7 dBFS. Mono MP3, 24 kHz, 48 kbit/s. The other 25 Emma clips were checked and left as they are.
+v60: `let-a.mp3` is the slow Emma take Lindsay picked (Kokoro text "A.", bf_emma, speed 0.8, onset cut past the vowel so there is no leading "an", "they", "the" or "letter"). Same Kokoro-82M bf_emma voice and Apache-2.0 licence. Levelled to -19.2 LUFS integrated, true peak -6.0 dBFS. Mono MP3, 24 kHz, 48 kbit/s. The other candidate takes were not shipped. The other 25 Emma clips were left as they are.
