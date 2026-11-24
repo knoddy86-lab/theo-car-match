@@ -8,3 +8,5 @@ The 26 letter-name clips `let-a.mp3` to `let-z.mp3` (British English: A, H "aitc
 - **Checks:** every letter was transcribed back with Whisper small.en inside the sequence of its two neighbours (26 of 26 read as the right letter; E needed a second check, E E E and B C D E, because the recogniser invents an "L" next to it), durations 0.66 to 1.14 s, pitch about 175-205 Hz with a steady contour.
 - **Levelling:** gain and a gentle peak limiter to about -19.2 LUFS integrated, true peak -4.9 dBFS or lower (same target as every other clip); mono MP3 24 kHz 48 kbit/s.
 - Credit: *Voice: Kokoro-82M "bf_emma" (Apache-2.0), rendered with kokoro-onnx.*
+
+v60: `let-a.mp3` replaced with a bare letter-name take (IPA ˈeɪ, speed 0.9, no leading "an", "a", "the" or "letter"). Same Kokoro-82M bf_emma voice and Apache-2.0 licence. 40 ms lead-in, 70 ms tail, speech about 0.33 s. Levelled to -19.1 LUFS integrated, true peak -5.7 dBFS. Mono MP3, 24 kHz, 48 kbit/s. The other 25 Emma clips were checked and left as they are.

@@ -2956,8 +2956,8 @@
             <div class="diff-row">
               <label for="lt-set-case">Letters shown as</label>
               <select id="lt-set-case" aria-label="Letter case">
-                <option value="both">Capital and small together (Aa Bb Cc)</option>
                 <option value="upper">Capital letters only (A B C)</option>
+                <option value="both">Capital and small together (Aa Bb Cc)</option>
                 <option value="lower">Small letters only (a b c)</option>
               </select>
             </div>
@@ -3253,7 +3253,7 @@
     var BLOB_FETCH_MS = 20000;
     var bootStartedAt = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
     var keyChangeOpen = false;
-    var APP_VERSION = "59";
+    var APP_VERSION = "60";
     var MATCH_PAIR_CAP = 6;
     var NAME_ROUNDS = 6;
     var THUMB_MAX = 256;
@@ -11025,16 +11025,16 @@
       var up = parseInt(raw.upto, 10);
       return { v: 49, level: lv, upto: up === 5 || up === 10 ? up : 20 };
     }
-    // v53: Letters settings (Easy by default like Numbers). v54: capital + small together ("Aa") by default; capitals only or small only stay in Settings.
+    // v53: Letters settings (Easy by default like Numbers). v60: a single capital ("A") by default.
+    // A save from before v60 that still says "both" moves to capitals once. Choosing "both" again (v: 60) is kept. Small letters stay as saved.
     var LETTERS_KEY = "theo-car-match-letters";
     var letterSettings = normalizeLetterSettings({});
     try { letterSettings = normalizeLetterSettings(JSON.parse(localStorage.getItem(LETTERS_KEY) || "{}") || {}); } catch (e) {}
     function normalizeLetterSettings(raw) {
       raw = raw && typeof raw === "object" ? raw : {};
-      // settings saved by v53 (no v:54 marker) held "upper" unless someone chose small letters, so they move to the pair once; a choice made after that is kept
-      var cs = raw.case === "lower" || raw.case === "upper" || raw.case === "both" ? raw.case : "both";
-      if (raw.v !== 54 && cs === "upper") cs = "both";
-      return { v: 54, level: raw.level === "hard" || raw.level === "medium" ? raw.level : "easy", case: cs };
+      var cs = raw.case === "lower" || raw.case === "upper" || raw.case === "both" ? raw.case : "upper";
+      if (raw.v !== 60 && cs === "both") cs = "upper";
+      return { v: 60, level: raw.level === "hard" || raw.level === "medium" ? raw.level : "easy", case: cs };
     }
     function saveLetterSettings(next) {
       letterSettings = normalizeLetterSettings(next);
@@ -11072,7 +11072,7 @@
       ["lt-set-level", "lt-set-case"].forEach(function (id) {
         var el = document.getElementById(id);
         if (el) el.addEventListener("change", function () {
-          saveLetterSettings({ v: 54, level: document.getElementById("lt-set-level").value, case: document.getElementById("lt-set-case").value });
+          saveLetterSettings({ v: 60, level: document.getElementById("lt-set-level").value, case: document.getElementById("lt-set-case").value });
         });
       });
       updateLetterSettingsUi();
@@ -14655,7 +14655,59 @@
       dragTarget: function (what) { var r = what === "body" || what === "top" ? bvdTargetRect(what) : bvdExtraTargetRect(what); return r ? { x: r.left + r.width / 2, y: r.top + r.height / 2, w: r.width, h: r.height } : null; },
       loadGarage: loadGarage,
       buildSayLog: function () { return buildSayLog.slice(); },
-      familyFace: function (id) { var p = familyPeople.filter(function (x) { return x.id === id; })[0]; return p ? familyItem(p, p.face, "face") : null; }
+      familyFace: function (id) { var p = familyPeople.filter(function (x) { return x.id === id; })[0]; return p ? familyItem(p, p.face, "face") : null; },
+      // v60: every templated spoken line and on-screen letter glyph, for the grammar check.
+      grammarLines: function () {
+        var lines = [];
+        var player = buildPlayerName();
+        BV_COLOURS.forEach(function (c) {
+          BV_KINDS.forEach(function (k) {
+            var mid = aOrAn(c.name) + " " + c.name + " " + k.say;
+            lines.push(mid);
+            lines.push(player + " built " + mid + "!");
+            lines.push("built " + mid + "!");
+          });
+        });
+        LETTERS.forEach(function (L) { lines.push(LETTER_SAY[L]); });
+        var savedCase = letterSettings.case;
+        var disp = {};
+        ["upper", "lower", "both"].forEach(function (cs) {
+          letterSettings.case = cs;
+          disp[cs] = LETTERS.map(function (L) { return SYMBOL_SETS.letters.disp(L); });
+          disp[cs].forEach(function (g) { lines.push(g); });
+        });
+        letterSettings.case = savedCase;
+        var numbers = [];
+        for (var n = 1; n <= 20; n++) numbers.push(numCap(NUM_WORDS[n]) + "!");
+        numbers.forEach(function (t) { lines.push(t); });
+        var names = [];
+        CARS.forEach(function (car) {
+          [car.name, car.fullName].forEach(function (nm) {
+            if (nm && names.indexOf(nm) === -1) names.push(nm);
+          });
+        });
+        names.forEach(function (nm) { lines.push("Where's " + nm + "?"); });
+        names.forEach(function (a) {
+          names.forEach(function (b) {
+            if (a === b) return;
+            lines.push("Find " + a + ", then " + b + ". Pick both");
+          });
+        });
+        var shapes = SHAPE_ORDER.map(function (k) { return "Where does the " + k + " go?"; });
+        shapes.forEach(function (t) { lines.push(t); });
+        [
+          "What will you build?", "Road vehicles!", "Construction!", "Pick a colour!",
+          "Add the wheels!", "Add the tracks!", "Add the roller and wheels!",
+          "All the wheels are on!", "And the other side!",
+          "Drag the parts on!", "Pick something extra!", "Pick some extras!",
+          "Ready? Tap go!", "Put each car on its shadow!", "More shadows!",
+          "Find the shadow!", "Try again!", "You did it!",
+          "Put each shape in its place!", "More shapes!", "Find where they go!",
+          "Who's missing?", "Look carefully!", "Let's match the cars!", "Let's match the family!",
+          "Cars or photos?", "Beep beep!", "Vroom!", "Great building!"
+        ].forEach(function (t) { lines.push(t); });
+        return { lines: lines, disp: disp, say: Object.assign({}, LETTER_SAY), numbers: numbers, shapes: shapes, names: names };
+      }
     };
 
   })();

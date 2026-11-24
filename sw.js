@@ -1,6 +1,6 @@
 /* Theo's Car Match service worker — cache-first so the game opens offline
    even when the home computer is unreachable (mobile data). Never caches /api. */
-var CACHE = "theo-car-match-v59";
+var CACHE = "theo-car-match-v60";
 var CORE = [
   "./",
   "./index.html",
@@ -101,6 +101,7 @@ OPTIONAL = OPTIONAL.concat(["berry", "moss", "dart", "rosie", "racer", "officer"
 // v57: Build Back on the paint step (and other Build steps), keeping chosen parts; Connection pairing QR (#pair= fragment, no query string)
 // v58: paint colour taps only repaint; the step advances only when Done is pressed (no auto-advance timer)
 // v59: leaving Build clears that player's garage; two-in-a-row says "Pick both" (no "Super fast!" cheer); Who's missing starts off; cars and photos share the Name "Where's ...?" voice; those prompts play a little faster
+// v60: Letters shows a single capital by default; Emma "a" is the bare letter name (no leading "an")
 var FAMILY_CLIPS = /*FAMILY_CLIPS_BEGIN*/{ voice: [], classic: [], build: [] }/*FAMILY_CLIPS_END*/;
 OPTIONAL = OPTIONAL.concat(FAMILY_CLIPS.voice.map(function (k) { return "./sounds/voice/" + k + ".mp3"; }), FAMILY_CLIPS.classic.map(function (k) { return "./sounds/classic/" + k + ".mp3"; }), FAMILY_CLIPS.build.map(function (k) { return "./sounds/build/" + k + ".mp3"; }));
 
