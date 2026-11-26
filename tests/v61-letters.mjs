@@ -18,14 +18,14 @@ for (const c of letters) {
 const index = fs.readFileSync(path.join(root, "index.html"), "utf8");
 const sw = fs.readFileSync(path.join(root, "sw.js"), "utf8");
 const version = JSON.parse(fs.readFileSync(path.join(root, "version.json"), "utf8"));
-if (version.version !== "61" || version.cache !== "theo-car-match-v61") fail("version.json " + JSON.stringify(version));
-if (!index.includes('APP_VERSION = "61"')) fail("APP_VERSION is not 61");
+if (version.version !== "62" || version.cache !== "theo-car-match-v62") fail("version.json " + JSON.stringify(version));
+if (!index.includes('APP_VERSION = "62"')) fail("APP_VERSION is not 62");
 if (!index.includes('SOUND_DIR + "letters/"')) fail("index.html does not point the Letters game at sounds/letters/");
 if (index.includes("letters-emma/")) fail("index.html still uses letters-emma/");
 if (!index.includes('letters: "alba"')) fail("default letters voice is not alba");
 if (index.includes('letters: "emma"')) fail("default letters voice is still emma");
 if (!index.includes("Alba and Cori")) fail("letters voice label should mention Alba and Cori");
-if (!sw.includes('var CACHE = "theo-car-match-v61"')) fail("sw.js cache is not theo-car-match-v61");
+if (!sw.includes('var CACHE = "theo-car-match-v62"')) fail("sw.js cache is not theo-car-match-v62");
 if (sw.includes("letters-emma")) fail("sw.js still mentions letters-emma");
 if (!sw.includes("./sounds/letters/let-")) fail("sw.js does not precache sounds/letters/");
 for (const c of letters) {
@@ -50,4 +50,4 @@ if (failures.length) {
   failures.forEach(function (f) { console.error(" - " + f); });
   process.exit(1);
 }
-console.log("v61 letters file and reference checks passed (26 clips + credits + v61 pointers)");
+console.log("v61/v62 letters file and reference checks passed (26 clips + credits + v62 pointers)");

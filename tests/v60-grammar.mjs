@@ -205,7 +205,7 @@ async function main() {
     const numbers = await fresh.page.evaluate(function () { return window.TheoCarMatch.numberSettings(); });
     if (numbers.level !== "easy" || numbers.upto !== 20 || numbers.v !== 49) fail("numbers settings changed " + JSON.stringify(numbers));
     const version = await fresh.page.evaluate(function () { return window.TheoCarMatch.version; });
-    if (version !== "61") fail("app version " + version);
+    if (version !== "62") fail("app version " + version);
 
     const opts = await fresh.page.evaluate(function () {
       return Array.prototype.map.call(document.querySelectorAll("#lt-set-case option"), function (o) { return o.value; });
@@ -377,12 +377,12 @@ async function main() {
     const ver = await fresh.page.evaluate(function () {
       return fetch("./version.json", { cache: "no-store" }).then(function (r) { return r.json(); });
     });
-    if (ver.version !== "61" || ver.cache !== "theo-car-match-v61" || ver.name !== "Car Games") fail("version.json " + JSON.stringify(ver));
+    if (ver.version !== "62" || ver.cache !== "theo-car-match-v62" || ver.name !== "Car Games") fail("version.json " + JSON.stringify(ver));
     const sw = await fresh.page.evaluate(function () {
       return fetch("./sw.js", { cache: "no-store" }).then(function (r) { return r.text(); });
     });
-    if (sw.indexOf('var CACHE = "theo-car-match-v61"') < 0) fail("sw.js cache is not theo-car-match-v61");
-    if (sw.indexOf("theo-car-match-v60") >= 0) fail("sw.js still names the v60 cache");
+    if (sw.indexOf('var CACHE = "theo-car-match-v62"') < 0) fail("sw.js cache is not theo-car-match-v62");
+    if (sw.indexOf("theo-car-match-v61") >= 0) fail("sw.js still names the v61 cache");
 
     const shotDir = process.env.SHOT_DIR || "/tmp/v61-test-shots";
     try { fs.mkdirSync(shotDir, { recursive: true }); } catch (e) {}
@@ -419,7 +419,7 @@ async function main() {
     failures.forEach(function (f) { console.error(" - " + f); });
     process.exit(1);
   }
-  console.log("v60 grammar and v61 letters checks passed");
+  console.log("v60 grammar and v62 letters checks passed");
 }
 
 main().catch(function (err) {

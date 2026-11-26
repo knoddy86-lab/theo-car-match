@@ -3175,17 +3175,17 @@
     try {
       var vsRaw = JSON.parse(localStorage.getItem(VOICE_STYLE_KEY) || "{}") || {};
       Object.keys(VOICE_STYLE_DEFAULTS).forEach(function (k) { if (vsRaw[k] === "classic" || vsRaw[k] === "alba" || (k === "letters" && vsRaw[k] === "emma")) voiceStyles[k] = vsRaw[k]; });
-      // v61: Letters default is the mixed Alba + Cori set (stored as "alba"). A saved Letters voice of Emma (v54–v60 default) moves to alba once so the new clips play; Classic stays; a later alba or classic choice is kept. The old v54 alba→emma flip is not applied.
-      if (vsRaw.lettersV !== 61) {
+      // v62: Letters default is still the mixed Alba + Cori set (stored as "alba"), with new R/F (Alba) and J/K (Cori) clips. A saved Emma letters voice (v54–v60) still moves to alba; Classic stays. The v61 clip swap is in the same folder, so a saved alba setting already plays the new takes.
+      if (vsRaw.lettersV !== 62) {
         if (voiceStyles.letters === "emma") voiceStyles.letters = "alba";
-        try { localStorage.setItem(VOICE_STYLE_KEY, JSON.stringify(Object.assign({ lettersV: 61 }, voiceStyles))); } catch (e2) {}
+        try { localStorage.setItem(VOICE_STYLE_KEY, JSON.stringify(Object.assign({ lettersV: 62 }, voiceStyles))); } catch (e2) {}
       }
     } catch (e) {}
     function voiceStyle(part) { return voiceStyles[part] === "classic" ? "classic" : "alba"; }
     function setVoiceStyle(part, value) {
       if (!VOICE_STYLE_DEFAULTS[part]) return;
       voiceStyles[part] = value === "classic" ? "classic" : "alba";
-      try { localStorage.setItem(VOICE_STYLE_KEY, JSON.stringify(Object.assign({ lettersV: 61 }, voiceStyles))); } catch (e) {}
+      try { localStorage.setItem(VOICE_STYLE_KEY, JSON.stringify(Object.assign({ lettersV: 62 }, voiceStyles))); } catch (e) {}
       syncVoiceStyleSelects();
     }
     function syncVoiceStyleSelects() {
@@ -3256,7 +3256,7 @@
     var BLOB_FETCH_MS = 20000;
     var bootStartedAt = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
     var keyChangeOpen = false;
-    var APP_VERSION = "61";
+    var APP_VERSION = "62";
     var MATCH_PAIR_CAP = 6;
     var NAME_ROUNDS = 6;
     var THUMB_MAX = 256;
