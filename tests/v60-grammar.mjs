@@ -169,11 +169,43 @@ async function main() {
     if (settings.case !== "upper" || settings.v !== 60) fail("fresh letters settings " + JSON.stringify(settings));
     if (settings.level !== "easy") fail("fresh letters level " + settings.level);
     const voice = await fresh.page.evaluate(function () { return window.TheoCarMatch.voiceStyle("letters"); });
-    if (voice !== "emma") fail("letters voice " + voice);
+    if (voice !== "alba") fail("letters voice " + voice);
+
+    // v61: a saved v60 Emma letters voice must move to alba and play sounds/letters/.
+    const migCtx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+    const migPage = await migCtx.newPage();
+    await migPage.addInitScript(function () {
+      localStorage.setItem("theo-car-match-voice-styles", JSON.stringify({
+        name: "classic", match: "alba", build: "alba", shadow: "alba", shapes: "alba", numbers: "alba",
+        letters: "emma", lettersV: 54
+      }));
+      window.__theoSrcs = [];
+      var desc = Object.getOwnPropertyDescriptor(HTMLMediaElement.prototype, "src");
+      Object.defineProperty(HTMLMediaElement.prototype, "src", {
+        configurable: true,
+        get: function () { return desc.get.call(this); },
+        set: function (v) { window.__theoSrcs.push(String(v)); desc.set.call(this, v); }
+      });
+    });
+    await migPage.goto(base, { waitUntil: "domcontentloaded", timeout: 30000 });
+    await migPage.waitForFunction(function () { return window.TheoCarMatch && window.TheoCarMatch.voiceStyle; }, null, { timeout: 15000 });
+    const migratedVoice = await migPage.evaluate(function () {
+      return {
+        voice: window.TheoCarMatch.voiceStyle("letters"),
+        raw: JSON.parse(localStorage.getItem("theo-car-match-voice-styles") || "{}")
+      };
+    });
+    if (migratedVoice.voice !== "alba") fail("v60 emma letters should migrate to alba, got " + JSON.stringify(migratedVoice));
+    await migPage.evaluate(function () { window.TheoCarMatch.startLetters(); });
+    await migPage.waitForTimeout(900);
+    const migSrc = await migPage.evaluate(function () { return (window.__theoSrcs || []).join(" "); });
+    if (migSrc.indexOf("sounds/letters/let-") < 0) fail("migrated letters audio src " + migSrc);
+    await migCtx.close();
+
     const numbers = await fresh.page.evaluate(function () { return window.TheoCarMatch.numberSettings(); });
     if (numbers.level !== "easy" || numbers.upto !== 20 || numbers.v !== 49) fail("numbers settings changed " + JSON.stringify(numbers));
     const version = await fresh.page.evaluate(function () { return window.TheoCarMatch.version; });
-    if (version !== "60") fail("app version " + version);
+    if (version !== "61") fail("app version " + version);
 
     const opts = await fresh.page.evaluate(function () {
       return Array.prototype.map.call(document.querySelectorAll("#lt-set-case option"), function (o) { return o.value; });
@@ -297,8 +329,8 @@ async function main() {
     const says = (easy.st.sayLog || []).filter(function (s) { return String(s).indexOf("say:") === 0; });
     if (says.length !== 1 || !/^say:let-[a-z]$/.test(says[0])) fail("easy announcement " + JSON.stringify(easy.st.sayLog));
     if (easy.say.length !== 1 || !/^voice\/let-[a-z]$/.test(easy.say[0])) fail("easy say log " + JSON.stringify(easy.say));
-    const emmaSrc = (easy.srcs || []).concat([easy.src]).join(" ");
-    if (emmaSrc.indexOf("sounds/letters-emma/let-") < 0) fail("letters audio src " + emmaSrc);
+    const letterSrc = (easy.srcs || []).concat([easy.src]).join(" ");
+    if (letterSrc.indexOf("sounds/letters/let-") < 0) fail("letters audio src " + letterSrc);
     if (easy.st.cornerShown !== true) fail("easy corner hidden");
 
     await fresh.page.setViewportSize({ width: 390, height: 844 });
@@ -345,14 +377,14 @@ async function main() {
     const ver = await fresh.page.evaluate(function () {
       return fetch("./version.json", { cache: "no-store" }).then(function (r) { return r.json(); });
     });
-    if (ver.version !== "60" || ver.cache !== "theo-car-match-v60" || ver.name !== "Car Games") fail("version.json " + JSON.stringify(ver));
+    if (ver.version !== "61" || ver.cache !== "theo-car-match-v61" || ver.name !== "Car Games") fail("version.json " + JSON.stringify(ver));
     const sw = await fresh.page.evaluate(function () {
       return fetch("./sw.js", { cache: "no-store" }).then(function (r) { return r.text(); });
     });
-    if (sw.indexOf('var CACHE = "theo-car-match-v60"') < 0) fail("sw.js cache is not theo-car-match-v60");
-    if (sw.indexOf("theo-car-match-v59") >= 0) fail("sw.js still names the v59 cache");
+    if (sw.indexOf('var CACHE = "theo-car-match-v61"') < 0) fail("sw.js cache is not theo-car-match-v61");
+    if (sw.indexOf("theo-car-match-v60") >= 0) fail("sw.js still names the v60 cache");
 
-    const shotDir = "/opt/cursor/artifacts";
+    const shotDir = process.env.SHOT_DIR || "/tmp/v61-test-shots";
     try { fs.mkdirSync(shotDir, { recursive: true }); } catch (e) {}
     await fresh.page.setViewportSize({ width: 1280, height: 800 });
     await fresh.page.evaluate(function () { window.TheoCarMatch.letterSettings({ case: "upper", level: "easy" }); window.TheoCarMatch.goHome(); window.TheoCarMatch.openSettings(); });
@@ -363,7 +395,7 @@ async function main() {
       return { hidden: pane.hidden, value: sel.value, first: sel.options[0].text, voice: document.getElementById("voice-style-letters").value, level: document.getElementById("lt-set-level").value };
     });
     if (shown.hidden || shown.value !== "upper" || shown.first.indexOf("Capital letters only") !== 0) fail("letters settings pane " + JSON.stringify(shown));
-    if (shown.voice !== "emma" || shown.level !== "easy") fail("letters voice or level in settings " + JSON.stringify(shown));
+    if (shown.voice !== "alba" || shown.level !== "easy") fail("letters voice or level in settings " + JSON.stringify(shown));
     await fresh.page.screenshot({ path: path.join(shotDir, "v60-letters-settings.png") });
     await fresh.page.evaluate(function () { window.TheoCarMatch.closeSettings(); window.TheoCarMatch.startLetters(); });
     await fresh.page.waitForTimeout(300);
@@ -387,7 +419,7 @@ async function main() {
     failures.forEach(function (f) { console.error(" - " + f); });
     process.exit(1);
   }
-  console.log("v60 grammar and letters checks passed");
+  console.log("v60 grammar and v61 letters checks passed");
 }
 
 main().catch(function (err) {

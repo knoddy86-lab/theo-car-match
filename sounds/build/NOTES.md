@@ -72,3 +72,5 @@ v48: Numbers game clips num-0 to num-20 (the number words zero to twenty, nothin
 
 
 v53: Letters game clips let-a to let-z (the 26 letter names, nothing else). Same Alba voice (en_GB-alba-medium, CC BY 4.0, Edinburgh CSTR), checked with Whisper using carrier phrases (bare letters are not reliably recognised in isolation), levelled to about -19.2 LUFS / -4.6 dBFS peak.
+
+v61: the Letters game plays the mixed set in `sounds/letters/` (and the same files here under `let-a`…`let-z`): Piper Alba for 23 letters, Piper Cori (`en_GB-cori-high`, public domain LibriVox) for L, I and R. See `sounds/letters/CREDITS.md`.
