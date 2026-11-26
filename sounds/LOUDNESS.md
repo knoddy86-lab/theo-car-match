@@ -17,3 +17,5 @@ v54: the family-name clips were moved out of the Pages build (full build only); 
 v54: the 26 Letters "Emma" clips (sounds/letters-emma/) are at the same level (-19.2 LUFS, peak -4.9 dBFS or lower).
 
 v61: the Letters clips in `sounds/letters/` (and the matching `sounds/build/let-*`) are at the same level (−19.2 LUFS, peak −4.6 dBFS or lower), mono 22.05 kHz 40 kbit/s. The replacement Alba and Classic `ramone.mp3` clips are at the same loudness target (Classic is mono 24 kHz 48 kbit/s, same as the other Classic name clips).
+
+v62: the replacement R, F, J and K letter clips are at the same level (−19.2 LUFS, peak −4.6 dBFS or lower), mono 22.05 kHz 40 kbit/s.
